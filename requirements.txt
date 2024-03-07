@@ -1,0 +1,5 @@
+
+numpy==1.26.3
+geemap==0.29.6
+geopandas==0.14.1
+pandas==2.1.4

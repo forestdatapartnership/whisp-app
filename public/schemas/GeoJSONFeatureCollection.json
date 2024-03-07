@@ -1,0 +1,49 @@
+{
+    "/geojson": {
+        "post": {
+          "summary": "Submit GeoJSON for Analysis",
+          "description": "Accepts a GeoJSON object, either a Feature or a Feature Collection, for analysis.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/GeoJSONFeature"
+                    },
+                    {
+                      "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                    }
+                  ],
+                  "description": "GeoJSON object"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "GeoJSON analysis results",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "object",
+                        "description": "Analysis results of the GeoJSON"
+                      },
+                      "token": {
+                        "type": "string",
+                        "description": "Unique token for the analysis"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+}

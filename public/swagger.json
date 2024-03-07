@@ -1,0 +1,185 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Whisp App API",
+    "version": "1.0.0",
+    "description": "API for Whisp - An analytical tool for the support of zero-deforestation regulation claims"
+  },
+  "servers": [
+    {
+      "url": "https://whisp-app-vdfqchwaca-uc.a.run.app/api",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/geo-ids": {
+      "post": {
+        "summary": "Analyze Geo IDs",
+        "description": "Accepts an array of Geo IDs and returns analysis results.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "geoIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Array of Geo IDs"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Geo IDs analysis results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "description": "Analysis results of each Geo ID"
+                      }
+                    },
+                    "token": {
+                      "type": "string",
+                      "description": "Unique token for the analysis session"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/geojson": {
+      "post": {
+        "summary": "Submit GeoJSON for Analysis",
+        "description": "Accepts a GeoJSON object, specifically a Feature with a Polygon geometry, for analysis.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["type", "properties", "geometry"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["Feature"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "geometry": {
+                    "type": "object",
+                    "required": ["type", "coordinates"],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["Polygon"]
+                      },
+                      "coordinates": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "number",
+                              "minItems": 2,
+                              "maxItems": 2
+                            },
+                            "minItems": 4
+                          }
+                        },
+                        "minItems": 1 
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "GeoJSON analysis results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Analysis results of the GeoJSON"
+                    },
+                    "token": {
+                      "type": "string",
+                      "description": "Unique token for the analysis"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },        
+    "/wkt": {
+      "post": {
+        "summary": "Submit WKT for Analysis",
+        "description": "Accepts a WKT (Well-Known Text) string for analysis.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "wkt": {
+                    "type": "string",
+                    "description": "WKT string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "WKT analysis results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Analysis results of WKT"
+                    },
+                    "token": {
+                      "type": "string",
+                      "description": "Unique token for the analysis"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+    "components": {
+        "schemas": {
+            "GeoJSONFeature": {
+                "type": "object",
+                "required": [
+                    "type",
+                    "properties",
+                    "geometry"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "Feature"
+                        ]
+                    },
+                    "properties": {
+                        "type": "object"
+                    },
+                    "geometry": {
+                        "type": "object",
+                        "required": [
+                            "type",
+                            "coordinates"
+                        ],
+                        "properties": {
+                            "type": {
+                                "type": "string"
+                            },
+                            "coordinates": {
+                                "type": "array",
+                                "items": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "GeoJSONFeatureCollection": {
+                "type": "object",
+                "required": [
+                    "type",
+                    "features"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "FeatureCollection"
+                        ]
+                    },
+                    "features": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GeoJSONFeature"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

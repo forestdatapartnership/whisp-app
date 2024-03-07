@@ -1,0 +1,177 @@
+<Schema name="whisp">
+  <Cube name="Collect Earth Plot" cache="true" enabled="true">
+    <Table name="plot" schema="${saikuDbSchema}"/>
+    <Dimension name="Plot - Id" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Plot - Id" column="id" uniqueMembers="false" levelType="Regular" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Plot - Central Point coordinates" type="" visible="true">
+      <Hierarchy type="StandardDimension" visible="true" hasAll="true">
+        <Level name="Plot - Central Point coordinates - Latitude" column="location_y" uniqueMembers="false"/>
+        <Level name="Plot - Central Point coordinates - Longitude" column="location_x" uniqueMembers="false"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Plot - Operator" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Plot - Operator" column="operator" uniqueMembers="false" levelType="Regular" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Plot - Actively saved by user (green tick)" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Plot - Actively saved by user (green tick)" column="actively_saved" uniqueMembers="false" levelType="Regular" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Plot - Last saved on" type="" visible="true">
+      <Hierarchy type="TimeDimension" allMemberName="attrLabel" visible="true" hasAll="true">
+        <Level name="Plot - Last saved on - Year" column="actively_saved_on_year" uniqueMembers="false" levelType="TimeYears" type="Numeric"/>
+        <Level name="Plot - Last saved on - Month" column="actively_saved_on_month" uniqueMembers="false" levelType="TimeMonths" type="Numeric"/>
+        <Level name="Plot - Last saved on - Day" column="actively_saved_on_day" uniqueMembers="false" levelType="TimeDays" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Plot - CSV file that contains the plot" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Plot - CSV file that contains the plot" column="plot_file" uniqueMembers="false" levelType="Regular" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Deforestation in the plot from 2020 onwards?" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Deforestation in the plot from 2020 onwards?" column="deforestation" uniqueMembers="false" levelType="Regular" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Year of deforestation" foreignKey="deforestation_year_code_id" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Table name="years_code" schema="${saikuDbSchema}"/>
+        <Level name="Year of deforestation" table="years_code" column="years_code_id" nameColumn="years_label_en" uniqueMembers="false" levelType="Regular" type="Integer"/>
+        <Level name="Year of deforestation -  ID" table="years_code" column="years_code_id" nameColumn="years" uniqueMembers="false" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Country" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Country" column="gaul_adm0" uniqueMembers="false" levelType="Regular" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Region" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Region" column="gaul_adm1" uniqueMembers="false" levelType="Regular" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Province/District" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Province/District" column="gaul_adm2" uniqueMembers="false" levelType="Regular" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% TREES 2020 - ESA World Cover 10m v100" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% TREES 2020 - ESA World Cover 10m v100" column="esatrees" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="Comments" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Comments" column="comments" uniqueMembers="false" levelType="Regular" type="String"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% Forest/No Forest 2020 - JAXA/ALOS/PALSAR/YEARLY/FNF4" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% Forest/No Forest 2020 - JAXA/ALOS/PALSAR/YEARLY/FNF4" column="jaxatrees" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% TREES 2020 - EC JRC global map of forest cover 2020, V1" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% TREES 2020 - EC JRC global map of forest cover 2020, V1" column="jrcgfc2020" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% TREES 2020 - Hansen Global Forest Change v1.10" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% TREES 2020 - Hansen Global Forest Change v1.10" column="gfctrees2020" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% TREES 2020 - GLAD Global Land Cover and Land Use Change, 2000-2020" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% TREES 2020 - GLAD Global Land Cover and Land Use Change, 2000-2020" column="gladlandcovertrees2020" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% of plot in Primary Humid Tropical Forests" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% of plot in Primary Humid Tropical Forests" column="phtf2020" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% of plot inisde Protected Area WCMC-WDPA" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% of plot inisde Protected Area WCMC-WDPA" column="wcmcwdpaprotection" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="RADD Alerts From 2020 (% of plot affected)" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="RADD Alerts From 2020 (% of plot affected)" column="raddalerts" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% of plot in Pal Oil plantation 2019 BIOPAMA" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% of plot in Pal Oil plantation 2019 BIOPAMA" column="oilpalm" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% of plot in Pal Oil plantation 2020 Forest Data Partnership" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% of plot in Pal Oil plantation 2020 Forest Data Partnership" column="fdappalm" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% of plot in Cocoa plantation 2020 ETK " type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% of plot in Cocoa plantation 2020 ETK " column="cocoakalischek" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% of plot in Forest Plantations 2020 (JRC)" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% of plot in Forest Plantations 2020 (JRC)" column="jrctmfplantations" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Dimension name="% of plot in undisturbed tropical moist forest 2020 (JRC)" type="StandardDimension" visible="true">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="% of plot in undisturbed tropical moist forest 2020 (JRC)" column="jrctmfundisturbed" uniqueMembers="false" levelType="Regular" type="Numeric"/>
+      </Hierarchy>
+    </Dimension>
+    <Measure name="plot_count" column="_plot_id" datatype="Integer" aggregator="distinct count" caption="Plot Count"/>
+    <Measure name="area" column="expansion_factor" datatype="Numeric" aggregator="sum" caption="Area (HA)" formatString="###,###.00"/>
+    <Measure name="plot_weight" column="plot_weight" datatype="Numeric" aggregator="sum" caption="Plot Weight" formatString="#,###.##"/>
+    <Measure name="esatrees_min" column="esatrees" datatype="Numeric" aggregator="min" caption="% TREES 2020 - ESA World Cover 10m v100 min" formatString="#.##"/>
+    <Measure name="esatrees_max" column="esatrees" datatype="Numeric" aggregator="max" caption="% TREES 2020 - ESA World Cover 10m v100 max" formatString="#.##"/>
+    <Measure name="esatrees_avg" column="esatrees" datatype="Numeric" aggregator="avg" caption="% TREES 2020 - ESA World Cover 10m v100 avg" formatString="#.##"/>
+    <Measure name="jaxatrees_min" column="jaxatrees" datatype="Numeric" aggregator="min" caption="% Forest/No Forest 2020 - JAXA/ALOS/PALSAR/YEARLY/FNF4 min" formatString="#.##"/>
+    <Measure name="jaxatrees_max" column="jaxatrees" datatype="Numeric" aggregator="max" caption="% Forest/No Forest 2020 - JAXA/ALOS/PALSAR/YEARLY/FNF4 max" formatString="#.##"/>
+    <Measure name="jaxatrees_avg" column="jaxatrees" datatype="Numeric" aggregator="avg" caption="% Forest/No Forest 2020 - JAXA/ALOS/PALSAR/YEARLY/FNF4 avg" formatString="#.##"/>
+    <Measure name="jrcgfc2020_min" column="jrcgfc2020" datatype="Numeric" aggregator="min" caption="% TREES 2020 - EC JRC global map of forest cover 2020, V1 min" formatString="#.##"/>
+    <Measure name="jrcgfc2020_max" column="jrcgfc2020" datatype="Numeric" aggregator="max" caption="% TREES 2020 - EC JRC global map of forest cover 2020, V1 max" formatString="#.##"/>
+    <Measure name="jrcgfc2020_avg" column="jrcgfc2020" datatype="Numeric" aggregator="avg" caption="% TREES 2020 - EC JRC global map of forest cover 2020, V1 avg" formatString="#.##"/>
+    <Measure name="gfctrees2020_min" column="gfctrees2020" datatype="Numeric" aggregator="min" caption="% TREES 2020 - Hansen Global Forest Change v1.10 min" formatString="#.##"/>
+    <Measure name="gfctrees2020_max" column="gfctrees2020" datatype="Numeric" aggregator="max" caption="% TREES 2020 - Hansen Global Forest Change v1.10 max" formatString="#.##"/>
+    <Measure name="gfctrees2020_avg" column="gfctrees2020" datatype="Numeric" aggregator="avg" caption="% TREES 2020 - Hansen Global Forest Change v1.10 avg" formatString="#.##"/>
+    <Measure name="gladlandcovertrees2020_min" column="gladlandcovertrees2020" datatype="Numeric" aggregator="min" caption="% TREES 2020 - GLAD Global Land Cover and Land Use Change, 2000-2020 min" formatString="#.##"/>
+    <Measure name="gladlandcovertrees2020_max" column="gladlandcovertrees2020" datatype="Numeric" aggregator="max" caption="% TREES 2020 - GLAD Global Land Cover and Land Use Change, 2000-2020 max" formatString="#.##"/>
+    <Measure name="gladlandcovertrees2020_avg" column="gladlandcovertrees2020" datatype="Numeric" aggregator="avg" caption="% TREES 2020 - GLAD Global Land Cover and Land Use Change, 2000-2020 avg" formatString="#.##"/>
+    <Measure name="phtf2020_min" column="phtf2020" datatype="Numeric" aggregator="min" caption="% of plot in Primary Humid Tropical Forests min" formatString="#.##"/>
+    <Measure name="phtf2020_max" column="phtf2020" datatype="Numeric" aggregator="max" caption="% of plot in Primary Humid Tropical Forests max" formatString="#.##"/>
+    <Measure name="phtf2020_avg" column="phtf2020" datatype="Numeric" aggregator="avg" caption="% of plot in Primary Humid Tropical Forests avg" formatString="#.##"/>
+    <Measure name="wcmcwdpaprotection_min" column="wcmcwdpaprotection" datatype="Numeric" aggregator="min" caption="% of plot inisde Protected Area WCMC-WDPA min" formatString="#.##"/>
+    <Measure name="wcmcwdpaprotection_max" column="wcmcwdpaprotection" datatype="Numeric" aggregator="max" caption="% of plot inisde Protected Area WCMC-WDPA max" formatString="#.##"/>
+    <Measure name="wcmcwdpaprotection_avg" column="wcmcwdpaprotection" datatype="Numeric" aggregator="avg" caption="% of plot inisde Protected Area WCMC-WDPA avg" formatString="#.##"/>
+    <Measure name="raddalerts_min" column="raddalerts" datatype="Numeric" aggregator="min" caption="RADD Alerts From 2020 (% of plot affected) min" formatString="#.##"/>
+    <Measure name="raddalerts_max" column="raddalerts" datatype="Numeric" aggregator="max" caption="RADD Alerts From 2020 (% of plot affected) max" formatString="#.##"/>
+    <Measure name="raddalerts_avg" column="raddalerts" datatype="Numeric" aggregator="avg" caption="RADD Alerts From 2020 (% of plot affected) avg" formatString="#.##"/>
+    <Measure name="oilpalm_min" column="oilpalm" datatype="Numeric" aggregator="min" caption="% of plot in Pal Oil plantation 2019 BIOPAMA min" formatString="#.##"/>
+    <Measure name="oilpalm_max" column="oilpalm" datatype="Numeric" aggregator="max" caption="% of plot in Pal Oil plantation 2019 BIOPAMA max" formatString="#.##"/>
+    <Measure name="oilpalm_avg" column="oilpalm" datatype="Numeric" aggregator="avg" caption="% of plot in Pal Oil plantation 2019 BIOPAMA avg" formatString="#.##"/>
+    <Measure name="fdappalm_min" column="fdappalm" datatype="Numeric" aggregator="min" caption="% of plot in Pal Oil plantation 2020 Forest Data Partnership min" formatString="#.##"/>
+    <Measure name="fdappalm_max" column="fdappalm" datatype="Numeric" aggregator="max" caption="% of plot in Pal Oil plantation 2020 Forest Data Partnership max" formatString="#.##"/>
+    <Measure name="fdappalm_avg" column="fdappalm" datatype="Numeric" aggregator="avg" caption="% of plot in Pal Oil plantation 2020 Forest Data Partnership avg" formatString="#.##"/>
+    <Measure name="cocoakalischek_min" column="cocoakalischek" datatype="Numeric" aggregator="min" caption="% of plot in Cocoa plantation 2020 ETK  min" formatString="#.##"/>
+    <Measure name="cocoakalischek_max" column="cocoakalischek" datatype="Numeric" aggregator="max" caption="% of plot in Cocoa plantation 2020 ETK  max" formatString="#.##"/>
+    <Measure name="cocoakalischek_avg" column="cocoakalischek" datatype="Numeric" aggregator="avg" caption="% of plot in Cocoa plantation 2020 ETK  avg" formatString="#.##"/>
+    <Measure name="jrctmfplantations_min" column="jrctmfplantations" datatype="Numeric" aggregator="min" caption="% of plot in Forest Plantations 2020 (JRC) min" formatString="#.##"/>
+    <Measure name="jrctmfplantations_max" column="jrctmfplantations" datatype="Numeric" aggregator="max" caption="% of plot in Forest Plantations 2020 (JRC) max" formatString="#.##"/>
+    <Measure name="jrctmfplantations_avg" column="jrctmfplantations" datatype="Numeric" aggregator="avg" caption="% of plot in Forest Plantations 2020 (JRC) avg" formatString="#.##"/>
+    <Measure name="jrctmfundisturbed_min" column="jrctmfundisturbed" datatype="Numeric" aggregator="min" caption="% of plot in undisturbed tropical moist forest 2020 (JRC) min" formatString="#.##"/>
+    <Measure name="jrctmfundisturbed_max" column="jrctmfundisturbed" datatype="Numeric" aggregator="max" caption="% of plot in undisturbed tropical moist forest 2020 (JRC) max" formatString="#.##"/>
+    <Measure name="jrctmfundisturbed_avg" column="jrctmfundisturbed" datatype="Numeric" aggregator="avg" caption="% of plot in undisturbed tropical moist forest 2020 (JRC) avg" formatString="#.##"/>
+  </Cube>
+</Schema>
