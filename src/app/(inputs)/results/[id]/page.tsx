@@ -61,15 +61,13 @@ const Results: React.FC = () => {
     }
 
     const generateEarthMap = () => {
-        // Extract 'id' from each object and join them with a comma
-
+        
         if (data.length > 0) {
-            const ids = data.map((item: any) => item.id).join(',');
+            const geoids = data.map((item: any) => item.geoid).join(',');
             // Construct the URL with these IDs
-            const url = `https://whisp.earthmap.org/?geoIds=${ids}&embed`
+            const url = `https://whisp.earthmap.org/?geoIds=${geoids}&embed`
             window.open(url, '_blank');
         }
-
     }
 
     return (

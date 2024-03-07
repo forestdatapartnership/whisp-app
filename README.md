@@ -12,7 +12,8 @@ Whisp is a powerful tool designed to support environmental conservation efforts 
 
 ## Getting Started
 
-To get started with Whisp, ensure you have Node.js installed on your system. Then, follow these steps:
+To get started with Whisp, ensure you have [Node.js](https://nodejs.org) installed on your system. We assume you are a registered user in [Asset Registry](https://asset-registry.agstack.org) and [Collect Earth Online](https://app.collect.earth/). Then, follow these steps:
+
 
 1. **Clone the Repository**
 
