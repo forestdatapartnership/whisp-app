@@ -12,6 +12,7 @@ export async function GET(request: NextRequest, context: { params: any }) {
             { ceoProjectLink }
         )
     } catch (error: any) {
-        return NextResponse.json({ error }, { status: 500 })
+        console.error(error);
+        return NextResponse.json({ error: "There was an error with the request. Please try again later." }, { status: 500 });
     }
 }

@@ -16,15 +16,15 @@ def load_csv_from_file(file_path):
             df = pd.read_csv(file)
             return df
     except FileNotFoundError:
-        print(f"File not found: {file_path}")
+        sys.stderr.write(f"File not found: {file_path}")
         sys.exit(1)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        sys.stderr.write(f"An error occurred: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Error: Correct usage is python script.py <path_to_csv_file>")
+        sys.stderr.write("Error: Correct usage is python script.py <path_to_csv_file>")
         sys.exit(1)
     else:
         file_path = sys.argv[1]
@@ -39,7 +39,7 @@ if __name__ == "__main__":
             
             # Check for 'geometry' column with GeoJSON strings
             if 'geometry' not in df.columns:
-                print("Error: CSV file must contain 'geometry' column with GeoJSON strings.")
+                sys.stderr.write("Error: CSV file must contain 'geometry' column with GeoJSON strings.")
                 sys.exit(1)
             
             # Convert GeoJSON strings in 'geometry' column to shapely geometries
@@ -74,4 +74,4 @@ if __name__ == "__main__":
 
                 print(base64_encoded_str)
         else:
-            print("No geometries loaded. Exiting.")
+            sys.stderr.write("No geometries loaded. Exiting.")

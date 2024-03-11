@@ -61,7 +61,7 @@ const Results: React.FC = () => {
     }
 
     const generateEarthMap = () => {
-        
+
         if (data.length > 0) {
             const geoids = data.map((item: any) => item.geoid).join(',');
             // Construct the URL with these IDs
@@ -79,25 +79,24 @@ const Results: React.FC = () => {
             )}
             <h1 className="text-2xl font-semibold text-center mb-2">Results</h1>
             <div className="flex justify-center my-4 space-x-2">
-                {/* <div className="w-52">
+                <div className="w-52">
                     <button
                         onClick={() => createCeoProject(token)}
-                        // className={`w-full text-white font-bold py-1 px-2 text-sm rounded ${isCeoDisabled ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-700'}`}
-                        className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-blue-300`}
-                        // disabled={isCeoDisabled}> //Ceo api not working, enable when api is running again
-                        disabled={true}>
+                        className={`w-full text-white font-bold py-1 px-2 text-sm rounded ${isCeoDisabled ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-700'}`}
+                        disabled={isCeoDisabled}>
                         Create CEO Project
                     </button>
-                </div> */}
+                </div>
                 <div className="w-52">
                     <button
                         onClick={() => generateEarthMap()}
-                        className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-blue-500 hover:bg-blue-700`}
+                        className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
                         disabled={data.length === 0 ? true : false}
                     >
                         View in Whisp Map
                     </button>
                 </div>
+
                 {/* <div className="w-52">
                     <a
                         href={isCeDisabled ? '#' : collectEarthUrl}
