@@ -25,7 +25,7 @@ export default function Home() {
         </Link>
         <Link href="/submit-geometry" onClick={() => resetStore()} className="block p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
           <h5 className="mb-2 text-1xl font-bold tracking-tight text-gray-900 dark:text-white">Send Geometry</h5>
-          <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">Submit your WKT text and receive the results of the analysis from that.</p>
+          <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">Submit your WKT or Geojson and get your plots analyzed.</p>
         </Link>
       </div>
     </main>
