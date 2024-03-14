@@ -4,6 +4,7 @@ import { analyzePlots } from "@/utils/analizePlots";
 import { geojsonToWKT } from "@terraformer/wkt";
 import { PolygonFeature } from "@/types/geojson";
 import { Feature } from "geojson";
+import { hint } from '@mapbox/geojsonhint';
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,6 +12,10 @@ export async function POST(request: NextRequest) {
 
         if (!body) throw new Error("Required request body is missing");
 
+        if (validateGeoJSON(JSON.stringify(body)).length > 0) {
+            return NextResponse.json({ error: "There was an error with your input." }, { status: 400 })
+        }
+        
         const geoJson = await transformGeoJSON(body);
 
         if (geoJson) {
@@ -20,20 +25,19 @@ export async function POST(request: NextRequest) {
         }
     } catch (error: any) {
         console.log(error.message)
-        return NextResponse.json({ error: "Error in analysis. Please try again later." }, { status: 500 })
+        return NextResponse.json({ error: "Error in analysis. There may be a problem with your input." }, { status: 500 })
     }
 }
 
 async function transformFeature(feature: Feature): Promise<PolygonFeature | null> {
     if (feature.geometry.type !== 'Polygon') {
-        console.error(`Unsupported geometry type: ${feature.geometry.type}. Must be a Polygon.`);
+        console.error(`Unsupported geometry type: ${feature.geometry.type}. Feature must be a Polygon.`);
         return null; // Consider returning null or a specific error object instead of throwing an error
     }
 
     const geoid = await getGeoid(feature.geometry);
     if (!geoid) {
-        console.error(`Error obtaining geoid.`);
-        throw new Error('Error obtain geoid.');
+        throw new Error('Error obtaining geoid. There may be a problem with your input.');
     }
 
     return {
@@ -43,6 +47,12 @@ async function transformFeature(feature: Feature): Promise<PolygonFeature | null
     };
 }
 
+const validateGeoJSON = (geojson: string) => {
+    const errors = hint(geojson).filter(error => {
+      return (!error.message.includes('"properties" member required') && !error.message.includes('Polygons and MultiPolygons should follow the right-hand rule'));
+    });
+    return errors;
+}
 
 async function transformGeoJSON(inputGeoJSON: any): Promise<any> {
     switch (inputGeoJSON.type) {
@@ -55,7 +65,7 @@ async function transformGeoJSON(inputGeoJSON: any): Promise<any> {
         case 'Feature':
             return transformFeature(inputGeoJSON);
         default:
-            throw new Error(`Unsupported geometry type: ${inputGeoJSON.type}`);
+            return NextResponse.json({ error: `Unsupported geometry type: ${inputGeoJSON.type}` }, { status: 400 });
     }
 }
 

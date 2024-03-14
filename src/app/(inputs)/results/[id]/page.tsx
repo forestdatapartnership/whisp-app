@@ -71,15 +71,15 @@ const Results: React.FC = () => {
     }
 
     return (
-        <div className="p-4 border w-8/12 border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
+        <div className="p-4 border border-gray-300 bg-gray-800 rounded shadow-md my-4">
             {isLoading && (
                 <div className="absolute top-0 left-0 right-0 bottom-0 bg-gray-200 bg-opacity-75 flex items-center justify-center z-10">
                     <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-8 h-8 animate-spin"></div>
                 </div>
             )}
             <h1 className="text-2xl font-semibold text-center mb-2">Results</h1>
-            <div className="flex justify-center my-4 space-x-2">
-                <div className="w-52">
+            <div className="flex flex-wrap justify-center my-4 gap-2">
+                <div className="w-full sm:w-52">
                     <button
                         onClick={() => createCeoProject(token)}
                         className={`w-full text-white font-bold py-1 px-2 text-sm rounded ${isCeoDisabled ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-700'}`}
@@ -87,7 +87,7 @@ const Results: React.FC = () => {
                         Create CEO Project
                     </button>
                 </div>
-                <div className="w-52">
+                <div className="w-full sm:w-52">
                     <button
                         onClick={() => generateEarthMap()}
                         className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
@@ -96,17 +96,18 @@ const Results: React.FC = () => {
                         View in Whisp Map
                     </button>
                 </div>
-
-                {/* <div className="w-52">
+                <div className="w-full sm:w-52">
                     <a
                         href={isCeDisabled ? '#' : collectEarthUrl}
                         download={!isCsvDisabled}
-                        className="w-full block text-white font-bold py-1 px-2 text-sm rounded bg-green-500 hover:bg-green-700 disabled:bg-green-300"
-                        style={{ textDecoration: 'none' }}>
+                        className="w-full inline-flex justify-center items-center text-white font-bold py-1 px-2 text-sm rounded bg-green-500 hover:bg-green-700 disabled:bg-green-300"
+                        style={{ textDecoration: 'none' }}
+                        role="button">
                         Download Collect Earth File
                     </a>
-                </div> */}
-                <div className="w-52">
+                </div>
+
+                <div className="w-full sm:w-52">
                     <a
                         href={isCsvDisabled ? '#' : csvUrl}
                         download={!isCsvDisabled}
@@ -120,5 +121,6 @@ const Results: React.FC = () => {
             <DataTable data={data} />
         </div>
     );
+
 };
 export default Results;

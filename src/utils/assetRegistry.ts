@@ -15,20 +15,22 @@ export const registerWkt = async (wkt: string): Promise<any> => {
       throw new Error("Missing required environment variables.");
     }
 
+    const body = JSON.stringify({ wkt });
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'API-KEY': apiKey,
         'CLIENT-SECRET': clientSecret,
-        'Content-Type': 'application/json', // Ensure the server expects JSON.
-        'API-KEYS-AUTHENTICATION': 'true' // If this is custom logic, ensure it's needed and correctly implemented.
+        'API-KEYS-AUTHENTICATION': 'true'
       },
       body: JSON.stringify({ wkt })
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    // if (!response.ok) {
+    //   throw new Error(`HTTP error! status: ${response.status}`);
+    // } // AR returns a 400 if field already registered but 
 
     const data = await response.json();
 

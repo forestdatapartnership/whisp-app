@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
 import { isValidWkt } from '@/utils/validateWkt';
+import Image from 'next/image';
 
 const WktJsonInput: React.FC = () => {
     const [wkt, setWkt] = useState<string>('');
@@ -115,25 +116,62 @@ const WktJsonInput: React.FC = () => {
         }
     };
 
+    const downloadSampleDocument = () => {
+        console.log('Downloading sample document...');
+
+        const element = document.createElement('a');
+        
+        element.setAttribute('href', '/civ_plot.json');
+
+        element.setAttribute('download', 'civ_plot.json');
+
+        document.body.appendChild(element);
+
+        // Programmatically click the anchor to trigger the download
+        element.click();
+
+        // Remove the anchor from the body once the download is initiated
+        document.body.removeChild(element);
+    };
+
     return (
-        <div className="p-5 border w-6/12 border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
-            <>
-                {isLoading && (
-                    <div className="absolute top-0 left-0 right-0 bottom-0 bg-gray-200 bg-opacity-75 flex items-center justify-center z-10">
-                        <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-8 h-8 animate-spin"></div>
-                    </div>
-                )}
-                <h1 className="text-2xl font-semibold text-center mb-2">Submit Geometry</h1>
-                {error && <ErrorAlert />}
-                <div>
-                    <div className="p-2 rounded-b-lg">
-                        <FileInput alertMessage="Area must be smaller than 1,000 acres." innerMessage="Only .txt and .json files are accepted." handleFileChange={handleFileChange} input=".txt, .json" />
-                    </div>
+        <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
+            {isLoading && (
+                <div className="absolute top-0 left-0 right-0 bottom-0 bg-gray-200 bg-opacity-75 flex items-center justify-center z-10">
+                    <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-8 h-8 animate-spin"></div>
                 </div>
+            )}
+            <h1 className="text-2xl font-semibold text-center mb-2">Submit Geometry</h1>
+            {error && <ErrorAlert />}
+            <div className="p-2 rounded-b-lg">
+                <FileInput
+                    alertMessage="Area must be smaller than 1,000 acres."
+                    innerMessage="Only .txt and .json files are accepted."
+                    handleFileChange={handleFileChange}
+                    input=".txt, .json"
+                />
+            </div>
+            <div className="flex items-center mx-2 justify-between">
+                <button
+                    onClick={downloadSampleDocument}
+                    className="flex mt-2 items-center justify-center w-28 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded focus:outline-none focus:shadow-outline"
+                    type="button"
+                >
+                    <Image
+                        className='mr-2'
+                        onClick={() => useStore.setState({ error: '' })}
+                        src="/download-outline.svg"
+                        alt="download-outline"
+                        width={20}
+                        height={20}
+                    />
+                    Sample
+                </button>
                 <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
-            </>
+            </div>
         </div>
     );
+
 };
 
 export default WktJsonInput;
