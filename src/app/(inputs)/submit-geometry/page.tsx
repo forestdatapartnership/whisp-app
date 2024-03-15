@@ -145,7 +145,7 @@ const WktJsonInput: React.FC = () => {
             {error && <ErrorAlert />}
             <div className="p-2 rounded-b-lg">
                 <FileInput
-                    alertMessage="Area must be smaller than 1,000 acres."
+                    alertMessage="Area must be smaller than 1,000 acres. Must be in WKT or geojson format."
                     innerMessage="Only .txt and .json files are accepted."
                     handleFileChange={handleFileChange}
                     input=".txt, .json"
