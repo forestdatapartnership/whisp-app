@@ -57,6 +57,9 @@ const validateGeoJSON = (geojson: string) => {
 async function transformGeoJSON(inputGeoJSON: any): Promise<any> {
     switch (inputGeoJSON.type) {
         case 'FeatureCollection':
+            if (inputGeoJSON.features.length > 100) {
+                throw new Error("The are more than 100 features in this collection. Please do not exceed more than 100 individual features.");
+            }
             const transformedFeatures = await Promise.all(inputGeoJSON.features.map((feature: any) => transformFeature(feature)));
             return {
                 type: 'FeatureCollection',
