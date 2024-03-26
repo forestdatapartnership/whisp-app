@@ -1,0 +1,29 @@
+.tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tooltip .tooltiptext {
+  visibility: visible;
+  min-width: 300px; /* Adjust the width as needed, or use max-content */
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  /* padding: 5px 0; */
+  position: absolute;
+  z-index: 10;
+  bottom: 100%; /* Adjust this if needed */
+  left: 50%; /* Centers the tooltip */
+  transform: translateX(-50%); /* Centers the tooltip */
+  white-space: nowrap; /* Prevents text wrapping */
+  opacity: 0;
+  transition: visibility 0s, opacity 0.5s ease-in-out;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}

@@ -6,14 +6,17 @@ import ErrorAlert from '@/components/ErrorBar';
 import SuccessAlert from '@/components/SuccessBar';
 import { useParams, useRouter } from 'next/navigation';
 import { useStore } from "@/store";
+import './styles.css';
+import Image from 'next/image';
 
 const Results: React.FC = () => {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isCeoDisabled, setIsCeoDisabled] = useState<boolean>(false);
     const [isCeDisabled, setIsCeDisabled] = useState<boolean>(false);
     const [isCsvDisabled, setIsCsvDisabled] = useState<boolean>(false);
     const [successMessage, setSuccessMessage] = useState<string>("");
     const [ceoLink, setCeoLink] = useState<string>("");
+    const [notFound, setNotFound] = useState<boolean>(false);
 
     const clearSuccessMessage = () => setSuccessMessage('');
 
@@ -26,30 +29,34 @@ const Results: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoading(true);
+            setNotFound(false);
             try {
                 const response = await fetch(`/api/report/${id}`);
                 if (!response.ok) {
+                    setNotFound(true);
                     throw new Error('Failed to fetch report');
                 }
                 const fetchedData = await response.json();
-                useStore.setState({ data: fetchedData.data }); // Update the store with the fetched data
+                useStore.setState({ data: fetchedData.data });
             } catch (error: any) {
-                console.error('Failed to fetch report:', error);
+                console.error(error);
                 useStore.setState({ error: error.message });
             } finally {
-                setIsLoading(false); // Hide loading indicator after fetch completes or fails
+                setIsLoading(false);
             }
         };
-    
+
         if (!data || data.length === 0) {
             fetchData();
+            setIsLoading(false);
         }
     }, [id, data]);
 
 
     const createCeoProject = async (token: string) => {
         try {
-            setIsLoading(true); // Indicate loading
+            setIsLoading(true);
             const response = await fetch(`/api/generate-ceo-project/${token}`, {
                 method: 'GET'
             });
@@ -99,10 +106,18 @@ const Results: React.FC = () => {
                 </div>
             )}
             {!data || data.length === 0 ? (
-                <div className="text-xl text-center text-white">Report not found.</div>
+                notFound ?
+                    <div className="text-xl text-center text-white">Report not found.</div> : null
             ) : (
                 <>
-                    <h1 className="text-2xl font-semibold text-center mb-2">Results</h1>
+                    <h1 className="text-2xl font-semibold text-center mb-2 text-white">Results
+                        <span className="tooltip ml-2 inline-block relative cursor-pointer">
+                            <Image src="/info.svg" alt="Info" width={24} height={24} />
+                            <span className="tooltiptext absolute invisible opacity-0 bg-black text-white text-xs rounded px-4 py-2 min-w-max bottom-full mb-2 left-1/2 transform -translate-x-1/2 transition-opacity duration-300">
+                                Results will remain for one hour then be deleted.
+                            </span>
+                        </span>
+                    </h1>
                     <div className="flex flex-wrap justify-center my-4 gap-2">
                         <div className="w-full sm:w-52">
                             <button
@@ -147,7 +162,5 @@ const Results: React.FC = () => {
             )}
         </div>
     );
-
-
 };
 export default Results;
