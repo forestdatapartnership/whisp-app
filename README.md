@@ -4,11 +4,81 @@
 
 Whisp is a powerful tool designed to support environmental conservation efforts by providing robust geospatial analysis. By ingesting geoids and geometries in either WKT (Well-Known Text) or GeoJSON formats, Whisp facilitates the creation of comprehensive supporting documentation necessary for claims under zero-deforestation regulatory mechanisms. This documentation can play a crucial role in validating efforts towards sustainability and compliance with environmental standards.
 
+Currently the application can be [here](https://whisp-app-vdfqchwaca-uc.a.run.app). 
+
 ## Features
 
 - **Data Ingestion:** Accepts geoids and geometries in WKT or GeoJSON formats.
 - **Geospatial Analysis:** Performs advanced analysis to support zero-deforestation claims.
 - **User-Friendly Interface:** Built with Next.js 14, offering a seamless and intuitive user experience.
+
+## Endpoints
+
+### Analyze Geo IDs
+
+- **Method:** POST
+- **URL:** `/geo-ids`
+- **Summary:** Analyze Geo IDs
+- **Description:** Accepts an array of Geo IDs and returns analysis results.
+- **Request Body:**
+  ```json
+  {
+    "geoIds": ["string"]
+  }
+- **Responses:**
+  ```json
+  {
+    "data": {"object"},
+    "token": "string"
+  }
+
+### Analyze WKT
+- **Method:** POST
+- **URL:** `/wkt`
+- **Summary:** Send wkt geometry and obtain, comes back with JSON table containing data
+- **Description:** Accepts an array of Geo IDs and returns analysis results
+- **Request Body:**
+  ```json
+  {
+    "wkt": "string"
+  }
+- **Responses:**
+  ```json
+  {
+    "data": {"object"},
+    "token": "string"
+  }
+
+### Analyze GeoJson
+- **Method:** POST
+- **URL:** `/geojson`
+- **Summary:** Send geojson according to standard RFC 7946, with a FeatureCollection or a single Feature with a polygon as its geometry, comes back with JSON table containing data for each individual polygon detected 
+- **Description:** Accepts an array of Geo IDs and returns analysis results
+- **Request Body:**
+  ```json 
+  {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [longitude, latitude], [longitude, latitude], [longitude, latitude]
+            ]
+          ]
+        }
+      }
+    ]
+  }
+- **Responses:**
+  ```json
+  {
+    "data": {"objec:t"},
+    "token": "string"
+  }
+
 
 ## Getting Started
 

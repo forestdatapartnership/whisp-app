@@ -5,6 +5,7 @@ import { useStore } from '@/store';
 import ErrorAlert from '@/components/ErrorBar';
 import { Tabs } from '@/components/Tabs';
 import { Buttons } from '@/components/Buttons';
+import Image from 'next/image';
 
 const GeoIdInput: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -73,8 +74,31 @@ const GeoIdInput: React.FC = () => {
         useStore.setState({ error: "", geoIds: [""], isDisabled: true, selectedFile: "" });
     };
 
+    const downloadSampleDocument = () => {
+        console.log('Downloading sample document...');
+        
+        // Create a new anchor element
+        const element = document.createElement('a');
+        
+        // Set the href to the path of the file you want to download
+        element.setAttribute('href', '/geoids.txt');
+        
+        // Set the download attribute to a specific filename or leave it empty to use the original filename
+        element.setAttribute('download', 'geoids.txt');
+        
+        // Append the anchor to the body
+        document.body.appendChild(element);
+        
+        // Programmatically click the anchor to trigger the download
+        element.click();
+        
+        // Remove the anchor from the body once the download is initiated
+        document.body.removeChild(element);
+    };
+    
+
     return (
-        <div className="p-5 border w-6/12 border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
+        <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
             {isLoading && (
                 <div className="absolute top-0 left-0 right-0 bottom-0 bg-gray-200 bg-opacity-75 flex items-center justify-center z-10">
                     <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-8 h-8 animate-spin"></div>
@@ -86,7 +110,24 @@ const GeoIdInput: React.FC = () => {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
             />
-            <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
+            <div className="flex mx-2 items-center justify-between">
+                <button
+                    onClick={downloadSampleDocument}
+                    className="flex mt-2 items-center justify-center w-28 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded focus:outline-none focus:shadow-outline"
+                    type="button"
+                >
+                    <Image
+                        className='mr-2'
+                        onClick={() => useStore.setState({ error: '' })}
+                        src="/download-outline.svg"
+                        alt="download-outline"
+                        width={20}
+                        height={20}
+                    />
+                    Sample
+                </button>
+                <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
+            </div>
         </div>
     );
 };

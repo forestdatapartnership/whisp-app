@@ -17,6 +17,9 @@ export async function POST(request: NextRequest) {
 
         try {
 
+            if (geoIds.length > 100) {
+                throw new Error("Please submit 100 individual polygons or less.");
+            }
             const geoJsonArray = await Promise.all(geoIds.map(async (geoId: string) => {
                 const geoJson = await getJsonfromGeoId(geoId);
                 return geoJson;

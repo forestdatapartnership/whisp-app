@@ -1,0 +1,11 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    echo "Fetching credentials.json from Secret Manager..."
+    gcloud secrets versions access latest --secret=my-credentials --format='get(payload.data)' | tr '_-' '/+' | base64 -d > credentials.json
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/whisp-app', '.']
+

@@ -14,6 +14,8 @@ export const analyzePlots = async (payload: PolygonCollection | PolygonFeature) 
         // Write the payload to a file
         await fs.writeFile(`${filePath}/${token}.json`, JSON.stringify(payload));
 
+        console.log("Starting analysis: ", token);
+
         // Attempt to analyze the plots
         const analyzed = await analyze(token);
         if (analyzed) {

@@ -242,7 +242,6 @@ def analyze_geometries(feature_collection):
             
             geometry = properties['geometry']
             centroid = ee.Geometry.Polygon(geometry['coordinates']).centroid().coordinates().getInfo()
-            x_coordinate, y_coordinate = centroid[0], centroid[1]
 
             stats_data = properties.get('stats', {}).get('data', {})
 
@@ -267,7 +266,7 @@ def analyze_geometries(feature_collection):
                 'cocoaK': stats_data.get('cocoaKalischek', -9999),  # cocoakalischek
                 'jrcPlant': stats_data.get('jrcTmfPlantations', -9999),  # jrctmfplantations
                 'jrcUndis': stats_data.get('jrcTmfUndisturbed', -9999),  # jrctmfundisturbed
-                # 'geometry': json.dumps(properties.get('geometry', {}))  # Assuming geometry is correctly structured
+                'geometry': json.dumps(properties.get('geometry', {}))  # Assuming geometry is correctly structured
             }
 
             data.append(row)
