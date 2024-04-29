@@ -75,7 +75,7 @@ Currently the application can be [here](https://whisp-app-vdfqchwaca-uc.a.run.ap
 - **Responses:**
   ```json
   {
-    "data": {"objec:t"},
+    "data": {"object"},
     "token": "string"
   }
 
