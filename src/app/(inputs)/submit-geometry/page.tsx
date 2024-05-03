@@ -15,6 +15,7 @@ const WktJsonInput: React.FC = () => {
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
     const { error } = useStore();
     const [type, setType] = useState<string>('');
+    const [generateGeoids, setGenerateGeoids] = useState<boolean>(false);
 
     const router = useRouter();
 
@@ -74,7 +75,7 @@ const WktJsonInput: React.FC = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ wkt: wkt }),
+                    body: JSON.stringify({ wkt: wkt, generateGeoids: generateGeoids}),
                 });
 
                 data = await response.json();
@@ -86,7 +87,7 @@ const WktJsonInput: React.FC = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ ...geojson }),
+                    body: JSON.stringify({ ...geojson, generateGeoids: generateGeoids }),
                 })
 
                 data = await response.json();
@@ -134,6 +135,36 @@ const WktJsonInput: React.FC = () => {
         document.body.removeChild(element);
     };
 
+    const renderExampleButton = () => (
+        <button
+            onClick={downloadSampleDocument}
+            className="flex mt-2 items-center justify-center w-28 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded focus:outline-none focus:shadow-outline"
+            type="button"
+        >
+            <Image
+                className='mr-2'
+                onClick={() => useStore.setState({ error: '' })}
+                src="/download-outline.svg"
+                alt="download-outline"
+                width={20}
+                height={20}
+            />
+            Example
+        </button>
+    )
+
+    const renderGeoIdCheckbox = () => (
+        <label className="flex items-center space-x-2">
+            <input
+                type="checkbox"
+                checked={generateGeoids}
+                onChange={() => setGenerateGeoids(!generateGeoids)}
+                className="form-checkbox h-5 w-5"
+            />
+            <span className="text-white">Generate GeoIds</span>
+        </label>
+    )
+
     return (
         <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
             {isLoading && (
@@ -146,32 +177,18 @@ const WktJsonInput: React.FC = () => {
             <div className="p-2 rounded-b-lg">
                 <FileInput
                     alertMessage="Area must be smaller than 1,000 acres. Must be in WKT or geojson format."
-                    innerMessage="Only .txt and .json files are accepted."
+                    innerMessage="Only .txt, .json and .geojson files are accepted."
                     handleFileChange={handleFileChange}
-                    input=".txt, .json"
+                    input=".txt, .json, .geojson"
                 />
             </div>
             <div className="flex items-center mx-2 justify-between">
-                <button
-                    onClick={downloadSampleDocument}
-                    className="flex mt-2 items-center justify-center w-28 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded focus:outline-none focus:shadow-outline"
-                    type="button"
-                >
-                    <Image
-                        className='mr-2'
-                        onClick={() => useStore.setState({ error: '' })}
-                        src="/download-outline.svg"
-                        alt="download-outline"
-                        width={20}
-                        height={20}
-                    />
-                    Sample
-                </button>
-                <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
+                {renderExampleButton()}
+                {renderGeoIdCheckbox()}
             </div>
+            <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
         </div>
     );
-
 };
 
 export default WktJsonInput;
