@@ -78,6 +78,7 @@ export const getJsonfromGeoId = async (geoId: string): Promise<any> => {
   }
 }
 
+export const getGeoid = async (geoJson: any) => {
   try {
       const wkt = geojsonToWKT(geoJson);
       const data = await registerWkt(wkt);
