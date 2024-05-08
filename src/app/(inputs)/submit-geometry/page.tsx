@@ -8,7 +8,7 @@ import { Buttons } from '@/components/Buttons';
 import { isValidWkt } from '@/utils/validateWkt';
 import Image from 'next/image';
 
-const WktJsonInput: React.FC = () => {
+const SubmitGeometry: React.FC = () => {
     const [wkt, setWkt] = useState<string>('');
     const [geojson, setGeojson] = useState<any>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -38,6 +38,7 @@ const WktJsonInput: React.FC = () => {
                             if (!isValidWKT) {
                                 useStore.setState({ error: "Invalid WKT format" });
                             } else {
+                                console.log(text);
                                 setWkt(text);
                                 useStore.setState({ selectedFile: file.name });
                             }
@@ -191,4 +192,4 @@ const WktJsonInput: React.FC = () => {
     );
 };
 
-export default WktJsonInput;
+export default SubmitGeometry;

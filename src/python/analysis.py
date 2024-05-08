@@ -22,12 +22,11 @@ def initialize_ee():
             credentials = service_account.Credentials.from_service_account_file(credentials_path,
                                                                                 scopes=['https://www.googleapis.com/auth/earthengine'])
             ee.Initialize(credentials)
-            print("Earth Engine has been initialized with the specified credentials.")
+            print("Earth Engine initialized.")
     except Exception as e:
         print("An error occurred during Earth Engine initialization:", e)
 
 initialize_ee()
-
 
 def load_geometries_from_file(file_path):
     try:
@@ -52,20 +51,21 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         data = load_geometries_from_file(file_path)
         if data is not None:
-            out_fc_list = []
 
             if data['type'] == 'FeatureCollection':
                 features = data['features']
+                generate_geo_ids = data.get('generateGeoids', False)
             elif data['type'] == 'Feature':
                 features = [data]
+                generate_geo_ids = data.get('generateGeoids', False)
             else:
                 print("JSON is not a GeoJSON Feature or FeatureCollection.")
                 sys.exit(1)
-
+            out_fc_list = []
             for feature in features:
                 if 'geometry' in feature and 'type' in feature['geometry'] and feature['geometry']['type'] == 'Polygon':
                     properties = {}
-                    if 'geoid' in feature['properties']:
+                    if generate_geo_ids:
                         properties['geoid'] = feature['properties']['geoid']
                     ee_feature = ee.Feature(ee.Geometry.Polygon(feature['geometry']['coordinates']), properties)
                     out_fc_list.append(ee_feature)
