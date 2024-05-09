@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { analyze } from "@/utils/runPython";
 
 export const analyzePlots = async (payload: any) => {
-    
+
     const token = uuidv4();
     const filePath = path.join(process.cwd(), 'temp');
 

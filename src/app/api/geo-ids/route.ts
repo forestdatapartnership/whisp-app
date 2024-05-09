@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJsonfromGeoId } from "@/utils/assetRegistry";
 import { analyzePlots } from "@/utils/analizePlots";
 import { PolygonCollection } from "@/types/geojson";
+import { createFeatureCollection } from "@/utils/geojsonUtils";
 
 export async function POST(request: NextRequest) {
 
@@ -13,39 +14,35 @@ export async function POST(request: NextRequest) {
 
     if (body['geoIds']) {
 
-        const geoIds = body['geoIds']
+        const geoIds = body['geoIds'];
 
         try {
 
             if (geoIds.length > 100) {
                 throw new Error("Please submit 100 individual polygons or less.");
             }
-            const geoJsonArray = await Promise.all(geoIds.map(async (geoId: string) => {
-                const geoJson = await getJsonfromGeoId(geoId);
-                return geoJson;
+            const geoJsonArray = await Promise.all(geoIds.map(async (geoid: string) => {
+                const geoJsonFeature = await getJsonfromGeoId(geoid);
+                const geoJsonGeoId = { ...geoJsonFeature, properties: { geoid } }; // Corrected variable name
+                return geoJsonGeoId; // Make sure to return the modified object
             }));
 
-            const noIssues = geoJsonArray.some((geoJson) => geoJson !== undefined)
+            const noIssues = geoJsonArray.some((geoJson) => geoJson !== undefined);
 
             if (!noIssues) {
                 const error = "One or more of the values submitted is not valid."
                 return NextResponse.json({ error: error }, { status: 400 })
             }
 
-            const polygonCollection: PolygonCollection = {
-                type: "FeatureCollection",
-                features: geoJsonArray.map((geoJson: any, index: number) => {
-                    if (!geoJson.properties) {
-                        geoJson.properties = {};
-                    }
+            const featureCollection = {
+                type: 'FeatureCollection',
+                features: geoJsonArray,
+                generateGeoids: true
+            }
 
-                    geoJson.properties.geoid = geoIds[index];
+            // const formattedCollection = createFeatureCollection(geojson);
 
-                    return geoJson;
-                })
-            };
-
-            return await analyzePlots(polygonCollection);
+            return await analyzePlots(featureCollection);
 
         } catch (error: any) {
             return NextResponse.json({ error: "There was system error. Please try again later." }, { status: 500 })
