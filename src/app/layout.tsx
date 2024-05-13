@@ -22,8 +22,8 @@ export default function RootLayout({
         <div className="flex flex-col h-screen">
           <Navbar/>
           {children}
-          <Footer/>
         </div>
+        <Footer/>
       </body>
     </html>
   )

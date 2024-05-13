@@ -1,5 +1,4 @@
-import { FeatureCollection, Feature, Polygon } from 'geojson';
-import { Prop } from 'types-ramda';
+import { FeatureCollection, Feature, Polygon, MultiPolygon } from 'geojson';
 
 interface Properties {
     geoid: string;

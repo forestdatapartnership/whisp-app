@@ -1,9 +1,10 @@
-import { parse } from 'terraformer-wkt-parser';
+import * as wellknown from 'wellknown';
 
 export function isValidWkt(inputString: string): boolean {
     try {
         // Attempt to parse the WKT string
-        const geometry = parse(inputString);
+        wellknown.parse(inputString);
+        // const geometry = parse(inputString);
         // If parsing is successful, return true
         return true;
     } catch (error) {

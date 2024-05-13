@@ -3,10 +3,9 @@ import path from "path";
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import { analyze } from "@/utils/runPython";
-import { PolygonCollection, PolygonFeature } from "@/types/geojson";
 
-export const analyzePlots = async (payload: PolygonCollection | PolygonFeature) => {
-    
+export const analyzePlots = async (payload: any) => {
+
     const token = uuidv4();
     const filePath = path.join(process.cwd(), 'temp');
 
