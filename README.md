@@ -1,10 +1,13 @@
 # Whisp: Geospatial Analysis Tool for Zero-Deforestation Claims
 
+[![license](https://img.shields.io/github/license/forestdatapartnership/whisp-app?color=yellow)](LICENSE)
+
+
 ## Overview
 
 Whisp is a powerful tool designed to support environmental conservation efforts by providing robust geospatial analysis. By ingesting geoids and geometries in either WKT (Well-Known Text) or GeoJSON formats, Whisp facilitates the creation of comprehensive supporting documentation necessary for claims under zero-deforestation regulatory mechanisms. This documentation can play a crucial role in validating efforts towards sustainability and compliance with environmental standards.
 
-Currently the application can be [here](https://whisp-app-vdfqchwaca-uc.a.run.app). 
+Currently the application can be [here](https://whisp-app-vdfqchwaca-uc.a.run.app).
 
 ## Features
 
@@ -52,10 +55,10 @@ Currently the application can be [here](https://whisp-app-vdfqchwaca-uc.a.run.ap
 ### Analyze GeoJson
 - **Method:** POST
 - **URL:** `/geojson`
-- **Summary:** Send geojson according to standard RFC 7946, with a FeatureCollection or a single Feature with a polygon as its geometry, comes back with JSON table containing data for each individual polygon detected 
+- **Summary:** Send geojson according to standard RFC 7946, with a FeatureCollection or a single Feature with a polygon as its geometry, comes back with JSON table containing data for each individual polygon detected
 - **Description:** Accepts an array of Geo IDs and returns analysis results
 - **Request Body:**
-  ```json 
+  ```json
   {
     "type": "FeatureCollection",
     "features": [
@@ -129,10 +132,6 @@ To get started with Whisp, ensure you have [Node.js](https://nodejs.org) install
 ## Contributing
 
 Contributions are welcome! If you'd like to contribute, please fork the repository and create a pull request with your changes. For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
 
 ---
 
