@@ -4,7 +4,7 @@
 
 Whisp is a powerful tool designed to support environmental conservation efforts by providing robust geospatial analysis. By ingesting geoids and geometries in either WKT (Well-Known Text) or GeoJSON formats, Whisp facilitates the creation of comprehensive supporting documentation necessary for claims under zero-deforestation regulatory mechanisms. This documentation can play a crucial role in validating efforts towards sustainability and compliance with environmental standards.
 
-THe application is currently exposed [here](https://whisp-app-vdfqchwaca-uc.a.run.app). 
+The application is currently exposed [here](https://whisp-app-vdfqchwaca-uc.a.run.app). 
 
 ## Features
 
