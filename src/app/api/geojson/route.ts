@@ -9,11 +9,11 @@ export async function POST(request: NextRequest) {
 
         if (!body) throw new Error("Required request body is missing");
 
-        const errors = validateGeoJSON(JSON.stringify(body));   
+        // const errors = validateGeoJSON(JSON.stringify(body));   
 
-        if (errors.length > 0) {
-            return NextResponse.json({ error: JSON.stringify(errors) }, { status: 400 })
-        }
+        // if (errors.length > 0) {
+        //     return NextResponse.json({ error: JSON.stringify(errors) }, { status: 400 })
+        // }
                 
         try {
             let featureCollection = createFeatureCollection(body);

@@ -44,21 +44,36 @@ export async function addGeoId(geojson: any): Promise<any> {
 
 
 function extractFeatures(geometry: GeometryObject | any, features: any[]): void {
-    if (geometry.type === 'Polygon' || geometry.type === 'Point') {
+    if (geometry.type === 'Polygon') {
         features.push({
             type: 'Feature',
             properties: {},
-            geometry: geometry
+            geometry: {
+                type: 'Polygon',
+                coordinates: geometry.coordinates.map((ring: number[][]) =>
+                    ring.map((coord: number[]) => coord.slice(0, 2))
+                )
+            }
+        });
+    } else if (geometry.type === 'Point') {
+        features.push({
+            type: 'Feature',
+            properties: {},
+            geometry: {
+                type: 'Point',
+                coordinates: geometry.coordinates.slice(0, 2)
+            }
         });
     } else if (geometry.type === 'MultiPolygon') {
-        // Process each polygon in the MultiPolygon
         geometry.coordinates.forEach((polygon: number[][][]) => {
             features.push({
                 type: 'Feature',
                 properties: {},
                 geometry: {
                     type: 'Polygon',
-                    coordinates: polygon
+                    coordinates: polygon.map((ring: number[][]) =>
+                        ring.map((coord: number[]) => coord.slice(0, 2))
+                    )
                 }
             });
         });
@@ -74,7 +89,6 @@ function extractFeatures(geometry: GeometryObject | any, features: any[]): void 
         });
     }
 }
-
 
 export function createFeatureCollection(geojson: any): FeatureCollection<Geometry, GeoJsonProperties> {
     let features: Feature[] = [];
