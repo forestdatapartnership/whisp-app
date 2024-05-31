@@ -124,7 +124,7 @@ const GeoIdInput: React.FC = () => {
                         width={20}
                         height={20}
                     />
-                    Sample
+                    Example
                 </button>
                 <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
             </div>

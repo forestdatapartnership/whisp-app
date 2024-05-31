@@ -11,7 +11,7 @@ export default function InputLayout({ children }: { children: React.ReactNode })
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
-    <div className="h-screen mx-5 flex flex-col md:flex-row">
+    <div className="h-full mx-5 flex flex-col md:flex-row">
       {/* Mobile Menu Icon */}
       <div className="md:hidden p-4">
         <button onClick={toggleSidebar}>
@@ -23,7 +23,6 @@ export default function InputLayout({ children }: { children: React.ReactNode })
           />
         </button>
       </div>
-
       {/* Sidebar: hidden on mobile until toggled. Use `display: none;` for fully hiding it off-screen */}
       <div className={`transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${!isSidebarOpen && 'hidden md:block'} px-5 bg-gray-800 md:translate-x-0 transition-transform duration-300 ease-in-out md:flex md:ml-10 md:w-1/6`}>
         <Sidebar />

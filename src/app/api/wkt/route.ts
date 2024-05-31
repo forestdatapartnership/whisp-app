@@ -3,34 +3,36 @@ import { getJsonfromGeoId, registerWkt } from "@/utils/assetRegistry";
 import { analyzePlots } from "@/utils/analizePlots";
 import { isValidWkt } from "@/utils/validateWkt";
 import { PolygonFeature } from "@/types/geojson";
+import * as wellknown from 'wellknown';
+import { addPropertyToFeatures, createFeatureCollection, validateGeoJSON } from "@/utils/geojsonUtils";
+import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 
-const getPlotFromWkt = async (wkt: string) => {
-    const data = await registerWkt(wkt);
+const getFeaturesFromWkt = async (wkt: string, generateGeoids: boolean) => {
 
-    const { 'Geo Id': agStackGeoId, 'matched geo ids': agStackGeoIds } = data;
+    if (generateGeoids) {
+        const data = await registerWkt(wkt);
+        const { 'Geo Id': agStackGeoId, 'matched geo ids': agStackGeoIds } = data;
 
-    if (agStackGeoId || (Array.isArray(agStackGeoIds) && agStackGeoIds.length > 0)) {
-        const geoId = agStackGeoId ?? agStackGeoIds[0];
+        if (agStackGeoId || (Array.isArray(agStackGeoIds) && agStackGeoIds.length > 0)) {
+            const geoId = agStackGeoId ?? agStackGeoIds[0];
+    
+            const geojson = wellknown.parse(wkt);
 
-        // Assuming getJsonfromGeoId returns a GeoJSON feature
-        const feature = await getJsonfromGeoId(geoId);
+            const featureCollection = createFeatureCollection(geojson);
 
-        // Ensure feature is a valid GeoJSON object before modifying it
-        if (feature && feature.type === 'Feature') {
-            // Include geoId in the properties of the GeoJSON feature
-            if (!feature.properties) {
-                feature.properties = {};
-            }
-            feature.properties.geoid = geoId;
+            const featureCollectionWithGeoId = addPropertyToFeatures(featureCollection, "geoid", geoId);
+            return featureCollectionWithGeoId;
 
-            return feature; // This is now a GeoJSON feature with geoId included in properties
         } else {
-            console.error("The returned object from getJsonfromGeoId is not a valid GeoJSON feature.");
+            console.log("No Geo ID found for the given WKT.");
             return null;
         }
     } else {
-        console.log("No Geo ID found for the given WKT.");
-        return null;
+        const geojson = wellknown.parse(wkt);
+
+        const featureCollection = createFeatureCollection(geojson);
+
+        return featureCollection
     }
 };
 
@@ -38,21 +40,23 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
-        if (!body) throw new Error("Required request body is missing")
+        if (!body) throw new Error("Required request body is missing");
 
-        const { wkt } = body
+        const generateGeoids = body.generateGeoids || false;
+        const { wkt } = body;
 
-        if (!wkt) throw new Error("Missing attribute 'wkt'")
+        if (!wkt) throw new Error("Missing attribute 'wkt'");
 
         const isValidWKT = isValidWkt(wkt);
 
         if (isValidWKT) {
-            const feature: PolygonFeature = await getPlotFromWkt(wkt);
-            return await analyzePlots(feature);
+            let featureCollection = await getFeaturesFromWkt(wkt, generateGeoids) as object;
+            featureCollection = {...featureCollection, generateGeoids};
+            return await analyzePlots(featureCollection); 
         }
 
     } catch (error: any) {
-        console.log(error.message)
-        return NextResponse.json({ error: "Error in analysis. Please try again later." }, { status: 500 })
+        console.error(error.message);
+        return new NextResponse(JSON.stringify({ error: "Error in analysis. Please check your input." }), { status: 500 });
     }
 }

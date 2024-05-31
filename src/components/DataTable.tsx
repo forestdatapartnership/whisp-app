@@ -12,7 +12,6 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
   const columnMappings: { [key: string]: string } = {
     
     PLOTID: 'Plot Id',
-    geoid: 'Geo Id',
     gaul0: 'Country',
     gaul1: 'State/Province',
     gaul2: 'County/District',
@@ -29,6 +28,7 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
     cocoaK: 'Cocoa Kalischek',
     jrcPlant: 'JRC TMF Plantations',
     jrcUndis: 'JRC TMF Undisturbed',
+    geoid: 'Geo Id',
   };
 
   const columns = Object.keys(columnMappings);

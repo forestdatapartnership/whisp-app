@@ -1,3 +1,5 @@
+import { geojsonToWKT } from "@terraformer/wkt";
+
 /**
  * Registers a field boundary with the asset registry service by sending a WKT (Well-Known Text) representation of the geometry.
  * The function posts the WKT string to the asset registry service endpoint and returns the response.
@@ -14,8 +16,6 @@ export const registerWkt = async (wkt: string): Promise<any> => {
     if (!url || !apiKey || !clientSecret) {
       throw new Error("Missing required environment variables.");
     }
-
-    const body = JSON.stringify({ wkt });
 
     const response = await fetch(url, {
       method: 'POST',
@@ -34,7 +34,10 @@ export const registerWkt = async (wkt: string): Promise<any> => {
 
     const data = await response.json();
 
+    const ok = await response.ok;
+
     return data;
+    
   } catch (error) {
     console.error(error);
     throw new Error("There was an error registering the WKT.");
@@ -72,5 +75,22 @@ export const getJsonfromGeoId = async (geoId: string): Promise<any> => {
   } catch (error: any) {
     console.error(error);
     throw new Error("There was an error getting the Json from Geo Id.");
+  }
+}
+
+export const getGeoid = async (geoJson: any) => {
+  try {
+      const wkt = geojsonToWKT(geoJson);
+      const data = await registerWkt(wkt);
+      const { 'Geo Id': agStackGeoId, 'matched geo ids': agStackGeoIds } = data;
+
+      if (agStackGeoId || (Array.isArray(agStackGeoIds) && agStackGeoIds.length > 0)) {
+          return agStackGeoId ?? agStackGeoIds[0];
+      } else {
+          return null;
+      }
+  } catch (error) {
+      console.log(error);
+      throw error;
   }
 }
