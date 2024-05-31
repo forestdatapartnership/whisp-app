@@ -119,7 +119,7 @@ const Results: React.FC = () => {
                         </span>
                     </h1>
                     <div className="flex flex-wrap justify-center my-4 gap-2">
-                        <div className="w-full sm:w-52">
+                        {/* <div className="w-full sm:w-52">
                             <button
                                 onClick={() => createCeoProject(token)}
                                 className={`w-full text-white font-bold py-1 px-2 text-sm rounded ${isCeoDisabled ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-700'}`}
@@ -145,7 +145,7 @@ const Results: React.FC = () => {
                                 role="button">
                                 Download Collect Earth File
                             </a>
-                        </div>
+                        </div> */}
                         <div className="w-full sm:w-52">
                             <a
                                 href={isCsvDisabled ? '#' : csvUrl}
