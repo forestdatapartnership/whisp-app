@@ -63,7 +63,6 @@ if __name__ == "__main__":
                         properties['geoid'] = feature['properties']['geoid']
                     ee_feature = ee.Feature(ee.Geometry.Polygon(feature['geometry']['coordinates']), properties)
                     properties = {}
-                    print(feature)
                     if generate_geo_ids:
                         properties['geoid'] = feature['properties']['geoid']
                     ee_feature = ee.Feature(ee.Geometry.Polygon(feature['geometry']['coordinates']), properties)
@@ -74,78 +73,7 @@ if __name__ == "__main__":
             print("FeatureCollection created.")
         else:
             print("No geometries loaded. Exiting.")
-
-# def get_stats_for_multiple_geoms(feature_collection):
-#     stats_list = feature_collection.map(lambda feature: ee.Feature(None, {
-#         "geoid": feature.get("geoid"),
-#         "stats": get_stats(feature.geometry()),
-#         "geometry": feature.geometry(),
-#         # "location": get_gaul_info(feature.geometry())
-#     }))
-#     return stats_list
-
-# def prepare_data_for_dataframe(feature_collection):
-    
-    
-
-#     stats_list_info = feature_collection.getInfo()['features']
-    
-#     # data = []
-#     # for feature_info in stats_list_info:
-#     #     properties = feature_info['properties']
-        
-#     #     # geometry = properties['geometry']
-#     #     # centroid = ee.Geometry.Polygon(geometry['coordinates']).centroid().coordinates().getInfo()
-
-#     #     stats_data = properties.get('stats', {}).get('data', {})
-
-#     #     row = {
-#     #         'geoid': properties['geoid'],
-#     #         'area': stats_data.get('Area_ha'),
-#     #         # 'YCoord': y_coordinate,
-#     #         # 'XCoord': x_coordinate,
-#     #         'gaul0': properties.get('location', {}).get('ADM0_NAME', "-9999"),  # gaul_adm0
-#     #         'gaul1': properties.get('location', {}).get('ADM1_NAME', "-9999"),  # gaul_adm1
-#     #         'gaul2': properties.get('location', {}).get('ADM2_NAME', "-9999"),  # gaul_adm2
-#     #         'esaTree': stats_data.get('esaTrees', -9999),  # esatrees
-#     #         'jaxaTree': stats_data.get('jaxaTrees', -9999),  # jaxatrees
-#     #         'jrc2020': stats_data.get('jrcGfc2020', -9999),  # jrcgfc2020
-#     #         'gfc2020': stats_data.get('gfcTrees2020', -9999),  # gfctrees2020
-#     #         'glad2020': stats_data.get('gladLandCoverTrees2020', -9999),  # gladlandcovertrees2020
-#     #         'phtf2020': stats_data.get('phtf2020', -9999),
-#     #         'wcmcpa': stats_data.get('wcmcWdpaProtection', -9999),  # wcmcwdpaprotection
-#     #         'raddAlrt': stats_data.get('raddAlerts', -9999),  # raddalerts
-#     #         'oilpalm': stats_data.get('oilpalm', -9999),
-#     #         'fdapPalm': stats_data.get('fdapPalm', -9999),  # fdappalm
-#     #         'cocoaK': stats_data.get('cocoaKalischek', -9999),  # cocoakalischek
-#     #         'jrcPlant': stats_data.get('jrcTmfPlantations', -9999),  # jrctmfplantations
-#     #         'jrcUndis': stats_data.get('jrcTmfUndisturbed', -9999),  # jrctmfundisturbed
-#     #         'geometry': json.dumps(properties.get('geometry', {}))  # Assuming geometry is correctly structured
-#     #     }
-
-#     #     data.append(row)
-    
-#     # # Create DataFrame from the prepared data
-#     # df = pd.DataFrame(data)
-    
-#     # # Function to convert a FeatureCollection to a list of dictionaries
-#     # def fc_to_list(feature_collection):
-#     #     def get_info(feature):
-#     #         return feature.getInfo()
-
-#     #     return feature_collection.map(get_info).getInfo()
-
-#     # # Convert FeatureCollection to a list of dictionaries
-#     # fc_list = fc_to_list(feature_collection)
-
-#     # Convert list of dictionaries to a Pandas DataFrame
-#     df = pd.DataFrame(fc_list)
-    
-#     df['PLOTID'] = range(1, len(df) + 1)
-#     cols = ['PLOTID'] + [col for col in df.columns if col != 'PLOTID']
-#     df = df[cols]
-#     return df
-
+            
 def prepare_data_for_dataframe(feature_collection):
     # Convert the FeatureCollection to a list of features
     fc_list = feature_collection.getInfo()['features']

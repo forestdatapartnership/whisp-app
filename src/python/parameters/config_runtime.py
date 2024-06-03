@@ -67,9 +67,13 @@ keep_system_index = True
 # do you keep other properties from input feature collection?
 keep_original_properties = False
 
+import os 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+print(dir_path)
 
 #lookup path - for dataset info
-path_lookup_gee_datasets_df = "lookup_gee_datasets.csv"
+path_lookup_gee_datasets_df = "public/lookup_gee_datasets.csv"
 
 lookup_gee_datasets_df = pd.read_csv(path_lookup_gee_datasets_df)
 
