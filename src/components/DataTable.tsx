@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface DataItem {
-  [key: string]: any; // Consider specifying a more detailed type if possible
+  [key: string]: any;
 }
 
 interface DataTableProps {
@@ -10,7 +10,6 @@ interface DataTableProps {
 
 const DataTable: React.FC<DataTableProps> = ({ data }) => {
   const columnMappings: { [key: string]: string } = {
-    
     PLOTID: 'Plot Id',
     gaul0: 'Country',
     gaul1: 'State/Province',
@@ -31,17 +30,18 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
     geoid: 'Geo Id',
   };
 
-  const columns = Object.keys(columnMappings);
-  
+  // Get the columns from the keys of the first item in the data array
+  const columns = data.length > 0 ? Object.keys(data[0]) : [];
+
   const truncateString = (str: string) => {
-    const limit = 20
+    const limit = 20;
     if (str.length > limit) {
       return str.slice(0, limit) + '…';
     } else {
       return str;
     }
   };
-  
+
   const formatValue = (column: string, value: any) => {
     if (typeof value === 'number') {
       return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
@@ -58,7 +58,7 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
           <tr>
             {columns.map((column, index) => (
               <th key={index} className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                {columnMappings[column]}
+                {columnMappings[column] || column}
               </th>
             ))}
           </tr>
