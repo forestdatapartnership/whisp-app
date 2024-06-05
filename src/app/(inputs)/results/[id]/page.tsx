@@ -18,6 +18,7 @@ const Results: React.FC = () => {
     const [ceoLink, setCeoLink] = useState<string>("");
     const [notFound, setNotFound] = useState<boolean>(false);
     const [geoIds, setGeoIds] = useState<string[]>([]);
+    const [tableData, setTableData] = useState<any[]>([]);
 
     const clearSuccessMessage = () => setSuccessMessage('');
 
@@ -47,6 +48,7 @@ const Results: React.FC = () => {
                 }
                 const fetchedData = await response.json();
                 const cleanedData = removeUnwantedProperties(fetchedData.data);
+                setTableData(cleanedData);
                 useStore.setState({ data: cleanedData });
             } catch (error: any) {
                 console.error(error);
