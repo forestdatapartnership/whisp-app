@@ -64,7 +64,19 @@ function extractFeatures(geometry: GeometryObject | any, features: any[]): void 
                 coordinates: geometry.coordinates.slice(0, 2)
             }
         });
-    } else if (geometry.type === 'MultiPolygon') {
+    } else if (geometry.type === 'MultiPoint') {
+        geometry.coordinates.forEach((point: number[]) => {
+            features.push({
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'Point',
+                    coordinates: point.slice(0, 2)
+                }
+            })
+        })
+    }
+    else if (geometry.type === 'MultiPolygon') {
         geometry.coordinates.forEach((polygon: number[][][]) => {
             features.push({
                 type: 'Feature',

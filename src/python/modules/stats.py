@@ -1,5 +1,4 @@
 import ee
-import functools
 from modules.datasets import combine_datasets
 from parameters.config_runtime import (
     percent_or_ha, plot_id_column, geometry_type_column, 

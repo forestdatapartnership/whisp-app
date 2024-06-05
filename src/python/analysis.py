@@ -4,7 +4,7 @@ import os
 import json
 import sys
 from modules.gee_initialize import initialize_ee
-from modules.tiday_tables import whisp_risk
+from modules.tidy_tables import whisp_risk
 
 initialize_ee()
 
@@ -45,16 +45,21 @@ if __name__ == "__main__":
                 sys.exit(1)
             out_fc_list = []
             for feature in features:
-                if 'geometry' in feature and 'type' in feature['geometry'] and feature['geometry']['type'] == 'Polygon':
-                    properties = {}
-                    if generate_geo_ids:
-                        properties['geoid'] = feature['properties']['geoid']
-                    ee_feature = ee.Feature(ee.Geometry.Polygon(feature['geometry']['coordinates']), properties)
-                    properties = {}
-                    if generate_geo_ids:
-                        properties['geoid'] = feature['properties']['geoid']
-                    ee_feature = ee.Feature(ee.Geometry.Polygon(feature['geometry']['coordinates']), properties)
-                    out_fc_list.append(ee_feature)
+                if 'geometry' in feature and 'type' in feature['geometry']:
+                    if feature['geometry']['type'] == 'Polygon':
+                        properties = {}
+                        if generate_geo_ids:
+                            properties['geoid'] = feature['properties']['geoid']
+                        ee_feature = ee.Feature(ee.Geometry.Polygon(feature['geometry']['coordinates']), properties)
+                        out_fc_list.append(ee_feature)
+                    elif feature['geometry']['type'] == 'Point':
+                        properties = {}
+                        if generate_geo_ids:
+                            properties['geoid'] = feature['properties']['geoid']
+                        ee_feature = ee.Feature(ee.Geometry.Point(feature['geometry']['coordinates']), properties)
+                        out_fc_list.append(ee_feature)
+                    else:
+                        print("Invalid geometry type in JSON.")
                 else:
                     print("Invalid geometry format in JSON.")
             feature_collection = ee.FeatureCollection(out_fc_list)
