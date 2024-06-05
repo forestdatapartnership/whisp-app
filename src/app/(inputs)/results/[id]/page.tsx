@@ -26,7 +26,7 @@ const Results: React.FC = () => {
 
     const { id } = useParams<{ id: string }>();
 
-    const csvUrl = `/api/download-csv/${token}`;
+    const csvUrl = `/api/download-csv/${token || id}`;
     const collectEarthUrl = `/api/generate-ce-project/${token}`;
 
     const removeUnwantedProperties = (data: any[]) => {
@@ -66,7 +66,6 @@ const Results: React.FC = () => {
             console.log(geoIds.some((geoId: any) => geoId === undefined))
         }
     }, [id, data]);
-
 
     const createCeoProject = async (token: string) => {
         try {
