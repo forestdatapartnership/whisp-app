@@ -4,13 +4,16 @@
 
 Whisp is a powerful tool designed to support environmental conservation efforts by providing robust geospatial analysis. By ingesting geoids and geometries in either WKT (Well-Known Text) or GeoJSON formats, Whisp facilitates the creation of comprehensive supporting documentation necessary for claims under zero-deforestation regulatory mechanisms. This documentation can play a crucial role in validating efforts towards sustainability and compliance with environmental standards.
 
-Currently the application can be [here](https://whisp-app-vdfqchwaca-uc.a.run.app). 
+Currently the application can be found [here](https://whisp.openforis.org/). 
 
 ## Features
 
 - **Data Ingestion:** Accepts geoids and geometries in WKT or GeoJSON formats.
 - **Geospatial Analysis:** Performs advanced analysis to support zero-deforestation claims.
 - **User-Friendly Interface:** Built with Next.js 14, offering a seamless and intuitive user experience.
+- **Unique token for analysis:** Each analysis is assigned a UUID that will serve to identify it as a unique document. You may share the analysis by providing the UUID within the url route: `/results/{UUID}`
+- **Optional Geo Id:** The platform allows to include the Geo Id as provided by the  [AgStack](https://agstack.org/) inititative. The selection is made by adding the `generateGeoids` flag, which will default to false if not included.
+
 
 ## Endpoints
 
@@ -31,7 +34,6 @@ Currently the application can be [here](https://whisp-app-vdfqchwaca-uc.a.run.ap
     "data": {"object"},
     "token": "string"
   }
-
 ### Analyze WKT
 - **Method:** POST
 - **URL:** `/wkt`
@@ -40,7 +42,8 @@ Currently the application can be [here](https://whisp-app-vdfqchwaca-uc.a.run.ap
 - **Request Body:**
   ```json
   {
-    "wkt": "string"
+    "wkt": "string",
+    "generateGeoids": "boolean"
   }
 - **Responses:**
   ```json
@@ -70,16 +73,15 @@ Currently the application can be [here](https://whisp-app-vdfqchwaca-uc.a.run.ap
           ]
         }
       }
-    ]
+    ],
+    "generateGeoids": "boolean"
   }
 - **Responses:**
   ```json
   {
-    "data": {"objec:t"},
+    "data": {"object"},
     "token": "string"
   }
-
-
 ## Getting Started
 
 To get started with Whisp, ensure you have [Node.js](https://nodejs.org) installed on your system. We assume you are a registered user in [Asset Registry](https://asset-registry.agstack.org) and [Collect Earth Online](https://app.collect.earth/). Then, follow these steps:
@@ -136,4 +138,4 @@ Contributions are welcome! If you'd like to contribute, please fork the reposito
 
 ---
 
-Built with ❤️ for the environment.
+Built with ❤️ for forests and biodiversity.

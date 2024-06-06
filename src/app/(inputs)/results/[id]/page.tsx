@@ -17,6 +17,8 @@ const Results: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState<string>("");
     const [ceoLink, setCeoLink] = useState<string>("");
     const [notFound, setNotFound] = useState<boolean>(false);
+    const [geoIds, setGeoIds] = useState<string[]>([]);
+    const [tableData, setTableData] = useState<any[]>([]);
 
     const clearSuccessMessage = () => setSuccessMessage('');
 
@@ -24,8 +26,15 @@ const Results: React.FC = () => {
 
     const { id } = useParams<{ id: string }>();
 
-    const csvUrl = `/api/download-csv/${token}`;
+    const csvUrl = `/api/download-csv/${token || id}`;
     const collectEarthUrl = `/api/generate-ce-project/${token}`;
+
+    const removeUnwantedProperties = (data: any[]) => {
+        return data.map(item => {
+            const { geometry, Centroid_lat, Centroid_lon, ...rest } = item;
+            return rest;
+        });
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -38,7 +47,9 @@ const Results: React.FC = () => {
                     throw new Error('Failed to fetch report');
                 }
                 const fetchedData = await response.json();
-                useStore.setState({ data: fetchedData.data });
+                const cleanedData = removeUnwantedProperties(fetchedData.data);
+                setTableData(cleanedData);
+                useStore.setState({ data: cleanedData });
             } catch (error: any) {
                 console.error(error);
                 useStore.setState({ error: error.message });
@@ -50,9 +61,11 @@ const Results: React.FC = () => {
         if (!data || data.length === 0) {
             fetchData();
             setIsLoading(false);
+        } else {
+            setGeoIds(data.map((item: any) => item.geoid));
+            console.log(geoIds.some((geoId: any) => geoId === undefined))
         }
     }, [id, data]);
-
 
     const createCeoProject = async (token: string) => {
         try {
@@ -89,12 +102,18 @@ const Results: React.FC = () => {
     }
 
     const generateEarthMap = () => {
-
         if (data.length > 0) {
-            const geoids = data.map((item: any) => item.geoid).join(',');
-            // Construct the URL with these IDs
-            const url = `https://whisp.earthmap.org/?geoIds=${geoids}&embed`
-            window.open(url, '_blank');
+            if (geoIds.length === 0) {
+                const downloadUrl = `${process.env.WHISP_URL}/api/generate-geojson/${id}`
+                const url = `https://whisp.earthmap.org/?fetchJson="${downloadUrl}"`
+                window.open(url, '_blank');
+            } else {
+
+                const geoidsString = geoIds.join(',');
+
+                const url = `https://whisp.earthmap.org/?geoIds=${geoidsString}&embed`
+                window.open(url, '_blank');
+            }
         }
     }
 
@@ -119,24 +138,26 @@ const Results: React.FC = () => {
                         </span>
                     </h1>
                     <div className="flex flex-wrap justify-center my-4 gap-2">
-                        <div className="w-full sm:w-52">
+                        {/* <div className="w-full sm:w-52">
                             <button
                                 onClick={() => createCeoProject(token)}
                                 className={`w-full text-white font-bold py-1 px-2 text-sm rounded ${isCeoDisabled ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-700'}`}
                                 disabled={isCeoDisabled}>
                                 Create CEO Project
                             </button>
-                        </div>
-                        <div className="w-full sm:w-52">
-                            <button
-                                onClick={() => generateEarthMap()}
-                                className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
-                                disabled={data.length === 0 ? true : false}
-                            >
-                                View in Whisp Map
-                            </button>
-                        </div>
-                        <div className="w-full sm:w-52">
+                        </div>*/}
+                        {!geoIds.some((geoId: any) => geoId === undefined) ? (
+                            <div className="w-full sm:w-52">
+                                <button
+                                    onClick={() => generateEarthMap()}
+                                    className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
+                                    disabled={data.length === 0 ? true : false}
+                                >
+                                    View in Whisp Map
+                                </button>
+                            </div>
+                        ) : null}
+                        {/*<div className="w-full sm:w-52">
                             <a
                                 href={isCeDisabled ? '#' : collectEarthUrl}
                                 download={!isCsvDisabled}
@@ -145,7 +166,7 @@ const Results: React.FC = () => {
                                 role="button">
                                 Download Collect Earth File
                             </a>
-                        </div>
+                        </div> */}
                         <div className="w-full sm:w-52">
                             <a
                                 href={isCsvDisabled ? '#' : csvUrl}

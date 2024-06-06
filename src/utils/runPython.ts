@@ -26,7 +26,7 @@ export const analyze = async (token: string): Promise<boolean> => {
         }
 
         const command = `${process.env.PYTHON_PATH} src/python/analysis.py "temp/${token}.json"`;
-
+        console.log(command)
         exec(command, (error, stdout, stderr) => {
             console.log(`Stdout: ${stdout}`);
             if (error) {
@@ -36,7 +36,6 @@ export const analyze = async (token: string): Promise<boolean> => {
             }
             if (stderr) {
                 console.error(`Stderr: ${stderr}`);
-                throw new Error("There was an error in the analysis, try again later.");
             }
             resolve(true);
         });
