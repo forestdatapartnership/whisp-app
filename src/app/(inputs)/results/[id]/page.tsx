@@ -103,8 +103,8 @@ const Results: React.FC = () => {
 
     const generateEarthMap = () => {
         if (data.length > 0) {
-            if (geoIds.length === 0) {
-                const downloadUrl = `${process.env.WHISP_URL}/api/generate-geojson/${id}`
+            if (geoIds.some((geoId: any) => geoId === undefined)) {
+                const downloadUrl = `${process.env.NEXT_PUBLIC_WHISP_URL}/api/generate-geojson/${id}`
                 const url = `https://whisp.earthmap.org/?fetchJson="${downloadUrl}"`
                 window.open(url, '_blank');
             } else {
@@ -146,17 +146,15 @@ const Results: React.FC = () => {
                                 Create CEO Project
                             </button>
                         </div>*/}
-                        {!geoIds.some((geoId: any) => geoId === undefined) ? (
-                            <div className="w-full sm:w-52">
-                                <button
-                                    onClick={() => generateEarthMap()}
-                                    className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
-                                    disabled={data.length === 0 ? true : false}
-                                >
-                                    View in Whisp Map
-                                </button>
-                            </div>
-                        ) : null}
+                        <div className="w-full sm:w-52">
+                            <button
+                                onClick={() => generateEarthMap()}
+                                className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
+                                disabled={data.length === 0 ? true : false}
+                            >
+                                View in Whisp Map
+                            </button>
+                        </div>
                         {/*<div className="w-full sm:w-52">
                             <a
                                 href={isCeDisabled ? '#' : collectEarthUrl}
