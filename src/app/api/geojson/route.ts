@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
                 featureCollection = await addGeoId(featureCollection);
             }
 
-            const newFeatureCollection = {...featureCollection, generateGeoids};
+            featureCollection = {...featureCollection, generateGeoids};
 
-            return await analyzePlots(newFeatureCollection);
+            return await analyzePlots(featureCollection);
 
         } catch (error: any) {
             console.log(error);

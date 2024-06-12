@@ -40,7 +40,7 @@ export const registerWkt = async (wkt: string): Promise<any> => {
     
   } catch (error) {
     console.error(error);
-    throw new Error("There was an error registering the WKT.");
+    // throw new Error("There was an error registering the WKT.");
   }
 }
 
@@ -74,7 +74,7 @@ export const getJsonfromGeoId = async (geoId: string): Promise<any> => {
     }
   } catch (error: any) {
     console.error(error);
-    throw new Error("There was an error getting the Json from Geo Id.");
+    // throw new Error("There was an error getting the Json from Geo Id.");
   }
 }
 
@@ -91,6 +91,6 @@ export const getGeoid = async (geoJson: any) => {
       }
   } catch (error) {
       console.log(error);
-      throw error;
+      // throw error;
   }
 }

@@ -7,12 +7,12 @@ async function addGeoIdFeature(feature: Feature): Promise<any | null> {
     const geoid = await getGeoid(feature.geometry)
 
     if (!geoid) {
-        throw new Error('Error obtaining geoid. There may be a problem with your input.');
+        console.error('Error obtaining geoid. There may be a problem with your input.');
     }
 
     return {
         type: 'Feature',
-        properties: { ...feature.properties, ...(geoid ? { geoid } : {}) },
+        properties: { ...feature.properties, ...{ geoid } },
         geometry: feature.geometry
     };
 }
@@ -27,7 +27,7 @@ export const validateGeoJSON = (geojson: string) => {
 export async function addGeoId(geojson: any): Promise<any> {
     switch (geojson.type) {
         case 'FeatureCollection':
-            if (geojson.features.length > 100) {
+            if (geojson.features.length > 200) {
                 throw new Error("The are more than 100 features in this collection. Please do not exceed more than 100 individual features.");
             }
             const featuresWithGeoId = await Promise.all(geojson.features.map((feature: any) => addGeoIdFeature(feature)));
@@ -102,7 +102,8 @@ function extractFeatures(geometry: GeometryObject | any, features: any[]): void 
     }
 }
 
-export function createFeatureCollection(geojson: any): FeatureCollection<Geometry, GeoJsonProperties> {
+// export function createFeatureCollection(geojson: any): FeatureCollection<Geometry, GeoJsonProperties> {
+export function createFeatureCollection(geojson: any): any {
     let features: Feature[] = [];
     extractFeatures(geojson, features);
     return {

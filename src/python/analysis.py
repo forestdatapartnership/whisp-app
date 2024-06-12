@@ -46,20 +46,23 @@ if __name__ == "__main__":
             out_fc_list = []
             for feature in features:
                 if 'geometry' in feature and 'type' in feature['geometry']:
-                    if feature['geometry']['type'] == 'Polygon':
-                        properties = {}
-                        if generate_geo_ids:
-                            properties['geoid'] = feature['properties']['geoid']
+                    geometry_type = feature['geometry']['type']
+                    properties = {}
+
+                    if 'geoid' in feature['properties']:
+                        properties['geoid'] = feature['properties']['geoid']
+                    else:
+                        properties['geoid'] = 'na'
+
+                    if geometry_type == 'Polygon':
                         ee_feature = ee.Feature(ee.Geometry.Polygon(feature['geometry']['coordinates']), properties)
-                        out_fc_list.append(ee_feature)
-                    elif feature['geometry']['type'] == 'Point':
-                        properties = {}
-                        if generate_geo_ids:
-                            properties['geoid'] = feature['properties']['geoid']
+                    elif geometry_type == 'Point':
                         ee_feature = ee.Feature(ee.Geometry.Point(feature['geometry']['coordinates']), properties)
-                        out_fc_list.append(ee_feature)
                     else:
                         print("Invalid geometry type in JSON.")
+                        continue
+
+                    out_fc_list.append(ee_feature)
                 else:
                     print("Invalid geometry format in JSON.")
             feature_collection = ee.FeatureCollection(out_fc_list)
