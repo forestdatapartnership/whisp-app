@@ -49,7 +49,6 @@ const Results: React.FC = () => {
                 const fetchedData = await response.json();
                 const cleanedData = removeUnwantedProperties(fetchedData.data);
                 setTableData(cleanedData);
-                useStore.setState({ data: cleanedData });
             } catch (error: any) {
                 console.error(error);
                 useStore.setState({ error: error.message });
@@ -62,8 +61,10 @@ const Results: React.FC = () => {
             fetchData();
             setIsLoading(false);
         } else {
+            const cleanedData = removeUnwantedProperties(data);
+            setTableData(cleanedData);
+
             setGeoIds(data.map((item: any) => item.geoid));
-            console.log(geoIds.some((geoId: any) => geoId === undefined))
         }
     }, [id, data]);
 
@@ -176,7 +177,7 @@ const Results: React.FC = () => {
                     </div>
                     {error && <ErrorAlert />}
                     {successMessage && <SuccessAlert successMessage={successMessage} clearSuccessMessage={clearSuccessMessage} />}
-                    <DataTable data={data} />
+                    <DataTable data={tableData} />
                 </>
             )}
         </div>

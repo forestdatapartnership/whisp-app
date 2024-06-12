@@ -49,10 +49,11 @@ if __name__ == "__main__":
                     geometry_type = feature['geometry']['type']
                     properties = {}
 
-                    if 'geoid' in feature['properties']:
-                        properties['geoid'] = feature['properties']['geoid']
-                    else:
-                        properties['geoid'] = 'na'
+                    if generate_geo_ids:
+                        if 'geoid' in feature['properties']:
+                            properties['geoid'] = feature['properties']['geoid']
+                        else:
+                            properties['geoid'] = 'na'
 
                     if geometry_type == 'Polygon':
                         ee_feature = ee.Feature(ee.Geometry.Polygon(feature['geometry']['coordinates']), properties)
