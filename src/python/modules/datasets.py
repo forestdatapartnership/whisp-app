@@ -345,26 +345,24 @@ def wcmc_wdpa_protection_prep():
     return wdpa_binary.rename("WDPA")
 
 # KBA
-# def birdlife_kbas_biodiversity_prep():
+def birdlife_kbas_biodiversity_prep():
     
-#     ##uploaded data - Non-commercial. For queries with limited numbers of sites. Exact number to be confirmed. 
-#     kbas_2023_poly = ee.FeatureCollection("projects/ee-andyarnellgee/assets/p0004_commodity_mapper_support/raw/KBAsGlobal_2023_March_01_POL");
+    ##uploaded data - Non-commercial. For queries with limited numbers of sites. Exact number to be confirmed. 
+    kbas_2023_poly = ee.FeatureCollection("projects/ee-andyarnellgee/assets/p0004_commodity_mapper_support/raw/KBAsGlobal_2023_March_01_POL");
 
-#     kba_2023_binary = ee.Image().paint(kbas_2023_poly,1)
+    kba_2023_binary = ee.Image().paint(kbas_2023_poly,1)
     
-#     return kba_2023_binary.rename('KBA')
-
-
-
+    return kba_2023_binary.rename('KBA')
 
 def try_access(asset_prep_func):
     try:
-        return asset_prep_func()
-    except Exception as e:
+        img = asset_prep_func()
+        if img is None:
+            return None
+        return img
+    except (ee.EEException, Exception) as e:
         print(f"Error accessing asset: {e}")
         return None
-
-# Now, wrap each datasetfunction in try_access
 
 def combine_datasets():
     "Combines datasets into a single multiband image" 
@@ -383,7 +381,7 @@ def combine_datasets():
     img_combined = img_combined.addBands(try_access(jrc_tmf_transition_prep))
     img_combined = img_combined.addBands(try_access(eth_kalischek_cocoa_prep))
     img_combined = img_combined.addBands(try_access(wcmc_wdpa_protection_prep))
-    # img_combined = img_combined.addBands(try_access(birdlife_kbas_biodiversity_prep))
+    img_combined = img_combined.addBands(try_access(birdlife_kbas_biodiversity_prep))
     img_combined = img_combined.addBands(try_access(esa_worldcover_trees_prep))
     img_combined = img_combined.addBands(try_access(civ_ocs2020_prep)) 
     img_combined = img_combined.addBands(try_access(tmf_loss_per_year_prep)) # multi year
