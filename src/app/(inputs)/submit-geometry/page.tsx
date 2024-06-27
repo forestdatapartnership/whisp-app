@@ -76,7 +76,7 @@ const SubmitGeometry: React.FC = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ wkt: wkt, generateGeoids: generateGeoids}),
+                    body: JSON.stringify({ wkt: wkt, generateGeoids: generateGeoids }),
                 });
 
                 data = await response.json();
@@ -122,7 +122,7 @@ const SubmitGeometry: React.FC = () => {
         console.log('Downloading sample document...');
 
         const element = document.createElement('a');
-        
+
         element.setAttribute('href', '/civ_plot.json');
 
         element.setAttribute('download', 'civ_plot.json');
