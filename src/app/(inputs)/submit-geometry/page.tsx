@@ -2,11 +2,11 @@
 import React, { useState } from 'react';
 import ErrorAlert from '@/components/ErrorBar';
 import { useStore } from '@/store';
-import { useRouter } from 'next/navigation';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
 import { isValidWkt } from '@/utils/validateWkt';
 import Image from 'next/image';
+import { useSafeRouterPush } from '@/utils/safePush';
 
 const SubmitGeometry: React.FC = () => {
     const [wkt, setWkt] = useState<string>('');
@@ -17,7 +17,7 @@ const SubmitGeometry: React.FC = () => {
     const [type, setType] = useState<string>('');
     const [generateGeoids, setGenerateGeoids] = useState<boolean>(false);
 
-    const router = useRouter();
+    const safePush = useSafeRouterPush();
 
     const resetStore = useStore((state) => state.reset);
 
@@ -109,7 +109,7 @@ const SubmitGeometry: React.FC = () => {
             if (data) {
                 resetStore();
                 useStore.setState({ token: data.token, data: data.data, error: "" });
-                router.push(`/results/${data.token}`);
+                safePush(`/results/${data.token}`);
             }
 
         } catch (error: any) {

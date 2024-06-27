@@ -1,11 +1,11 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useStore } from '@/store';
 import ErrorAlert from '@/components/ErrorBar';
 import { Tabs } from '@/components/Tabs';
 import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
+import { useSafeRouterPush } from '@/utils/safePush';
 
 const GeoIdInput: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -17,7 +17,7 @@ const GeoIdInput: React.FC = () => {
         useStore.setState({ geoIds: newGeoIds });
     };
 
-    const router = useRouter();
+    const safePush = useSafeRouterPush();
 
     useEffect(() => {
         const hasGeoIds = geoIds?.some(geoId => geoId.trim() !== '');
@@ -58,7 +58,7 @@ const GeoIdInput: React.FC = () => {
 
                     if (data) {
                         useStore.setState({ token: data.token, data: data.data, shpBase64: data.plotFileBase64, selectedFile: "" });
-                        router.push(`/results/${data.token}`);
+                        safePush(`/results/${data.token}`);
                     }
                 } catch (error: any) {
                     useStore.setState({ error: error.message });
