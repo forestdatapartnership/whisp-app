@@ -23,13 +23,13 @@ export async function POST(request: NextRequest) {
             }
             const geoJsonArray = await Promise.all(geoIds.map(async (geoid: string) => {
                 const geoJsonFeature = await getJsonfromGeoId(geoid);
-                const geoJsonGeoId = { ...geoJsonFeature, properties: { geoid } }; // Corrected variable name
-                return geoJsonGeoId; // Make sure to return the modified object
+                if (geoJsonFeature) {
+                    const geoJsonGeoId = { ...geoJsonFeature, properties: { geoid } }; 
+                    return geoJsonGeoId;
+                }
             }));
 
-            const noIssues = geoJsonArray.some((geoJson) => geoJson !== undefined);
-
-            if (!noIssues) {
+            if (!geoJsonArray || geoJsonArray.length === 0) {
                 const error = "One or more of the values submitted is not valid."
                 return NextResponse.json({ error: error }, { status: 400 })
             }

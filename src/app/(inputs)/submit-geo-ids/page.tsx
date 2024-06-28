@@ -77,7 +77,6 @@ const GeoIdInput: React.FC = () => {
     const downloadSampleDocument = () => {
         console.log('Downloading sample document...');
         
-        // Create a new anchor element
         const element = document.createElement('a');
         
         // Set the href to the path of the file you want to download
