@@ -60,7 +60,7 @@ def get_stats_feature(feature):
 
     geom_type = ee.Dictionary({geometry_type_column: feature.geometry().type()})
     coords_list = centroid.coordinates()
-    coords_dict = ee.Dictionary({centroid_x_coord_column: coords_list.get(0), centroid_y_coord_column: coords_list.get(1)})
+    coords_dict = ee.Dictionary({centroid_x_coord_column: coords_list.get(1), centroid_y_coord_column: coords_list.get(0)})
     stats_unit_type = ee.Dictionary({stats_unit_type_column: percent_or_ha})
     feature_info = country.combine(geom_type).combine(coords_dict).combine(stats_unit_type)
     

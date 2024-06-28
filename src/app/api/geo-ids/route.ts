@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJsonfromGeoId } from "@/utils/assetRegistry";
 import { analyzePlots } from "@/utils/analizePlots";
-import { PolygonCollection } from "@/types/geojson";
-import { createFeatureCollection } from "@/utils/geojsonUtils";
 
 export async function POST(request: NextRequest) {
 
