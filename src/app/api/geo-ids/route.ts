@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
         try {
 
             if (geoIds.length > 100) {
-                throw new Error("Please submit 100 individual polygons or less.");
+                return NextResponse.json({ error: "Your input contains more that 100 geometries, please submit 100 or less." }, { status: 500 });
             }
             const geoJsonArray = await Promise.all(geoIds.map(async (geoid: string) => {
                 const geoJsonFeature = await getJsonfromGeoId(geoid);
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
             return await analyzePlots(featureCollection);
 
         } catch (error: any) {
-            return NextResponse.json({ error: "There was system error. Please try again later." }, { status: 500 })
+            return NextResponse.json({ error: "There was system error. Please try again later." }, { status: 500 });
         }
     } else {
         return NextResponse.json({ error: 'Request body is missing geoId.' }, { status: 400 })
