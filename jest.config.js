@@ -15,5 +15,5 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(module-to-transform|another-module-to-transform)/)'
   ],
-  testTimeOut: 10000
+  testTimeout: 10000
 };
