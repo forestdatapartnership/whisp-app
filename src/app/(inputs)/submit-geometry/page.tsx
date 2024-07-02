@@ -123,9 +123,9 @@ const SubmitGeometry: React.FC = () => {
 
         const element = document.createElement('a');
 
-        element.setAttribute('href', '/civ_plot.json');
+        element.setAttribute('href', '/whisp_example_polys.geojson');
 
-        element.setAttribute('download', 'civ_plot.json');
+        element.setAttribute('download', 'whisp_example_polys.geojson');
 
         document.body.appendChild(element);
 
@@ -177,7 +177,7 @@ const SubmitGeometry: React.FC = () => {
             {error && <ErrorAlert />}
             <div className="p-2 rounded-b-lg">
                 <FileInput
-                    alertMessage="Area must be smaller than 1,000 acres. Must be in WKT or geojson format."
+                    alertMessage="Must be in WKT or geojson format."
                     innerMessage="Only .txt, .json and .geojson files are accepted."
                     handleFileChange={handleFileChange}
                     input=".txt, .json, .geojson"
