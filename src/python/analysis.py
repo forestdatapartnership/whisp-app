@@ -8,7 +8,7 @@ from modules.tidy_tables import whisp_risk
 
 initialize_ee()
 
-from modules.stats import get_stats
+from modules.stats import get_stats_formatted
 initialize_ee()
 
 def load_geometries_from_file(file_path):
@@ -95,7 +95,7 @@ def prepare_data_for_dataframe(feature_collection):
     
     return df
 
-feature_collection_with_stats = get_stats(feature_collection)
+feature_collection_with_stats = get_stats_formatted(feature_collection)
 
 df = prepare_data_for_dataframe(feature_collection_with_stats)
 
