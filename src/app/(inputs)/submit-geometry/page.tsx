@@ -177,7 +177,6 @@ const SubmitGeometry: React.FC = () => {
             {error && <ErrorAlert />}
             <div className="p-2 rounded-b-lg">
                 <FileInput
-                    alertMessage="Must be in WKT or geojson format."
                     innerMessage="Only .txt, .json and .geojson files are accepted."
                     handleFileChange={handleFileChange}
                     input=".txt, .json, .geojson"
