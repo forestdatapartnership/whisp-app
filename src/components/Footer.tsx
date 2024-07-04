@@ -1,4 +1,3 @@
-
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -12,7 +11,9 @@ const Footer: React.FC = () => {
                     </Link>
                 </div>
                 <div>
-                    © {new Date().getFullYear()} WHISP. Licensed under the MIT License.
+                    © {new Date().getFullYear()}
+                    <Link href="https://openforis.org" target="_blank" className="text-blue-500"> Open Foris </Link>
+                    |  MIT License.
                 </div>
             </div>
         </footer>

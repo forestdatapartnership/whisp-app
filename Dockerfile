@@ -26,6 +26,7 @@ COPY . .
 COPY credentials.json /app
 COPY --from=deps /app/node_modules ./node_modules
 RUN npm run build
+RUN npm run test
 
 # Production image, copy all the files and run next
 FROM base AS runner
