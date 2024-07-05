@@ -12,7 +12,7 @@ async function addGeoIdFeature(feature: Feature): Promise<any | null> {
 
     return {
         type: 'Feature',
-        properties: { ...feature.properties, ...{ geoid } },
+        properties: { ...feature.properties, ...{ geoid: geoid ? geoid : 'na' } },
         geometry: feature.geometry
     };
 }
