@@ -77,12 +77,8 @@ def prepare_data_for_dataframe(feature_collection):
     
     # Initialize an empty list to store the rows
     data = []
-
-    # Iterate through each feature in the list
     for feature in fc_list:
         properties = feature['properties']
-        geometry = feature['geometry']
-        properties['geometry'] = json.dumps(geometry)
         data.append(properties)
     
     # Create DataFrame from the prepared data
