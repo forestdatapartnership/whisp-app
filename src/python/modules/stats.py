@@ -2,9 +2,9 @@ import ee
 
 from modules.datasets import combine_datasets
 
-from parameters.config_runtime import percent_or_ha, plot_id_column, geometry_type_column, geometry_area_column, geometry_area_column_formatting, centroid_x_coord_column, centroid_y_coord_column, country_column, admin_1_column, water_flag, stats_unit_type_column, stats_area_columns_formatting, stats_percent_columns_formatting
+from parameters.config_runtime import lookup_gee_datasets_df, percent_or_ha, plot_id_column, geometry_type_column, geometry_area_column, geometry_area_column_formatting, centroid_x_coord_column, centroid_y_coord_column, country_column, admin_1_column, water_flag, stats_unit_type_column, stats_area_columns_formatting, stats_percent_columns_formatting
 
-import functools
+from modules.tidy_tables import get_exclude_list, get_presence_only_flag_list
 
 
 ########################################
@@ -85,22 +85,14 @@ def value_at_point_flag(point, image, band_name, output_name):
     # Return the output dictionary
     return ee.Dictionary({output_name: result})#.getInfo()
 
-
-################### main stats functions
-    
 def get_stats(feature_or_feature_col):
-    # Check if the input is a Feature or a FeatureCollection
     if isinstance(feature_or_feature_col, ee.Feature):
-        # If the input is a Feature, call the server-side function for processing
-        print("feature")
         output = ee.FeatureCollection([get_stats_feature(feature_or_feature_col)])
     elif isinstance(feature_or_feature_col, ee.FeatureCollection):
-        # If the input is a FeatureCollection, call the server-side function for processing
         output = get_stats_fc(feature_or_feature_col)
     else:
         output = "Check inputs: not an ee.Feature or ee.FeatureCollection"
     return output
-
 
 def get_stats_fc(feature_col):
     return ee.FeatureCollection(feature_col.map(get_stats_feature))
@@ -122,9 +114,7 @@ def percent_and_format(val,area_ha):
     return ee.Number(formatted_value)
 
 def get_stats_feature(feature):
-    
-    img_combined = combine_datasets() #imported function
-
+    img_combined = combine_datasets()
     reduce = img_combined.reduceRegion(
         reducer=ee.Reducer.sum(), 
         geometry=feature.geometry(), 
@@ -132,98 +122,41 @@ def get_stats_feature(feature):
         maxPixels=1e10,
         tileScale=8
     )
-    ######
-    ## roi attributes
-    ######
-    ## get location
-    
-    ### gaul boundaries - dated, moving towards open licence
-    # location = ee.Dictionary(get_gaul_info(feature.geometry()))
-    
-    # country = ee.Dictionary({country_column: location.get('ADM0_NAME')})
-    
-    ### gadm - non-commercial use only
-    
-    # location = ee.Dictionary(get_gadm_info(feature.geometry().centroid(1)))
-
-    # country = ee.Dictionary({country_column: location.get('GID_0')})
-
-    
-    ### geoboundaries - freqently updated database; allows commercial use (CC BY 4.0 DEED)
     centroid = feature.geometry().centroid(1)
-    
     location = ee.Dictionary(get_geoboundaries_info(centroid))
-    
     country = ee.Dictionary({country_column: location.get('shapeGroup')})
-
-    admin_1 = ee.Dictionary({admin_1_column: location.get('shapeName')}) # if running adm1
-    
+    admin_1 = ee.Dictionary({admin_1_column: location.get('shapeName')})
     water_all = water_flag_all_prep()
-    
-    water_flag_dict = value_at_point_flag(centroid,water_all,"water_flag",water_flag)
-    
+    water_flag_dict = value_at_point_flag(centroid, water_all, "water_flag", water_flag)
     geom_type = ee.Dictionary({geometry_type_column: feature.geometry().type()})
-    
-    coords_list = centroid.coordinates() # list of lat lon coords for centroid
-
-    # Create a dictionary with latitude and longitude keys  #coords.get(1).format('%.2f')
+    coords_list = centroid.coordinates()
     coords_dict = ee.Dictionary({centroid_x_coord_column: coords_list.get(0), centroid_y_coord_column: coords_list.get(1)})
-
     stats_unit_type = ee.Dictionary({stats_unit_type_column: percent_or_ha})
-
-    # combine info on country, geometry type and coordinates into a single dictionary
     feature_info = country.combine(admin_1).combine(geom_type).combine(coords_dict).combine(stats_unit_type).combine(water_flag_dict)
-    
-    
-    
-    
-
-    ####
-    
-    # Now, modified_dict contains all keys with the prefix added
-    reduce_ha = reduce.map(lambda key, val: divide_and_format(ee.Number(val),ee.Number(10000)))  
-    
-    # Get val for hectares
+    reduce_ha = reduce.map(lambda key, val: divide_and_format(ee.Number(val), ee.Number(10000)))  
     area_ha = ee.Number(ee.Dictionary(reduce_ha).get(geometry_area_column))
-
-    
-    ####
-    
-    # Apply the function (defined above) to each value in the dictionary using map()
     reduce_percent = reduce_ha.map(lambda key, val: percent_and_format(ee.Number(val), area_ha)) 
-
-    # Reformat
-    reducer_stats_ha = reduce_ha.set(geometry_area_column, area_ha.format(geometry_area_column_formatting))  # area ha (to a set number of decimal places) 
-    
-    reducer_stats_percent = reduce_percent.set(geometry_area_column, area_ha.format(geometry_area_column_formatting))  # area ha (to a set number of decimal places) 
-
-    # add country info on to ha analysis results
+    reducer_stats_ha = reduce_ha.set(geometry_area_column, area_ha.format(geometry_area_column_formatting))
+    reducer_stats_percent = reduce_percent.set(geometry_area_column, area_ha.format(geometry_area_column_formatting))
     properties_ha = feature_info.combine(ee.Dictionary(reducer_stats_ha))
-    
-    # add country info on to percent analysis results
     properties_percent = feature_info.combine(ee.Dictionary(reducer_stats_percent))
-    
-    # choose whether ha or percent based on the percent_or_ha variable (definined in paramters.config_runtime)
+
     out_feature = ee.Algorithms.If(percent_or_ha == "ha", 
                                    feature.set(properties_ha).setGeometry(None), 
                                    feature.set(properties_percent).setGeometry(None))
 
-    
-    
-    return out_feature
-
+    return ee.Feature(out_feature).set('geoid', feature.get('geoid')).set('geometry', feature.geometry())
 
 
 ############
 
-    
 def reformat_whisp_fc(feature_collection, 
-                                order=None, 
-                                id_name=None, 
-                                flag_positive=None, 
-                                round_properties=None, 
-                                exclude_properties=None,
-                                select_and_rename=None):
+                      order=None, 
+                      id_name=None, 
+                      flag_positive=None, 
+                      round_properties=None, 
+                      exclude_properties=None,
+                      select_and_rename=None):
     """
     Process a FeatureCollection with various reformatting operations.
 
@@ -239,14 +172,12 @@ def reformat_whisp_fc(feature_collection,
     Returns:
     - processed_features: ee.FeatureCollection, FeatureCollection after processing.
     """
-
-
     # Reorder properties if specified
     if order:
         feature_collection = feature_collection.map(lambda feature: reorder_properties(feature, order))
 
     if id_name:
-        feature_collection = add_id_to_feature_collection(feature_collection,id_name)
+        feature_collection = add_id_to_feature_collection(feature_collection, id_name)
 
     # Flag positive values if specified
     if flag_positive:
@@ -260,7 +191,7 @@ def reformat_whisp_fc(feature_collection,
     if exclude_properties:
         feature_collection = feature_collection.map(lambda feature: copy_properties_and_exclude(feature, exclude_properties))
         
-    #Function to select and rename properties
+    # Function to select and rename properties
     def select_and_rename_properties(feature):
         first_feature = ee.Feature(feature_collection.first())
         property_names = first_feature.propertyNames().getInfo()
@@ -269,37 +200,23 @@ def reformat_whisp_fc(feature_collection,
         
     # Select and rename properties if specified
     if select_and_rename:
-        
         feature_collection = feature_collection.map(select_and_rename_properties)
-
     
     return feature_collection
 
-
-def stats_formatter_decorator(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs) -> ee.FeatureCollection:
-        feature_or_feature_col = args[0]
-        fc = func(*args, **kwargs)
-        fc_formatted = reformat_whisp_fc(
-            fc,
-            order=kwargs.get('order'),
-            id_name=kwargs.get('id_name'),
-            flag_positive=kwargs.get('flag_positive'),
-            round_properties=kwargs.get('round_properties'),
-            exclude_properties=kwargs.get('exclude_properties'),
-            select_and_rename=kwargs.get('select_and_rename')
-        )
-        return fc_formatted
-    return wrapper
-
-@stats_formatter_decorator
 def get_stats_formatted(feature_or_feature_col, **kwargs) -> ee.FeatureCollection:
     fc = get_stats(feature_or_feature_col)
-    return fc
-
-
-
+    
+    presence_only_flag_list = get_presence_only_flag_list(lookup_gee_datasets_df)
+    exclude_list = get_exclude_list(lookup_gee_datasets_df)
+    
+    fc_formatted = reformat_whisp_fc(
+        fc,
+        id_name=plot_id_column,  
+        flag_positive=presence_only_flag_list,
+        exclude_properties=exclude_list
+    )
+    return fc_formatted
 
 ##tidying functions
 
@@ -368,12 +285,3 @@ def round_properties_to_whole_numbers(feature,round_properties):
 # Function to exclude properties
 def copy_properties_and_exclude(feature,exclude_properties):
     return ee.Feature(feature.geometry()).copyProperties(source=feature, exclude=exclude_properties)
-
-
-# # Function to select and rename properties
-# def select_and_rename_properties(feature):
-#     first_feature = ee.Feature(feature_collection.first())
-#     property_names = first_feature.propertyNames().getInfo()
-#     new_property_names = [prop.replace('_', ' ') for prop in property_names]
-#     return feature.select(property_names, new_property_names)
-
