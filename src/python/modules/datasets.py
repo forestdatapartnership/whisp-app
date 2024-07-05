@@ -388,7 +388,7 @@ def combine_datasets():
     img_combined = img_combined.addBands(try_access(jrc_tmf_transition_prep))
     img_combined = img_combined.addBands(try_access(eth_kalischek_cocoa_prep))
     img_combined = img_combined.addBands(try_access(wcmc_wdpa_protection_prep))
-    img_combined = img_combined.addBands(try_access(birdlife_kbas_biodiversity_prep))
+    # img_combined = img_combined.addBands(try_access(birdlife_kbas_biodiversity_prep))
     img_combined = img_combined.addBands(try_access(esa_worldcover_trees_prep))
     img_combined = img_combined.addBands(try_access(civ_ocs2020_prep)) 
     img_combined = img_combined.addBands(try_access(tmf_def_per_year_prep)) # multi year
