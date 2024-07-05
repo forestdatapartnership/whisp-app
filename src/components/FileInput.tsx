@@ -6,7 +6,7 @@ import { useStore } from '@/store';
 
 type FileInputProps = {
     innerMessage: string,
-    alertMessage: string,
+    alertMessage?: string,
     input: string,
     handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
@@ -22,9 +22,11 @@ export const FileInput: React.FC<FileInputProps> = ({
 
     return (
         <>
-            <div style={{ minHeight: '2rem' }} className="bg-yellow-50 mb-4 relative flex justify-center items-center">
-                <p className="text-gray-700 dark:text-gray-800 text-center">{alertMessage}</p>
-            </div>
+            {alertMessage &&
+                <div style={{ minHeight: '2rem' }} className="bg-yellow-50 mb-4 relative flex justify-center items-center">
+                    <p className="text-gray-700 dark:text-gray-800 text-center">{alertMessage}</p>
+                </div>
+            }
             <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 cursor-pointer">
                 {
                     selectedFile ?

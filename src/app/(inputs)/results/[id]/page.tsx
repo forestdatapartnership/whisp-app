@@ -49,7 +49,6 @@ const Results: React.FC = () => {
                 const fetchedData = await response.json();
                 const cleanedData = removeUnwantedProperties(fetchedData.data);
                 setTableData(cleanedData);
-                useStore.setState({ data: cleanedData });
             } catch (error: any) {
                 console.error(error);
                 useStore.setState({ error: error.message });
@@ -62,8 +61,10 @@ const Results: React.FC = () => {
             fetchData();
             setIsLoading(false);
         } else {
+            const cleanedData = removeUnwantedProperties(data);
+            setTableData(cleanedData);
+
             setGeoIds(data.map((item: any) => item.geoid));
-            console.log(geoIds.some((geoId: any) => geoId === undefined))
         }
     }, [id, data]);
 
@@ -103,17 +104,9 @@ const Results: React.FC = () => {
 
     const generateEarthMap = () => {
         if (data.length > 0) {
-            if (geoIds.length === 0) {
-                const downloadUrl = `${process.env.WHISP_URL}/api/generate-geojson/${id}`
-                const url = `https://whisp.earthmap.org/?fetchJson="${downloadUrl}"`
-                window.open(url, '_blank');
-            } else {
-
-                const geoidsString = geoIds.join(',');
-
-                const url = `https://whisp.earthmap.org/?geoIds=${geoidsString}&embed`
-                window.open(url, '_blank');
-            }
+            const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`
+            const url = `https://whisp.earthmap.org/?fetchJson="${downloadUrl}"`
+            window.open(url, '_blank');
         }
     }
 
@@ -146,17 +139,15 @@ const Results: React.FC = () => {
                                 Create CEO Project
                             </button>
                         </div>*/}
-                        {!geoIds.some((geoId: any) => geoId === undefined) ? (
-                            <div className="w-full sm:w-52">
-                                <button
-                                    onClick={() => generateEarthMap()}
-                                    className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
-                                    disabled={data.length === 0 ? true : false}
-                                >
-                                    View in Whisp Map
-                                </button>
-                            </div>
-                        ) : null}
+                        <div className="w-full sm:w-52">
+                            <button
+                                onClick={() => generateEarthMap()}
+                                className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
+                                disabled={data.length === 0 ? true : false}
+                            >
+                                View in Whisp Map
+                            </button>
+                        </div>
                         {/*<div className="w-full sm:w-52">
                             <a
                                 href={isCeDisabled ? '#' : collectEarthUrl}
@@ -178,7 +169,7 @@ const Results: React.FC = () => {
                     </div>
                     {error && <ErrorAlert />}
                     {successMessage && <SuccessAlert successMessage={successMessage} clearSuccessMessage={clearSuccessMessage} />}
-                    <DataTable data={data} />
+                    <DataTable data={tableData} />
                 </>
             )}
         </div>

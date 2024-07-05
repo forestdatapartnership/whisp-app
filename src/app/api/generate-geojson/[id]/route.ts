@@ -6,19 +6,17 @@ import { Feature, FeatureCollection } from 'geojson';
 
 export async function GET(request: NextRequest, { params }: any) {
 
-	console.log(params)
-
 	if (!params || !params.id) {
 		return NextResponse.json({ error: 'ID parameter is missing.' }, { status: 400 });
 	}
 
 	const { id } = params;
 
-	function combineGeometriesToFeatureCollection(data: any): FeatureCollection {
+	function combineGeometriesToFeatureCollection(data: any): any {
 		const features: Feature[] = data.map((item: any) => (
 			{
 				type: "Feature",
-				properties: {},
+				properties: {plotId: item.plotId},
 				geometry: {...JSON.parse(item.geometry)}
 			}
 		));
@@ -26,6 +24,13 @@ export async function GET(request: NextRequest, { params }: any) {
 		return {
 			type: "FeatureCollection",
 			features: features,
+			name: {
+ 
+				"en" : "WHISP Plots",
+				"fr" : "Parcelles WHISP",
+				"pt" : "Parcelas WHISP",
+				"es" : "Parcelas WHISP"
+			},
 		};
 	}
 

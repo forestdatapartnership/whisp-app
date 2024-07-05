@@ -2,11 +2,11 @@
 import React, { useState } from 'react';
 import ErrorAlert from '@/components/ErrorBar';
 import { useStore } from '@/store';
-import { useRouter } from 'next/navigation';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
 import { isValidWkt } from '@/utils/validateWkt';
 import Image from 'next/image';
+import { useSafeRouterPush } from '@/utils/safePush';
 
 const SubmitGeometry: React.FC = () => {
     const [wkt, setWkt] = useState<string>('');
@@ -17,7 +17,7 @@ const SubmitGeometry: React.FC = () => {
     const [type, setType] = useState<string>('');
     const [generateGeoids, setGenerateGeoids] = useState<boolean>(false);
 
-    const router = useRouter();
+    const safePush = useSafeRouterPush();
 
     const resetStore = useStore((state) => state.reset);
 
@@ -76,7 +76,7 @@ const SubmitGeometry: React.FC = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ wkt: wkt, generateGeoids: generateGeoids}),
+                    body: JSON.stringify({ wkt: wkt, generateGeoids: generateGeoids }),
                 });
 
                 data = await response.json();
@@ -109,7 +109,7 @@ const SubmitGeometry: React.FC = () => {
             if (data) {
                 resetStore();
                 useStore.setState({ token: data.token, data: data.data, error: "" });
-                router.push(`/results/${data.token}`);
+                safePush(`/results/${data.token}`);
             }
 
         } catch (error: any) {
@@ -122,10 +122,10 @@ const SubmitGeometry: React.FC = () => {
         console.log('Downloading sample document...');
 
         const element = document.createElement('a');
-        
-        element.setAttribute('href', '/civ_plot.json');
 
-        element.setAttribute('download', 'civ_plot.json');
+        element.setAttribute('href', '/whisp_example_polys.geojson');
+
+        element.setAttribute('download', 'whisp_example_polys.geojson');
 
         document.body.appendChild(element);
 
@@ -177,7 +177,6 @@ const SubmitGeometry: React.FC = () => {
             {error && <ErrorAlert />}
             <div className="p-2 rounded-b-lg">
                 <FileInput
-                    alertMessage="Area must be smaller than 1,000 acres. Must be in WKT or geojson format."
                     innerMessage="Only .txt, .json and .geojson files are accepted."
                     handleFileChange={handleFileChange}
                     input=".txt, .json, .geojson"

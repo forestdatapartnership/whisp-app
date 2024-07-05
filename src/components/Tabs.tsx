@@ -20,7 +20,7 @@ export const Tabs: React.FC<{ activeTab: number; setActiveTab: (index: number) =
     };
 
     const tabs =[
-        { title: 'File', content: <FileInput innerMessage="Only .txt files are accepted." alertMessage="Submit a text file with geoids separated by a comma or new line." handleFileChange={handleFileChange} input=".txt"/> },
+        { title: 'File', content: <FileInput innerMessage="Only .txt files are accepted." alertMessage="Submit a .txt file with up to 100 geoids separated by a comma or new line." handleFileChange={handleFileChange} input=".txt"/> },
         { title: 'Manual', content: <ManualInput /> }
     ]
     
