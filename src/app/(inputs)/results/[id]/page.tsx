@@ -117,7 +117,7 @@ const Results: React.FC = () => {
                     <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-8 h-8 animate-spin"></div>
                 </div>
             )}
-            {!data || data.length === 0 ? (
+            {!tableData || tableData.length === 0 ? (
                 notFound ?
                     <div className="text-xl text-center text-white">Report not found.</div> : null
             ) : (
