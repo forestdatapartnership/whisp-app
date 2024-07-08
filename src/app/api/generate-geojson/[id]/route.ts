@@ -17,7 +17,7 @@ export async function GET(request: NextRequest, { params }: any) {
 			{
 				type: "Feature",
 				properties: {plotId: item.plotId},
-				geometry: {...JSON.parse(item.geometry)}
+				geometry: item.geometry
 			}
 		));
 
