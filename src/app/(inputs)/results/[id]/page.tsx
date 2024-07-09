@@ -105,7 +105,7 @@ const Results: React.FC = () => {
     const generateEarthMap = () => {
         if (data.length > 0) {
             const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`
-            const url = `https://whisp.earthmap.org/?fetchJson="${downloadUrl}"`
+            const url = `https://whisp.earthmap.org/?fetchJson=${downloadUrl}`
             window.open(url, '_blank');
         }
     }
