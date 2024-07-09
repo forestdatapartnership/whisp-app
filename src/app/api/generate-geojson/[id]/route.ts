@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: any) {
 		const features: Feature[] = data.map((item: any) => (
 			{
 				type: "Feature",
-				properties: {plotId: item.plotId},
+				properties: {name: item.plotId},
 				geometry: item.geometry
 			}
 		));
