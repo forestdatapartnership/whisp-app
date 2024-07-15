@@ -14,6 +14,9 @@ const Navbar: React.FC = () => {
                     <Link target="_blank" href="https://openforis.org/solutions/whisp" className="hover:text-gray-300 mx-4">
                         About
                     </Link>
+                    <Link href="/documentation" className="hover:text-gray-300 mx-4">
+                        Documentation
+                    </Link>
                 </div>
             </div>
         </nav>
