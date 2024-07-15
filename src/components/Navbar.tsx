@@ -11,8 +11,8 @@ const Navbar: React.FC = () => {
                     </Link>
                 </div>
                 <div className="flex mx-12 justify-end">
-                    <Link href="/documentation" className="hover:text-gray-300">
-                        Documentation
+                    <Link target="_blank" href="https://openforis.org/solutions/whisp" className="hover:text-gray-300 mx-4">
+                        About
                     </Link>
                 </div>
             </div>
