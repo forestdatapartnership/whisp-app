@@ -1,10 +1,23 @@
 import { isValidWkt } from './validateWkt';
 import { geojsonToWKT } from '@terraformer/wkt';
 
+const maxFileSize = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_KB) || 0
+
+const checkFileSize = (file: File) : string | undefined => {
+    if (maxFileSize>0 && file.size>maxFileSize*1024) {
+        return `The file is too large: ${(file.size/1024).toFixed(2)} KB, the maximum file size allowed is ${maxFileSize} KB.`;
+    }
+};
+
 export const parseGeoIdFile = (file: File): Promise<string[] | { error: string }> => {
     return new Promise((resolve, reject) => {
-        const fileReader = new FileReader();
+        const sizeCheckResult = checkFileSize(file);
+        if (sizeCheckResult) {
+            resolve({ error: sizeCheckResult });
+            return;
+        }
 
+        const fileReader = new FileReader();
         fileReader.onload = async (e) => {
             const text = e.target?.result;
             if (typeof text === 'string') {
@@ -29,11 +42,15 @@ export const parseGeoIdFile = (file: File): Promise<string[] | { error: string }
     });
 };
 
-
-export const parseWKTAndJSONFile = (file: File): Promise< object | { error: string }> => {
+export const parseWKTAndJSONFile = (file: File): Promise<{ wkt: string } | { json:string } | { error: string }> => {
     return new Promise((resolve, reject) => {
+        const sizeCheckResult = checkFileSize(file);
+        if (sizeCheckResult) {
+            resolve({ error: sizeCheckResult });
+            return;
+        }
+        
         const fileReader = new FileReader();
-
         fileReader.onload = async (e) => {
             const text = e.target?.result;
             if (typeof text === 'string') {
@@ -44,11 +61,11 @@ export const parseWKTAndJSONFile = (file: File): Promise< object | { error: stri
                         return;
                     }
                     resolve({wkt: text});
-                } else if (file.name.endsWith('.json')) {
+                } else if (file.name.endsWith('.json') || file.name.endsWith('.geojson')) {
                     try {
                         const jsonData = JSON.parse(text);
-                        const wkt = jsonData.type === 'FeatureCollection' ? jsonData.features.map((feature: any) => geojsonToWKT(feature.geometry)) : geojsonToWKT(jsonData.geometry);
-                        resolve({wkt});
+                        //const wkt = jsonData.type === 'FeatureCollection' ? jsonData.features.map((feature: any) => geojsonToWKT(feature.geometry)) : geojsonToWKT(jsonData.geometry);
+                        resolve({json: jsonData});
                     } catch (error) {
                         resolve({ error: 'Invalid GeoJSON format.' });
                         return;
@@ -63,6 +80,6 @@ export const parseWKTAndJSONFile = (file: File): Promise< object | { error: stri
             resolve({ error: 'Error reading the file.' });
         };
 
-        fileReader.readAsText(file);
+        fileReader.readAsText(file);        
     });
 };
