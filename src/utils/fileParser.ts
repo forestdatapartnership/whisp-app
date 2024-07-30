@@ -1,10 +1,8 @@
 import { isValidWkt } from './validateWkt';
-import { geojsonToWKT } from '@terraformer/wkt';
-
-const maxFileSize = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_KB) || 0
 
 const checkFileSize = (file: File) : string | undefined => {
-    if (maxFileSize>0 && file.size>maxFileSize*1024) {
+    const maxFileSize = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_KB) || 0
+    if (maxFileSize > 0 && file.size > maxFileSize * 1024) {
         return `The file is too large: ${(file.size/1024).toFixed(2)} KB, the maximum file size allowed is ${maxFileSize} KB.`;
     }
 };
@@ -42,7 +40,7 @@ export const parseGeoIdFile = (file: File): Promise<string[] | { error: string }
     });
 };
 
-export const parseWKTAndJSONFile = (file: File): Promise<{ wkt: string } | { json:string } | { error: string }> => {
+export const parseWKTAndJSONFile = (file: File): Promise<{ wkt: string } | { json: string } | { error: string }> => {
     return new Promise((resolve, reject) => {
         const sizeCheckResult = checkFileSize(file);
         if (sizeCheckResult) {
@@ -80,6 +78,6 @@ export const parseWKTAndJSONFile = (file: File): Promise<{ wkt: string } | { jso
             resolve({ error: 'Error reading the file.' });
         };
 
-        fileReader.readAsText(file);        
+        fileReader.readAsText(file);
     });
 };
