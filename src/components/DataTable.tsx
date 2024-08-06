@@ -3,10 +3,8 @@ import React from 'react';
 
 const DataTable: React.FC<any> = ({ data }) => {
 
-  const excludedColumns = ['geoid']; // Example excluded column names
+  const columns = data.length > 0 ? Object.keys(data[0]) : [];
   
-  const columns = data.length > 0 ? Object.keys(data[0]).filter(column => !excludedColumns.includes(column)) : [];
-
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-sm divide-y">
