@@ -109,7 +109,7 @@ const GeoIdInput: React.FC = () => {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
             />
-            <div className="flex mx-2 items-center justify-between">
+            <div className="flex mx-2 items-center justify-between flex-wrap">
                 <button
                     onClick={downloadSampleDocument}
                     className="flex mt-2 items-center justify-center w-28 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded focus:outline-none focus:shadow-outline"

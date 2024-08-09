@@ -1,4 +1,3 @@
-
 import request from 'supertest';
 import { createServer, Server } from 'http';
 import { parse } from 'url';
@@ -9,13 +8,20 @@ const handle = app.getRequestHandler();
 
 describe('POST /api/geojson', () => {
   let server: Server;
+  let address: string;
 
   beforeAll(async () => {
     await app.prepare();
-    server = createServer((req, res) => {
-      const parsedUrl = parse(req.url!, true);
-      handle(req, res, parsedUrl);
-    }).listen(3000);
+    await new Promise<void>((resolve) => {
+      server = createServer((req, res) => {
+        const parsedUrl = parse(req.url!, true);
+        handle(req, res, parsedUrl);
+      }).listen(0, () => {
+        const port = (server.address() as any).port;
+        address = `http://localhost:${port}`;
+        resolve();
+      });
+    });
   });
 
   afterAll((done) => {
@@ -26,17 +32,13 @@ describe('POST /api/geojson', () => {
     }
   });
 
-
   it('returns a successful analysis response for a point geometry', async () => {
     const body = {
       type: "Point",
-      coordinates: [
-        10,
-        11.2
-      ]  // Add the actual geoJSON data you want to test with
+      coordinates: [10, 11.2]
     };
 
-    const res = await request(server)
+    const res = await request(address)
       .post('/api/geojson')
       .send(body)
       .set('Accept', 'application/json');
@@ -46,21 +48,15 @@ describe('POST /api/geojson', () => {
   });
 
   it('returns a successful analysis response, for a multipoint', async () => {
-    const body =
-    {
+    const body = {
       type: "MultiPoint",
       coordinates: [
-        [
-          10,
-          11.2
-        ],
-        [
-          10.5,
-          11.9
-        ]
+        [10, 11.2],
+        [10.5, 11.9]
       ]
-    }
-    const res = await request(server)
+    };
+
+    const res = await request(address)
       .post('/api/geojson')
       .send(body)
       .set('Accept', 'application/json');
@@ -70,8 +66,7 @@ describe('POST /api/geojson', () => {
   });
 
   it('returns a successful analysis response for a set of geoids', async () => {
-    const body =
-    {
+    const body = {
       geoIds: [
         "c73172da7a0a50c87eed2a08c3acd65f8c8dd1033e84f1fcbe6ce2b90701ce0d",
         "2ff3962841cdfe820b31e03c54b774b724afbc5dafbf742bd0c8a0fc3a664a36",
@@ -83,9 +78,9 @@ describe('POST /api/geojson', () => {
         "0520cfac98fbc1bd7952b1c07a9f6983b83625722b6f665ea83ac9aad3512918",
         "b7c15efb6e3c63fcfe649a2d994973a6f5caa844f720f0edb7cf24f6a6c3c1b3"
       ]
-    }
+    };
 
-    const res = await request(server)
+    const res = await request(address)
       .post('/api/geo-ids')
       .send(body)
       .set('Accept', 'application/json');
@@ -97,13 +92,10 @@ describe('POST /api/geojson', () => {
   it('returns a successful analysis response', async () => {
     const body = {
       type: "Point",
-      coordinates: [
-        10,
-        11.2
-      ]  // Add the actual geoJSON data you want to test with
+      coordinates: [10, 11.2]
     };
 
-    const res = await request(server)
+    const res = await request(address)
       .post('/api/geojson')
       .send(body)
       .set('Accept', 'application/json');

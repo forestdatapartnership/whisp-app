@@ -85,10 +85,10 @@ def prepare_data_for_dataframe(feature_collection):
     df = pd.DataFrame(data)
     df['plotId'] = range(1, len(df) + 1)
     
-    # Reorder columns to place 'plotId' first and 'geoid' right after it, if it exists
+    # Reorder columns to place 'plotId' first and 'geoid' right after it, if it exists  
     cols = ['plotId'] + (['geoid'] if 'geoid' in df.columns else []) + [col for col in df.columns if col not in ['plotId', 'geoid']]
     df = df[cols]
-    
+   
     return df
 
 feature_collection_with_stats = get_stats_formatted(feature_collection)
@@ -105,6 +105,8 @@ df_w_risk = whisp_risk(
 
 csv_file_path = os.path.splitext(file_path)[0] + '-result.csv'
 
+if 'geoid' not in df.columns:
+        df['geoid'] = 'na'
 df_w_risk.to_csv(csv_file_path, index=False, encoding='utf-8-sig')
 
 # Convert the DataFrame to a dictionary
@@ -119,5 +121,12 @@ json_filename = os.path.splitext(file_path)[0] + '-result.json'
 with open(json_filename, 'w') as outfile:
     outfile.write(json_data)
 
-print(f"Data exported to {csv_file_path}")
+csv_file_path = os.path.splitext(file_path)[0] + '-result.csv'
+
+if 'geoid' not in df_w_risk.columns:
+        df['geoid'] = 'na'
+
+df_w_risk.to_csv(csv_file_path, index=False, encoding='utf-8-sig')
+
+print(f"Data exported to {json_filename}")
 

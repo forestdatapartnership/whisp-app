@@ -26,18 +26,36 @@ export const analyze = async (token: string): Promise<boolean> => {
         }
 
         const command = `${process.env.PYTHON_PATH} src/python/analysis.py "temp/${token}.json"`;
-        console.log(command)
-        exec(command, (error, stdout, stderr) => {
+        const childProcess = exec(command, (error, stdout, stderr) => {
             console.log(`Stdout: ${stdout}`);
             if (error) {
                 console.error(`${error.message}`);
+                if (childProcess && !childProcess.killed) {
+                    childProcess.kill();
+                }
                 reject(`${error.message}`);
                 return;
             }
-            if (stderr) {
-                console.error(`Stderr: ${stderr}`);
+            // Check exit code:
+            if (childProcess.exitCode !== 0) {
+                reject(`Python script exited with code ${childProcess.exitCode}`);
+            } else {
+                resolve(true);
             }
-            resolve(true);
+        });
+        
+        // Set a timeout
+        const timeoutId = setTimeout(() => {
+            if (childProcess && !childProcess.killed) {
+                console.error('Analysis timed out after 90 seconds.');
+                childProcess.kill();
+                reject('Analysis timed out.');
+            }
+        }, 90000); // 90 seconds in milliseconds
+
+        // Clear the timeout if the process finishes before the timeout
+        childProcess.on('exit', () => {
+            clearTimeout(timeoutId);
         });
     });
 };

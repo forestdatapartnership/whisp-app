@@ -105,7 +105,7 @@ const Results: React.FC = () => {
     const generateEarthMap = () => {
         if (data.length > 0) {
             const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`
-            const url = `https://whisp.earthmap.org/?fetchJson="${downloadUrl}"`
+            const url = `https://whisp.earthmap.org/?fetchJson=${downloadUrl}`
             window.open(url, '_blank');
         }
     }
@@ -117,7 +117,7 @@ const Results: React.FC = () => {
                     <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-8 h-8 animate-spin"></div>
                 </div>
             )}
-            {!data || data.length === 0 ? (
+            {!tableData || tableData.length === 0 ? (
                 notFound ?
                     <div className="text-xl text-center text-white">Report not found.</div> : null
             ) : (
