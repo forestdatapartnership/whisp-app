@@ -333,8 +333,11 @@ def feat_coll_prep(feats_name,attr_name, base_name):
 
 
 # WDPA
-# NB restricted for commercial use. Shown here for code tranparency. 
-# Results are included only in the Whisp API. And there results are restricted to a limited number of plots. This aims to support small holders and smaller cooperatives etc. 
+# NB this dataset is restricted to non-commercial use only. Shown here using the non-commercial version of the WDPA for code transparency only.
+# Results will be included only in the Whisp API where they will be restricted to a limited number of plots. This aims to support small holders and smaller cooperatives etc. 
+
+# UPDATE: temporarily not including this dataset whilst arranging a cleaner solution to highlighting areas of importance.
+
 def wcmc_wdpa_protection_prep():
     wdpa_poly = ee.FeatureCollection("WCMC/WDPA/current/polygons")
     
@@ -349,9 +352,12 @@ def wcmc_wdpa_protection_prep():
 
 
 # KBA  
-# NB restricted for commercial use. Shown here for code tranparency. 
+# NB restricted data for non-commercial use only. Shown here for code transparency... 
 # Key Biodiversity Areas (KBAs) results show presence/absence in plot
 # Results are included only in the Whisp API. And results are restricted to a limited number of plots. This aims to support small holders and smaller cooperatives etc.
+
+# UPDATE: temporarily not including this dataset whilst arranging a cleaner solution to highlighting areas of importance.
+
 def birdlife_kbas_biodiversity_prep():
     
     ##uploaded data - Non-commercial. For queries with limited numbers of sites. Exact number to be confirmed. 
@@ -387,7 +393,7 @@ def combine_datasets():
     img_combined = img_combined.addBands(try_access(fdap_palm_prep))
     img_combined = img_combined.addBands(try_access(jrc_tmf_transition_prep))
     img_combined = img_combined.addBands(try_access(eth_kalischek_cocoa_prep))
-    img_combined = img_combined.addBands(try_access(wcmc_wdpa_protection_prep))
+    # img_combined = img_combined.addBands(try_access(wcmc_wdpa_protection_prep))
     # img_combined = img_combined.addBands(try_access(birdlife_kbas_biodiversity_prep))
     img_combined = img_combined.addBands(try_access(esa_worldcover_trees_prep))
     img_combined = img_combined.addBands(try_access(civ_ocs2020_prep)) 
