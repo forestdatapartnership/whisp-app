@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import DataTable from '@/components/DataTable';
+import { columns } from "@/components/results/columns"
+import { DataTable } from "@/components/results/data-table"
 import ErrorAlert from '@/components/ErrorBar';
 import SuccessAlert from '@/components/SuccessBar';
 import { useParams, useRouter } from 'next/navigation';
@@ -169,7 +170,7 @@ const Results: React.FC = () => {
                     </div>
                     {error && <ErrorAlert />}
                     {successMessage && <SuccessAlert successMessage={successMessage} clearSuccessMessage={clearSuccessMessage} />}
-                    <DataTable data={tableData} />
+                    <DataTable columns={columns} data={tableData} />
                 </>
             )}
         </div>
