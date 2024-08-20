@@ -36,8 +36,8 @@ const truncateString = (str: string) => {
 const formatValue = (column: string, value: any) => {
     if (typeof value === 'number') {
         return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
-    } else if (column === 'geoid' && typeof value === 'string') {
-        return truncateString(value);
+    } else if (column === 'geoid') {
+        return typeof value === 'string' && value.trim().length > 0? truncateString(value) : "na";
     }
     return value;
 };
@@ -82,6 +82,7 @@ export function DataTable<TData, TValue>({
                 <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                        {/* TODO: use column definitions to format cells */}
                         {/* {flexRender(cell.column.columnDef.cell, cell.getContext())} */}
                         {formatValue(cell.column.id, cell.getValue())}
                     </TableCell>
