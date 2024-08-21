@@ -4,14 +4,14 @@ import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu"
 import { MixerHorizontalIcon } from "@radix-ui/react-icons"
 import { Table } from "@tanstack/react-table"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/Button"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/DropdownMenu"
 
 interface DataTableViewOptionsProps<TData> {
   table: Table<TData>
@@ -26,6 +26,7 @@ export function DataTableViewOptions<TData>({
           typeof column.accessorFn !== "undefined" && column.getCanHide()
       ).forEach(c=>c.toggleVisibility(visibility));
   };
+  //table.getAllColumns().find((column)=>column.id == "geoid")?.toggleVisibility(false);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

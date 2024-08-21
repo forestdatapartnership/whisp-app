@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { columns } from "@/components/results/columns"
-import { DataTable } from "@/components/results/data-table"
+import { columns } from "@/components/results/Columns"
+import { DataTable } from "@/components/results/DataTable"
 import ErrorAlert from '@/components/ErrorBar';
 import SuccessAlert from '@/components/SuccessBar';
 import { useParams, useRouter } from 'next/navigation';
@@ -30,12 +30,13 @@ const Results: React.FC = () => {
     const csvUrl = `/api/download-csv/${token || id}`;
     const collectEarthUrl = `/api/generate-ce-project/${token}`;
 
-    const removeUnwantedProperties = (data: any[]) => {
-        return data.map(item => {
-            const { geometry, Centroid_lat, Centroid_lon, ...rest } = item;
-            return rest;
-        });
-    };
+    const filterColumns = (columns: any[], data: any[]) => {
+        const excludedColumns = ["geometry", "Centroid_lat", "Centroid_lon"];
+        if (data.length>0 && data.find((row)=> row["geoid"]?.trim().length>0) == null) {
+            excludedColumns.push("geoid")
+        }
+        return columns.filter((column)=> !excludedColumns.includes(column.accessorKey));
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -47,9 +48,7 @@ const Results: React.FC = () => {
                     setNotFound(true);
                     throw new Error('Failed to fetch report');
                 }
-                const fetchedData = await response.json();
-                const cleanedData = removeUnwantedProperties(fetchedData.data);
-                setTableData(cleanedData);
+                setTableData(await response.json());
             } catch (error: any) {
                 console.error(error);
                 useStore.setState({ error: error.message });
@@ -62,8 +61,7 @@ const Results: React.FC = () => {
             fetchData();
             setIsLoading(false);
         } else {
-            const cleanedData = removeUnwantedProperties(data);
-            setTableData(cleanedData);
+            setTableData(data);
 
             setGeoIds(data.map((item: any) => item.geoid));
         }
@@ -170,7 +168,7 @@ const Results: React.FC = () => {
                     </div>
                     {error && <ErrorAlert />}
                     {successMessage && <SuccessAlert successMessage={successMessage} clearSuccessMessage={clearSuccessMessage} />}
-                    <DataTable columns={columns} data={tableData} />
+                    <DataTable columns={filterColumns(columns, tableData)} data={tableData} />
                 </>
             )}
         </div>

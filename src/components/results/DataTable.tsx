@@ -15,9 +15,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { DataTablePagination } from "./data-table-pagination"
-import { DataTableViewOptions } from "./data-table-view-options"
+} from "@/components/ui/Table"
+import { DataTablePagination } from "./DataTablePagination"
+import { DataTableViewOptions } from "./DataTableViewOptions"
  
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
