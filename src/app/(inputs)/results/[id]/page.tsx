@@ -48,7 +48,8 @@ const Results: React.FC = () => {
                     setNotFound(true);
                     throw new Error('Failed to fetch report');
                 }
-                setTableData(await response.json());
+                const fetchedData = await response.json();
+                setTableData(fetchedData.data);
             } catch (error: any) {
                 console.error(error);
                 useStore.setState({ error: error.message });

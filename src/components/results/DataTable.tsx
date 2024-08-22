@@ -23,24 +23,6 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
 }
-
-const truncateString = (str: string) => {
-    const limit = 20;
-    if (str.length > limit) {
-      return str.slice(0, limit) + '…';
-    } else {
-      return str;
-    }
-};
-
-const formatValue = (column: string, value: any) => {
-    if (typeof value === 'number') {
-        return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
-    } else if (column === 'geoid') {
-        return typeof value === 'string' && value.trim().length > 0? truncateString(value) : "na";
-    }
-    return value;
-};
  
 export function DataTable<TData, TValue>({
   columns,
@@ -51,7 +33,25 @@ export function DataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-  })
+  });
+
+  const truncateString = (str: string) => {
+    const limit = 20;
+    if (str.length > limit) {
+      return str.slice(0, limit) + '…';
+    } else {
+      return str;
+    }
+  };
+
+  const formatValue = (column: string, value: any) => {
+      if (typeof value === 'number') {
+          return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
+      } else if (column === 'geoid') {
+          return typeof value === 'string' && value.trim().length > 0? truncateString(value) : "na";
+      }
+      return value;
+  };
  
   return (
     <div>
