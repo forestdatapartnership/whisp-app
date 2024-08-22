@@ -9,7 +9,7 @@ const Navbar: React.FC = () => {
                 <div className="flex md:mx-12 justify-center items-center h-full">
                     <Link href="/" className="text-lg hover:text-gray-300 flex items-center">
                         <Image
-                            src="whisp_logo.svg"
+                            src="/whisp_logo.svg"
                             alt="Picture of the author"
                             width={35}
                             height={35}
