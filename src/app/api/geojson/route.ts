@@ -18,6 +18,10 @@ export async function POST(request: NextRequest) {
         try {
             let featureCollection = createFeatureCollection(body);
 
+            if (featureCollection.features.length > 100) {
+                return NextResponse.json({ error: "There was a problem with your input." }, { status: 400 });
+            }
+
             if (generateGeoids) {
                 featureCollection = await addGeoId(featureCollection);
             }
