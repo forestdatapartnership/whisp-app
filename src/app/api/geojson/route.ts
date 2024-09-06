@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzePlots } from "@/utils/analizePlots";
 import { validateGeoJSON, createFeatureCollection, addGeoId } from "@/utils/geojsonUtils";
+import { GEOMETRY_LIMIT } from "@/utils/constants";
 
 export async function POST(request: NextRequest) {
     try {
@@ -18,8 +19,8 @@ export async function POST(request: NextRequest) {
         try {
             let featureCollection = createFeatureCollection(body);
 
-            if (featureCollection.features.length > 100) {
-                return NextResponse.json({ error: "There was a problem with your input." }, { status: 400 });
+            if (featureCollection.features.length > GEOMETRY_LIMIT) {
+                return NextResponse.json({ error: `The are more than ${GEOMETRY_LIMIT} features in this collection. Please do not exceed more than ${GEOMETRY_LIMIT} individual features.` }, { status: 400 });
             }
 
             if (generateGeoids) {
