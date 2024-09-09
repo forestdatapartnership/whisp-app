@@ -47,7 +47,7 @@ export function DataTable<TData, TValue>({
   const formatValue = (column: string, value: any) => {
       if (typeof value === 'number') {
           return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
-      } else if (column === 'geoid') {
+      } else if (column === 'geoid' || column === 'WDPA') {
           return typeof value === 'string' && value.trim().length > 0? truncateString(value) : "na";
       }
       return value;
