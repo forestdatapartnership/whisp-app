@@ -5,9 +5,8 @@ import { parseGeoIdFile } from "@/utils/fileParser";
 
 export const Tabs: React.FC<{ activeTab: number; setActiveTab: (index: number) => void }> = ({ activeTab, setActiveTab }) => {
 
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (file: File) => {
         useStore.setState({ error: "" })
-        const file = event.target.files ? event.target.files[0] : null;
         if (file) {
             const result = await parseGeoIdFile(file);
             
@@ -18,13 +17,15 @@ export const Tabs: React.FC<{ activeTab: number; setActiveTab: (index: number) =
             }
         }
     };
-
+    const accept = {
+        'text/plain': ['.txt']
+    }
     const tabs =[
-        { title: 'File', content: <FileInput innerMessage="Only .txt files are accepted." alertMessage="Submit a .txt file with up to 100 geoids separated by a comma or new line." handleFileChange={handleFileChange} input=".txt"/> },
+        { title: 'File', content: <FileInput innerMessage="Only .txt files are accepted." alertMessage="Submit a .txt file with up to 100 geoids separated by a comma or new line." handleFileChange={handleFileChange} accept={accept}/> },
         { title: 'Manual', content: <ManualInput /> }
     ]
     
-    return (
+    return ( 
         <div>
             <div className="flex justify-center space-x-1 p-2 rounded-t-lg ">
                 {tabs.map((tab, index) => (

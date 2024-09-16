@@ -21,9 +21,8 @@ const SubmitGeometry: React.FC = () => {
 
     const resetStore = useStore((state) => state.reset);
 
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (file: File) => {
         useStore.setState({ error: "" });
-        const file = event.target.files ? event.target.files[0] : null;
         if (file) {
             const result = await parseWKTAndJSONFile(file);
             
@@ -152,6 +151,11 @@ const SubmitGeometry: React.FC = () => {
         </label>
     )
 
+    const accept = {
+        'text/plain': ['.txt'],
+        'application/json': ['.json', '.geojson']
+    }
+
     return (
         <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
             {isLoading && (
@@ -165,7 +169,7 @@ const SubmitGeometry: React.FC = () => {
                 <FileInput
                     innerMessage="Only .txt, .json and .geojson files are accepted."
                     handleFileChange={handleFileChange}
-                    input=".txt, .json, .geojson"
+                    accept={accept}
                 />
             </div>
             <div className="flex items-center mx-2 justify-between">
