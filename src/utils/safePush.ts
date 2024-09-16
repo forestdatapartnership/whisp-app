@@ -6,7 +6,6 @@ export function useSafeRouterPush() {
   const [isMounted, setIsMounted] = useState(true);
 
   useEffect(() => {
-    console.log(isMounted)
     setIsMounted(true); // Set to true when mounted
     return () => setIsMounted(false); // Set to false when unmounted
 
