@@ -28,8 +28,9 @@ export function middleware(request: NextRequest) {
         return response;
     }
 
-    // Fallback for disallowed origins
-    return new NextResponse('Origin not allowed', { status: 403 });
+    const response = NextResponse.next();
+
+    return response;
 }
  
 export const config = {
