@@ -1,38 +1,39 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 
+const corsOptions = {
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  }
+
 export function middleware(request: NextRequest) {
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
     const origin = request.headers.get('origin') ?? '';
-
-    // Handle OPTIONS requests for preflight
-    if (request.method === "OPTIONS") {
-        const headers = new Headers();
-        headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        
-        // Dynamically check if origin is allowed
-        if (allowedOrigins.includes(origin)) {
-            headers.set('Access-Control-Allow-Origin', origin);
-        } else {
-            headers.set('Access-Control-Allow-Origin', 'null');
+    const isAllowedOrigin = allowedOrigins.includes(origin)
+    
+    const isPreflight = request.method === 'OPTIONS'
+    if (isPreflight) {
+        const preflightHeaders = {
+        ...(isAllowedOrigin && { 'Access-Control-Allow-Origin': origin }),
+        ...corsOptions,
         }
-
-        return new NextResponse(null, { status: 200, headers });
+        return NextResponse.json({}, { headers: preflightHeaders })
     }
 
     // Handle other requests
-    if (allowedOrigins.includes(origin)) {
-        const response = NextResponse.next();
-        response.headers.set('Access-Control-Allow-Origin', origin);
-        return response;
+    const response = NextResponse.next()
+    
+    if (isAllowedOrigin) {
+        response.headers.set('Access-Control-Allow-Origin', origin)
     }
-
-    const response = NextResponse.next();
-
-    return response;
+    
+    Object.entries(corsOptions).forEach(([key, value]) => {
+        response.headers.set(key, value)
+    })
+    
+    return response
 }
  
 export const config = {
-  matcher: '/api/:path*',
+  matcher: '/:path*',
 };
