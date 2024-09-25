@@ -40,12 +40,14 @@ const Navbar: React.FC = () => {
                                 <Link 
                                     href="/documentation/layers" 
                                     className="block px-4 py-2 hover:bg-gray-600 rounded-t-lg"
+                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 >
                                     Layers
                                 </Link>
                                 <Link 
                                     href="/documentation/api-guide" 
                                     className="block px-4 py-2 hover:bg-gray-600 rounded-b-lg"
+                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 >
                                     API Guide
                                 </Link>
