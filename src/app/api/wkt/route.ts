@@ -6,6 +6,7 @@ import { PolygonFeature } from "@/types/geojson";
 import * as wellknown from 'wellknown';
 import { addPropertyToFeatures, createFeatureCollection, validateGeoJSON } from "@/utils/geojsonUtils";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
+import { BaseRoute } from "@/lib/routes/BaseRoute";
 
 const getFeaturesFromWkt = async (wkt: string, generateGeoids: boolean) => {
 
@@ -37,16 +38,18 @@ const getFeaturesFromWkt = async (wkt: string, generateGeoids: boolean) => {
 };
 
 export async function POST(request: NextRequest) {
+    const routeHandler = new BaseRoute(request);
+    const body = await routeHandler.jsonOrNull();
+
+    if (!body) {
+        return routeHandler.missingOrInvalidBodyResponse();
+    }
+        
+    const generateGeoids = body.generateGeoids || false;
+    const { wkt } = body;
+
+    if (!wkt) return routeHandler.badRequestResponse("Missing attribute 'wkt'");
     try {
-        const body = await request.json();
-
-        if (!body) throw new Error("Required request body is missing");
-
-        const generateGeoids = body.generateGeoids || false;
-        const { wkt } = body;
-
-        if (!wkt) throw new Error("Missing attribute 'wkt'");
-
         const isValidWKT = isValidWkt(wkt);
 
         if (isValidWKT) {
@@ -57,6 +60,6 @@ export async function POST(request: NextRequest) {
 
     } catch (error: any) {
         console.error(error.message);
-        return new NextResponse(JSON.stringify({ error: "Error in analysis. Please check your input." }), { status: 500 });
+        return routeHandler.errorResponse("Error in analysis. Please check your input.");
     }
 }

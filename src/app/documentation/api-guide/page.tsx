@@ -5,6 +5,7 @@ import SwaggerUI from "swagger-ui-react";
 import 'swagger-ui-react/swagger-ui.css';
 import './styles.css';
 
+
 const DocumentationPage = () => {
   return (
     <div className="min-h-screen text-white p-8">
