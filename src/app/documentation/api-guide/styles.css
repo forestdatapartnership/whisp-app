@@ -13,7 +13,7 @@ embed[type="application/pdf"] { filter: invert(90%); }
     color: '#FFFFFF'
 }
 
-.swagger-ui, .swagger-ui section h3 { color: #FFFFFF; }
+.swagger-ui, .swagger-ui p, .swagger-ui section h3 { color: #FFFFFF; }
 
 .swagger-ui a { background-color: transparent; }
 
