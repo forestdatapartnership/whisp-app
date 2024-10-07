@@ -3,6 +3,7 @@ import path from "path";
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import { analyze } from "@/utils/runPython";
+import { log, info } from "@/lib/logger";
 
 export const analyzePlots = async (payload: any) => {
 
@@ -23,7 +24,10 @@ export const analyzePlots = async (payload: any) => {
             // Read and parse the analysis results
             fileHandle = await fs.open(`${filePath}/${token}-result.json`, 'r'); // Explicitly open the file
             const fileContents = await fileHandle.readFile('utf8'); 
-             const jsonData = JSON.parse(fileContents);
+            const jsonData = JSON.parse(fileContents);
+            if (Array.isArray(jsonData)){
+                info(`${jsonData.length} plots successully analysed for token ${token}`, 'analyzePlots.ts', { token: token, plots: jsonData.length });
+            }
             return NextResponse.json(
                 { data: jsonData, token: token }
             )
