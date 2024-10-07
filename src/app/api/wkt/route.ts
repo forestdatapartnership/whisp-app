@@ -6,6 +6,9 @@ import { PolygonFeature } from "@/types/geojson";
 import * as wellknown from 'wellknown';
 import { addPropertyToFeatures, createFeatureCollection, validateGeoJSON } from "@/utils/geojsonUtils";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
+import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { useBadRequestResponse } from "@/lib/hooks/responses";
 
 const getFeaturesFromWkt = async (wkt: string, generateGeoids: boolean) => {
 
@@ -36,27 +39,16 @@ const getFeaturesFromWkt = async (wkt: string, generateGeoids: boolean) => {
     }
 };
 
-export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
+export const POST = withErrorHandling(withRequiredJsonBody(async (req: NextRequest, body: any): Promise<NextResponse> => {
+    const generateGeoids = body.generateGeoids || false;
+    const { wkt } = body;
 
-        if (!body) throw new Error("Required request body is missing");
+    if (!wkt) return useBadRequestResponse("Missing attribute 'wkt'");
+    
+    const isValidWKT = isValidWkt(wkt);
+    if (!isValidWKT) return useBadRequestResponse("Invalid WKT.");
 
-        const generateGeoids = body.generateGeoids || false;
-        const { wkt } = body;
-
-        if (!wkt) throw new Error("Missing attribute 'wkt'");
-
-        const isValidWKT = isValidWkt(wkt);
-
-        if (isValidWKT) {
-            let featureCollection = await getFeaturesFromWkt(wkt, generateGeoids) as object;
-            featureCollection = {...featureCollection, generateGeoids};
-            return await analyzePlots(featureCollection); 
-        }
-
-    } catch (error: any) {
-        console.error(error.message);
-        return new NextResponse(JSON.stringify({ error: "Error in analysis. Please check your input." }), { status: 500 });
-    }
-}
+    let featureCollection = await getFeaturesFromWkt(wkt, generateGeoids) as object;
+    featureCollection = {...featureCollection, generateGeoids};
+    return await analyzePlots(featureCollection); 
+}));
