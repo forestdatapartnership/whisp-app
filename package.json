@@ -36,6 +36,7 @@
     "truncate": "^3.0.0",
     "uuidv4": "^6.2.13",
     "wellknown": "^0.5.0",
+    "winston": "^3.15.0",
     "xml2js": "^0.6.2",
     "zip-a-folder": "^3.1.6",
     "zustand": "^4.4.7"
