@@ -1,38 +1,18 @@
 import winston from "winston";
+import { getLogLevel } from "./utils";
 
-const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.json()
-      ),
-    }),
-  ],
-});
+export type LogFunction = (level: 'debug' | 'info' | 'warn' | 'error', message: string, source?: string, meta?: Record<string, any>) => void;
 
-function log(level: string, message: string, source: any = null, metadata = {}) {
-    const meta = {
-      ...metadata,
-      ...(source ? { source } : {}),
-    };
-  
-    logger.log(level, message, meta);
+export function useLogger(): winston.Logger {
+  return winston.createLogger({
+    level: getLogLevel(),
+    format: winston.format.json(),
+    transports: [
+      new winston.transports.Console({
+        format: winston.format.combine(
+          winston.format.json()
+        ),
+      }),
+    ],
+  });
 }
-
-function info(message: string, source: any = null, metadata = {}) {
-    log ('info', message, source, metadata);
-
-}
-
-function warn(message: string, source: any = null, metadata = {}){
-    log ('warn', message, source, metadata);
-}
-
-function error(message:string, source: any = null, metadata = {}){
-    log ('error', message, source, metadata);
-}
-
-export {logger, log, info, warn, error};

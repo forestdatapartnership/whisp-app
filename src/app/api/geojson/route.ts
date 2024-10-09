@@ -5,8 +5,10 @@ import { GEOMETRY_LIMIT } from "@/utils/constants";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
+import { LogFunction } from "@/lib/logger";
+import { withLogging } from "@/lib/hooks/withLogging";
 
-export const POST = withErrorHandling(withRequiredJsonBody(async (req: NextRequest, body: any): Promise<NextResponse> => {
+export const POST = withLogging(withErrorHandling(withRequiredJsonBody(async (req: NextRequest, body: any, log: LogFunction): Promise<NextResponse> => {
     const generateGeoids = body.generateGeoids || false;
 
     // const errors = validateGeoJSON(JSON.stringify(body));   
@@ -27,5 +29,5 @@ export const POST = withErrorHandling(withRequiredJsonBody(async (req: NextReque
 
     featureCollection = {...featureCollection, generateGeoids};
 
-    return await analyzePlots(featureCollection);
-}));
+    return await analyzePlots(featureCollection, log);
+})));

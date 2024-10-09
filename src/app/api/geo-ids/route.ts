@@ -4,8 +4,10 @@ import { analyzePlots } from "@/utils/analizePlots";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { useBadRequestResponse, useErrorResponse } from "@/lib/hooks/responses";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { withLogging } from "@/lib/hooks/withLogging";
+import { LogFunction } from "@/lib/logger";
 
-export const POST = withErrorHandling(withRequiredJsonBody(async (req: NextRequest, body: any): Promise<NextResponse> => {
+export const POST = withLogging(withErrorHandling(withRequiredJsonBody(async (req: NextRequest, body: any, log: LogFunction): Promise<NextResponse> => {
     const geoIds = body['geoIds'];
     if (!geoIds || !Array.isArray(geoIds)) {
         return useBadRequestResponse('Request body is missing geoId.');
@@ -33,5 +35,5 @@ export const POST = withErrorHandling(withRequiredJsonBody(async (req: NextReque
     }
 
     // const formattedCollection = createFeatureCollection(geojson);
-    return await analyzePlots(featureCollection);
-}));
+    return await analyzePlots(featureCollection, log);
+})));
