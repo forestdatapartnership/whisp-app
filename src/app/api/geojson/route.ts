@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzePlots } from "@/utils/analizePlots";
-import { validateGeoJSON, createFeatureCollection, addGeoId } from "@/utils/geojsonUtils";
+import { createFeatureCollection, addGeoId } from "@/utils/geojsonUtils";
 import { GEOMETRY_LIMIT } from "@/utils/constants";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
 import { LogFunction } from "@/lib/logger";
 import { withLogging } from "@/lib/hooks/withLogging";
+import { compose } from "@/utils/compose";
 
-export const POST = withLogging(withErrorHandling(withRequiredJsonBody(async (req: NextRequest, body: any, log: LogFunction): Promise<NextResponse> => {
+export const POST = compose(
+    withLogging,
+    withErrorHandling,
+    withRequiredJsonBody
+  )(async (req: NextRequest, body: any, log: LogFunction): Promise<NextResponse> => {
     const generateGeoids = body.generateGeoids || false;
-
-    // const errors = validateGeoJSON(JSON.stringify(body));   
-
-    // if (errors.length > 0) {
-    //     return NextResponse.json({ error: JSON.stringify(errors) }, { status: 400 })
-    // }
 
     let featureCollection = createFeatureCollection(body);
 
@@ -30,4 +29,4 @@ export const POST = withLogging(withErrorHandling(withRequiredJsonBody(async (re
     featureCollection = {...featureCollection, generateGeoids};
 
     return await analyzePlots(featureCollection, log);
-})));
+});
