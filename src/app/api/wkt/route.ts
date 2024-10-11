@@ -9,6 +9,8 @@ import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
+import { LogFunction } from "@/lib/logger";
+import { withLogging } from "@/lib/hooks/withLogging";
 
 const getFeaturesFromWkt = async (wkt: string, generateGeoids: boolean) => {
 
@@ -39,7 +41,7 @@ const getFeaturesFromWkt = async (wkt: string, generateGeoids: boolean) => {
     }
 };
 
-export const POST = withErrorHandling(withRequiredJsonBody(async (req: NextRequest, body: any): Promise<NextResponse> => {
+export const POST = withLogging(withErrorHandling(withRequiredJsonBody(async (req: NextRequest, body: any, log: LogFunction): Promise<NextResponse> => {
     const generateGeoids = body.generateGeoids || false;
     const { wkt } = body;
 
@@ -50,5 +52,5 @@ export const POST = withErrorHandling(withRequiredJsonBody(async (req: NextReque
 
     let featureCollection = await getFeaturesFromWkt(wkt, generateGeoids) as object;
     featureCollection = {...featureCollection, generateGeoids};
-    return await analyzePlots(featureCollection); 
-}));
+    return await analyzePlots(featureCollection, log); 
+})));

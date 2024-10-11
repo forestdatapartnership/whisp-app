@@ -1,15 +1,15 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { useBadRequestResponse } from './responses';
-import { error as logError } from "@/lib/logger"
+import { LogFunction } from "@/lib/logger"
 
 export function withErrorHandling(
-  handler: (req: NextRequest) => Promise<NextResponse>
+  handler: (req: NextRequest, log: LogFunction) => Promise<NextResponse>
 ) {
-  return async function (req: NextRequest): Promise<NextResponse> {
+  return async function (req: NextRequest, log: LogFunction): Promise<NextResponse> {
     try {
-      return await handler(req);
+      return await handler(req, log);
     } catch (error: any) {
-      logError('Error occurred: ' + error);
+      log('error', 'Error occurred: ' + error);
       return useBadRequestResponse("Error in analysis. Please check your input.");
     }
   };
