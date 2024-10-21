@@ -4,9 +4,9 @@ import ErrorAlert from '@/components/ErrorBar';
 import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
-import { isValidWkt } from '@/utils/validateWkt';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/utils/safePush';
+import { parseWKTAndJSONFile } from "@/utils/fileParser";
 
 const SubmitGeometry: React.FC = () => {
     const [wkt, setWkt] = useState<string>('');
@@ -21,41 +21,26 @@ const SubmitGeometry: React.FC = () => {
 
     const resetStore = useStore((state) => state.reset);
 
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (file: File) => {
         useStore.setState({ error: "" });
-        const file = event.target.files ? event.target.files[0] : null;
-
         if (file) {
-            const fileReader = new FileReader();
-
-            fileReader.onload = async (event) => {
-                const text = event.target?.result;
-                if (typeof text === 'string') {
-                    try {
-                        if (file.name.endsWith('.txt')) {
-                            setType('wkt');
-                            const isValidWKT = isValidWkt(text);
-                            if (!isValidWKT) {
-                                useStore.setState({ error: "Invalid WKT format" });
-                            } else {
-                                console.log(text);
-                                setWkt(text);
-                                useStore.setState({ selectedFile: file.name });
-                            }
-
-                        } else if (file.name.endsWith('.json') || file.name.endsWith('.geojson')) {
-                            setType('json');
-                            const jsonData = JSON.parse(text);
-                            setGeojson({ ...jsonData });
-                            useStore.setState({ selectedFile: file.name });
-                        }
-                    } catch (error) {
-                        useStore.setState({ error: "Error parsing file. Please check the file format." });
-                    }
+            const result = await parseWKTAndJSONFile(file);
+            
+            if (result && 'error' in result) {
+                useStore.setState({ error: result.error, selectedFile: "" });
+                setIsDisabled(true);
+            } else {
+                setIsDisabled(false);
+                useStore.setState({ selectedFile: file.name });
+                if (result && 'wkt' in result) {
+                    setType('wkt');
+                    setWkt(result.wkt);
                 }
-            };
-            fileReader.readAsText(file); // Initiate the reading process
-            setIsDisabled(false);
+                else if (result && 'json' in result) {
+                    setType('json');
+                    setGeojson(result.json);
+                }
+            }
         }
     };
 
@@ -166,6 +151,11 @@ const SubmitGeometry: React.FC = () => {
         </label>
     )
 
+    const accept = {
+        'text/plain': ['.txt'],
+        'application/json': ['.json', '.geojson']
+    }
+
     return (
         <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
             {isLoading && (
@@ -179,7 +169,7 @@ const SubmitGeometry: React.FC = () => {
                 <FileInput
                     innerMessage="Only .txt, .json and .geojson files are accepted."
                     handleFileChange={handleFileChange}
-                    input=".txt, .json, .geojson"
+                    accept={accept}
                 />
             </div>
             <div className="flex items-center mx-2 justify-between">
