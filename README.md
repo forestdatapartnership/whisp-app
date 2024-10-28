@@ -20,7 +20,7 @@ Currently the application can be found [here](https://whisp.openforis.org/).
 ### Analyze Geo IDs
 
 - **Method:** POST
-- **URL:** `/geo-ids`
+- **URL:** `https://whisp.openforis.org/api/geo-ids`
 - **Summary:** Analyze Geo IDs
 - **Description:** Accepts an array of Geo IDs and returns analysis results.
 - **Request Body:**
@@ -36,14 +36,13 @@ Currently the application can be found [here](https://whisp.openforis.org/).
   }
 ### Analyze WKT
 - **Method:** POST
-- **URL:** `/wkt`
+- **URL:** `https://whisp.openforis.org/api/wkt`
 - **Summary:** Send wkt geometry and obtain, comes back with JSON table containing data
 - **Description:** Accepts an array of Geo IDs and returns analysis results
 - **Request Body:**
   ```json
   {
-    "wkt": "string",
-    "generateGeoids": "boolean"
+    "wkt": "string"
   }
 - **Responses:**
   ```json
@@ -54,7 +53,7 @@ Currently the application can be found [here](https://whisp.openforis.org/).
 
 ### Analyze GeoJson
 - **Method:** POST
-- **URL:** `/geojson`
+- **URL:** `https://whisp.openforis.org/api/wkt/geojson`
 - **Summary:** Send geojson according to standard RFC 7946, with a FeatureCollection or a single Feature with a polygon as its geometry, comes back with JSON table containing data for each individual polygon detected 
 - **Description:** Accepts an array of Geo IDs and returns analysis results
 - **Request Body:**
