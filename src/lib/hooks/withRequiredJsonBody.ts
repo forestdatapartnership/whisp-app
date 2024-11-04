@@ -13,3 +13,4 @@ export function withRequiredJsonBody(handler: (req: NextRequest, jsonBody: any, 
     return handler(req, body, log, ...args);
   };
 }
+
