@@ -1,4 +1,3 @@
-export const compose = (...handlers: Function[]) => {
-    return (handler: Function) =>
-      handlers.reduceRight((prevHandler, currentHandler) => currentHandler(prevHandler), handler);
-  };
+export function compose<T>(...handlers: Array<(arg: T) => T>): (arg: T) => T {
+  return (arg: T) => handlers.reduce((prev, handler) => handler(prev), arg);
+}
