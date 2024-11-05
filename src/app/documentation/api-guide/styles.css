@@ -25,6 +25,14 @@ body .swagger-ui .swagger-ui section h3 {
     color: #FFFFFF;
 }
 
+#swagger-container .swagger-ui h2.title, 
+#swagger-container .swagger-ui p, 
+#swagger-container .swagger-ui span,
+#swagger-container .swagger-ui section h3,
+#swagger-container .opblock-summary-description {
+    color: #FFFFFF !important;
+}
+
 .swagger-ui legend { color: inherit; }
 
 .swagger-ui .debug * { outline: #e6da99 solid 1px; }
