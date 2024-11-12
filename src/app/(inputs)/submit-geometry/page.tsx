@@ -25,7 +25,7 @@ const SubmitGeometry: React.FC = () => {
         useStore.setState({ error: "" });
         if (file) {
             const result = await parseWKTAndJSONFile(file);
-            
+
             if (result && 'error' in result) {
                 useStore.setState({ error: result.error, selectedFile: "" });
                 setIsDisabled(true);
@@ -61,7 +61,7 @@ const SubmitGeometry: React.FC = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ wkt: wkt, generateGeoids: generateGeoids }),
+                    body: JSON.stringify({ wkt: wkt }),
                 });
 
                 data = await response.json();
@@ -73,7 +73,7 @@ const SubmitGeometry: React.FC = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ ...geojson, generateGeoids: generateGeoids }),
+                    body: JSON.stringify({ ...geojson, generateGeoids: false }),
                 })
 
                 data = await response.json();
@@ -174,7 +174,6 @@ const SubmitGeometry: React.FC = () => {
             </div>
             <div className="flex items-center mx-2 justify-between">
                 {renderExampleButton()}
-                {renderGeoIdCheckbox()}
             </div>
             <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
         </div>
