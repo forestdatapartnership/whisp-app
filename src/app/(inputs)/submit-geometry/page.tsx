@@ -7,6 +7,7 @@ import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/utils/safePush';
 import { parseWKTAndJSONFile } from "@/utils/fileParser";
+import Link from 'next/link';
 
 const SubmitGeometry: React.FC = () => {
     const [wkt, setWkt] = useState<string>('');
@@ -176,7 +177,11 @@ const SubmitGeometry: React.FC = () => {
                 {renderExampleButton()}
                 {renderGeoIdCheckbox()}
             </div>
-            <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
+            <div className="flex items-center justify-between">
+                <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">Terms of Service</Link>
+                <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
+            </div>
+
         </div>
     );
 };
