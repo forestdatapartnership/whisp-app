@@ -13,7 +13,7 @@ export const POST = compose(
     withLogging,
     withErrorHandling,
     withRequiredJsonBody
-  )(async (req: NextRequest, body: any, log: LogFunction): Promise<NextResponse> => {
+)(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
     const generateGeoids = body.generateGeoids || false;
 
     let featureCollection = createFeatureCollection(body);
@@ -26,7 +26,7 @@ export const POST = compose(
         featureCollection = await addGeoId(featureCollection);
     }
 
-    featureCollection = {...featureCollection, generateGeoids};
+    featureCollection = { ...featureCollection, generateGeoids };
 
     return await analyzePlots(featureCollection, log);
 });
