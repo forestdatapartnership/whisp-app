@@ -6,6 +6,7 @@ import { Tabs } from '@/components/Tabs';
 import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/utils/safePush';
+import Link from 'next/link';
 
 const GeoIdInput: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -76,25 +77,42 @@ const GeoIdInput: React.FC = () => {
 
     const downloadSampleDocument = () => {
         console.log('Downloading sample document...');
-        
+
         const element = document.createElement('a');
-        
+
         // Set the href to the path of the file you want to download
         element.setAttribute('href', '/geoids.txt');
-        
+
         // Set the download attribute to a specific filename or leave it empty to use the original filename
         element.setAttribute('download', 'geoids.txt');
-        
+
         // Append the anchor to the body
         document.body.appendChild(element);
-        
+
         // Programmatically click the anchor to trigger the download
         element.click();
-        
+
         // Remove the anchor from the body once the download is initiated
         document.body.removeChild(element);
     };
-    
+
+    const renderExampleButton = () => (
+        <button
+            onClick={downloadSampleDocument}
+            className="flex mt-2 items-center justify-center w-28 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded focus:outline-none focus:shadow-outline"
+            type="button"
+        >
+            <Image
+                className='mr-2'
+                onClick={() => useStore.setState({ error: '' })}
+                src="/download-outline.svg"
+                alt="download-outline"
+                width={20}
+                height={20}
+            />
+            Example
+        </button>
+    )
 
     return (
         <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
@@ -109,22 +127,11 @@ const GeoIdInput: React.FC = () => {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
             />
-            <div className="flex mx-2 items-center justify-between flex-wrap">
-                <button
-                    onClick={downloadSampleDocument}
-                    className="flex mt-2 items-center justify-center w-28 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded focus:outline-none focus:shadow-outline"
-                    type="button"
-                >
-                    <Image
-                        className='mr-2'
-                        onClick={() => useStore.setState({ error: '' })}
-                        src="/download-outline.svg"
-                        alt="download-outline"
-                        width={20}
-                        height={20}
-                    />
-                    Example
-                </button>
+            <div className="flex items-center mx-2 justify-between">
+                {renderExampleButton()}
+            </div>
+            <div className="flex items-center justify-between">
+                <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">Terms of Service</Link>
                 <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
             </div>
         </div>
