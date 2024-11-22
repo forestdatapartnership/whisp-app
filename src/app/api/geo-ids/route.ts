@@ -26,10 +26,17 @@ export const POST = compose(
   }
 
   const geoJsonArray = await Promise.all(geoIds.map(async (geoid: string) => {
-    const geoJsonFeature = await getJsonfromGeoId(geoid);
-    if (geoJsonFeature) {
-      const geoJsonGeoId = { ...geoJsonFeature, properties: { geoid } };
-      return geoJsonGeoId;
+
+    try {
+      const geoJsonFeature = await getJsonfromGeoId(geoid);
+      if (geoJsonFeature) {
+        const geoJsonGeoId = { ...geoJsonFeature, properties: { geoid } };
+        return geoJsonGeoId;
+      } else {
+        return "";
+      }
+    } catch {
+      return useErrorResponse("Asset registry is currently unavailable.", 502);
     }
   }));
 
