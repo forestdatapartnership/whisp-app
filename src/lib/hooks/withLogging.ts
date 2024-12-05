@@ -10,8 +10,8 @@ export function withLogging(handler : (req: NextRequest, log: LogFunction) => Pr
                 ip: req.ip || req.headers.get('X-Forwarded-For'), 
                 geo: req.geo,
                 method: req.method,
-                path: req.nextUrl.pathname,
-                userAgent: req.headers.get('user-agent'),
+                path: req.nextUrl?.pathname,
+                userAgent: req.headers?.get?.('user-agent'),
                 referrer: req.referrer
             }
         };
