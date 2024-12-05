@@ -56,10 +56,41 @@ describe('Dynamic API Analysis Tests', () => {
     });
   });
 
-  function validateTypes(expected: any, actual: any) {
-    for (const key in expected) {
-      if (typeof expected[key] !== typeof actual[key]) {
-        throw new Error(`Type mismatch for key "${key}": expected ${typeof expected[key]} but got ${typeof actual[key]}`);
+  function validateTypes(expected: any, actual: any) : void {
+    // validate array members
+    if (Array.isArray(expected) && Array.isArray(actual)) {
+      if (expected.length !== actual.length) {
+        throw new Error(
+          `Array length mismatch: expected ${expected.length} but got ${actual.length}`
+        );
       }
+      for (let i = 0; i < expected.length; i++) {
+        validateTypes(expected[i], actual[i]);
+      }
+    } 
+    // validate nested objects
+    else if (typeof expected === 'object' && expected !== null &&
+             typeof actual === 'object' && actual !== null) {
+      const expectedKeys = Object.keys(expected);
+      const actualKeys = Object.keys(actual);
+  
+      if (expectedKeys.length !== actualKeys.length) {
+        throw new Error(
+          `Object key length mismatch: expected ${expectedKeys.length} keys but got ${actualKeys.length} keys`
+        );
+      }
+  
+      for (const key of expectedKeys) {
+        if (!(key in actual)) {
+          throw new Error(`Key "${key}" is missing in actual object`);
+        }
+        validateTypes(expected[key], actual[key]);
+      }
+    }
+    // validate primitive types 
+    else if (typeof expected !== typeof actual) {
+      throw new Error(
+        `Type mismatch: expected ${typeof expected} but got ${typeof actual}`
+      );
     }
   }
