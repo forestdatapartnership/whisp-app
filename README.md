@@ -82,7 +82,34 @@ Currently the application can be found [here](https://whisp.openforis.org/).
     "token": "string"
   }
 ## Getting Started
+### Send an API request (WKT file)
 
+   ```
+import requests
+
+def whisp_wkt(wkt):
+    url = 'https://whisp.openforis.org/api/wkt'  # Correct endpoint
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        "wkt": wkt  # Only the WKT string is required
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f"HTTP error! Status: {response.status_code}, Response: {response.text}")
+
+# Usage
+wkt_string = "POLYGON((-4.286591893206829 5.545425708271704,-4.2872464587004755 5.54450734589365,-4.2883087863049205 5.54450734589365,-4.287901024194124 5.545607244851676,-4.286591893206829 5.545425708271704))"
+result = analyze_wkt(wkt_string)
+result["data"]
+    ```
+
+### Running the API locally
 To get started with Whisp, ensure you have [Node.js](https://nodejs.org) and [Python 3.11](https://www.python.org/downloads/) installed on your system. We assume you are a registered user in [Asset Registry](https://asset-registry.agstack.org) and [Collect Earth Online](https://app.collect.earth/). Then, follow these steps:
 
 
