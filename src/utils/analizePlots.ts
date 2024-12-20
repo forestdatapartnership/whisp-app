@@ -27,7 +27,7 @@ export const analyzePlots = async (payload: any, log: LogFunction) => {
             const fileContents = await fileHandle.readFile('utf8'); 
             const jsonData = JSON.parse(fileContents);
             if (Array.isArray(jsonData)){
-                log("info",`${jsonData.length} plots successully analysed for token ${token}`, logSource, { token: token, plots: jsonData.length });
+                log("info",`${jsonData.length} plots successfully analysed for token ${token}`, logSource, { token: token, plots: jsonData.length });
             }
             return NextResponse.json(
                 { data: jsonData, token: token }
