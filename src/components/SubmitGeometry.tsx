@@ -7,7 +7,6 @@ import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/utils/safePush';
 import { parseWKTAndJSONFile } from "@/utils/fileParser";
-import Link from 'next/link';
 
 const SubmitGeometry: React.FC = () => {
     const [wkt, setWkt] = useState<string>('');
@@ -26,7 +25,7 @@ const SubmitGeometry: React.FC = () => {
         useStore.setState({ error: "" });
         if (file) {
             const result = await parseWKTAndJSONFile(file);
-            
+
             if (result && 'error' in result) {
                 useStore.setState({ error: result.error, selectedFile: "" });
                 setIsDisabled(true);
@@ -140,18 +139,6 @@ const SubmitGeometry: React.FC = () => {
         </button>
     )
 
-    const renderGeoIdCheckbox = () => (
-        <label className="flex items-center space-x-2">
-            <input
-                type="checkbox"
-                checked={generateGeoids}
-                onChange={() => setGenerateGeoids(!generateGeoids)}
-                className="form-checkbox h-5 w-5"
-            />
-            <span className="text-white">Generate GeoIds</span>
-        </label>
-    )
-
     const accept = {
         'text/plain': ['.txt'],
         'application/json': ['.json', '.geojson']
@@ -174,12 +161,8 @@ const SubmitGeometry: React.FC = () => {
                 />
             </div>
             <div className="flex items-center mx-2 justify-between">
-                {renderExampleButton()}
-                {renderGeoIdCheckbox()}
-            </div>
-            <div className="flex items-center justify-between">
-                <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">Terms of Service</Link>
-                <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
+	    	{renderExampleButton()}
+            	<Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
             </div>
 
         </div>
