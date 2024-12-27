@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJsonfromGeoId, registerWkt } from "@/utils/assetRegistry";
 import { analyzePlots } from "@/utils/analizePlots";
 import { isValidWkt } from "@/utils/validateWkt";
-import { PolygonFeature } from "@/types/geojson";
-import * as wellknown from 'wellknown';
-import { addPropertyToFeatures, createFeatureCollection, validateGeoJSON } from "@/utils/geojsonUtils";
-import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
@@ -14,22 +9,20 @@ import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
 import { wktToFeatureCollection } from "@/utils/wktUtils";
 
-
-
 export const POST = compose(
-    withLogging,
-    withErrorHandling,
-    withRequiredJsonBody
-  )(async (req: NextRequest, body: any, log: LogFunction): Promise<NextResponse> => {
-    const generateGeoids = body.generateGeoids || false;
-    const { wkt } = body;
+  withLogging,
+  withErrorHandling,
+  withRequiredJsonBody
+)(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
+  const generateGeoids = body.generateGeoids || false;
+  const { wkt } = body;
 
-    if (!wkt) return useBadRequestResponse("Missing attribute 'wkt'");
-    
-    const isValidWKT = isValidWkt(wkt);
-    if (!isValidWKT) return useBadRequestResponse("Invalid WKT.");
+  if (!wkt) return useBadRequestResponse("Missing attribute 'wkt'");
 
-    let featureCollection = await wktToFeatureCollection(wkt, generateGeoids) as object;
-    featureCollection = {...featureCollection, generateGeoids};
-    return await analyzePlots(featureCollection, log); 
+  const isValidWKT = isValidWkt(wkt);
+  if (!isValidWKT) return useBadRequestResponse("Invalid WKT.");
+
+  let featureCollection = await wktToFeatureCollection(wkt, generateGeoids) as object;
+  featureCollection = { ...featureCollection, generateGeoids };
+  return await analyzePlots(featureCollection, log);
 });

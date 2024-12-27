@@ -15,7 +15,8 @@ const POST = compose(
   withLogging,
   withErrorHandling,
   withRequiredJsonBody
-)(async (req: NextRequest, body: any, log: LogFunction): Promise<NextResponse> => {
+)(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
+  console.log(body);
   const geoIds = body['geoIds'];
   if (!geoIds || !Array.isArray(geoIds)) {
     return useBadRequestResponse('Request body is missing geoId.');
@@ -25,10 +26,17 @@ const POST = compose(
   }
 
   const geoJsonArray = await Promise.all(geoIds.map(async (geoid: string) => {
-    const geoJsonFeature = await getJsonfromGeoId(geoid);
-    if (geoJsonFeature) {
-      const geoJsonGeoId = { ...geoJsonFeature, properties: { geoid } };
-      return geoJsonGeoId;
+
+    try {
+      const geoJsonFeature = await getJsonfromGeoId(geoid);
+      if (geoJsonFeature) {
+        const geoJsonGeoId = { ...geoJsonFeature, properties: { geoid } };
+        return geoJsonGeoId;
+      } else {
+        return "";
+      }
+    } catch {
+      return useErrorResponse("Asset registry is currently unavailable.", 502);
     }
   }));
 

@@ -6,57 +6,6 @@
     "description": "API for Whisp - An analytical tool for the support of zero-deforestation regulation claims"
   },
   "paths": {
-    "/api/geo-ids": {
-      "post": {
-        "summary": "Analyze Geo IDs",
-        "description": "Accepts an array of Geo IDs and returns analysis results.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "geoIds": {
-                    "type": "array",
-                    "example": ["c73172da7a0a50c87eed2a08c3acd65f8c8dd1033e84f1fcbe6ce2b90701ce0d", "2ff3962841cdfe820b31e03c54b774b724afbc5dafbf742bd0c8a0fc3a664a36"],
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": "Array of Geo IDs"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Geo IDs analysis results",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "description": "Analysis results of each Geo ID"
-                      }
-                    },
-                    "token": {
-                      "type": "string",
-                      "description": "Unique token for the analysis session"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/geojson": {
       "post": {
         "summary": "Submit GeoJSON for Analysis",

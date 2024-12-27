@@ -47,7 +47,7 @@ def glad_pht_prep():
 
 # EUFO_2020
 def jrc_gfc_2020_prep():
-    jrc_gfc2020_raw = ee.ImageCollection("JRC/GFC2020/V1")
+    jrc_gfc2020_raw = ee.ImageCollection("JRC/GFC2020/V2")
     return jrc_gfc2020_raw.mosaic().rename("EUFO_2020")
 
 # TMF_disturbed, TMF_plant, TMF_undist
@@ -74,8 +74,8 @@ def eth_kalischek_cocoa_prep():
 
 # Oil_palm_FDaP
 def fdap_palm_prep():
-    fdap_palm2020_model_raw = ee.ImageCollection("projects/forestdatapartnership/assets/palm/palm_2020_model_20240312")
-    fdap_palm = fdap_palm2020_model_raw.mosaic().gt(0.95).selfMask() # to check with Nick (increased due to false postives)
+    fdap_palm2020_model_raw = ee.ImageCollection('projects/forestdatapartnership/assets/palm/model_2024a')
+    fdap_palm = fdap_palm2020_model_raw.filterDate('2020-01-01', '2020-12-31').mosaic().gt(0.83).selfMask() 
     return fdap_palm.rename("Oil_palm_FDaP")
 
 # RADD_year_2019 to RADD_year_< current year >

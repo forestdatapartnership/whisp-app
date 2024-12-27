@@ -1,3 +1,4 @@
+import { useErrorResponse } from "@/lib/hooks/responses";
 import { geojsonToWKT } from "@terraformer/wkt";
 
 /**
@@ -34,10 +35,8 @@ export const registerWkt = async (wkt: string): Promise<any> => {
 
     const data = await response.json();
 
-    const ok = await response.ok;
-
     return data;
-    
+
   } catch (error) {
     console.error(error);
     // throw new Error("There was an error registering the WKT.");
@@ -53,44 +52,40 @@ export const registerWkt = async (wkt: string): Promise<any> => {
  * @return {Promise<any>} - A promise that resolves with the 'Geo JSON' object if successful, or logs an error and returns undefined if not.
  */
 export const getJsonfromGeoId = async (geoId: string): Promise<any> => {
+  const response = await fetch(`${process.env.ASSET_REGISTRY_BASE}/fetch-field/${geoId}`, {
+    method: "GET"
+  });
 
-  try {
-
-    const response = await fetch(`${process.env.ASSET_REGISTRY_BASE}/fetch-field/${geoId}`, {
-      method: "GET"
-    });
-
-    if (!response.ok) {
-      console.error(`HTTP error from Asset Registry, status: ${response.status} and geoId ${geoId}`);
-      return
+  if (!response.ok) {
+    console.error(`HTTP error from Asset Registry, status: ${response.status} and geoId ${geoId}`);
+    if (response.status >= 500) {
+      throw new Error("Asset registry is currently available.")
     }
+    return;
+  }
 
-    const data = await response.json();
+  const data = await response.json();
 
-    if (data && ['Geo JSON']) {
-      return data['Geo JSON'];
-    } else {
-      return
-    }
-  } catch (error: any) {
-    console.error(error);
-    // throw new Error("There was an error getting the Json from Geo Id.");
+  if (data && data['Geo JSON']) {
+    return data['Geo JSON'];
+  } else {
+    return;
   }
 }
 
 export const getGeoid = async (geoJson: any) => {
   try {
-      const wkt = geojsonToWKT(geoJson);
-      const data = await registerWkt(wkt);
-      const { 'Geo Id': agStackGeoId, 'matched geo ids': agStackGeoIds } = data;
+    const wkt = geojsonToWKT(geoJson);
+    const data = await registerWkt(wkt);
+    const { 'Geo Id': agStackGeoId, 'matched geo ids': agStackGeoIds } = data;
 
-      if (agStackGeoId || (Array.isArray(agStackGeoIds) && agStackGeoIds.length > 0)) {
-          return agStackGeoId ?? agStackGeoIds[0];
-      } else {
-          return null;
-      }
+    if (agStackGeoId || (Array.isArray(agStackGeoIds) && agStackGeoIds.length > 0)) {
+      return agStackGeoId ?? agStackGeoIds[0];
+    } else {
+      return null;
+    }
   } catch (error) {
-      console.log(error);
-      // throw error;
+    console.log(error);
+    // throw error;
   }
 }

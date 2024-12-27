@@ -29,7 +29,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-dropzone": "^14.2.3",
-    "swagger-ui-react": "^5.11.7",
+    "swagger-ui-react": "^5.17.14",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "terraformer-wkt-parser": "^1.2.1",

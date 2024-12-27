@@ -13,13 +13,24 @@ embed[type="application/pdf"] { filter: invert(90%); }
     color: '#FFFFFF'
 }
 
-.swagger-ui, .swagger-ui p, .swagger-ui section h3 { color: #FFFFFF; }
+body .swagger-ui .swagger-ui p, 
+body .swagger-ui .swagger-ui section h3 { 
+    color: #FFFFFF !important; 
+}
 
 .swagger-ui a { background-color: transparent; }
 
 .swagger-ui mark {
     background-color: #664b00;
     color: #FFFFFF;
+}
+
+#swagger-container .swagger-ui h2.title, 
+#swagger-container .swagger-ui p, 
+#swagger-container .swagger-ui span,
+#swagger-container .swagger-ui section h3,
+#swagger-container .opblock-summary-description {
+    color: #FFFFFF !important;
 }
 
 .swagger-ui legend { color: inherit; }
