@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import path from "path";
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
-import { analyze } from "@/utils/runPython";
+import { analyzeGeoJson } from "@/utils/runPython";
 import { LogFunction } from "@/lib/logger";
 
 export const analyzePlots = async (payload: any, log: LogFunction) => {
@@ -19,7 +19,7 @@ export const analyzePlots = async (payload: any, log: LogFunction) => {
         log("debug", `Starting analysis: ${token}`, logSource);
 
         // Attempt to analyze the plots
-        const analyzed = await analyze(token);
+        const analyzed = await analyzeGeoJson(token, log);
  
         if (analyzed) {
             // Read and parse the analysis results
