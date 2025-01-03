@@ -1,4 +1,5 @@
 import { exec } from 'child_process';
+import { LogFunction } from "@/lib/logger"
 
 // Define a UUID type as a branded string
 type UUID = string & { readonly __brand: unique symbol };
@@ -16,34 +17,37 @@ function isUUID(token: string): token is UUID {
  * @return {Promise<boolean>} - A promise that resolves to `true` if the analysis is successful,
  *                              and rejects with an error message if it fails due to execution errors or script errors.
  */
-export const analyze = async (token: string): Promise<boolean> => {
-    
+export const analyzeGeoJson = async (token: string, log: LogFunction): Promise<boolean> => {
+
+    const logSource = "runPython.ts"
+
     return new Promise((resolve, reject) => {
 
         if (!isUUID(token)) {
             reject('Invalid token: Not a UUID.');
             return;
         }
-
         const command = `${process.env.PYTHON_PATH} src/python/analysis.py "temp/${token}.json"`;
         const childProcess = exec(command, (error, stdout, stderr) => {
-            console.log(`Stdout: ${stdout}`);
+            log("debug", `Python Stdout: ${stdout}`);
+
             if (error) {
-                console.error(`${error.message}`);
+                log("error", `Python Stderr: ${stderr}`);
                 if (childProcess && !childProcess.killed) {
                     childProcess.kill();
                 }
-                reject(`${error.message}`);
+                reject(error.message);
                 return;
             }
+
             // Check exit code:
             if (childProcess.exitCode !== 0) {
+                log("error", `Python Stderr: ${stderr}`);
                 reject(`Python script exited with code ${childProcess.exitCode}`);
             } else {
                 resolve(true);
             }
         });
-        
         // Set a timeout
         const timeoutId = setTimeout(() => {
             if (childProcess && !childProcess.killed) {

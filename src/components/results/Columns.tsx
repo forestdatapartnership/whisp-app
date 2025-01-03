@@ -170,10 +170,10 @@ export const columns: ColumnDef<GeoAnalysisResult>[] = [
     header: "plotId",
     enableHiding: false,
   },
-  {
-    accessorKey: "geoid",
-    header: "geoid",
-  },
+  // {
+  //   accessorKey: "geoid",
+  //   header: "geoid",
+  // },
   {
     accessorKey: "Admin_Level_1",
     header: "Admin_Level_1",
