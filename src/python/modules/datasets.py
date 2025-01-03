@@ -167,42 +167,42 @@ def glad_gfc_loss_per_year_prep():
 # MODIS_fire_2000 to MODIS_fire_< current year >
 def modis_fire_prep():
     modis_fire = ee.ImageCollection("MODIS/061/MCD64A1")
+    start_year = 2000
+
+    # Determine the last available year by checking the latest image in the collection
+    last_image = modis_fire.sort('system:time_start', False).first()
+    last_date = ee.Date(last_image.get('system:time_start'))
+    end_year = last_date.get('year').getInfo()
+
     img_stack = None
-    
-    start_year = 2000 ## (starts 2019 in Africa, then 2020 for S America and Asia: https://data.globalforestwatch.org/datasets/gfw::deforestation-alerts-radd/about
-    
-    current_year = datetime.now().year
 
-    for year in range(start_year, current_year +1):
-        date_st = str(year) + "-01-01"
-        date_ed = str(year) + "-12-31"
-        #print(date_st)
-        modis_year = modis_fire.filterDate(date_st,date_ed).mosaic().select(['BurnDate']).gte(0).rename("MODIS_fire_" + str(year))
-        
-        if img_stack is None:
-            img_stack = modis_year
-        else:
-            img_stack = img_stack.addBands(modis_year)
+    for year in range(start_year, end_year + 1):
+        date_st = f"{year}-01-01"
+        date_ed = f"{year}-12-31"
+        modis_year = modis_fire.filterDate(date_st, date_ed).mosaic().select(['BurnDate']).gte(0).rename(f"MODIS_fire_{year}")
+        img_stack = modis_year if img_stack is None else img_stack.addBands(modis_year)
+
     return img_stack
-
-
 
 # ESA_fire_2000 to ESA_fire_2020
 def esa_fire_prep():
     esa_fire = ee.ImageCollection("ESA/CCI/FireCCI/5_1")
-    img_stack = None
-    for year in range(2001, 2020 +1):
-        date_st = str(year) + "-01-01"
-        date_ed = str(year) + "-12-31"
-        #print(date_st)
-        esa_year = esa_fire.filterDate(date_st,date_ed).mosaic().select(['BurnDate']).gte(0).rename("ESA_fire_" + str(year))
-        
-        if img_stack is None:
-            img_stack = esa_year
-        else:
-            img_stack = img_stack.addBands(esa_year)
-    return img_stack
+    start_year = 2001
 
+    # Determine the last available year by checking the latest image in the collection
+    last_image = esa_fire.sort('system:time_start', False).first()
+    last_date = ee.Date(last_image.get('system:time_start'))
+    end_year = last_date.get('year').getInfo()
+
+    img_stack = None
+
+    for year in range(start_year, end_year + 1):
+        date_st = f"{year}-01-01"
+        date_ed = f"{year}-12-31"
+        esa_year = esa_fire.filterDate(date_st, date_ed).mosaic().select(['BurnDate']).gte(0).rename(f"ESA_fire_{year}")
+        img_stack = esa_year if img_stack is None else img_stack.addBands(esa_year)
+
+    return img_stack
 
 
 #### disturbances combined (split into before and after 2020) 
