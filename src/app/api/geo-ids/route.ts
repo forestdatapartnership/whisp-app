@@ -11,7 +11,7 @@ import { compose } from "@/utils/compose";
 // Create a compose function for handlers
 
 
-const POST = compose(
+export const POST = compose(
   withLogging,
   withErrorHandling,
   withRequiredJsonBody
@@ -53,4 +53,3 @@ const POST = compose(
   return await analyzePlots(featureCollection, log);
 });
 
-export default POST;
