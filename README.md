@@ -26,7 +26,7 @@ Currently the application can be found [here](https://whisp.openforis.org/).
 
 ### Analyze GeoJson
 - **Method:** POST
-- **URL:** `https://whisp.openforis.org/api/wkt`
+- **URL:** `https://whisp.openforis.org/api/geojson`
 - **Summary:** Send geojson according to standard RFC 7946, with a FeatureCollection or a single Feature with a polygon as its geometry, comes back with JSON table containing data for each individual polygon detected 
 - **Request Body:**
   ```json 
