@@ -9,7 +9,7 @@ import { LogFunction } from "@/lib/logger";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
 
-export const POST = compose(
+const POST = compose(
     withLogging,
     withErrorHandling,
     withRequiredJsonBody
@@ -30,3 +30,4 @@ export const POST = compose(
 
     return await analyzePlots(featureCollection, log);
 });
+export default POST;
