@@ -45,13 +45,13 @@ Currently the application can be found [here](https://whisp.openforis.org/).
         }
       }
     ],
-  }```
+  }
 - **Responses:**
   ```json
   {
     "data": {"object"},
     "token": "string"
-  }```
+  }
 ## Getting Started
 
 To get started with Whisp, ensure you have [Node.js](https://nodejs.org) and [Python 3.11](https://www.python.org/downloads/) installed on your system. We assume you are a registered user in [Asset Registry](https://asset-registry.agstack.org) and [Collect Earth Online](https://app.collect.earth/). Then, follow these steps:
