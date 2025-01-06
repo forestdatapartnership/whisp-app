@@ -69,7 +69,7 @@ To get started with Whisp, ensure you have [Node.js](https://nodejs.org) and [Py
     - Install Google Earth Engine library
       
         ```bash
-        pip install earthengine-api --upgrade
+        pip install - r requirements.txt
         ```
       
     - Install project dependencies  
