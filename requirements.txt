@@ -3,4 +3,4 @@ geemap==0.29.6
 geopandas==0.14.1
 pandas==2.1.4
 earthengine-api==0.1.410
--e git+https://github.com/forestdatapartnership/whisp.git@30e25cb5a45a383778aa1d823a0ee75d27cb3904#egg=whisp
+-e git+https://github.com/forestdatapartnership/whisp.git@e310996683a4d4a67b17919d80a6161326922230#egg=whisp
