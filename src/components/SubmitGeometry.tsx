@@ -7,6 +7,7 @@ import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/utils/safePush';
 import { parseWKTAndJSONFile } from "@/utils/fileParser";
+import Link from 'next/link';
 
 const SubmitGeometry: React.FC = () => {
     const [wkt, setWkt] = useState<string>('');
@@ -15,7 +16,6 @@ const SubmitGeometry: React.FC = () => {
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
     const { error } = useStore();
     const [type, setType] = useState<string>('');
-    const [generateGeoids, setGenerateGeoids] = useState<boolean>(false);
 
     const safePush = useSafeRouterPush();
 
@@ -61,7 +61,7 @@ const SubmitGeometry: React.FC = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ wkt: wkt, generateGeoids: generateGeoids }),
+                    body: JSON.stringify({ wkt: wkt }),
                 });
 
                 data = await response.json();
@@ -73,7 +73,7 @@ const SubmitGeometry: React.FC = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ ...geojson, generateGeoids: generateGeoids }),
+                    body: JSON.stringify({ ...geojson }),
                 })
 
                 data = await response.json();
@@ -152,7 +152,9 @@ const SubmitGeometry: React.FC = () => {
                 </div>
             )}
             <h1 className="text-2xl font-semibold text-center mb-2">Submit Geometry</h1>
-            {error && <ErrorAlert />}
+            <div className="mx-2">
+                {error && <ErrorAlert />}
+            </div>
             <div className="p-2 rounded-b-lg">
                 <FileInput
                     innerMessage="Only .txt, .json and .geojson files are accepted."
@@ -161,10 +163,13 @@ const SubmitGeometry: React.FC = () => {
                 />
             </div>
             <div className="flex items-center mx-2 justify-between">
-	    	{renderExampleButton()}
-            	<Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
-            </div>
+                {renderExampleButton()}
 
+            </div>
+            <div className="flex items-center justify-between">
+                <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">Terms of Service</Link>
+                <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
+            </div>
         </div>
     );
 };

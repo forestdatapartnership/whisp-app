@@ -32,3 +32,4 @@ export const POST = compose(
 
     return await analyzePlots(featureCollection, log);
 });
+

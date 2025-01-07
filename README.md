@@ -2,43 +2,16 @@
 
 ## Overview
 
-Whisp is a powerful tool designed to support environmental conservation efforts by providing robust geospatial analysis. By ingesting geoids and geometries in either WKT (Well-Known Text) or GeoJSON formats, Whisp facilitates the creation of comprehensive supporting documentation necessary for claims under zero-deforestation regulatory mechanisms. This documentation can play a crucial role in validating efforts towards sustainability and compliance with environmental standards.
+Whisp is a tool that provides a detailed geospatial analysis via Google Earth Engine (GEE) to aid in zero-deforestation claims. It ingests geometries in either WKT (Well-Known Text) or GeoJSON format.  
 
 Currently the application can be found [here](https://whisp.openforis.org/). 
 
-## Features
-
-- **Data Ingestion:** Accepts geoids and geometries in WKT or GeoJSON formats.
-- **Geospatial Analysis:** Performs advanced analysis to support zero-deforestation claims.
-- **User-Friendly Interface:** Built with Next.js 14, offering a seamless and intuitive user experience.
-- **Unique token for analysis:** Each analysis is assigned a UUID that will serve to identify it as a unique document. You may share the analysis by providing the UUID within the url route: `/results/{UUID}`
-- **Optional Geo Id:** The platform allows to include the Geo Id as provided by the  [AgStack](https://agstack.org/) inititative. The selection is made by adding the `generateGeoids` flag, which will default to false if not included.
-
-
 ## Endpoints
 
-### Analyze Geo IDs
-
-- **Method:** POST
-- **URL:** `https://whisp.openforis.org/api/geo-ids`
-- **Summary:** Analyze Geo IDs
-- **Description:** Accepts an array of Geo IDs and returns analysis results.
-- **Request Body:**
-  ```json
-  {
-    "geoIds": ["string"]
-  }
-- **Responses:**
-  ```json
-  {
-    "data": {"object"},
-    "token": "string"
-  }
 ### Analyze WKT
 - **Method:** POST
 - **URL:** `https://whisp.openforis.org/api/wkt`
-- **Summary:** Send wkt geometry and obtain, comes back with JSON table containing data
-- **Description:** Accepts an array of Geo IDs and returns analysis results
+- **Summary:** Send wkt geometry and obtain JSON table containing data
 - **Request Body:**
   ```json
   {
@@ -53,9 +26,8 @@ Currently the application can be found [here](https://whisp.openforis.org/).
 
 ### Analyze GeoJson
 - **Method:** POST
-- **URL:** `https://whisp.openforis.org/api/wkt/geojson`
+- **URL:** `https://whisp.openforis.org/api/geojson`
 - **Summary:** Send geojson according to standard RFC 7946, with a FeatureCollection or a single Feature with a polygon as its geometry, comes back with JSON table containing data for each individual polygon detected 
-- **Description:** Accepts an array of Geo IDs and returns analysis results
 - **Request Body:**
   ```json 
   {
@@ -73,7 +45,6 @@ Currently the application can be found [here](https://whisp.openforis.org/).
         }
       }
     ],
-    "generateGeoids": "boolean"
   }
 - **Responses:**
   ```json
@@ -98,7 +69,7 @@ To get started with Whisp, ensure you have [Node.js](https://nodejs.org) and [Py
     - Install Google Earth Engine library
       
         ```bash
-        pip install earthengine-api --upgrade
+        pip install - r requirements.txt
         ```
       
     - Install project dependencies  
@@ -113,12 +84,6 @@ To get started with Whisp, ensure you have [Node.js](https://nodejs.org) and [Py
 
         ```plaintext
         PYTHON_PATH=
-        ASSET_REGISTRY_BASE=https://api-ar.agstack.org
-        USER_REGISTRY_BASE=https://user-registry.agstack.org
-        API_KEY=
-        CLIENT_SECRET=
-        CEO_EMAIL=
-        CEO_PASSWORD=
         ```
 
     - Create a `credentials.json` in the root directory with your Google Earth Engine service account details.
