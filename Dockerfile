@@ -1,13 +1,12 @@
-# Use Python 3.11 as the base image
 FROM python:3.11-slim AS base
 
-# Install Node.js v20.9.0, and necessary libraries for numpy
-RUN apt-get update && apt-get install -y curl gnupg && \
+# Install Node.js v20.9.0, git, and necessary libraries for numpy
+RUN apt-get update && apt-get install -y curl gnupg git && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs
 
-# Verify Node.js and npm installations
-RUN node -v && npm -v
+# Verify Node.js, npm, and git installations
+RUN node -v && npm -v && git --version
 
 # Install Python packages from requirements.txt
 COPY requirements.txt .
