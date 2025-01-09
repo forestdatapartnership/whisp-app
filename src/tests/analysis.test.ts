@@ -3,8 +3,8 @@ import path from 'path';
 import { createRequest } from 'node-mocks-http'; 
 import { compare } from 'fast-json-patch'; 
 
-import geoIdsAnalysisHandler from '@/app/api/geo-ids/route';
-import geojsonAnalysisHandler from '@/app/api/geojson/route';
+import { POST as geoIdsAnalysisHandler } from '@/app/api/geo-ids/route';
+import { POST as geojsonAnalysisHandler } from '@/app/api/geojson/route';
 import { NextRequest, NextResponse } from 'next/server';
 
 const INPUT_FOLDER = path.join(__dirname, 'analysis-data/input');
