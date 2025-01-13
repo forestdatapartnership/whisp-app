@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node jest-with-vm-modules.js"
+    "test": "jest"
   },
   "dependencies": {
     "@google/earthengine": "^0.1.390",
