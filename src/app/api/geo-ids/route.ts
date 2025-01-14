@@ -16,7 +16,6 @@ export const POST = compose(
   withErrorHandling,
   withRequiredJsonBody
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
-  console.log(body);
   const geoIds = body['geoIds'];
   if (!geoIds || !Array.isArray(geoIds)) {
     return useBadRequestResponse('Request body is missing geoId.');
