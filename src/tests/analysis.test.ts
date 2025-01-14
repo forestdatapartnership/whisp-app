@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { createRequest } from 'node-mocks-http'; 
-import { compare } from 'fast-json-patch'; 
 
 import { POST as geoIdsAnalysisHandler } from '@/app/api/geo-ids/route';
 import { POST as geojsonAnalysisHandler } from '@/app/api/geojson/route';
@@ -43,7 +42,7 @@ describe('Dynamic API Analysis Tests', () => {
   
         // compare types
         validateTypes(expectedOutput, result);
-
+      });
     });
   });
 
