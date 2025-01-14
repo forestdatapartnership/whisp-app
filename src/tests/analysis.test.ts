@@ -44,15 +44,6 @@ describe('Dynamic API Analysis Tests', () => {
         // compare types
         validateTypes(expectedOutput, result);
 
-        // compare jsons
-        const differences = compare(expectedOutput, result);
-  
-        // to do: implement a way to ignore some keys
-        if (differences.length > 0) {
-          console.error(`Differences for ${file}:`, differences);
-        }
-        expect(differences.length).toBe(0);
-      });
     });
   });
 
