@@ -1,14 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { columns } from "@/components/results/Columns"
 import { DataTable } from "@/components/results/DataTable"
 import ErrorAlert from '@/components/ErrorBar';
 import SuccessAlert from '@/components/SuccessBar';
 import { useParams, useRouter } from 'next/navigation';
 import { useStore } from "@/store";
 import './styles.css';
-import Image from 'next/image';
+import { ColumnDef } from '@tanstack/react-table';
 
 const Results: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -20,7 +19,7 @@ const Results: React.FC = () => {
     const [notFound, setNotFound] = useState<boolean>(false);
     const [geoIds, setGeoIds] = useState<string[]>([]);
     const [tableData, setTableData] = useState<any[]>([]);
-
+    const [columns, setColumns] = useState<any[]>([]);
     const clearSuccessMessage = () => setSuccessMessage('');
 
     const { token, data, error } = useStore();
@@ -28,15 +27,27 @@ const Results: React.FC = () => {
     const { id } = useParams<{ id: string }>();
 
     const csvUrl = `/api/download-csv/${token || id}`;
-    const collectEarthUrl = `/api/generate-ce-project/${token}`;
 
     const filterColumns = (columns: any[], data: any[]) => {
         const excludedColumns = ["geometry", "Centroid_lat", "Centroid_lon"];
-        if (data.length>0 && data.find((row)=> row["geoid"]?.trim().length>0) == null) {
+        if (data.length > 0 && data.find((row) => row["geoid"]?.trim().length > 0) == null) {
             excludedColumns.push("geoid")
         }
-        return columns.filter((column)=> !excludedColumns.includes(column.accessorKey));
+        return columns.filter((column) => !excludedColumns.includes(column.accessorKey));
     }
+
+    const createColumnDefs = (data: Record<string, any>[]): ColumnDef<Record<string, any>>[] => {
+        
+        console.log(data)
+        if (data.length === 0) return [];
+
+        const sample = data[0];
+        return Object.keys(sample).map((key) => ({
+            accessorKey: key,
+            header: key,
+            enableHiding: false,
+        }));
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -50,6 +61,7 @@ const Results: React.FC = () => {
                 }
                 const fetchedData = await response.json();
                 setTableData(fetchedData.data);
+                setColumns(createColumnDefs(fetchedData.data));
             } catch (error: any) {
                 console.error(error);
                 useStore.setState({ error: error.message });
@@ -63,7 +75,7 @@ const Results: React.FC = () => {
             setIsLoading(false);
         } else {
             setTableData(data);
-
+            setColumns(createColumnDefs(data));
             setGeoIds(data.map((item: any) => item.geoid));
         }
     }, [id, data]);
