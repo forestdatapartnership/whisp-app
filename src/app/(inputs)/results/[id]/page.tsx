@@ -36,7 +36,6 @@ const Results: React.FC = () => {
 
     const createColumnDefs = (data: Record<string, any>[]): ColumnDef<Record<string, any>>[] => {
         
-        console.log(data)
         if (data.length === 0) return [];
 
         const sample = data[0];
