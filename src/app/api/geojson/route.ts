@@ -8,7 +8,6 @@ import { useBadRequestResponse } from "@/lib/hooks/responses";
 import { LogFunction } from "@/lib/logger";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
-import { getIssues } from '@placemarkio/check-geojson';
 
 export const POST = compose(
     withLogging,
