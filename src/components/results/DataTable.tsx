@@ -44,15 +44,16 @@ export function DataTable<TData, TValue>({
     }
   };
 
-  const formatValue = (column: string, value: any) => {
-      if (typeof value === 'number') {
-          return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
-      } else if (column === 'geoid' || column === 'WDPA') {
-          return typeof value === 'string' && value.trim().length > 0? truncateString(value) : "na";
-      }
-      return value;
-  };
- 
+    const formatValue = (column: string, value: any) => {
+        if (typeof value === 'boolean') {
+            return value ? 'true' : 'false';
+        } else if (typeof value === 'number') {
+            return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
+        } else if (column === 'geoid' || column === 'WDPA') {
+            return typeof value === 'string' && value.trim().length > 0 ? truncateString(value) : 'na';
+        }
+        return value;
+    };
   return (
     <div>
         <DataTableViewOptions table={table} />
