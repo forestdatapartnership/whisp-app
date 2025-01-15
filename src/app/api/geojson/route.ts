@@ -14,7 +14,9 @@ export const POST = compose(
     withLogging,
     withErrorHandling,
     withRequiredJsonBody
-)(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
+)(async (req: NextRequest, ...args): Promise<NextResponse> => {
+    const [log, body] = args;
+
     const generateGeoids = body.generateGeoids || false;
 
     const geojsonErrors = validateGeoJSON(JSON.stringify(body));
