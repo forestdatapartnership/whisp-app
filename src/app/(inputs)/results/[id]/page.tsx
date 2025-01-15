@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DataTable } from "@/components/results/DataTable"
 import ErrorAlert from '@/components/ErrorBar';
 import SuccessAlert from '@/components/SuccessBar';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useStore } from "@/store";
 import './styles.css';
 import { ColumnDef } from '@tanstack/react-table';

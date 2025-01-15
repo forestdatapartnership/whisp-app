@@ -1,6 +1,7 @@
 import { hint } from '@mapbox/geojsonhint';
 import { getGeoid } from "./assetRegistry";
 import { Geometry, Feature, FeatureCollection, GeometryObject, Point, Polygon, GeoJsonProperties } from 'geojson';
+import { getIssues } from '@placemarkio/check-geojson'
 
 async function addGeoIdFeature(feature: Feature): Promise<any | null> {
 
@@ -18,11 +19,19 @@ async function addGeoIdFeature(feature: Feature): Promise<any | null> {
 }
 
 export const validateGeoJSON = (geojson: string) => {
-    const errors = hint(geojson).filter(error => {
-      return (!error.message.includes('"properties" member required') && !error.message.includes('Polygons and MultiPolygons should follow the right-hand rule'));
-    });
+    const ignoredErrors = [
+        '"properties" member required',
+        'Polygons and MultiPolygons should follow the right-hand rule',
+        'The properties member is missing.',
+        'This GeoJSON object requires a properties member but it is missing.'
+    ];
+
+    const errors = getIssues(geojson).filter(error => 
+        !ignoredErrors.some(ignoredError => error.message.includes(ignoredError))
+    );
+
     return errors;
-}
+};
 
 export async function addGeoId(geojson: any): Promise<any> {
     switch (geojson.type) {
