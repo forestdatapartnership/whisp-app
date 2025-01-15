@@ -5,10 +5,9 @@ import { columns } from "@/components/results/Columns"
 import { DataTable } from "@/components/results/DataTable"
 import ErrorAlert from '@/components/ErrorBar';
 import SuccessAlert from '@/components/SuccessBar';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useStore } from "@/store";
 import './styles.css';
-import Image from 'next/image';
 
 const Results: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
