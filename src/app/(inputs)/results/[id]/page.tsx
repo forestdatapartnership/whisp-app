@@ -42,7 +42,6 @@ const Results: React.FC = () => {
         return Object.keys(sample).map((key) => ({
             accessorKey: key,
             header: key,
-            enableHiding: false,
         }));
     };
 
