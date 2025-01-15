@@ -30,7 +30,7 @@ describe('Dynamic API Analysis Tests', () => {
           res = await geojsonAnalysisHandler(req);
         }
         else { 
-          return;
+          throw new Error("Please check files.")
         }
         
         // validate response
