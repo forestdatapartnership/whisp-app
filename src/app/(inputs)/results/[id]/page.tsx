@@ -11,8 +11,6 @@ import { ColumnDef } from '@tanstack/react-table';
 
 const Results: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [isCeoDisabled, setIsCeoDisabled] = useState<boolean>(false);
-    const [isCeDisabled, setIsCeDisabled] = useState<boolean>(false);
     const [isCsvDisabled, setIsCsvDisabled] = useState<boolean>(false);
     const [successMessage, setSuccessMessage] = useState<string>("");
     const [ceoLink, setCeoLink] = useState<string>("");
