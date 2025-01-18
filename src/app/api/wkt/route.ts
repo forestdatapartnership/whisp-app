@@ -16,6 +16,10 @@ export const POST = compose(
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
   const generateGeoids = body.generateGeoids || false;
   const { wkt } = body;
+  const logSource = "route.ts"
+
+  // Printing body temporarily to debug suspicious activity. 
+  log("info", body, logSource);
 
   if (!wkt) return useBadRequestResponse("Missing attribute 'wkt'");
 
