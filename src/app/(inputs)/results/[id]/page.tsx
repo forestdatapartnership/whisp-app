@@ -77,7 +77,7 @@ const Results: React.FC = () => {
     }, [id, data]);
 
     const generateEarthMap = () => {
-        if (data.length > 0) {
+        if (tableData.length > 0) {
             const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`
             const url = `https://whisp.earthmap.org/?fetchJson=${downloadUrl}`
             window.open(url, '_blank');
@@ -103,7 +103,7 @@ const Results: React.FC = () => {
                             <button
                                 onClick={() => generateEarthMap()}
                                 className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
-                                disabled={data.length === 0 ? true : false}
+                                disabled={tableData.length === 0 ? true : false}
                             >
                                 View in Whisp Map
                             </button>
