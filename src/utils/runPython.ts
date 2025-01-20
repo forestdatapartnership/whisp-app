@@ -4,10 +4,6 @@ import { LogFunction } from "@/lib/logger"
 // Define a UUID type as a branded string
 type UUID = string & { readonly __brand: unique symbol };
 
-function isUUID(token: string): token is UUID {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token);
-}
-
 /**
  * Asynchronously analyzes data by executing a Python script using a provided token.
  * The function expects a unique token to identify the data file, which should be located in the `temp` directory.
@@ -19,14 +15,8 @@ function isUUID(token: string): token is UUID {
  */
 export const analyzeGeoJson = async (token: string, log: LogFunction): Promise<boolean> => {
 
-    const logSource = "runPython.ts"
-
     return new Promise((resolve, reject) => {
 
-        if (!isUUID(token)) {
-            reject('Invalid token: Not a UUID.');
-            return;
-        }
         const command = `${process.env.PYTHON_PATH} src/python/analysis.py "temp/${token}.json"`;
         const childProcess = exec(command, (error, stdout, stderr) => {
             log("debug", `Python Stdout: ${stdout}`);
