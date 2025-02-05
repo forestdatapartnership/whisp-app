@@ -16,8 +16,8 @@ export async function GET(request: NextRequest, { params }: any) {
 		const features: Feature[] = data.map((item: any) => (
 			{
 				type: "Feature",
-				properties: {name: String(item.plotId)},
-				geometry: item.geometry
+				properties: { name: String(item.plotId) },
+				geometry: item.geojson
 			}
 		));
 
@@ -25,11 +25,11 @@ export async function GET(request: NextRequest, { params }: any) {
 			type: "FeatureCollection",
 			features: features,
 			name: {
- 
-				"en" : "WHISP Plots",
-				"fr" : "Parcelles WHISP",
-				"pt" : "Parcelas WHISP",
-				"es" : "Parcelas WHISP"
+
+				"en": "WHISP Plots",
+				"fr": "Parcelles WHISP",
+				"pt": "Parcelas WHISP",
+				"es": "Parcelas WHISP"
 			},
 		};
 	}
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest, { params }: any) {
 		}
 
 		const geojson = combineGeometriesToFeatureCollection(parsedData);
-		
+
 		return NextResponse.json(geojson);
 
 	} catch (error: any) {
