@@ -1,7 +1,9 @@
 import os
 import json
 import sys
+import ast
 import whisp
+import pandas as pd
 
 # Get the current working directory and resolve the absolute path.
 current_directory = os.path.abspath(os.getcwd())
@@ -23,6 +25,21 @@ whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path)
 # Replace NaN values with empty strings for consistency.
 whisp_df = whisp_df.fillna('')
 
+# Rename 'geo' column to 'geojson' and ensure correct formatting
+if 'geo' in whisp_df.columns:
+    whisp_df = whisp_df.rename(columns={'geo': 'geojson'})
+
+    # Graceful way to parse geojson correctly
+    def parse_geojson(value):
+        if isinstance(value, str):  # If it's a string, try to parse
+            try:
+                return ast.literal_eval(value)  # Safely parse Python-like JSON
+            except (ValueError, SyntaxError):
+                return None  # Return None if parsing fails
+        return value  # If already a dict, return as-is
+
+    whisp_df['geojson'] = whisp_df['geojson'].apply(parse_geojson)
+
 # Define the path for the resulting CSV file based on the input file name.
 csv_file_path = os.path.splitext(file_path)[0] + '-result.csv'
 
@@ -41,3 +58,4 @@ with open(json_filename, 'w') as outfile:
 
 # Notify the user of the successful export.
 print(f"Data exported to {json_filename}")
+
