@@ -11,8 +11,8 @@ import { geojsonToWKT } from "@terraformer/wkt";
 export const registerWkt = async (wkt: string): Promise<any> => {
   try {
     const url = `${process.env.ASSET_REGISTRY_BASE}/register-field-boundary`;
-    const apiKey = process.env.API_KEY;
-    const clientSecret = process.env.CLIENT_SECRET;
+    const apiKey = process.env.AR_API_KEY;
+    const clientSecret = process.env.AR_CLIENT_SECRET;
 
     if (!url || !apiKey || !clientSecret) {
       throw new Error("Missing required environment variables.");
