@@ -8,9 +8,6 @@ import { withLogging } from "@/lib/hooks/withLogging";
 import { LogFunction } from "@/lib/logger";
 import { compose } from "@/utils/compose";
 
-// Create a compose function for handlers
-
-
 export const POST = compose(
   withLogging,
   withErrorHandling,
