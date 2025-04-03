@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "db:setup": "node src/db/dbSetup.js",
     "lint": "next lint",
     "test": "jest"
   },
@@ -21,12 +22,17 @@
     "@types/wellknown": "^0.5.8",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "cookie": "^1.0.2",
     "csv-parser": "^3.0.0",
     "csv-stringify": "^6.4.6",
     "geojson-validation": "^1.0.2",
+    "jose": "^6.0.10",
     "just": "^0.1.8",
     "lucide-react": "^0.427.0",
     "next": "^14.2.23",
+    "next-auth": "^4.24.11",
+    "nodemailer": "^6.10.0",
+    "pg": "^8.14.1",
     "react": "^18",
     "react-dom": "^18",
     "react-dropzone": "^14.2.3",
@@ -47,6 +53,8 @@
     "@types/geojson": "^7946.0.14",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.14.2",
+    "@types/nodemailer": "^6.4.17",
+    "@types/pg": "^8.11.11",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/supertest": "^6.0.2",
@@ -60,6 +68,7 @@
     "node-mocks-http": "^1.16.1",
     "tailwindcss": "^3.3.0",
     "ts-jest": "^29.2.5",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   }
 }

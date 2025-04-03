@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DataTable } from "@/components/results/DataTable"
-import ErrorAlert from '@/components/ErrorBar';
+import ErrorAlert from '@/components/ErrorAlert';
 import SuccessAlert from '@/components/SuccessBar';
 import { useParams } from 'next/navigation';
 import { useStore } from "@/store";
@@ -13,14 +13,17 @@ const Results: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isCsvDisabled, setIsCsvDisabled] = useState<boolean>(false);
     const [successMessage, setSuccessMessage] = useState<string>("");
-    const [ceoLink, setCeoLink] = useState<string>("");
     const [notFound, setNotFound] = useState<boolean>(false);
     const [geoIds, setGeoIds] = useState<string[]>([]);
     const [tableData, setTableData] = useState<any[]>([]);
     const [columns, setColumns] = useState<any[]>([]);
-    const clearSuccessMessage = () => setSuccessMessage('');
+
+    const clearSuccessMessage = () => setSuccessMessage("");
 
     const { token, data, error } = useStore();
+
+    const clearError = () => useStore.setState({ error: "" });
+
 
     const { id } = useParams<{ id: string }>();
 
@@ -57,6 +60,7 @@ const Results: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+
             setIsLoading(true);
             setNotFound(false);
             try {
@@ -134,7 +138,7 @@ const Results: React.FC = () => {
                             </a>
                         </div>
                     </div>
-                    {error && <ErrorAlert />}
+                    {error && <ErrorAlert error={error} clearError={clearError} /> }
                     {successMessage && <SuccessAlert successMessage={successMessage} clearSuccessMessage={clearSuccessMessage} />}
                     <DataTable columns={columns} data={tableData} />
                 </>

@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react';
-import ErrorAlert from '@/components/ErrorBar';
+import ErrorAlert from '@/components/ErrorAlert';
 import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
@@ -18,11 +18,12 @@ const SubmitGeometry: React.FC = () => {
     const [type, setType] = useState<string>('');
 
     const safePush = useSafeRouterPush();
-
     const resetStore = useStore((state) => state.reset);
 
+    const clearError = () => useStore.setState({ error: "" });
+
     const handleFileChange = async (file: File) => {
-        useStore.setState({ error: "" });
+        clearError();
         if (file) {
             const result = await parseWKTAndJSONFile(file);
 
@@ -46,12 +47,12 @@ const SubmitGeometry: React.FC = () => {
 
     const clearInput = () => {
         setIsDisabled(true);
-        useStore.setState({ error: "", selectedFile: "" });
-    }
+        clearError();
+        useStore.setState({ selectedFile: "" });
+    };
 
     const analyze = async () => {
-
-        setIsLoading(true)
+        setIsLoading(true);
 
         try {
             let data, response;
@@ -61,20 +62,18 @@ const SubmitGeometry: React.FC = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ wkt: wkt }),
+                    body: JSON.stringify({ wkt }),
                 });
 
                 data = await response.json();
-
-            } else if (type === ('json')) {
-
+            } else if (type === 'json') {
                 response = await fetch('/api/geojson', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ ...geojson }),
-                })
+                });
 
                 data = await response.json();
             }
@@ -93,10 +92,9 @@ const SubmitGeometry: React.FC = () => {
 
             if (data) {
                 resetStore();
-                useStore.setState({ token: data.token, data: data.data, error: "" });
+                useStore.setState({ token: data.token, data: data.data });
                 safePush(`/results/${data.token}`);
             }
-
         } catch (error: any) {
             useStore.setState({ error: error.message });
             setIsLoading(false);
@@ -104,20 +102,11 @@ const SubmitGeometry: React.FC = () => {
     };
 
     const downloadSampleDocument = () => {
-        console.log('Downloading sample document...');
-
         const element = document.createElement('a');
-
         element.setAttribute('href', '/whisp_example_polys.geojson');
-
         element.setAttribute('download', 'whisp_example_polys.geojson');
-
         document.body.appendChild(element);
-
-        // Programmatically click the anchor to trigger the download
         element.click();
-
-        // Remove the anchor from the body once the download is initiated
         document.body.removeChild(element);
     };
 
@@ -129,7 +118,7 @@ const SubmitGeometry: React.FC = () => {
         >
             <Image
                 className='mr-2'
-                onClick={() => useStore.setState({ error: '' })}
+                onClick={clearError}
                 src="/download-outline.svg"
                 alt="download-outline"
                 width={20}
@@ -137,12 +126,12 @@ const SubmitGeometry: React.FC = () => {
             />
             Example
         </button>
-    )
+    );
 
     const accept = {
         'text/plain': ['.txt'],
         'application/json': ['.json', '.geojson']
-    }
+    };
 
     return (
         <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
@@ -153,7 +142,7 @@ const SubmitGeometry: React.FC = () => {
             )}
             <h1 className="text-2xl font-semibold text-center mb-2">Submit Geometry</h1>
             <div className="mx-2">
-                {error && <ErrorAlert />}
+                {error && <ErrorAlert error={error} clearError={clearError} />}
             </div>
             <div className="p-2 rounded-b-lg">
                 <FileInput
@@ -164,10 +153,11 @@ const SubmitGeometry: React.FC = () => {
             </div>
             <div className="flex items-center mx-2 justify-between">
                 {renderExampleButton()}
-
             </div>
             <div className="flex items-center justify-between">
-                <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">Terms of Service</Link>
+                <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">
+                    Terms of Service
+                </Link>
                 <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
             </div>
         </div>
@@ -175,3 +165,4 @@ const SubmitGeometry: React.FC = () => {
 };
 
 export default SubmitGeometry;
+

@@ -1,11 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
-import { useStore } from '@/store';
 
+interface ErrorAlertProps {
+    error: string;
+    clearError: () => void;
+}
 
-const ErrorAlert = () => {
-
-    const error = useStore().error;
+const ErrorAlert: React.FC<ErrorAlertProps> = ({ error, clearError }) => {
+    if (!error) return null;
 
     return (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -15,10 +17,10 @@ const ErrorAlert = () => {
             </div>
             <span className="absolute top-0 bottom-0 right-0 flex items-center px-4 py-3">
                 <Image
-                    onClick={() => useStore.setState({ error: "" })}
+                    onClick={clearError}
                     src="/x-red.svg"
                     alt="Close"
-                    className="fill-current"
+                    className="cursor-pointer"
                     width={15}
                     height={15}
                 />
