@@ -9,8 +9,18 @@ RETURNS TEXT AS $$
 DECLARE
     hashed_password TEXT;
 BEGIN
+    -- Check if the email already exists
     IF EXISTS (SELECT 1 FROM users WHERE email = u_email) THEN
         RETURN 'Email already exists';
+    END IF;
+
+    -- Password Policy Enforcement
+    IF LENGTH(u_password) < 8 OR
+       NOT u_password ~ '[A-Z]' OR
+       NOT u_password ~ '[a-z]' OR
+       NOT u_password ~ '[0-9]' OR
+       NOT u_password ~ '[!@#$%^&*(),.?":{}|<>]' THEN
+       RETURN 'Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character.';
     END IF;
 
     -- Hash the password using bcrypt
@@ -24,17 +34,133 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP FUNCTION IF EXISTS login_user(TEXT, TEXT);
-
-CREATE OR REPLACE FUNCTION login_user(u_email TEXT, u_password TEXT)
-RETURNS TABLE(id INT, email TEXT)
-AS $$
+CREATE OR REPLACE FUNCTION change_password(
+    u_email TEXT,
+    current_password TEXT,
+    new_password TEXT
+)
+RETURNS TEXT AS $$
+DECLARE
+    user_record RECORD;
 BEGIN
-  RETURN QUERY
-  SELECT users.id, users.email
-  FROM users
-  WHERE users.email = u_email
-    AND users.password_hash = crypt(u_password, users.password_hash);
+    SELECT * INTO user_record FROM users WHERE email = u_email;
+
+    IF NOT FOUND THEN
+        RETURN 'User not found';
+    END IF;
+
+    IF user_record.password_hash <> crypt(current_password, user_record.password_hash) THEN
+        RETURN 'Incorrect current password';
+    END IF;
+
+    IF LENGTH(new_password) < 8 OR
+       NOT new_password ~ '[A-Z]' OR
+       NOT new_password ~ '[a-z]' OR
+       NOT new_password ~ '[0-9]' OR
+       NOT new_password ~ '[!@#$%^&*(),.?":{}|<>]' THEN
+       RETURN 'Password does not meet policy';
+    END IF;
+
+    UPDATE users SET password_hash = crypt(new_password, gen_salt('bf'))
+    WHERE email = u_email;
+
+    RETURN 'Password changed successfully';
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION change_password(
+    u_email TEXT,
+    current_password TEXT,
+    new_password TEXT
+)
+RETURNS TEXT AS $$
+DECLARE
+    user_record RECORD;
+BEGIN
+    SELECT * INTO user_record FROM users WHERE email = u_email;
+
+    IF NOT FOUND THEN
+        RETURN 'User not found';
+    END IF;
+
+    IF user_record.password_hash <> crypt(current_password, user_record.password_hash) THEN
+        RETURN 'Incorrect current password';
+    END IF;
+
+    IF LENGTH(new_password) < 8 OR
+       NOT new_password ~ '[A-Z]' OR
+       NOT new_password ~ '[a-z]' OR
+       NOT new_password ~ '[0-9]' OR
+       NOT new_password ~ '[!@#$%^&*(),.?":{}|<>]' THEN
+       RETURN 'Password does not meet policy';
+    END IF;
+
+    UPDATE users SET password_hash = crypt(new_password, gen_salt('bf'))
+    WHERE email = u_email;
+
+    RETURN 'Password changed successfully';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION insert_email_verification_token(
+  u_email TEXT,
+  u_token TEXT,
+  u_expires_at TIMESTAMPTZ
+) RETURNS VOID AS $$
+DECLARE
+  uid INT;
+BEGIN
+  SELECT id INTO uid FROM users WHERE email = u_email;
+
+  IF uid IS NULL THEN
+    RAISE EXCEPTION 'User with email % does not exist', u_email;
+  END IF;
+
+  INSERT INTO email_verification_tokens (user_id, token, expires_at)
+  VALUES (uid, u_token, u_expires_at);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION verify_email_by_token(u_token TEXT)
+RETURNS TEXT AS $$
+DECLARE
+  target_user_id INT;
+BEGIN
+  SELECT user_id INTO target_user_id
+  FROM email_verification_tokens
+  WHERE token = u_token AND expires_at > NOW();
+
+  IF target_user_id IS NULL THEN
+    RETURN 'Invalid or expired token';
+  END IF;
+
+  UPDATE users SET email_verified = TRUE WHERE id = target_user_id;
+  DELETE FROM email_verification_tokens WHERE token = u_token;
+
+  RETURN 'Email verified successfully';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION create_or_replace_api_key(
+  _user_id INT,
+  _api_key TEXT,
+  _expires_at TIMESTAMPTZ
+)
+RETURNS api_keys AS $$
+INSERT INTO api_keys (user_id, api_key, expires_at)
+VALUES (_user_id, _api_key, _expires_at)
+ON CONFLICT (user_id)
+DO UPDATE SET api_key = EXCLUDED.api_key, expires_at = EXCLUDED.expires_at
+RETURNING *;
+$$ LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION get_api_key_by_user(_user_id INT)
+RETURNS api_keys AS $$
+SELECT * FROM api_keys WHERE user_id = _user_id;
+$$ LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION delete_api_key(_id INT)
+RETURNS VOID AS $$
+DELETE FROM api_keys WHERE id = _id;
+$$ LANGUAGE sql;
 
