@@ -154,13 +154,18 @@ DO UPDATE SET api_key = EXCLUDED.api_key, expires_at = EXCLUDED.expires_at
 RETURNING *;
 $$ LANGUAGE sql;
 
-CREATE OR REPLACE FUNCTION get_api_key_by_user(_user_id INT)
+CREATE OR REPLACE FUNCTION find_api_key(p_hashed_key TEXT)
 RETURNS api_keys AS $$
-SELECT * FROM api_keys WHERE user_id = _user_id;
+SELECT *
+FROM api_keys
+WHERE api_key = p_hashed_key
+  AND revoked = false
+  AND expires_at > now()
+LIMIT 1;
 $$ LANGUAGE sql;
 
-CREATE OR REPLACE FUNCTION delete_api_key(_id INT)
+CREATE OR REPLACE FUNCTION delete_api_key_by_user(_user_id INT)
 RETURNS VOID AS $$
-DELETE FROM api_keys WHERE id = _id;
+DELETE FROM api_keys WHERE user_id = _user_id;
 $$ LANGUAGE sql;
 

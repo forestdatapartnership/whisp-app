@@ -9,10 +9,6 @@ import { jwtVerify, SignJWT } from "jose";
 export const withAuth: MiddlewareFactory = (next) => {
     return async (request: NextRequest, _next: NextFetchEvent) => {
 
-        // if (process.env.NODE_ENV === "development") {
-        //     return NextResponse.next();
-        // }
-        //
         const SECRET_KEY = process.env.JWT_SECRET || "your-secret-key";
         const { pathname } = request.nextUrl;
 
