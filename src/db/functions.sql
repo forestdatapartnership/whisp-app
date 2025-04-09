@@ -143,25 +143,26 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION create_or_replace_api_key(
   _user_id INT,
-  _api_key TEXT,
+  _api_key_hash TEXT,
   _expires_at TIMESTAMPTZ
 )
 RETURNS api_keys AS $$
-INSERT INTO api_keys (user_id, api_key, expires_at)
-VALUES (_user_id, _api_key, _expires_at)
+INSERT INTO api_keys (user_id, api_key_hash, expires_at)
+VALUES (_user_id, _api_key_hash, _expires_at)
 ON CONFLICT (user_id)
-DO UPDATE SET api_key = EXCLUDED.api_key, expires_at = EXCLUDED.expires_at
+DO UPDATE SET api_key_hash = EXCLUDED.api_key_hash, expires_at = EXCLUDED.expires_at
 RETURNING *;
 $$ LANGUAGE sql;
 
 CREATE OR REPLACE FUNCTION find_api_key(p_hashed_key TEXT)
-RETURNS api_keys AS $$
-SELECT *
-FROM api_keys
-WHERE api_key = p_hashed_key
-  AND revoked = false
-  AND expires_at > now()
-LIMIT 1;
+RETURNS BOOLEAN AS $$
+SELECT EXISTS (
+  SELECT 1
+  FROM api_keys
+  WHERE api_key_hash = p_hashed_key
+    AND revoked = false
+    AND expires_at > now()
+);
 $$ LANGUAGE sql;
 
 CREATE OR REPLACE FUNCTION delete_api_key_by_user(_user_id INT)
