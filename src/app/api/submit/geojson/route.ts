@@ -5,9 +5,9 @@ import { GEOMETRY_LIMIT } from "@/utils/constants";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
-import { LogFunction } from "@/lib/logger";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
+import { checkApiKey } from "@/lib/checkApiKey";
 
 export const POST = compose(
     withLogging,
@@ -15,6 +15,10 @@ export const POST = compose(
     withRequiredJsonBody
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
     const [log, body] = args;
+    console.log("checkKey")
+
+    const apiKeyCheck = await checkApiKey(req, log);
+    if (apiKeyCheck !== true) return apiKeyCheck;
 
     const generateGeoids = body.generateGeoids || false;
 
