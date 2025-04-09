@@ -12,8 +12,18 @@ export const withAuth: MiddlewareFactory = (next) => {
         const SECRET_KEY = process.env.JWT_SECRET || "your-secret-key";
         const { pathname } = request.nextUrl;
 
-        const publicPaths = ["/api/auth/login", "/api/auth/register", "/login", "/register", "/api/auth/change-password"];
-        if (publicPaths.some(path => pathname.startsWith(path))) {
+        const publicPaths = [
+            "/api/auth/login",
+            "/api/auth/register",
+            "/login",
+            "/register",
+            "/api/auth/change-password"
+        ];
+
+        if (
+            publicPaths.includes(pathname) ||
+            pathname.startsWith("/api/submit/")
+        ) {
             return NextResponse.next();
         }
 
@@ -74,17 +84,17 @@ export const withAuth: MiddlewareFactory = (next) => {
                         headers: requestHeaders
                     }
                 });
-                
+
                 // Set new tokens as cookies
-                response.cookies.set('token', newAccessToken, { 
+                response.cookies.set('token', newAccessToken, {
                     httpOnly: true,
                     secure: true,
                     sameSite: 'strict',
                     path: '/',
                     maxAge: 900 // 15 minutes
                 });
-                
-                response.cookies.set('refreshToken', newRefreshToken, { 
+
+                response.cookies.set('refreshToken', newRefreshToken, {
                     httpOnly: true,
                     secure: true,
                     sameSite: 'strict',
