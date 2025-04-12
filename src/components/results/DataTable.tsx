@@ -33,6 +33,15 @@ export function DataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      columnVisibility: {
+        geojson: false,
+        Centroid_lat: false,
+        Centroid_lon: false,
+        external_id: false,
+        geoid: false
+      }
+    }
   });
 
   const truncateString = (str: string) => {

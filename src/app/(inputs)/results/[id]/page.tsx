@@ -26,21 +26,6 @@ const Results: React.FC = () => {
 
     const csvUrl = `/api/download-csv/${token || id}`;
 
-    const filterColumns = (columns: any[], data: any[]) => {
-        const excludedColumns = ["geojson", "Centroid_lat", "Centroid_lon"];
-
-        if (data.length > 0 && data.find((row) => row["geoid"]?.trim().length > 0) == null) {
-            excludedColumns.push("geoid");
-        }
-
-        const allExternalIdEmpty = data.every((row) => !row["external_id"]?.trim());
-        if (allExternalIdEmpty) {
-            excludedColumns.push("external_id");
-        }
-
-        return columns.filter((column) => !excludedColumns.includes(column.accessorKey));
-    }
-
     const createColumnDefs = (data: Record<string, any>[]): ColumnDef<Record<string, any>>[] => {
         if (data.length === 0) return [];
         const sample = data[0];
@@ -62,10 +47,8 @@ const Results: React.FC = () => {
                 }
                 const fetchedData = await response.json();
                 setTableData(fetchedData.data);
-
                 const columnDefs = createColumnDefs(fetchedData.data);
-                const filteredColumns = filterColumns(columnDefs, fetchedData.data);
-                setColumns(filteredColumns);
+                setColumns(columnDefs);
             } catch (error: any) {
                 console.error(error);
                 useStore.setState({ error: error.message });
@@ -80,8 +63,7 @@ const Results: React.FC = () => {
         } else {
             setTableData(data);
             const columnDefs = createColumnDefs(data);
-            const filteredColumns = filterColumns(columnDefs, data);
-            setColumns(filteredColumns);
+            setColumns(columnDefs);
             setGeoIds(data.map((item: any) => item.geoid));
         }
     }, [id, data]);
