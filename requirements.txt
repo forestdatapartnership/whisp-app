@@ -1,7 +1,2 @@
-numpy==1.26.3
-geemap==0.29.6
-geopandas==0.14.1
-pandas==2.1.4
-earthengine-api==0.1.410
-geojson==3.2.0
--e git+https://github.com/forestdatapartnership/whisp.git@f928474bbdc78cf897fcb75e41c7cd8e709e9ce8#egg=whisp
+pandas
+openforis-whisp==1.0.0a1
