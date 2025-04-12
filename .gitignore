@@ -47,3 +47,7 @@ credentials.*
 
 # Ignore any deploy file
 *.sh
+
+venv/
+/lib
+/bin
