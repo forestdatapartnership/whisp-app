@@ -5,11 +5,12 @@ import {
 } from "next/server";
 import { MiddlewareFactory } from "./types";
 import { jwtVerify, SignJWT } from "jose";
+import { assertEnvVar } from "@/lib/utils";
 
 export const withAuth: MiddlewareFactory = (next) => {
     return async (request: NextRequest, _next: NextFetchEvent) => {
-
-        const SECRET_KEY = process.env.JWT_SECRET || "your-secret-key";
+        // Assert JWT secret is present at startup
+        const SECRET_KEY = assertEnvVar('JWT_SECRET');
         const { pathname } = request.nextUrl;
 
         const publicPaths = [
@@ -36,6 +37,7 @@ export const withAuth: MiddlewareFactory = (next) => {
                     token,
                     new TextEncoder().encode(SECRET_KEY)
                 );
+
                 if (!payload.sub) throw new Error("Invalid token payload: Missing 'sub'");
 
                 // Add sub to request headers

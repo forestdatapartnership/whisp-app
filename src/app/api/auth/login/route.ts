@@ -5,8 +5,7 @@ import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
-
-const SECRET_KEY = process.env.JWT_SECRET || "your-secret-key";
+import { assertEnvVar } from "@/lib/utils";
 
 export const POST = compose(
     withLogging,
@@ -14,6 +13,7 @@ export const POST = compose(
     withRequiredJsonBody
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
     const [log, body] = args;
+    const SECRET_KEY = assertEnvVar('JWT_SECRET');
 
     const { email, password } = body;
 
