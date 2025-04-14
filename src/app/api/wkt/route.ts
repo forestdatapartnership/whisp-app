@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzePlots } from "@/utils/analizePlots";
 import { isValidWkt } from "@/utils/validateWkt";
+import { isValidWgs84Coordinates, coordinatesLikelyInMeters } from "@/utils/geojsonUtils";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
@@ -8,6 +9,7 @@ import { LogFunction } from "@/lib/logger";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
 import { wktToFeatureCollection } from "@/utils/wktUtils";
+import * as wellknown from 'wellknown';
 
 export const POST = compose(
   withLogging,
@@ -25,6 +27,24 @@ export const POST = compose(
 
   const isValidWKT = isValidWkt(wkt);
   if (!isValidWKT) return useBadRequestResponse("Invalid WKT.");
+
+  // Parse WKT to GeoJSON to validate coordinates
+  try {
+    const geoJson = wellknown.parse(wkt);
+    
+    // Check if coordinates are in a projected system (like meters)
+    if (coordinatesLikelyInMeters(geoJson)) {
+      return useBadRequestResponse("Invalid coordinate reference system. Coordinates appear to be in meters rather than degrees. Please use EPSG:4326 (WGS84) coordinates.");
+    }
+    
+    // Check if coordinates are valid WGS84 values
+    if (!isValidWgs84Coordinates(geoJson)) {
+      return useBadRequestResponse("Invalid coordinates. Please ensure your data is in EPSG:4326 (WGS84) coordinate reference system.");
+    }
+  } catch (error) {
+    log("error", `Error validating WKT coordinates: ${error}`, logSource);
+    return useBadRequestResponse("Error processing WKT coordinates.");
+  }
 
   let featureCollection = await wktToFeatureCollection(wkt, generateGeoids) as object;
   featureCollection = { ...featureCollection, generateGeoids };
