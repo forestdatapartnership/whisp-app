@@ -13,18 +13,16 @@ export const withAuth: MiddlewareFactory = (next) => {
         const SECRET_KEY = assertEnvVar('JWT_SECRET');
         const { pathname } = request.nextUrl;
 
-        const publicPaths = [
-            "/api/auth/login",
-            "/api/auth/register",
-            "/login",
-            "/register",
-            "/api/auth/change-password"
+        const privatePaths = [
+            "/api/api-key",
+            "/api/download-csv",
+            "/auth/logout",
+            "/auth/change-password",
+            "/settings",
+            "/api/protected-data"
         ];
 
-        if (
-            publicPaths.includes(pathname) ||
-            pathname.startsWith("/api/submit/")
-        ) {
+        if (!privatePaths.some(path => pathname.startsWith(path))) {
             return NextResponse.next();
         }
 

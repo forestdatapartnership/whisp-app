@@ -28,6 +28,10 @@ const Navbar: React.FC = () => {
                         About
                     </Link>
 
+                    <Link href="/login" className="hover:text-gray-300 mx-4">
+                        Login
+                    </Link>
+
                     <div className="relative mx-4">
                         <button 
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
