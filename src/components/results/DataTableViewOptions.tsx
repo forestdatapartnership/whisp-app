@@ -23,7 +23,10 @@ export function DataTableViewOptions<TData>({
   const toggleAll = (visibility: boolean) => {
       table.getAllColumns().filter(
         (column) =>
-          typeof column.accessorFn !== "undefined" && column.getCanHide()
+          typeof column.accessorFn !== "undefined" && 
+          column.getCanHide() && 
+          // Exclude columns that might contain GeoJSON objects
+          column.id !== 'geojson'
       ).forEach(c=>c.toggleVisibility(visibility));
   };
   //table.getAllColumns().find((column)=>column.id == "geoid")?.toggleVisibility(false);
