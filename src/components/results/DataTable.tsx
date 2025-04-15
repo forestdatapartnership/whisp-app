@@ -36,8 +36,6 @@ export function DataTable<TData, TValue>({
     initialState: {
       columnVisibility: {
         geojson: false,
-        Centroid_lat: false,
-        Centroid_lon: false,
         external_id: false,
         geoid: false
       }
