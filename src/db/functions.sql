@@ -128,14 +128,18 @@ DECLARE
 BEGIN
   SELECT user_id INTO target_user_id
   FROM email_verification_tokens
-  WHERE token = u_token AND expires_at > NOW();
+  WHERE token = u_token 
+    AND expires_at > NOW()
+    AND revoked = FALSE;
 
   IF target_user_id IS NULL THEN
     RETURN 'Invalid or expired token';
   END IF;
 
   UPDATE users SET email_verified = TRUE WHERE id = target_user_id;
-  DELETE FROM email_verification_tokens WHERE token = u_token;
+  
+  -- Mark the token as revoked instead of deleting it
+  UPDATE email_verification_tokens SET revoked = TRUE WHERE token = u_token;
 
   RETURN 'Email verified successfully';
 END;
@@ -150,7 +154,10 @@ RETURNS api_keys AS $$
 INSERT INTO api_keys (user_id, api_key_hash, expires_at)
 VALUES (_user_id, _api_key_hash, _expires_at)
 ON CONFLICT (user_id)
-DO UPDATE SET api_key_hash = EXCLUDED.api_key_hash, expires_at = EXCLUDED.expires_at
+DO UPDATE SET 
+  api_key_hash = EXCLUDED.api_key_hash, 
+  expires_at = EXCLUDED.expires_at,
+  created_at = NOW()
 RETURNING *;
 $$ LANGUAGE sql;
 
@@ -168,5 +175,23 @@ $$ LANGUAGE sql;
 CREATE OR REPLACE FUNCTION delete_api_key_by_user(_user_id INT)
 RETURNS VOID AS $$
 DELETE FROM api_keys WHERE user_id = _user_id;
+$$ LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION get_api_key_metadata(_user_id INT)
+RETURNS TABLE (
+  id INT,
+  user_id INT,
+  created_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  revoked BOOLEAN
+) AS $$
+SELECT 
+  id, 
+  user_id,
+  created_at, 
+  expires_at, 
+  revoked
+FROM api_keys
+WHERE user_id = _user_id;
 $$ LANGUAGE sql;
 

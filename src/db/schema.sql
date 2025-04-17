@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   token TEXT UNIQUE NOT NULL,
   expires_at TIMESTAMPTZ NOT NULL,
+  revoked BOOLEAN DEFAULT FALSE,
   PRIMARY KEY (user_id, token)
 );
 
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
   id SERIAL PRIMARY KEY,
   user_id INT UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   api_key_hash TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   expires_at TIMESTAMPTZ,
   revoked BOOLEAN DEFAULT FALSE
 );
