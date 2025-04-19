@@ -9,7 +9,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 		},
 	});
 
-	const verificationUrl = `https://your-app.com/verify?token=${token}`;
+	const verificationUrl = `${process.env.HOST_URL}/verify-email?token=${token}`;
 
 	await transporter.sendMail({
 		from: '"Whisp" <whisp.openforis@gmail.com>',
