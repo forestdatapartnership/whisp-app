@@ -15,7 +15,6 @@ export const POST = compose(
     withRequiredJsonBody
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
     const [log, body] = args;
-    console.log("checkKey")
 
     const apiKeyCheck = await checkApiKey(req, log);
     if (apiKeyCheck !== true) return apiKeyCheck;
