@@ -1,4 +1,3 @@
-
 const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
@@ -17,23 +16,20 @@ const client = new Client({
 const runSqlFile = async (filePath) => {
   try {
     const sql = fs.readFileSync(filePath, 'utf8');
-    await client.query('BEGIN');  // Start a transaction
-
+    
     try {
       const result = await client.query(sql);  // Execute the SQL file
       console.log(`✅ Successfully executed: ${path.basename(filePath)}`);
-
-      // Log result information
       console.log(`📝 Command Output from ${path.basename(filePath)}:`);
-
-      await client.query('COMMIT');  // Commit transaction
+      return true;
     } catch (error) {
-      await client.query('ROLLBACK');  // Rollback transaction on error
       console.error(`❌ Failed to execute ${path.basename(filePath)}: ${error.message}`);
+      return false;
     }
     
   } catch (err) {
     console.error(`❌ Error reading file ${path.basename(filePath)}: ${err.message}`);
+    return false;
   }
 };
 
@@ -43,9 +39,14 @@ const runMigrations = async () => {
     await client.connect();
     console.log('🚀 Connected to PostgreSQL');
 
-    // Run schema and functions SQL files
-    await runSqlFile(path.join(__dirname, 'schema.sql'));
-    await runSqlFile(path.join(__dirname, 'functions.sql'));
+    // Run schema first and ensure it succeeds before running functions
+    const schemaSuccess = await runSqlFile(path.join(__dirname, 'schema.sql'));
+    
+    if (schemaSuccess) {
+      await runSqlFile(path.join(__dirname, 'functions.sql'));
+    } else {
+      console.error('❌ Schema setup failed. Skipping functions setup.');
+    }
 
   } catch (err) {
     console.error('❌ Migration failed:', err.message);
