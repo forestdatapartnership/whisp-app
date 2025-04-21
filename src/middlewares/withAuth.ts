@@ -16,10 +16,12 @@ export const withAuth: MiddlewareFactory = (next) => {
         const privatePaths = [
             "/api/api-key",
             "/api/download-csv",
+            "/api/user/profile",
             "/auth/logout",
             "/auth/change-password",
             "/settings",
-            "/api/protected-data"
+            "/api/protected-data",
+            "/dashboard",
         ];
 
         if (!privatePaths.some(path => pathname.startsWith(path))) {
@@ -38,16 +40,15 @@ export const withAuth: MiddlewareFactory = (next) => {
 
                 if (!payload.sub) throw new Error("Invalid token payload: Missing 'sub'");
 
-                // Add sub to request headers
-                const requestHeaders = new Headers(request.headers);
-                requestHeaders.set('x-user-id', payload.sub);
-
-                // Token is valid - pass along with modified headers
-                return NextResponse.next({
-                    request: {
-                        headers: requestHeaders
-                    }
+                const response = NextResponse.next();
+                response.cookies.set('userId', payload.sub.toString(), {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: "strict",
+                    path: '/'
                 });
+                
+                return response;
             } catch (error) {
                 console.error("Access token verification failed:", error);
             }
@@ -75,14 +76,14 @@ export const withAuth: MiddlewareFactory = (next) => {
                     .setExpirationTime("7d")
                     .sign(new TextEncoder().encode(SECRET_KEY));
 
-                // Add sub to request headers
-                const requestHeaders = new Headers(request.headers);
-                requestHeaders.set('x-user-id', payload.sub);
-
-                const response = NextResponse.next({
-                    request: {
-                        headers: requestHeaders
-                    }
+                const response = NextResponse.next();
+                
+                // Set userId cookie
+                response.cookies.set('userId', payload.sub.toString(), {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: "strict",
+                    path: '/'
                 });
 
                 // Set new tokens as cookies

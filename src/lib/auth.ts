@@ -1,9 +1,13 @@
 import { NextRequest } from 'next/server'
 
 export async function getAuthUser(req: NextRequest) {
-  const userId = req.headers.get('x-user-id')
-  if (!userId) return null
-
+  // Simply get the userId from the cookie set by withAuth middleware
+  const userId = req.cookies.get('userId')?.value
+  
+  if (!userId) {
+    return null
+  }
+  
   return { id: userId }
 }
 
