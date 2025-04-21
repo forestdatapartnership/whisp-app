@@ -6,15 +6,16 @@ CREATE TABLE IF NOT EXISTS users (
   last_name TEXT NOT NULL,
   organization TEXT,
   email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL
+  password_hash TEXT NOT NULL,
+  email_verified BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS email_verification_tokens (
+  id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   token TEXT UNIQUE NOT NULL,
   expires_at TIMESTAMPTZ NOT NULL,
-  revoked BOOLEAN DEFAULT FALSE,
-  PRIMARY KEY (user_id, token)
+  revoked BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS api_keys (

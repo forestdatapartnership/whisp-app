@@ -195,3 +195,23 @@ FROM api_keys
 WHERE user_id = _user_id;
 $$ LANGUAGE sql;
 
+CREATE OR REPLACE FUNCTION get_user_profile(_user_id INT)
+RETURNS TABLE (
+  id INT,
+  name TEXT,
+  last_name TEXT,
+  organization TEXT,
+  email TEXT,
+  email_verified BOOLEAN
+) AS $$
+SELECT 
+  id, 
+  name, 
+  last_name, 
+  organization, 
+  email, 
+  email_verified
+FROM users
+WHERE id = _user_id;
+$$ LANGUAGE sql;
+
