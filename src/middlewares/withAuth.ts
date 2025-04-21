@@ -13,6 +13,22 @@ export const withAuth: MiddlewareFactory = (next) => {
         const SECRET_KEY = assertEnvVar('JWT_SECRET');
         const { pathname } = request.nextUrl;
 
+        // Check if user is on home page and has a valid token - redirect to dashboard
+        if (pathname === "/" || pathname === "/index") {
+            const token = request.cookies.get("token")?.value;
+            if (token) {
+                try {
+                    // Verify token validity
+                    await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
+                    // Redirect to dashboard if token is valid
+                    return NextResponse.redirect(new URL("/dashboard", request.url));
+                } catch (error) {
+                    // Token is invalid, continue to home page
+                    console.error("Token verification failed on home page:", error);
+                }
+            }
+        }
+
         const privatePaths = [
             "/api/api-key",
             "/api/download-csv",
@@ -39,16 +55,9 @@ export const withAuth: MiddlewareFactory = (next) => {
                 );
 
                 if (!payload.sub) throw new Error("Invalid token payload: Missing 'sub'");
-
-                const response = NextResponse.next();
-                response.cookies.set('userId', payload.sub.toString(), {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === "production",
-                    sameSite: "strict",
-                    path: '/'
-                });
                 
-                return response;
+                // Simply allow the request to proceed - getAuthUser will extract the data from the token
+                return NextResponse.next();
             } catch (error) {
                 console.error("Access token verification failed:", error);
             }
@@ -77,14 +86,6 @@ export const withAuth: MiddlewareFactory = (next) => {
                     .sign(new TextEncoder().encode(SECRET_KEY));
 
                 const response = NextResponse.next();
-                
-                // Set userId cookie
-                response.cookies.set('userId', payload.sub.toString(), {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === "production",
-                    sameSite: "strict",
-                    path: '/'
-                });
 
                 // Set new tokens as cookies
                 response.cookies.set('token', newAccessToken, {
