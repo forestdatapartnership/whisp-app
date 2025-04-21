@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
         throw new Error(data.error || "Invalid email or password");
       }
 
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
       // We no longer reset submitted state here to keep the error visible

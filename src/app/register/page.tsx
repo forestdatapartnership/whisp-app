@@ -14,7 +14,6 @@ const RegisterPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [passwordMatchError, setPasswordMatchError] = useState(false);
   const [showPasswordTooltip, setShowPasswordTooltip] = useState(false);
-  const [emailError, setEmailError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const router = useRouter();
@@ -42,53 +41,6 @@ const RegisterPage: React.FC = () => {
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return false;
     
     return true;
-  };
-
-  const formatPasswordRequirements = () => {
-    return (
-      <div className="mt-2 w-full bg-[#2B3341] border border-gray-700 rounded-lg shadow-lg p-4">
-        <div className="text-sm text-gray-300 font-medium mb-2 text-left">Password requirements:</div>
-        <ul className="list-none space-y-2 text-sm text-gray-400">
-          <li className="flex items-center">
-            <span className="mr-2 text-gray-400">•</span>
-            <span className="flex-grow text-left">At least 8 characters long</span>
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-gray-400">•</span>
-            <span className="flex-grow text-left">Include at least one uppercase letter (A-Z)</span>
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-gray-400">•</span>
-            <span className="flex-grow text-left">Include at least one lowercase letter (a-z)</span>
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-gray-400">•</span>
-            <span className="flex-grow text-left">Include at least one number (0-9)</span>
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-gray-400">•</span>
-            <span className="flex-grow text-left">Include at least one special character (!@#$%^&*(),.?":{}|&lt;&gt;)</span>
-          </li>
-        </ul>
-      </div>
-    );
-  };
-
-  // Add a tooltip component for validation errors
-  const ValidationTooltip = ({ message }: { message: string }) => {
-    return (
-      <div className="absolute -top-14 left-2 bg-white p-2 rounded shadow-lg z-10">
-        <div className="flex items-center gap-2">
-          <div className="bg-amber-500 text-white rounded-full p-1 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <span className="text-black text-sm">{message}</span>
-        </div>
-        <div className="absolute -bottom-2 left-5 w-4 h-4 bg-white transform rotate-45"></div>
-      </div>
-    );
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,7 +173,7 @@ const RegisterPage: React.FC = () => {
             </div>
             <button
               onClick={() => router.push('/login')}
-              className="ml-auto text-xs text-blue-400 hover:text-blue-300 underline"
+              className="ml-auto text-sm text-blue-400 hover:text-blue-300 underline"
             >
               Go to login
             </button>
@@ -361,7 +313,7 @@ const RegisterPage: React.FC = () => {
           </button>
         </form>
       </section>
-      <section className="my-8">
+      <section className="my-8 pb-12">
         <p className="text-lg text-gray-400">
           Already have an account?{' '}
           <a 

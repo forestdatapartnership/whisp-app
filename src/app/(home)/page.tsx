@@ -2,10 +2,22 @@
 
 import { useStore } from '@/store';
 import SubmitGeometry from '@/components/SubmitGeometry';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { parseCookies } from 'nookies';
 
 export default function Home() {
-
   const resetStore = useStore((state) => state.reset);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if token exists in cookies
+    const cookies = parseCookies();
+    if (cookies.token) {
+      // Redirect to dashboard if authenticated
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   return (
     <main className="text-center mx-auto px-2 max-w-3xl">
