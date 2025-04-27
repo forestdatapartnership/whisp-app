@@ -146,4 +146,84 @@ export function addPropertyToFeatures(
       features: modifiedFeatures
     };
   }
-  
+
+/**
+ * Checks if coordinates in a geometry are likely in EPSG:4326 (WGS84).
+ * @param geometry The geometry object to check
+ * @returns boolean indicating if the coordinates are valid for WGS84
+ */
+export function isValidWgs84Coordinates(geometry: any): boolean {
+    // Check if geometry is null or undefined
+    if (!geometry) return false;
+    
+    // Extract coordinates from different geometry types
+    let coordinates: number[][] = [];
+    
+    if (geometry.type === 'Point') {
+        coordinates = [geometry.coordinates];
+    } else if (geometry.type === 'LineString' || geometry.type === 'MultiPoint') {
+        coordinates = geometry.coordinates;
+    } else if (geometry.type === 'Polygon' || geometry.type === 'MultiLineString') {
+        geometry.coordinates.forEach((ring: number[][]) => {
+            coordinates = coordinates.concat(ring);
+        });
+    } else if (geometry.type === 'MultiPolygon') {
+        geometry.coordinates.forEach((polygon: number[][][]) => {
+            polygon.forEach((ring: number[][]) => {
+                coordinates = coordinates.concat(ring);
+            });
+        });
+    } else if (geometry.type === 'GeometryCollection') {
+        return geometry.geometries.every((geom: any) => isValidWgs84Coordinates(geom));
+    }
+    
+    // Check each coordinate to ensure it's within valid WGS84 range
+    return coordinates.every((coord: number[]) => {
+        const [longitude, latitude] = coord;
+        // Valid longitude range: -180 to 180
+        // Valid latitude range: -90 to 90
+        return (
+            typeof longitude === 'number' &&
+            typeof latitude === 'number' &&
+            longitude >= -180 && longitude <= 180 &&
+            latitude >= -90 && latitude <= 90
+        );
+    });
+}
+
+/**
+ * Checks if the values in a geometry are likely in a projected CRS (like meters).
+ * @param geometry The geometry object to check
+ * @returns boolean indicating if the coordinates appear to be in meters
+ */
+export function coordinatesLikelyInMeters(geometry: any): boolean {
+    if (!geometry) return false;
+    
+    // Extract coordinates from different geometry types
+    let coordinates: number[][] = [];
+    
+    if (geometry.type === 'Point') {
+        coordinates = [geometry.coordinates];
+    } else if (geometry.type === 'LineString' || geometry.type === 'MultiPoint') {
+        coordinates = geometry.coordinates;
+    } else if (geometry.type === 'Polygon' || geometry.type === 'MultiLineString') {
+        if (geometry.coordinates.length > 0 && geometry.coordinates[0].length > 0) {
+            coordinates = geometry.coordinates[0].slice(0, 3); // Sample a few coordinates
+        }
+    } else if (geometry.type === 'MultiPolygon') {
+        if (geometry.coordinates.length > 0 && geometry.coordinates[0].length > 0) {
+            coordinates = geometry.coordinates[0][0].slice(0, 3); // Sample a few coordinates
+        }
+    }
+    
+    // Check if coordinates are likely in meters (values too large for degrees)
+    return coordinates.some((coord: number[]) => {
+        const [x, y] = coord;
+        // Values significantly outside the WGS84 range indicate a projected CRS
+        return (
+            Math.abs(x) > 180 || 
+            Math.abs(y) > 90
+        );
+    });
+}
+

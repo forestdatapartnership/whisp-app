@@ -29,28 +29,8 @@ const Results: React.FC = () => {
 
     const csvUrl = `/api/download-csv/${token || id}`;
 
-    const filterColumns = (columns: any[], data: any[]) => {
-        const excludedColumns = ["geojson", "Centroid_lat", "Centroid_lon"];
-
-        // Check if 'geoid' column has non-empty values
-        if (data.length > 0 && data.find((row) => row["geoid"]?.trim().length > 0) == null) {
-            excludedColumns.push("geoid");
-        }
-
-        // Check if 'EXTERNAL_ID' column should be excluded (all values are empty)
-        const allExternalIdEmpty = data.every((row) => !row["external_id"]?.trim());
-        if (allExternalIdEmpty) {
-            excludedColumns.push("external_id");
-        }
-
-        // Filter the columns by excluding the ones in the excludedColumns list
-        return columns.filter((column) => !excludedColumns.includes(column.accessorKey));
-    }
-
     const createColumnDefs = (data: Record<string, any>[]): ColumnDef<Record<string, any>>[] => {
-        
         if (data.length === 0) return [];
-
         const sample = data[0];
         return Object.keys(sample).map((key) => ({
             accessorKey: key,
@@ -71,12 +51,8 @@ const Results: React.FC = () => {
                 }
                 const fetchedData = await response.json();
                 setTableData(fetchedData.data);
-
-                // Generate column definitions
                 const columnDefs = createColumnDefs(fetchedData.data);
-                // Filter the columns before setting state
-                const filteredColumns = filterColumns(columnDefs, fetchedData.data);
-                setColumns(filteredColumns);
+                setColumns(columnDefs);
             } catch (error: any) {
                 console.error(error);
                 useStore.setState({ error: error.message });
@@ -91,8 +67,7 @@ const Results: React.FC = () => {
         } else {
             setTableData(data);
             const columnDefs = createColumnDefs(data);
-            const filteredColumns = filterColumns(columnDefs, data);
-            setColumns(filteredColumns);
+            setColumns(columnDefs);
             setGeoIds(data.map((item: any) => item.geoid));
         }
     }, [id, data]);

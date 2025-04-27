@@ -3,6 +3,7 @@
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu"
 import { MixerHorizontalIcon } from "@radix-ui/react-icons"
 import { Table } from "@tanstack/react-table"
+import React from "react"
 
 import { Button } from "@/components/ui/Button"
 import {
@@ -20,15 +21,20 @@ interface DataTableViewOptionsProps<TData> {
 export function DataTableViewOptions<TData>({
   table,
 }: DataTableViewOptionsProps<TData>) {
+  const [open, setOpen] = React.useState(false);
+  
   const toggleAll = (visibility: boolean) => {
       table.getAllColumns().filter(
         (column) =>
-          typeof column.accessorFn !== "undefined" && column.getCanHide()
+          typeof column.accessorFn !== "undefined" && 
+          column.getCanHide() && 
+          // Exclude columns that might contain GeoJSON objects
+          column.id !== 'geojson'
       ).forEach(c=>c.toggleVisibility(visibility));
   };
-  //table.getAllColumns().find((column)=>column.id == "geoid")?.toggleVisibility(false);
+  
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
@@ -39,7 +45,7 @@ export function DataTableViewOptions<TData>({
           Toggle columns
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[350px] h-[400px] overflow-auto">
+      <DropdownMenuContent align="end" className="w-[350px] h-[400px] overflow-auto" onCloseAutoFocus={(e) => e.preventDefault()}>
         <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" className="ml-auto hidden h-8 lg:flex" onClick={() => toggleAll(false)}>
             Select None
@@ -63,7 +69,13 @@ export function DataTableViewOptions<TData>({
                 key={column.id}
                 className="uppercase"
                 checked={column.getIsVisible()}
-                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                onCheckedChange={(value) => {
+                  column.toggleVisibility(!!value);
+                  // Stop event propagation to prevent dropdown from closing
+                  return false;
+                }}
+                // Prevent the dropdown from closing when clicking the item
+                onSelect={(e) => e.preventDefault()}
               >
                 {column.id}
               </DropdownMenuCheckboxItem>
