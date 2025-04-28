@@ -22,34 +22,43 @@ type RecordData = {
     KBA: string;
 };
 
+type UserProfile = {
+    id: number;
+    name: string;
+    last_name: string;
+    organization: string | null;
+    email: string;
+    email_verified: boolean;
+};
+
 type StoreState = {
     token: string,
     data: RecordData[],
-    geometryFile: File | null,
-    geoIdsFile: File | null,
     error: string,
     geoIds: string[],
-    isDisabled: boolean,
     selectedFile: string,
     geometry: string[],
-    shpBase64: string,
+    user: UserProfile | null,
+    isAuthenticated: boolean,
+    setUser: (user: UserProfile | null) => void,
+    setIsAuthenticated: (isAuthenticated: boolean) => void,
     reset: () => void;
 };
 
-const initialState: Omit<StoreState, 'reset'> = {
+const initialState: Omit<StoreState, 'reset' | 'setUser' | 'setIsAuthenticated'> = {
     token: "",
     data: [],
-    geometryFile: null,
-    geoIdsFile: null,
     error: "",
     geoIds: [""],
-    isDisabled: true,
     selectedFile: "",
     geometry: [],
-    shpBase64: ""
+    user: null,
+    isAuthenticated: false
 };
 
 export const useStore = create<StoreState>((set) => ({
     ...initialState,
+    setUser: (user) => set({ user }),
+    setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
     reset: () => set({ ...initialState }),
 }));
