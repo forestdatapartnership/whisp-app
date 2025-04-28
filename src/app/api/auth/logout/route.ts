@@ -10,7 +10,18 @@ export const GET = compose(
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
     const [log] = args;
     const logSource = "logout/route.ts";
-    const expiredCookie = serialize("token", "", {
+    
+    // Create expired cookie for the access token
+    const expiredAccessCookie = serialize("token", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+        maxAge: 0
+    });
+    
+    // Create expired cookie for the refresh token
+    const expiredRefreshCookie = serialize("refreshToken", "", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -19,7 +30,10 @@ export const GET = compose(
     });
 
     const response = NextResponse.json({ message: "Logout successful" });
-    response.headers.set("Set-Cookie", expiredCookie);
+    
+    // Set both expired cookies in the response headers
+    response.headers.append("Set-Cookie", expiredAccessCookie);
+    response.headers.append("Set-Cookie", expiredRefreshCookie);
 
     log("info", "User successfully logged out", logSource);
 
