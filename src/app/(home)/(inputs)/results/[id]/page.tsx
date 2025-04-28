@@ -8,21 +8,38 @@ import { useStore } from "@/store";
 import './styles.css';
 import { ColumnDef } from '@tanstack/react-table';
 
+// Define a type for alerts to keep track of type and message
+type AlertData = {
+    type: 'error' | 'success' | 'warning';
+    message: string;
+} | null;
+
 const Results: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isCsvDisabled, setIsCsvDisabled] = useState<boolean>(false);
-    const [successMessage, setSuccessMessage] = useState<string>("");
+    const [alert, setAlert] = useState<AlertData>(null);
     const [notFound, setNotFound] = useState<boolean>(false);
     const [geoIds, setGeoIds] = useState<string[]>([]);
     const [tableData, setTableData] = useState<any[]>([]);
     const [columns, setColumns] = useState<any[]>([]);
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
-    const clearSuccessMessage = () => setSuccessMessage("");
+    const clearAlert = () => setAlert(null);
 
     const { token, data, error } = useStore();
 
-    const clearError = () => useStore.setState({ error: "" });
+    // Effect to sync store error with local alert state
+    useEffect(() => {
+        if (error) {
+            setAlert({ type: 'error', message: error });
+        }
+    }, [error]);
+
+    // Clear error from the store when alert is dismissed
+    const clearStoreError = () => {
+        useStore.setState({ error: "" });
+        clearAlert();
+    };
 
     const { id } = useParams<{ id: string }>();
 
@@ -54,6 +71,7 @@ const Results: React.FC = () => {
                 setColumns(columnDefs);
             } catch (error: any) {
                 console.error(error);
+                setAlert({ type: 'error', message: error.message });
                 useStore.setState({ error: error.message });
             } finally {
                 setIsLoading(false);
@@ -100,9 +118,10 @@ const Results: React.FC = () => {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             
-            setSuccessMessage("CSV downloaded successfully");
+            setAlert({ type: 'success', message: "CSV downloaded successfully" });
         } catch (error: any) {
             console.error('Download failed:', error);
+            setAlert({ type: 'error', message: error.message });
             useStore.setState({ error: error.message });
         } finally {
             setIsDownloading(false);
@@ -142,8 +161,7 @@ const Results: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    {error && <Alert type="error" message={error} onClose={clearError} />}
-                    {successMessage && <Alert type="success" message={successMessage} onClose={clearSuccessMessage} />}
+                    {alert && <Alert type={alert.type} message={alert.message} onClose={alert.type === 'error' ? clearStoreError : clearAlert} />}
                     <DataTable columns={columns} data={tableData} />
                 </>
             )}
