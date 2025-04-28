@@ -17,7 +17,7 @@ export const GET = compose(
 
   const key = randomUUID();
   const hashedKey = createHash("sha256").update(key).digest("hex");
-  const expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+  const expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365); // 1 year (365 days)
 
   const client = await pool.connect();
   try {
