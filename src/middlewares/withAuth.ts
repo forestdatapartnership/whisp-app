@@ -12,10 +12,12 @@ export const withAuth: MiddlewareFactory = (next) => {
         // Assert JWT secret is present at startup
         const SECRET_KEY = assertEnvVar('JWT_SECRET');
         const { pathname } = request.nextUrl;
-
+        
+        // Get token from cookies
+        const token = request.cookies.get("token")?.value;
+        
         // Check if user is on home page and has a valid token - redirect to dashboard
         if (pathname === "/" || pathname === "/index") {
-            const token = request.cookies.get("token")?.value;
             if (token) {
                 try {
                     // Verify token validity
@@ -28,10 +30,24 @@ export const withAuth: MiddlewareFactory = (next) => {
                 }
             }
         }
+        
+        // Check if user is on login or register page and has a valid token - redirect to dashboard
+        if (pathname === "/login" || pathname === "/register") {
+            if (token) {
+                try {
+                    // Verify token validity
+                    await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
+                    // Redirect to dashboard if token is valid
+                    return NextResponse.redirect(new URL("/dashboard", request.url));
+                } catch (error) {
+                    // Token is invalid, continue to login/register page
+                    console.error(`Token verification failed on ${pathname} page:`, error);
+                }
+            }
+        }
 
         const privatePaths = [
             "/api/api-key",
-            "/api/download-csv",
             "/api/user/profile",
             "/auth/logout",
             "/auth/change-password",
@@ -44,7 +60,7 @@ export const withAuth: MiddlewareFactory = (next) => {
             return NextResponse.next();
         }
 
-        const token = request.cookies.get("token")?.value;
+        // Moved token and refreshToken variables up since we check token earlier in the function
         const refreshToken = request.cookies.get("refreshToken")?.value;
 
         if (token) {
