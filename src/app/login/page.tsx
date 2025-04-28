@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -32,14 +33,31 @@ const LoginPage: React.FC = () => {
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
-      // We no longer reset submitted state here to keep the error visible
     }
   };
 
   return (
-    <main className="text-center mx-auto px-2 max-w-3xl">
+    <main className="text-center mx-auto px-2 max-w-md">
       <section className="mt-8">
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center items-center mb-6 relative w-full">
+          <Link 
+            href="/" 
+            className="absolute left-0 text-gray-400 hover:text-gray-300"
+            aria-label="Back to home"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-6 w-6" 
+              viewBox="0 0 20 20" 
+              fill="currentColor"
+            >
+              <path 
+                fillRule="evenodd" 
+                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" 
+                clipRule="evenodd" 
+              />
+            </svg>
+          </Link>
           <img src="/whisp_logo.svg" alt="Whisp Logo" className="h-36" />
         </div>
         <h1 className="text-3xl font-semibold my-8">Login</h1>
@@ -56,8 +74,8 @@ const LoginPage: React.FC = () => {
               aria-label="Close"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 011.414 1.414L11.414 10l4.293 4.293a1 1 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 01-1.414-1.414L8.586 10 4.293 5.707a1 1 010-1.414z" clipRule="evenodd" />
+            </svg>
             </button>
           </div>
         )}
