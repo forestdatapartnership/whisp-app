@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react';
-import ErrorAlert from '@/components/ErrorAlert';
+import Alert from '@/components/Alert';
 import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
@@ -9,7 +9,12 @@ import { useSafeRouterPush } from '@/utils/safePush';
 import { parseWKTAndJSONFile } from "@/utils/fileParser";
 import Link from 'next/link';
 
-const SubmitGeometry: React.FC = () => {
+interface SubmitGeometryProps {
+    useTempKey?: boolean;
+    usePublicEndpoints?: boolean;
+}
+
+const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = false, usePublicEndpoints = false }) => {
     const [wkt, setWkt] = useState<string>('');
     const [geojson, setGeojson] = useState<any>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -56,22 +61,25 @@ const SubmitGeometry: React.FC = () => {
 
         try {
             let data, response;
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Use public endpoints based on props
+            const apiBasePath = usePublicEndpoints ? '/api/public/submit/' : '/api/submit/';
+
             if (type === 'wkt') {
-                response = await fetch('/api/wkt', {
+                response = await fetch(`${apiBasePath}wkt`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers,
                     body: JSON.stringify({ wkt }),
                 });
 
                 data = await response.json();
             } else if (type === 'json') {
-                response = await fetch('/api/geojson', {
+                response = await fetch(`${apiBasePath}geojson`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers,
                     body: JSON.stringify({ ...geojson }),
                 });
 
@@ -142,7 +150,7 @@ const SubmitGeometry: React.FC = () => {
             )}
             <h1 className="text-2xl font-semibold text-center mb-2">Submit Geometry</h1>
             <div className="mx-2">
-                {error && <ErrorAlert error={error} clearError={clearError} />}
+                {error && <Alert type="error" message={error} onClose={clearError} />}
             </div>
             <div className="p-2 rounded-b-lg">
                 <FileInput
