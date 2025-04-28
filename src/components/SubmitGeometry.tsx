@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Alert from '@/components/Alert';
 import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
@@ -8,17 +8,18 @@ import Image from 'next/image';
 import { useSafeRouterPush } from '@/utils/safePush';
 import { parseWKTAndJSONFile } from "@/utils/fileParser";
 import Link from 'next/link';
+import { fetchTempApiKey, createApiHeaders } from '@/utils/secureApiUtils';
 
 interface SubmitGeometryProps {
     useTempKey?: boolean;
-    usePublicEndpoints?: boolean;
 }
 
-const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = false, usePublicEndpoints = false }) => {
+const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) => {
     const [wkt, setWkt] = useState<string>('');
     const [geojson, setGeojson] = useState<any>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
+    const [tempApiKey, setTempApiKey] = useState<string | null>(null);
     const { error } = useStore();
     const [type, setType] = useState<string>('');
 
@@ -26,6 +27,23 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = false, use
     const resetStore = useStore((state) => state.reset);
 
     const clearError = () => useStore.setState({ error: "" });
+    
+    useEffect(() => {
+        // Only fetch the temp API key if useTempKey is true
+        if (useTempKey) {
+            getApiKey();
+        }
+    }, [useTempKey]);
+    
+    const getApiKey = async () => {
+        try {
+            const key = await fetchTempApiKey('submit-geometry');
+            setTempApiKey(key);
+        } catch (err) {
+            console.error('Error fetching temp API key:', err);
+            useStore.setState({ error: "Error fetching API key. Some features may be limited." });
+        }
+    };
 
     const handleFileChange = async (file: File) => {
         clearError();
@@ -61,12 +79,11 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = false, use
 
         try {
             let data, response;
-            const headers = {
-                'Content-Type': 'application/json'
-            };
+            // Use the utility function to create headers with API key
+            const headers = createApiHeaders(tempApiKey);
             
-            // Use public endpoints based on props
-            const apiBasePath = usePublicEndpoints ? '/api/public/submit/' : '/api/submit/';
+            // Always use the secure endpoints
+            const apiBasePath = '/api/submit/';
 
             if (type === 'wkt') {
                 response = await fetch(`${apiBasePath}wkt`, {
@@ -105,6 +122,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = false, use
             }
         } catch (error: any) {
             useStore.setState({ error: error.message });
+        } finally {
             setIsLoading(false);
         }
     };

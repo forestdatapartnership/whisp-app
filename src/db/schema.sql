@@ -27,3 +27,10 @@ CREATE TABLE IF NOT EXISTS api_keys (
   revoked BOOLEAN DEFAULT FALSE
 );
 
+CREATE TABLE IF NOT EXISTS temp_api_keys (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  raw_api_key UUID NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+

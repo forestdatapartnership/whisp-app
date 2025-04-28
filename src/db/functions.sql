@@ -215,3 +215,47 @@ FROM users
 WHERE id = _user_id;
 $$ LANGUAGE sql;
 
+-- Function to generate and store new temp API key
+CREATE OR REPLACE FUNCTION generate_temp_api_key()
+RETURNS VOID AS $$
+DECLARE
+  new_uuid UUID := uuid_generate_v4();
+  new_hashed TEXT;
+BEGIN
+  new_hashed := crypt(new_uuid::text, gen_salt('bf'));
+
+  -- Update or Insert into api_keys (main table)
+  INSERT INTO api_keys (user_id, api_key_hash, expires_at, revoked)
+  VALUES (-1000, new_hashed, NOW() + INTERVAL '1 hour', FALSE)
+  ON CONFLICT (user_id)
+  DO UPDATE SET 
+    api_key_hash = EXCLUDED.api_key_hash,
+    expires_at = EXCLUDED.expires_at,
+    created_at = NOW(),
+    revoked = FALSE;
+
+  -- Insert into temp_api_keys (raw key)
+  INSERT INTO temp_api_keys (user_id, raw_api_key)
+  VALUES (-1000, new_uuid);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_temp_api_key()
+RETURNS UUID AS $$
+DECLARE
+  temp_key UUID;
+BEGIN
+  SELECT raw_api_key
+  INTO temp_key
+  FROM temp_api_keys
+  WHERE user_id = -1000
+  ORDER BY created_at DESC
+  LIMIT 1;
+
+  IF temp_key IS NULL THEN
+    RAISE EXCEPTION 'No temp API key found for user -1000';
+  END IF;
+
+  RETURN temp_key;
+END;
+$$ LANGUAGE plpgsql;

@@ -31,7 +31,7 @@ export default function Home() {
       </section>
 
       <section className="mt-8 text-center">
-        <h2 className="text-xl font-semibold mb-4">Need a permanent API key?</h2>
+        <h2 className="text-xl font-semibold mb-4">Need an API key?</h2>
         <div className="flex justify-center gap-4">
           <Link href="/login">
             <button
