@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Alert from '@/components/Alert';
 import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
@@ -19,7 +19,6 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
     const [geojson, setGeojson] = useState<any>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
-    const [tempApiKey, setTempApiKey] = useState<string | null>(null);
     const { error } = useStore();
     const [type, setType] = useState<string>('');
 
@@ -27,23 +26,6 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
     const resetStore = useStore((state) => state.reset);
 
     const clearError = () => useStore.setState({ error: "" });
-    
-    useEffect(() => {
-        // Only fetch the temp API key if useTempKey is true
-        if (useTempKey) {
-            getApiKey();
-        }
-    }, [useTempKey]);
-    
-    const getApiKey = async () => {
-        try {
-            const key = await fetchTempApiKey('submit-geometry');
-            setTempApiKey(key);
-        } catch (err) {
-            console.error('Error fetching temp API key:', err);
-            useStore.setState({ error: "Error fetching API key. Some features may be limited." });
-        }
-    };
 
     const handleFileChange = async (file: File) => {
         clearError();
@@ -78,9 +60,20 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
         setIsLoading(true);
 
         try {
+            // Get the temp API key at the start of the analysis
+            let apiKey = null;
+            if (useTempKey) {
+                try {
+                    apiKey = await fetchTempApiKey('submit-geometry');
+                } catch (err) {
+                    console.error('Error fetching temp API key:', err);
+                    throw new Error("Failed to get API key for authentication");
+                }
+            }
+
             let data, response;
-            // Use the utility function to create headers with API key
-            const headers = createApiHeaders(tempApiKey);
+            // Use the utility function to create headers with the freshly retrieved API key
+            const headers = createApiHeaders(apiKey);
             
             // Always use the secure endpoints
             const apiBasePath = '/api/submit/';
