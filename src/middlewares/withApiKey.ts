@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 import { MiddlewareFactory } from "./types";
-import { createHash } from "crypto";
 import pool from "@/lib/db";
 
 export const withApiKey: MiddlewareFactory = (next) => {
@@ -21,18 +20,17 @@ export const withApiKey: MiddlewareFactory = (next) => {
 			return NextResponse.next();
 		}
 
-		const rawKey = request.headers.get("x-api-key");
-		if (!rawKey) {
+		const apiKey = request.headers.get("x-api-key");
+		if (!apiKey) {
 			return NextResponse.json({ error: "Missing API key" }, { status: 401 });
 		}
 
-		const hashedKey = createHash("sha256").update(rawKey).digest("hex");
-
+		// No longer hashing the key, using it directly for lookup
 		const client = await pool.connect();
 		try {
 			const result = await client.query(
 				"SELECT user_id FROM find_api_key($1)",
-				[hashedKey]
+				[apiKey]
 			);
 
 			if (result.rowCount === 0) {

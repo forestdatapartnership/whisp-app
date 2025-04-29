@@ -16,8 +16,6 @@ const Navbar: React.FC = () => {
     // Debug logging to verify our cookie detection is working correctly
     useEffect(() => {
         const hasAuthCookie = hasCookie('token') || hasCookie('refreshToken');
-        console.log('Auth cookies detected:', hasAuthCookie);
-        console.log('Authentication state:', { isAuthenticated, loading });
     }, [isAuthenticated, loading]);
 
     const handleLogout = async () => {

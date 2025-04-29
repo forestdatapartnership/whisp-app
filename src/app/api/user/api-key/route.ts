@@ -4,7 +4,7 @@ import { withLogging } from "@/lib/hooks/withLogging";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { getAuthUser } from "@/lib/auth";
 import pool from "@/lib/db";
-import { createHash, randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 
 export const GET = compose(
   withLogging
@@ -16,17 +16,17 @@ export const GET = compose(
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const key = randomUUID();
-  const hashedKey = createHash("sha256").update(key).digest("hex");
+  // No longer hashing the key, storing it directly
   const expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365); // 1 year (365 days)
 
   const client = await pool.connect();
   try {
     await client.query(
       "SELECT * FROM create_or_replace_api_key($1, $2, $3)",
-      [user.id, hashedKey, expires_at]
+      [user.id, key, expires_at]
     );
 
-    return NextResponse.json({ key }); // Return raw key only
+    return NextResponse.json({ key }); // Return the same key that was stored
   } catch (error) {
     log("error", error, logSource);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

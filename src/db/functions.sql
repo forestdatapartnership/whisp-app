@@ -177,29 +177,30 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION create_or_replace_api_key(
   _user_id INT,
-  _api_key_hash TEXT,
+  _api_key TEXT,
   _expires_at TIMESTAMPTZ
 )
 RETURNS api_keys AS $$
-INSERT INTO api_keys (user_id, api_key_hash, expires_at)
-VALUES (_user_id, _api_key_hash, _expires_at)
+INSERT INTO api_keys (user_id, api_key, expires_at)
+VALUES (_user_id, _api_key, _expires_at)
 ON CONFLICT (user_id)
 DO UPDATE SET 
-  api_key_hash = EXCLUDED.api_key_hash, 
+  api_key = EXCLUDED.api_key,
   expires_at = EXCLUDED.expires_at,
   created_at = NOW()
 RETURNING *;
 $$ LANGUAGE sql;
 
-CREATE OR REPLACE FUNCTION find_api_key(p_hashed_key TEXT)
-RETURNS BOOLEAN AS $$
-SELECT EXISTS (
-  SELECT 1
-  FROM api_keys
-  WHERE api_key_hash = p_hashed_key
-    AND revoked = false
-    AND expires_at > now()
-);
+
+CREATE OR REPLACE FUNCTION find_api_key(p_api_key TEXT)
+RETURNS TABLE (
+  user_id INT
+) AS $$
+SELECT user_id
+FROM api_keys
+WHERE api_key = p_api_key
+  AND revoked = false
+  AND expires_at > now();
 $$ LANGUAGE sql;
 
 CREATE OR REPLACE FUNCTION delete_api_key_by_user(_user_id INT)
@@ -249,7 +250,6 @@ CREATE OR REPLACE FUNCTION generate_temp_api_key()
 RETURNS VOID AS $$
 DECLARE
   new_uuid UUID := uuid_generate_v4();
-  new_hashed TEXT;
 BEGIN
   BEGIN
     -- Delete previous temp API keys
@@ -259,19 +259,12 @@ BEGIN
   END;
 
   BEGIN
-    -- Generate SHA-256 hash
-    new_hashed := encode(digest(new_uuid::text, 'sha256'), 'hex');
-  EXCEPTION WHEN OTHERS THEN
-    RAISE EXCEPTION 'Failed to generate hash: %', SQLERRM;
-  END;
-
-  BEGIN
-    -- Update or Insert into api_keys (main table)
-    INSERT INTO api_keys (user_id, api_key_hash, expires_at, revoked)
-    VALUES (-1000, new_hashed, NOW() + INTERVAL '1 hour', FALSE)
+    -- Update or Insert into api_keys (main table) - store the actual key
+    INSERT INTO api_keys (user_id, api_key, expires_at, revoked)
+    VALUES (-1000, new_uuid::text, NOW() + INTERVAL '1 hour', FALSE)
     ON CONFLICT (user_id)
     DO UPDATE SET 
-      api_key_hash = EXCLUDED.api_key_hash,
+      api_key = EXCLUDED.api_key,
       expires_at = EXCLUDED.expires_at,
       created_at = NOW(),
       revoked = FALSE;
@@ -280,7 +273,7 @@ BEGIN
   END;
 
   BEGIN
-    -- Insert into temp_api_keys (raw key)
+    -- Insert into temp_api_keys (keeping this for backward compatibility)
     INSERT INTO temp_api_keys (user_id, raw_api_key)
     VALUES (-1000, new_uuid);
   EXCEPTION WHEN OTHERS THEN

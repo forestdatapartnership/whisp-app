@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
 CREATE TABLE IF NOT EXISTS api_keys (
   id SERIAL PRIMARY KEY,
   user_id INT UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-  api_key_hash TEXT UNIQUE NOT NULL,
+  api_key TEXT UNIQUE NOT NULL, -- Changed from api_key_hash to api_key
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   expires_at TIMESTAMPTZ,
   revoked BOOLEAN DEFAULT FALSE
