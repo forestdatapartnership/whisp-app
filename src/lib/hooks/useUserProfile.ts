@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store';
-import { hasCookie } from '@/lib/utils';
 
 /**
  * Custom hook for fetching and managing user profile data
@@ -12,7 +11,6 @@ export function useUserProfile(redirectToLogin = false) {
   const { user, isAuthenticated, setUser, setIsAuthenticated } = useStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [checkedCookie, setCheckedCookie] = useState(false);
   const router = useRouter();
 
   const fetchUserProfile = async () => {
@@ -20,7 +18,9 @@ export function useUserProfile(redirectToLogin = false) {
     setError(null);
 
     try {
-      const response = await fetch('/api/user/profile');
+      const response = await fetch('/api/user/profile', {
+        credentials: 'include' // Include cookies in the request
+      });
       
       if (response.ok) {
         const data = await response.json();
@@ -33,6 +33,7 @@ export function useUserProfile(redirectToLogin = false) {
             router.push('/login');
           }
           setIsAuthenticated(false);
+          setUser(null);
         }
         setError('Failed to fetch user profile');
         return false;
@@ -40,6 +41,8 @@ export function useUserProfile(redirectToLogin = false) {
     } catch (error) {
       console.error('Error fetching user profile:', error);
       setError('An error occurred while fetching user profile');
+      setIsAuthenticated(false);
+      setUser(null);
       return false;
     } finally {
       setLoading(false);
@@ -74,23 +77,14 @@ export function useUserProfile(redirectToLogin = false) {
   };
 
   useEffect(() => {
-    // First check if we have an auth cookie (token or refreshToken), if not, don't bother making an API call
-    const hasAuthCookie = hasCookie('token') || hasCookie('refreshToken');
-    setCheckedCookie(true);
-    
-    // Only fetch the profile if:
-    // 1. We have a cookie that might indicate authentication
-    // 2. We don't already have a user and aren't already authenticated
-    if (hasAuthCookie && !user && !isAuthenticated) {
+    // Always attempt to fetch the profile on initial mount
+    // Let the server API tell us if the user is authenticated or not
+    if (!user || !isAuthenticated) {
       fetchUserProfile();
     } else {
-      // If no auth cookie, set loading to false immediately
-      if (!hasAuthCookie) {
-        setIsAuthenticated(false);
-      }
       setLoading(false);
     }
-  }, [user, isAuthenticated, checkedCookie]);
+  }, []); // Only run on initial mount
 
   return {
     user,
