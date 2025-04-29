@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store';
+import { hasCookie } from '@/lib/utils';
 
 /**
  * Custom hook for fetching and managing user profile data
@@ -11,6 +12,7 @@ export function useUserProfile(redirectToLogin = false) {
   const { user, isAuthenticated, setUser, setIsAuthenticated } = useStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [checkedCookie, setCheckedCookie] = useState(false);
   const router = useRouter();
 
   const fetchUserProfile = async () => {
@@ -72,13 +74,23 @@ export function useUserProfile(redirectToLogin = false) {
   };
 
   useEffect(() => {
-    // Only fetch if we don't already have a user and we're not authenticated
-    if (!user && !isAuthenticated) {
+    // First check if we have an auth cookie (token or refreshToken), if not, don't bother making an API call
+    const hasAuthCookie = hasCookie('token') || hasCookie('refreshToken');
+    setCheckedCookie(true);
+    
+    // Only fetch the profile if:
+    // 1. We have a cookie that might indicate authentication
+    // 2. We don't already have a user and aren't already authenticated
+    if (hasAuthCookie && !user && !isAuthenticated) {
       fetchUserProfile();
     } else {
+      // If no auth cookie, set loading to false immediately
+      if (!hasAuthCookie) {
+        setIsAuthenticated(false);
+      }
       setLoading(false);
     }
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, checkedCookie]);
 
   return {
     user,
