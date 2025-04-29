@@ -10,6 +10,7 @@ const DocumentationPage = () => {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [swaggerInstance, setSwaggerInstance] = useState<any>(null);
 
   useEffect(() => {
     const getApiKey = async () => {
@@ -55,12 +56,7 @@ const DocumentationPage = () => {
           </div>
         ) : (
           <>
-            <div className="bg-green-900/20 border border-green-500 p-4 mb-4 text-white rounded-lg shadow-lg">
-              <h3 className="text-lg font-semibold mb-1">API Key Ready</h3>
-              <p className="text-sm">Your temporary API key has been automatically set for all requests.</p>
-              <p className="text-sm mt-1 text-gray-300">Key: {apiKey}</p>
-            </div>
-            <div id="swagger-container" className="bg-gray-800 p-4 text-white rounded-lg shadow-lg">
+                        <div id="swagger-container" className="bg-gray-800 p-4 text-white rounded-lg shadow-lg">
               <SwaggerUI 
                 url="/swagger.json"
                 docExpansion="list"
@@ -68,6 +64,17 @@ const DocumentationPage = () => {
                 tryItOutEnabled={true}
                 displayRequestDuration={true}
                 requestInterceptor={requestInterceptor}
+                persistAuthorization={true}
+                onComplete={ui => {
+                  // Store the Swagger UI instance
+                  setSwaggerInstance(ui);
+                  
+                  // This ensures the API key is available when Swagger UI is fully loaded
+                  if (apiKey) {
+                    // Set default API key in Swagger UI's auth
+                    ui.preauthorizeApiKey("ApiKeyAuth", apiKey);
+                  }
+                }}
               />
             </div>
           </>
