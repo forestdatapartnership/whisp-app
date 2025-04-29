@@ -34,6 +34,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION login_user(
+  u_email TEXT,
+  u_password TEXT
+)
+RETURNS TABLE (
+  id INT,
+  email TEXT,
+  email_verified BOOLEAN
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    users.id,
+    users.email,
+    users.email_verified
+  FROM users
+  WHERE 
+    users.email = u_email AND
+    users.password_hash = crypt(u_password, users.password_hash);
+    
+  -- If no rows are returned, the credentials were invalid
+  IF NOT FOUND THEN
+    RETURN;
+  END IF;
+  
+  -- Note: The email verification check is done in the route handler
+  -- This function just returns the verification status
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION change_password(
     u_email TEXT,
     current_password TEXT,
