@@ -2,15 +2,23 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
 import { useRouter } from 'next/navigation';
+import { hasCookie } from '@/lib/utils';
 
 const Navbar: React.FC = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const router = useRouter();
-    const { user, isAuthenticated, logout } = useUserProfile();
+    const { user, isAuthenticated, loading, logout } = useUserProfile();
+
+    // Debug logging to verify our cookie detection is working correctly
+    useEffect(() => {
+        const hasAuthCookie = hasCookie('token') || hasCookie('refreshToken');
+        console.log('Auth cookies detected:', hasAuthCookie);
+        console.log('Authentication state:', { isAuthenticated, loading });
+    }, [isAuthenticated, loading]);
 
     const handleLogout = async () => {
         await logout();
