@@ -20,12 +20,22 @@ export const POST = compose(
     if (email && password) {
         const client = await pool.connect();
         try {
-            const result = await client.query("SELECT id, email FROM login_user($1, $2)", [email, password]);
+            // Updated query to also return email_verified status
+            const result = await client.query("SELECT id, email, email_verified FROM login_user($1, $2)", [email, password]);
             if (result.rowCount === 0) {
                 return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
             }
 
             const user = result.rows[0];
+            
+            // Check if email is verified
+            if (!user.email_verified) {
+                return NextResponse.json({ 
+                    error: "Email not verified", 
+                    message: "Please verify your email before logging in. Check your inbox for a verification link.",
+                    email: user.email
+                }, { status: 403 });
+            }
 
             // Generate Access Token
             const accessToken = await new SignJWT({ sub: user.id })
@@ -61,7 +71,8 @@ export const POST = compose(
             });
 
             return response;
-        } catch {
+        } catch (error) {
+            log("error", error, "login/route.ts");
             return NextResponse.json({ error: "Server error" }, { status: 500 });
         } finally {
             client.release();
