@@ -215,28 +215,47 @@ FROM users
 WHERE id = _user_id;
 $$ LANGUAGE sql;
 
--- Function to generate and store new temp API key
 CREATE OR REPLACE FUNCTION generate_temp_api_key()
 RETURNS VOID AS $$
 DECLARE
   new_uuid UUID := uuid_generate_v4();
   new_hashed TEXT;
 BEGIN
-  new_hashed := crypt(new_uuid::text, gen_salt('bf'));
+  BEGIN
+    -- Delete previous temp API keys
+    DELETE FROM temp_api_keys WHERE user_id = -1000;
+  EXCEPTION WHEN OTHERS THEN
+    RAISE EXCEPTION 'Failed to delete previous temp API keys: %', SQLERRM;
+  END;
 
-  -- Update or Insert into api_keys (main table)
-  INSERT INTO api_keys (user_id, api_key_hash, expires_at, revoked)
-  VALUES (-1000, new_hashed, NOW() + INTERVAL '1 hour', FALSE)
-  ON CONFLICT (user_id)
-  DO UPDATE SET 
-    api_key_hash = EXCLUDED.api_key_hash,
-    expires_at = EXCLUDED.expires_at,
-    created_at = NOW(),
-    revoked = FALSE;
+  BEGIN
+    -- Generate SHA-256 hash
+    new_hashed := encode(digest(new_uuid::text, 'sha256'), 'hex');
+  EXCEPTION WHEN OTHERS THEN
+    RAISE EXCEPTION 'Failed to generate hash: %', SQLERRM;
+  END;
 
-  -- Insert into temp_api_keys (raw key)
-  INSERT INTO temp_api_keys (user_id, raw_api_key)
-  VALUES (-1000, new_uuid);
+  BEGIN
+    -- Update or Insert into api_keys (main table)
+    INSERT INTO api_keys (user_id, api_key_hash, expires_at, revoked)
+    VALUES (-1000, new_hashed, NOW() + INTERVAL '1 hour', FALSE)
+    ON CONFLICT (user_id)
+    DO UPDATE SET 
+      api_key_hash = EXCLUDED.api_key_hash,
+      expires_at = EXCLUDED.expires_at,
+      created_at = NOW(),
+      revoked = FALSE;
+  EXCEPTION WHEN OTHERS THEN
+    RAISE EXCEPTION 'Failed to upsert api_keys: %', SQLERRM;
+  END;
+
+  BEGIN
+    -- Insert into temp_api_keys (raw key)
+    INSERT INTO temp_api_keys (user_id, raw_api_key)
+    VALUES (-1000, new_uuid);
+  EXCEPTION WHEN OTHERS THEN
+    RAISE EXCEPTION 'Failed to insert into temp_api_keys: %', SQLERRM;
+  END;
 END;
 $$ LANGUAGE plpgsql;
 
