@@ -45,10 +45,7 @@ export const GET = compose(
     // Additional rate limiting check
     // You could implement a more sophisticated rate-limiting strategy here
     const requestIp = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
-    
-    // Generate a new temp API key if needed
-    await pool.query('SELECT generate_temp_api_key()');
-    
+        
     // Get the latest temp API key
     const result = await pool.query('SELECT get_temp_api_key() AS api_key');
     const apiKey = result.rows[0].api_key;
