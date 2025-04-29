@@ -319,7 +319,7 @@ export default function Dashboard() {
               </button>
             </div>
             <Alert
-              type="error"
+              type="warning"
               message={<span>
                 <strong>IMPORTANT: This is the only time you'll see this key.</strong> Copy it now and store it securely. 
                 For security reasons, we cannot show it to you again.
