@@ -221,37 +221,6 @@
           }
         }
       }
-    },
-    "/api/temp-key": {
-      "get": {
-        "summary": "Get Temporary API Key",
-        "description": "Retrieves a temporary API key for making authorized requests.",
-        "responses": {
-          "200": {
-            "description": "Temporary API key successfully generated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "apiKey": {
-                      "type": "string",
-                      "example": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error - Failed to generate temporary API key"
-          }
-        }
-      }
     }
   }
 }
