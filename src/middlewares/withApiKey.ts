@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 import { MiddlewareFactory } from "./types";
 import { createHash } from "crypto";
@@ -8,8 +7,17 @@ export const withApiKey: MiddlewareFactory = (next) => {
 	return async (request: NextRequest, _next: NextFetchEvent) => {
 		const { pathname } = request.nextUrl;
 
-		const protectedPaths = ["/api/wkt", "/api/geoids", "/api/geojson"];
-		if (!protectedPaths.includes(pathname)) {
+		// Updated protected paths to include both old and new routes
+		const protectedPaths = [
+			"/api/wkt", "/api/geoids", "/api/geojson", // Old paths (redirected)
+			"/api/submit/wkt", "/api/submit/geo-ids", "/api/submit/geojson" // New paths
+		];
+		
+		// Check if the path starts with any of the protected paths
+		const isProtectedPath = protectedPaths.some(path => 
+			pathname === path || pathname.startsWith(`${path}/`));
+			
+		if (!isProtectedPath) {
 			return NextResponse.next();
 		}
 
