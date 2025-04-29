@@ -7,7 +7,6 @@ import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
-import { checkApiKey } from "@/lib/checkApiKey";
 
 export const POST = compose(
     withLogging,
@@ -17,9 +16,7 @@ export const POST = compose(
     const [log, body] = args;
     const logSource = "geojson/route.ts";
 
-    const apiKeyCheck = await checkApiKey(req, log);
-    if (apiKeyCheck !== true) return apiKeyCheck;
-
+    // API key checking is now handled by middleware
     const generateGeoids = body.generateGeoids || false;
 
     const geojsonErrors = validateGeoJSON(JSON.stringify(body));

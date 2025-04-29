@@ -25,12 +25,13 @@ export const POST = compose(
 
   if (!wkt) return useBadRequestResponse("Missing attribute 'wkt'");
 
-  const isValidWKT = isValidWkt(wkt);
-  if (!isValidWKT) return useBadRequestResponse("Invalid WKT.");
-
   // Parse WKT to GeoJSON to validate coordinates
   try {
     const geoJson = wellknown.parse(wkt);
+
+    if (!geoJson) {
+      return useBadRequestResponse("Invalid WKT. Unable to parse to GeoJSON.");
+    }
     
     // Check if coordinates are in a projected system (like meters)
     if (coordinatesLikelyInMeters(geoJson)) {
