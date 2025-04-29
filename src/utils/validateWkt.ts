@@ -5,13 +5,12 @@ import * as wellknown from 'wellknown';
  * @param inputString The WKT string to validate
  * @returns boolean indicating if the WKT is valid
  */
-export function isValidWkt(inputString: string): boolean {
+export function isValidWkt(inputString: string): wellknown.GeoJSONGeometryOrNull {
     try {
         // Attempt to parse the WKT string
-        wellknown.parse(inputString);
-        return true;
+        return wellknown.parse(inputString);
     } catch (error) {
         // If an error occurs, the string is not valid WKT
-        return false;
+        return null;
     }
 }
