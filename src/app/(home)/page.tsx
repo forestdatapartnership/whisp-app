@@ -51,7 +51,7 @@ export default function Home() {
       </section>
       
       <div className='my-8'>
-        <SubmitGeometry usePublicEndpoints={true} />
+        <SubmitGeometry />
       </div>
 
       <section className="mt-8">
