@@ -124,7 +124,7 @@ export default function Dashboard() {
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white">Whisp Dashboard</h1>
+          <h1 className="text-3xl font-bold text-white">API Dashboard</h1>
           <p className="mt-2 text-gray-400">
             Manage your API key for accessing the Whisp API
           </p>
