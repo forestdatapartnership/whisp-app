@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 export type AlertType = 'error' | 'success' | 'warning';
 
 interface AlertProps {
   type: AlertType;
-  message: string;
+  message: string | ReactNode;
   onClose?: () => void;
 }
 
