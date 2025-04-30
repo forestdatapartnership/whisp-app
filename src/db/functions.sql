@@ -301,3 +301,18 @@ BEGIN
   RETURN temp_key;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_api_key_by_user_id(_user_id INT)
+RETURNS TEXT AS $$
+DECLARE
+  key_value TEXT;
+BEGIN
+  SELECT api_key INTO key_value
+  FROM api_keys
+  WHERE user_id = _user_id
+    AND revoked = false
+    AND (expires_at IS NULL OR expires_at > NOW());
+  
+  RETURN key_value; -- Will return NULL if no valid key is found
+END;
+$$ LANGUAGE plpgsql;
