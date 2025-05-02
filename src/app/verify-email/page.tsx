@@ -21,7 +21,7 @@ const EmailVerificationContent = () => {
           return;
         }
 
-        const response = await fetch(`/api/auth/verify-email?token=${token}`, {
+        const response = await fetch(`/api/auth/verify-email/${token}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
