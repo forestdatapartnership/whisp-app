@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from "@/lib/db";
 
-export async function GET(request: Request) {
+// This explicitly tells Next.js this route should be dynamically rendered
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
 	try {
-		// Get token from URL query parameters
+		// Get token from URL query parameters using nextUrl instead of request.url
 		const token = request.nextUrl.searchParams.get('token');
 		
 		if (!token) {

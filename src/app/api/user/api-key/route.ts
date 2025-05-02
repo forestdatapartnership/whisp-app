@@ -4,6 +4,7 @@ import { withLogging } from "@/lib/hooks/withLogging";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { getAuthUser } from "@/lib/auth";
 import { getPool } from "@/lib/db";
+import { randomUUID } from "crypto";
 
 export const GET = compose(
   withLogging
