@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 import { MiddlewareFactory } from "./types";
-import pool from "@/lib/db";
+import { getPool } from "@/lib/db";
 
 export const withApiKey: MiddlewareFactory = (next) => {
 	return async (request: NextRequest, _next: NextFetchEvent) => {
@@ -25,7 +25,8 @@ export const withApiKey: MiddlewareFactory = (next) => {
 			return NextResponse.json({ error: "Missing API key" }, { status: 401 });
 		}
 
-		// No longer hashing the key, using it directly for lookup
+			// Get the database pool and a client
+		const pool = await getPool();
 		const client = await pool.connect();
 		try {
 			const result = await client.query(

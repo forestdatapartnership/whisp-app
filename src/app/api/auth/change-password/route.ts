@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import pool from "@/lib/db";
+import { getPool } from "@/lib/db";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
 	const { email, currentPassword, newPassword } = await req.json();
 
+	const pool = await getPool();
 	const client = await pool.connect();
 	try {
 		const result = await client.query(

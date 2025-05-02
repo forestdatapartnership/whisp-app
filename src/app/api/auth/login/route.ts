@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
-import pool from "@/lib/db";
+import { getPool } from "@/lib/db";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { withLogging } from "@/lib/hooks/withLogging";
@@ -18,6 +18,7 @@ export const POST = compose(
     const { email, password } = body;
 
     if (email && password) {
+        const pool = await getPool();
         const client = await pool.connect();
         try {
             // Updated query to also return email_verified status

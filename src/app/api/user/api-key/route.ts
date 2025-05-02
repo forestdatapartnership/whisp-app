@@ -3,8 +3,7 @@ import { compose } from "@/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { getAuthUser } from "@/lib/auth";
-import pool from "@/lib/db";
-import { randomUUID } from "crypto";
+import { getPool } from "@/lib/db";
 
 export const GET = compose(
   withLogging
@@ -19,6 +18,7 @@ export const GET = compose(
   // No longer hashing the key, storing it directly
   const expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365); // 1 year (365 days)
 
+  const pool = await getPool();
   const client = await pool.connect();
   try {
     await client.query(
@@ -45,7 +45,9 @@ export const DELETE = compose(
   const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const pool = await getPool();
   const client = await pool.connect();
+
   try {
     await client.query("SELECT delete_api_key_by_user($1)", [user.id]);
     return NextResponse.json({ success: true });

@@ -3,7 +3,7 @@ import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
 import { LogFunction } from "@/lib/logger";
-import pool from "@/lib/db";
+import { getPool } from "@/lib/db";
 import { headers } from "next/headers";
 
 // UI Secret Key - this should match what's used in your frontend
@@ -46,27 +46,38 @@ export const GET = compose(
     // You could implement a more sophisticated rate-limiting strategy here
     const requestIp = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
     
-    await pool.query('SELECT generate_temp_api_key()');
-
-    const result = await pool.query('SELECT get_temp_api_key() AS api_key');
-    const apiKey = result.rows[0].api_key;
+    // Get a client from the pool instead of using pool directly
+    const pool = await getPool();
+    const client = await pool.connect();
     
-    log("info", "Temporary API key generated successfully", logSource);
-    
-    return NextResponse.json(
-      {
-        success: true,
-        apiKey: apiKey
-      },
-      {
-        headers: {
-          // Set security headers to prevent caching
-          'Cache-Control': 'no-store, max-age=0, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+    try {
+      // First generate a temp API key
+      await client.query('SELECT generate_temp_api_key()');
+      
+      // Then retrieve the generated key
+      const result = await client.query('SELECT get_temp_api_key() AS api_key');
+      const apiKey = result.rows[0].api_key;
+      
+      log("info", "Temporary API key generated successfully", logSource);
+      
+      return NextResponse.json(
+        {
+          success: true,
+          apiKey: apiKey
+        },
+        {
+          headers: {
+            // Set security headers to prevent caching
+            'Cache-Control': 'no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
         }
-      }
-    );
+      );
+    } finally {
+      // Always release the client back to the pool
+      client.release();
+    }
   } catch (error: any) {
     log("error", `Error generating temporary API key: ${error.message}`, logSource);
     return NextResponse.json(

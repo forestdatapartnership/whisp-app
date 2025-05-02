@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
-import pool from "@/lib/db";
+import { getPool } from "@/lib/db";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
@@ -24,6 +24,7 @@ export const GET = compose(
     return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
   }
 
+  const pool = await getPool();
   const client = await pool.connect();
   try {
     // Use the get_user_profile database function with integer userId
@@ -67,6 +68,7 @@ export const PUT = compose(
     return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
   }
 
+  const pool = await getPool();
   const client = await pool.connect();
   try {
     // Update user profile
@@ -123,6 +125,7 @@ export const DELETE = compose(
     return NextResponse.json({ error: "Password confirmation is required" }, { status: 400 });
   }
 
+  const pool = await getPool();
   const client = await pool.connect();
   try {
     // First verify the password

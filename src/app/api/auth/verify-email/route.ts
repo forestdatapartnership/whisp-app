@@ -1,17 +1,17 @@
-import { NextResponse } from 'next/server';
-import pool from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { getPool } from "@/lib/db";
 
 export async function GET(request: Request) {
 	try {
 		// Get token from URL query parameters
-		const url = new URL(request.url);
-		const token = url.searchParams.get('token');
+		const token = request.nextUrl.searchParams.get('token');
 		
 		if (!token) {
 			return NextResponse.json({ error: 'Token is required' }, { status: 400 });
 		}
 
 		// Connect to the database
+		const pool = await getPool();
 		const client = await pool.connect();
 		
 		try {

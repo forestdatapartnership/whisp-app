@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import pool from "@/lib/db";
+import { getPool } from "@/lib/db";
 import { compose } from "@/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
@@ -42,6 +42,7 @@ export const POST = compose(
 		}, { status: 400 });
 	}
 
+	const pool = await getPool();
 	const client = await pool.connect();
 	try {
 		const result = await client.query(
