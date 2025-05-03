@@ -8,19 +8,46 @@ CREATE OR REPLACE FUNCTION register_user(
 RETURNS TEXT AS $$
 DECLARE
     hashed_password TEXT;
+    existing_user RECORD;
+    validation_error TEXT;
 BEGIN
-    -- Check if the email already exists
-    IF EXISTS (SELECT 1 FROM users WHERE email = u_email) THEN
-        RETURN 'Email already exists';
+    -- Check if the email already exists and if it's verified
+    SELECT * INTO existing_user FROM users WHERE email = u_email;
+    
+    IF FOUND THEN
+        -- If the user exists but email is not verified, allow re-registration
+        IF NOT existing_user.email_verified THEN
+            -- Password Policy Enforcement
+            validation_error := validate_password(u_password);
+            IF validation_error IS NOT NULL THEN
+                RETURN validation_error;
+            END IF;
+
+            -- Hash the password using bcrypt
+            hashed_password := crypt(u_password, gen_salt('bf'));
+            
+            -- Update the existing unverified user
+            UPDATE users SET 
+                name = u_name,
+                last_name = u_last_name,
+                organization = u_organization,
+                password_hash = hashed_password
+            WHERE email = u_email;
+            
+            -- Delete any existing verification tokens
+            DELETE FROM email_verification_tokens WHERE user_id = existing_user.id;
+            
+            RETURN 'User re-registered successfully';
+        ELSE
+            -- If email is already verified, reject the registration
+            RETURN 'Email already exists';
+        END IF;
     END IF;
 
     -- Password Policy Enforcement
-    IF LENGTH(u_password) < 8 OR
-       NOT u_password ~ '[A-Z]' OR
-       NOT u_password ~ '[a-z]' OR
-       NOT u_password ~ '[0-9]' OR
-       NOT u_password ~ '[!@#$%^&*(),.?":{}|<>]' THEN
-       RETURN 'Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character.';
+    validation_error := validate_password(u_password);
+    IF validation_error IS NOT NULL THEN
+        RETURN validation_error;
     END IF;
 
     -- Hash the password using bcrypt
@@ -72,6 +99,7 @@ CREATE OR REPLACE FUNCTION change_password(
 RETURNS TEXT AS $$
 DECLARE
     user_record RECORD;
+    validation_error TEXT;
 BEGIN
     SELECT * INTO user_record FROM users WHERE email = u_email;
 
@@ -83,12 +111,9 @@ BEGIN
         RETURN 'Incorrect current password';
     END IF;
 
-    IF LENGTH(new_password) < 8 OR
-       NOT new_password ~ '[A-Z]' OR
-       NOT new_password ~ '[a-z]' OR
-       NOT new_password ~ '[0-9]' OR
-       NOT new_password ~ '[!@#$%^&*(),.?":{}|<>]' THEN
-       RETURN 'Password does not meet policy';
+    validation_error := validate_password(new_password);
+    IF validation_error IS NOT NULL THEN
+        RETURN validation_error;
     END IF;
 
     UPDATE users SET password_hash = crypt(new_password, gen_salt('bf'))
@@ -106,6 +131,7 @@ CREATE OR REPLACE FUNCTION change_password(
 RETURNS TEXT AS $$
 DECLARE
     user_record RECORD;
+    validation_error TEXT;
 BEGIN
     SELECT * INTO user_record FROM users WHERE email = u_email;
 
@@ -117,12 +143,9 @@ BEGIN
         RETURN 'Incorrect current password';
     END IF;
 
-    IF LENGTH(new_password) < 8 OR
-       NOT new_password ~ '[A-Z]' OR
-       NOT new_password ~ '[a-z]' OR
-       NOT new_password ~ '[0-9]' OR
-       NOT new_password ~ '[!@#$%^&*(),.?":{}|<>]' THEN
-       RETURN 'Password does not meet policy';
+    validation_error := validate_password(new_password);
+    IF validation_error IS NOT NULL THEN
+        RETURN validation_error;
     END IF;
 
     UPDATE users SET password_hash = crypt(new_password, gen_salt('bf'))
@@ -314,5 +337,50 @@ BEGIN
     AND (expires_at IS NULL OR expires_at > NOW());
   
   RETURN key_value; -- Will return NULL if no valid key is found
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION verify_password(
+  _user_id INT,
+  _password TEXT
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+  is_valid BOOLEAN;
+BEGIN
+  SELECT (password_hash = crypt(_password, password_hash)) INTO is_valid
+  FROM users
+  WHERE id = _user_id;
+  
+  RETURN COALESCE(is_valid, FALSE);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION validate_password(p_password TEXT)
+RETURNS TEXT AS $$
+BEGIN
+    -- Password Policy Enforcement
+    IF LENGTH(p_password) < 8 THEN
+        RETURN 'Password must be at least 8 characters long';
+    END IF;
+    
+    IF NOT p_password ~ '[A-Z]' THEN
+        RETURN 'Password must contain at least one uppercase letter';
+    END IF;
+    
+    IF NOT p_password ~ '[a-z]' THEN
+        RETURN 'Password must contain at least one lowercase letter';
+    END IF;
+    
+    IF NOT p_password ~ '[0-9]' THEN
+        RETURN 'Password must contain at least one number';
+    END IF;
+    
+    IF NOT p_password ~ '[!@#$%^&*(),.?":{}|<>]' THEN
+        RETURN 'Password must contain at least one special character';
+    END IF;
+    
+    -- If all validations pass
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
