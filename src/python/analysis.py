@@ -1,4 +1,3 @@
-
 import os
 import json
 import sys
@@ -7,26 +6,24 @@ import openforis_whisp as whisp
 import pandas as pd
 import numpy as np
 
-# Get the current working directory and resolve the absolute path.
-current_directory = os.path.abspath(os.getcwd())
+# Determine credential path: prefer Cloud Run secret mount if available
+CREDENTIAL_PATH = "/var/secrets/credentials.json"
+if not os.path.exists(CREDENTIAL_PATH):
+    CREDENTIAL_PATH = os.path.join(os.path.abspath(os.getcwd()), "credentials.json")
 
-# Initialize the 'whisp' module using credentials from a file in the current directory.
-whisp.initialize_ee(os.path.join(current_directory, 'credentials.json'))
+# Initialize Earth Engine using the detected credentials
+whisp.initialize_ee(CREDENTIAL_PATH)
 
 def main(file_path):
-    # Convert GeoJSON data to a DataFrame using the 'whisp' library.
     whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path)
 
-    # Rename 'geo' column to 'geojson' if present
     if 'geo' in whisp_df.columns:
         whisp_df = whisp_df.rename(columns={'geo': 'geojson'})
 
-    # Replace NaN values with empty strings for string columns, but skip 'geojson'
     for col in whisp_df.columns:
         if col != 'geojson' and whisp_df[col].dtype == 'object':
             whisp_df[col] = whisp_df[col].fillna('')
 
-    # Parse 'geojson' strings into actual dicts
     if 'geojson' in whisp_df.columns:
         def parse_geojson(val):
             if isinstance(val, str):
@@ -37,26 +34,20 @@ def main(file_path):
             return val
         whisp_df['geojson'] = whisp_df['geojson'].apply(parse_geojson)
 
-    # Store a copy of the original data structure to preserve important fields
     original_columns = whisp_df.columns.tolist()
-
     csv_file_path = os.path.splitext(file_path)[0] + '-result.csv'
 
-    # Calculate risk-related data using 'whisp' and save it to a CSV file.
     whisp_df_risk = whisp.whisp_risk(whisp_df)
     whisp_df_risk.to_csv(csv_file_path, index=False, encoding='utf-8-sig')
 
-    # More selective NaN handling - only replace NaN/inf with None in numeric columns
     for col in whisp_df_risk.columns:
         if pd.api.types.is_numeric_dtype(whisp_df_risk[col]):
             whisp_df_risk[col] = whisp_df_risk[col].replace([np.nan, np.inf, -np.inf], None)
         elif whisp_df_risk[col].dtype == 'object':
             whisp_df_risk[col] = whisp_df_risk[col].fillna('')
 
-    # Convert DataFrame to dictionary records
     df_dict = whisp_df_risk.to_dict(orient='records')
 
-    # Parse geojson string fields into actual objects if needed
     for record in df_dict:
         for geo_field in ['geojson', 'geometry']:
             if geo_field in record and isinstance(record[geo_field], str):
@@ -65,7 +56,6 @@ def main(file_path):
                 except (ValueError, SyntaxError):
                     pass
 
-    # More selective cleaning function that only replaces NaN/inf with None
     def clean_nan_values(item):
         if isinstance(item, dict):
             return {k: clean_nan_values(v) for k, v in item.items()}
@@ -78,14 +68,12 @@ def main(file_path):
 
     clean_dict = clean_nan_values(df_dict)
 
-    # Custom JSON encoder that handles remaining NaN values but preserves everything else
     class CustomJSONEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, float) and (np.isnan(obj) or np.isinf(obj)):
                 return None
             return super().default(obj)
 
-    # Create GeoJSON output format
     geojson_output = {
         "type": "FeatureCollection",
         "features": []
