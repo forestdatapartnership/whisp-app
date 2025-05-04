@@ -35,3 +35,13 @@ CREATE TABLE IF NOT EXISTS temp_api_keys (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Table to store password reset tokens
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  revoked BOOLEAN NOT NULL DEFAULT FALSE
+);
+
