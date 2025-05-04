@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
 import { compose } from "@/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { randomBytes } from "crypto";
 import { sendVerificationEmail } from "@/lib/mailer";
+import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 
 const validatePassword = (password: string): boolean => {
 	const minLength = 8;
@@ -25,7 +24,6 @@ const validatePassword = (password: string): boolean => {
 
 export const POST = compose(
 	withLogging,
-	withErrorHandling,
 	withRequiredJsonBody
 )(async (_req: NextRequest, ...args): Promise<NextResponse> => {
 	const logSource = "register/route.ts";
