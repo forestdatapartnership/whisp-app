@@ -11,49 +11,39 @@ DECLARE
     existing_user RECORD;
     validation_error TEXT;
 BEGIN
-    -- Check if the email already exists and if it's verified
     SELECT * INTO existing_user FROM users WHERE email = u_email;
-    
+
     IF FOUND THEN
-        -- If the user exists but email is not verified, allow re-registration
         IF NOT existing_user.email_verified THEN
-            -- Password Policy Enforcement
             validation_error := validate_password(u_password);
             IF validation_error IS NOT NULL THEN
                 RETURN validation_error;
             END IF;
 
-            -- Hash the password using bcrypt
             hashed_password := crypt(u_password, gen_salt('bf'));
-            
-            -- Update the existing unverified user
+
             UPDATE users SET 
                 name = u_name,
                 last_name = u_last_name,
                 organization = u_organization,
                 password_hash = hashed_password
             WHERE email = u_email;
-            
-            -- Delete any existing verification tokens
+
             DELETE FROM email_verification_tokens WHERE user_id = existing_user.id;
-            
-            RETURN 'User re-registered successfully';
+
+            RETURN 'User registered successfully';
         ELSE
-            -- If email is already verified, reject the registration
             RETURN 'Email already exists';
         END IF;
     END IF;
 
-    -- Password Policy Enforcement
     validation_error := validate_password(u_password);
     IF validation_error IS NOT NULL THEN
         RETURN validation_error;
     END IF;
 
-    -- Hash the password using bcrypt
     hashed_password := crypt(u_password, gen_salt('bf'));
 
-    -- Insert the new user
     INSERT INTO users (name, last_name, organization, email, password_hash)
     VALUES (u_name, u_last_name, u_organization, u_email, hashed_password);
 
