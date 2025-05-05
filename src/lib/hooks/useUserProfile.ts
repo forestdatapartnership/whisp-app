@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store';
 
@@ -9,13 +9,22 @@ import { useStore } from '@/store';
  */
 export function useUserProfile(redirectToLogin = false) {
   const { user, isAuthenticated, setUser, setIsAuthenticated } = useStore();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!user);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  
+  // Use a ref to track if a fetch is in progress to prevent duplicate requests
+  const fetchInProgress = useRef(false);
 
   const fetchUserProfile = async () => {
+    // If a fetch is already in progress, don't start another one
+    if (fetchInProgress.current) {
+      return false;
+    }
+    
     setLoading(true);
     setError(null);
+    fetchInProgress.current = true;
 
     try {
       const response = await fetch('/api/user/profile', {
@@ -46,6 +55,7 @@ export function useUserProfile(redirectToLogin = false) {
       return false;
     } finally {
       setLoading(false);
+      fetchInProgress.current = false;
     }
   };
 
@@ -77,14 +87,13 @@ export function useUserProfile(redirectToLogin = false) {
   };
 
   useEffect(() => {
-    // Always attempt to fetch the profile on initial mount
-    // Let the server API tell us if the user is authenticated or not
+    // Only fetch profile if we don't have a user or authentication state
     if (!user || !isAuthenticated) {
       fetchUserProfile();
     } else {
       setLoading(false);
     }
-  }, []); // Only run on initial mount
+  }, [isAuthenticated, user]); // Include dependencies
 
   return {
     user,
