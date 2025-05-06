@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Alert from "@/components/Alert";
 
-const ResetPasswordPage: React.FC = () => {
+// Component to handle the search params with suspense
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [newPassword, setNewPassword] = useState("");
@@ -226,6 +227,35 @@ const ResetPasswordPage: React.FC = () => {
         )}
       </section>
     </main>
+  );
+}
+
+// Loading fallback for suspense
+function ResetPasswordFallback() {
+  return (
+    <main className="text-center mx-auto px-2 max-w-md">
+      <section className="mt-8">
+        <div className="flex justify-center items-center mb-6 relative w-full">
+          <img src="/whisp_logo.svg" alt="Whisp Logo" className="h-36" />
+        </div>
+        <h1 className="text-3xl font-semibold my-8">Reset Password</h1>
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg max-w-md mx-auto text-center">
+          <div className="flex justify-center my-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+// Main component with suspense boundary
+const ResetPasswordPage: React.FC = () => {
+  return (
+    <Suspense fallback={<ResetPasswordFallback />}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 };
 
