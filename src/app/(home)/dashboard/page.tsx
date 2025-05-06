@@ -18,7 +18,7 @@ type ApiKeyMetadata = {
 export default function Dashboard() {
   const router = useRouter();
   const { user, isAuthenticated, loading: authLoading, logout } = useUserProfile(true);
-  
+
   // State variables
   const [apiKeyMetadata, setApiKeyMetadata] = useState<ApiKeyMetadata | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ export default function Dashboard() {
     if (isAuthenticated && user) {
       fetchApiKeyMetadata();
     }
-    
+
     if (!authLoading) {
       setLoading(false);
     }
@@ -64,12 +64,12 @@ export default function Dashboard() {
   const createApiKey = async () => {
     setKeyBeingCreated(true);
     setErrorMessage('');
-    
+
     try {
       const response = await fetch('/api/user/api-key', {
         method: 'GET',
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setNewlyCreatedKey({ key: data.key });
@@ -91,12 +91,12 @@ export default function Dashboard() {
   const deleteApiKey = async () => {
     setErrorMessage('');
     setSuccessMessage('');
-    
+
     try {
       const response = await fetch('/api/user/api-key', {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         await fetchApiKeyMetadata();
         setSuccessMessage('API key deleted successfully');
@@ -130,8 +130,8 @@ export default function Dashboard() {
           </p>
         </div>
         <div>
-          <Link 
-            href="/settings" 
+          <Link
+            href="/settings"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-300 bg-gray-800 hover:bg-gray-700 hover:text-white transition-colors"
           >
             Account Settings
@@ -141,24 +141,24 @@ export default function Dashboard() {
 
       {/* Alert Messages */}
       {errorMessage && (
-        <Alert 
-          type="error" 
-          message={errorMessage} 
+        <Alert
+          type="error"
+          message={errorMessage}
           onClose={() => setErrorMessage('')}
         />
       )}
 
       {successMessage && (
-        <Alert 
-          type="success" 
-          message={successMessage} 
+        <Alert
+          type="success"
+          message={successMessage}
           onClose={() => setSuccessMessage('')}
         />
       )}
 
       <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
         <h2 className="text-2xl font-semibold text-white mb-6">API Key Management</h2>
-        
+
         {/* API Key Status */}
         {!keyBeingCreated && !newlyCreatedKey && (
           <div className="mb-8">
@@ -227,13 +227,13 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            
+
             <Alert
               type="error"
               message={<span><strong>Warning:</strong> Creating a new API key will immediately invalidate your current key.
-              Any applications or scripts using your current key will stop working.</span>}
+                Any applications or scripts using your current key will stop working.</span>}
             />
-            
+
             <div className="flex gap-2 justify-end">
               <button
                 onClick={createApiKey}
@@ -265,13 +265,13 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            
+
             <Alert
               type="error"
               message={<span><strong>Warning:</strong> Deleting your API key will immediately revoke access.
-              Any applications or scripts using this key will stop working.</span>}
+                Any applications or scripts using this key will stop working.</span>}
             />
-            
+
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
@@ -321,7 +321,7 @@ export default function Dashboard() {
             <Alert
               type="warning"
               message={<span>
-                <strong>IMPORTANT: This is the only time you'll see this key.</strong> Copy it now and store it securely. 
+                <strong>IMPORTANT: This is the only time you'll see this key.</strong> Copy it now and store it securely.
                 For security reasons, we cannot show it to you again.
               </span>}
             />
@@ -375,6 +375,21 @@ curl -X POST "https://whisp.openforis.org/api/submit/geo-ids" \\
               API documentation
             </Link>
           </p>
+        </div>
+        {/* API Instructions */}
+        <div className="mt-8 p-4 border border-gray-700 rounded-lg">
+          <h3 className="text-lg font-medium text-white mb-2">Analyze your File</h3>
+          <p className="text-gray-400 mb-4">
+            Submit your geojson or wkt and receive the Whisp analysis
+          </p>
+          <button
+            onClick={createApiKey}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+          >
+            <Link href="/submit-geometry" >
+              Submit
+            </Link>
+          </button>
         </div>
       </div>
     </div>
