@@ -7,12 +7,21 @@ import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { LogFunction } from "@/lib/logger";
 import { compose } from "@/utils/compose";
+import { validateApiKey } from "@/utils/apiKeyValidator";
 
 export const POST = compose(
   withLogging,
   withErrorHandling,
   withRequiredJsonBody
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
+  const logSource = "geo-ids/route.ts";
+
+  // Validate API key directly in the route handler, passing the log function
+  const { error, userId } = await validateApiKey(req, log);
+  if (error) {
+    return error;
+  }
+  
   const geoIds = body['geoIds'];
   if (!geoIds || !Array.isArray(geoIds)) {
     return useBadRequestResponse('Request body is missing geoId.');

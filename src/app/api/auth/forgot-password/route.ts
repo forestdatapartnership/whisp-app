@@ -6,7 +6,6 @@ import { withLogging } from '@/lib/hooks/withLogging';
 import { withErrorHandling } from '@/lib/hooks/withErrorHandling';
 import { withRequiredJsonBody } from '@/lib/hooks/withRequiredJsonBody';
 import { compose } from '@/utils/compose';
-import { LogFunction } from '@/lib/logger';
 
 export const POST = compose(
   withLogging,

@@ -10,15 +10,25 @@ import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
 import { wktToFeatureCollection } from "@/utils/wktUtils";
 import * as wellknown from 'wellknown';
+import { validateApiKey } from "@/utils/apiKeyValidator";
 
 export const POST = compose(
   withLogging,
   withErrorHandling,
   withRequiredJsonBody
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
+  const logSource = "wkt/route.ts";
+
+  // Validate API key directly in the route handler, passing the log function
+  const { error, userId } = await validateApiKey(req, log);
+  if (error) {
+    return error;
+  }
+  
+  // Removed duplicate logging since it's now handled in validateApiKey
+
   const generateGeoids = body.generateGeoids || false;
   const { wkt } = body;
-  const logSource = "route.ts"
 
   // Printing body temporarily to debug suspicious activity. 
   log("info", body, logSource);

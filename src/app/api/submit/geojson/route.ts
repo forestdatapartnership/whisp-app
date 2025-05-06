@@ -7,16 +7,25 @@ import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/utils/compose";
+import { validateApiKey } from "@/utils/apiKeyValidator";
 
 export const POST = compose(
     withLogging,
     withErrorHandling,
     withRequiredJsonBody
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
+
     const [log, body] = args;
     const logSource = "geojson/route.ts";
-
-    // API key checking is now handled by middleware
+    
+    // Validate API key directly in the route handler, passing the log function
+    const { error, userId } = await validateApiKey(req, log);
+    if (error) {
+        return error;
+    }
+    
+    // Removed duplicate logging since it's now handled in validateApiKey
+    
     const generateGeoids = body.generateGeoids || false;
 
     const geojsonErrors = validateGeoJSON(JSON.stringify(body));
