@@ -39,6 +39,36 @@ export async function fetchTempApiKey(source: string = 'client'): Promise<string
 }
 
 /**
+ * Fetches the authenticated user's API key
+ * @returns The user's API key or throws an error
+ */
+export async function fetchUserApiKey(): Promise<string> {
+  try {
+    const response = await fetch('/api/user/api-key', {
+      method: 'GET',
+      credentials: 'include', // Include cookies for authentication
+      cache: 'no-store' // Ensure the browser doesn't cache this request
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to retrieve user API key');
+    }
+    
+    const data = await response.json();
+    
+    if (data.apiKey) {
+      return data.apiKey;
+    } else {
+      throw new Error('No API key found for user');
+    }
+  } catch (err) {
+    console.error('Error fetching user API key:', err);
+    throw err;
+  }
+}
+
+/**
  * Creates headers for API requests including the API key if available
  */
 export function createApiHeaders(apiKey?: string | null): Record<string, string> {

@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { useSafeRouterPush } from '@/utils/safePush';
 import { parseWKTAndJSONFile } from "@/utils/fileParser";
 import Link from 'next/link';
-import { fetchTempApiKey, createApiHeaders } from '@/utils/secureApiUtils';
+import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/utils/secureApiUtils';
 
 interface SubmitGeometryProps {
     useTempKey?: boolean;
@@ -19,7 +19,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
     const [geojson, setGeojson] = useState<any>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
-    const { error } = useStore();
+    const { error, user } = useStore();
     const [type, setType] = useState<string>('');
 
     const safePush = useSafeRouterPush();
@@ -60,7 +60,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
         setIsLoading(true);
 
         try {
-            // Get the temp API key at the start of the analysis
+            // Get the appropriate API key based on useTempKey flag
             let apiKey = null;
             if (useTempKey) {
                 try {
@@ -69,10 +69,18 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
                     console.error('Error fetching temp API key:', err);
                     throw new Error("Failed to get API key for authentication");
                 }
+            } else {
+                // For authenticated users, fetch their own API key
+                try {
+                    apiKey = await fetchUserApiKey();
+                } catch (err) {
+                    console.error('Error fetching user API key:', err);
+                    throw new Error("Failed to get API key for authenticated user");
+                }
             }
 
             let data, response;
-            // Use the utility function to create headers with the freshly retrieved API key
+            // Use the utility function to create headers with the retrieved API key
             const headers = createApiHeaders(apiKey);
             
             // Always use the secure endpoints

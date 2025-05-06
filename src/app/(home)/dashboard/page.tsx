@@ -72,7 +72,7 @@ export default function Dashboard() {
 
       if (response.ok) {
         const data = await response.json();
-        setNewlyCreatedKey({ key: data.key });
+        setNewlyCreatedKey({ key: data.apiKey });
         await fetchApiKeyMetadata();
         setSuccessMessage('API key created successfully. Make sure to copy your key now - you won\'t be able to see it again!');
         setShowCreateKeyForm(false);
