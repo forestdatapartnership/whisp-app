@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import SwaggerUI from "swagger-ui-react";
 import 'swagger-ui-react/swagger-ui.css';
 import './styles.css';
-import { fetchTempApiKey } from '@/utils/secureApiUtils';
+import { fetchTempApiKey } from '@/lib/secureApiUtils';
 
 const DocumentationPage = () => {
   const [apiKey, setApiKey] = useState<string | null>(null);
