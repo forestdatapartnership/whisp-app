@@ -227,3 +227,44 @@ export function coordinatesLikelyInMeters(geometry: any): boolean {
     });
 }
 
+/**
+ * Checks if the GeoJSON has a CRS property and validates if it's EPSG:4326
+ * @param geojson The GeoJSON object to check
+ * @returns An object with isValid boolean and message string
+ */
+export function validateCrs(geojson: any): { isValid: boolean; message: string } {
+    // If no CRS is specified, it's valid by default (GeoJSON spec assumes WGS84)
+    if (!geojson.crs) {
+        return { isValid: true, message: "" };
+    }
+
+    // Check if the CRS is EPSG:4326
+    if (geojson.crs.type === "name" && 
+        geojson.crs.properties && 
+        geojson.crs.properties.name) {
+        
+        const crsName = geojson.crs.properties.name.toLowerCase();
+        
+        // Valid EPSG:4326 CRS identifiers
+        const validCrs = [
+            "urn:ogc:def:crs:ogc:1.3:crs84",
+            "urn:ogc:def:crs:epsg::4326",
+            "urn:ogc:def:crs:epsg:4326"
+        ];
+        
+        if (validCrs.some(valid => crsName.includes(valid) || crsName.includes("4326"))) {
+            return { isValid: true, message: "" };
+        }
+        
+        return { 
+            isValid: false, 
+            message: `Invalid CRS: ${geojson.crs.properties.name}. Only EPSG:4326 (WGS84) coordinate system is supported.` 
+        };
+    }
+    
+    return { 
+        isValid: false, 
+        message: "Invalid CRS specification. Only EPSG:4326 (WGS84) coordinate system is supported." 
+    };
+}
+

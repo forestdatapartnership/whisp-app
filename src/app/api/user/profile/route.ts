@@ -3,7 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { getPool } from "@/lib/db";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { compose } from "@/utils/compose";
+import { compose } from "@/lib/utils/compose";
 
 export const GET = compose(
   withLogging,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serialize } from "cookie";
-import { compose } from "@/utils/compose";
+import { compose } from "@/lib/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 

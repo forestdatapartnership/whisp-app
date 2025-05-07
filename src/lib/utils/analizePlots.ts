@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import path from "path";
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
-import { analyzeGeoJson } from "@/utils/runPython";
+import { analyzeGeoJson } from "@/lib/utils/runPython";
 import { LogFunction } from "@/lib/logger";
 
 export const analyzePlots = async (payload: any, log: LogFunction) => {

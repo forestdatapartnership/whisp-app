@@ -4,7 +4,7 @@ import { getPool } from "@/lib/db";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { compose } from "@/utils/compose";
+import { compose } from "@/lib/utils/compose";
 import { assertEnvVar } from "@/lib/utils";
 
 export const POST = compose(

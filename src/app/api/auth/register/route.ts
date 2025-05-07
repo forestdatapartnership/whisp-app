@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
-import { compose } from "@/utils/compose";
+import { compose } from "@/lib/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { randomBytes } from "crypto";
 import { sendVerificationEmail } from "@/lib/mailer";

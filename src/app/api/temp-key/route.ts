@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { compose } from "@/utils/compose";
+import { compose } from "@/lib/utils/compose";
 import { LogFunction } from "@/lib/logger";
 import { getPool } from "@/lib/db";
 import { headers } from "next/headers";

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJsonfromGeoId } from "@/utils/assetRegistry";
-import { analyzePlots } from "@/utils/analizePlots";
+import { getJsonfromGeoId } from "@/lib/utils/assetRegistry";
+import { analyzePlots } from "@/lib/utils/analizePlots";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { useBadRequestResponse, useErrorResponse } from "@/lib/hooks/responses";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { LogFunction } from "@/lib/logger";
-import { compose } from "@/utils/compose";
-import { validateApiKey } from "@/utils/apiKeyValidator";
+import { compose } from "@/lib/utils/compose";
+import { validateApiKey } from "@/lib/utils/apiKeyValidator";
 
 export const POST = compose(
   withLogging,

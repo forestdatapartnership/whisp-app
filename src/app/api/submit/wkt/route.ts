@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzePlots } from "@/utils/analizePlots";
-import { isValidWkt } from "@/utils/validateWkt";
-import { isValidWgs84Coordinates, coordinatesLikelyInMeters } from "@/utils/geojsonUtils";
+import { analyzePlots } from "@/lib/utils/analizePlots";
+import { isValidWkt } from "@/lib/utils/validateWkt";
+import { isValidWgs84Coordinates, coordinatesLikelyInMeters } from "@/lib/utils/geojsonUtils";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
 import { LogFunction } from "@/lib/logger";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { compose } from "@/utils/compose";
-import { wktToFeatureCollection } from "@/utils/wktUtils";
+import { compose } from "@/lib/utils/compose";
+import { wktToFeatureCollection } from "@/lib/utils/wktUtils";
 import * as wellknown from 'wellknown';
-import { validateApiKey } from "@/utils/apiKeyValidator";
+import { validateApiKey } from "@/lib/utils/apiKeyValidator";
 
 export const POST = compose(
   withLogging,
