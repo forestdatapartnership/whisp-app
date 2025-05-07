@@ -5,10 +5,10 @@ import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
-import { useSafeRouterPush } from '@/utils/safePush';
-import { parseWKTAndJSONFile } from "@/utils/fileParser";
+import { useSafeRouterPush } from '@/lib/utils/safePush';
+import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
 import Link from 'next/link';
-import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/utils/secureApiUtils';
+import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 
 interface SubmitGeometryProps {
     useTempKey?: boolean;
