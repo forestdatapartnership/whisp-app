@@ -92,7 +92,7 @@ export const runPythonScript = async (
 
     // Handle parent process termination
     const handleSignal = (signal: NodeJS.Signals) => {
-      log("info", `Received ${signal}, terminating child process.`);
+      log("debug", `Received ${signal}, terminating child process.`);
       killProcess(childProcess);
     };
 

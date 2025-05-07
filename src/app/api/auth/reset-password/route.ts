@@ -24,7 +24,7 @@ export const POST = compose(
       );
     }
 
-    log("info", "Attempting password reset with token", logSource);
+    log("debug", "Attempting password reset with token", logSource);
     
     const pool = await getPool();
     const client = await pool.connect();
@@ -44,7 +44,7 @@ export const POST = compose(
       );
     }
 
-    log("info", "Password reset successfully", logSource);
+    log("debug", "Password reset successfully", logSource);
     
     return NextResponse.json(
       { message: 'Your password has been reset successfully' },

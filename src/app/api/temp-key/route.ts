@@ -58,7 +58,7 @@ export const GET = compose(
       const result = await client.query('SELECT get_temp_api_key() AS api_key');
       const apiKey = result.rows[0].api_key;
       
-      log("info", "Temporary API key generated successfully", logSource);
+      log("debug", "Temporary API key generated successfully", logSource);
       
       return NextResponse.json(
         {

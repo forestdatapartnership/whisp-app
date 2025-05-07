@@ -40,7 +40,7 @@ export const GET = compose(
       [user.id, key, expires_at]
     );
 
-    log("info", `Created new API key for user ${user.id}`, logSource);
+    log("debug", `Created new API key for user ${user.id}`, logSource);
     return NextResponse.json({ apiKey: key }); // Return with consistent property name
   } catch (error) {
     log("error", error, logSource);

@@ -30,9 +30,6 @@ export const POST = compose(
   const generateGeoids = body.generateGeoids || false;
   const { wkt } = body;
 
-  // Printing body temporarily to debug suspicious activity. 
-  log("info", body, logSource);
-
   if (!wkt) return useBadRequestResponse("Missing attribute 'wkt'");
 
   // Parse WKT to GeoJSON to validate coordinates

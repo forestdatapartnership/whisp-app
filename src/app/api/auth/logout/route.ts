@@ -35,7 +35,7 @@ export const GET = compose(
     response.headers.append("Set-Cookie", expiredAccessCookie);
     response.headers.append("Set-Cookie", expiredRefreshCookie);
 
-    log("info", "User successfully logged out", logSource);
+    log("debug", "User successfully logged out", logSource);
 
     return response;
 });
