@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzePlots } from "@/utils/analizePlots";
-import { createFeatureCollection, addGeoId, validateGeoJSON, isValidWgs84Coordinates, coordinatesLikelyInMeters } from "@/utils/geojsonUtils";
-import { GEOMETRY_LIMIT } from "@/utils/constants";
+import { analyzePlots } from "@/lib/utils/analizePlots";
+import { 
+    createFeatureCollection, 
+    addGeoId, 
+    validateGeoJSON, 
+    isValidWgs84Coordinates, 
+    coordinatesLikelyInMeters,
+    validateCrs 
+} from "@/lib/utils/geojsonUtils";
+import { GEOMETRY_LIMIT } from "@/lib/utils/constants";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { compose } from "@/utils/compose";
-import { validateApiKey } from "@/utils/apiKeyValidator";
+import { compose } from "@/lib/utils/compose";
+import { validateApiKey } from "@/lib/utils/apiKeyValidator";
 
 export const POST = compose(
     withLogging,
@@ -35,6 +42,12 @@ export const POST = compose(
                 .map(error => `- ${error.message}`)
                 .join('\n')}`
         );
+    }
+
+    // Validate CRS to ensure only EPSG:4326 is allowed
+    const crsValidation = validateCrs(body);
+    if (!crsValidation.isValid) {
+        return useBadRequestResponse(crsValidation.message);
     }
 
     try {
