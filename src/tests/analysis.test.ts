@@ -6,9 +6,12 @@ import { POST as geojsonHandler } from '@/app/api/submit/geojson/route';
 import { POST as wktHandler } from '@/app/api/submit/wkt/route';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Mock the middleware instead of the checkApiKey function
-jest.mock('@/middlewares/withApiKey', () => ({
-  withApiKey: jest.fn((next) => next)
+// Mock the validateApiKey function
+jest.mock('@/lib/utils/apiKeyValidator', () => ({
+  validateApiKey: jest.fn().mockResolvedValue({ 
+    error: null, 
+    userId: 'mock-user-id' 
+  })
 }));
 
 // Mock next/server
