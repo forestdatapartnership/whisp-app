@@ -3,7 +3,7 @@ import { getPool } from '@/lib/db';
 import { withLogging } from '@/lib/hooks/withLogging';
 import { withErrorHandling } from '@/lib/hooks/withErrorHandling';
 import { withRequiredJsonBody } from '@/lib/hooks/withRequiredJsonBody';
-import { compose } from '@/utils/compose';
+import { compose } from '@/lib/utils/compose';
 
 export const POST = compose(
   withLogging,
