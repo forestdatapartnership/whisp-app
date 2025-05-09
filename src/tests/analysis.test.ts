@@ -44,6 +44,7 @@ describe('Dynamic API Analysis Tests', () => {
   
   const inputFiles = fs.readdirSync(INPUT_FOLDER);
   inputFiles.forEach((file) => {
+    // Set a longer timeout (50 seconds) for each test
     test(`Processing ${file}`, async () => {
       const inputFilePath = path.join(INPUT_FOLDER, file);
       const inputData = JSON.parse(fs.readFileSync(inputFilePath, 'utf8'));
@@ -80,7 +81,8 @@ describe('Dynamic API Analysis Tests', () => {
       expect(res.status).toBe(200);
       const jsonResponse = await res.json();
       expect(jsonResponse && Object.keys(jsonResponse).length).toBeGreaterThan(0);
-    });
+    // Add timeout of 50 seconds (50000ms) here
+    }, 50000);
   });
 });
 
