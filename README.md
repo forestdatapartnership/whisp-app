@@ -122,44 +122,32 @@ To get started with Whisp, ensure you have [Node.js](https://nodejs.org), [Postg
         # Python Execution
         PYTHON_PATH=/path/to/your/python
         
+        # Asset Registry
+        ASSET_REGISTRY_BASE=https://api-ar.agstack.org
+        AR_API_KEY=
+        AR_CLIENT_SECRET=
+        
         # PostgreSQL Database Connection
         DB_USER=postgres
         DB_HOST=localhost
         DB_NAME=whisp
-        DB_PASSWORD='postgres'
+        DB_PASSWORD=
         DB_PORT=5432
         
         # Authentication & Security
         JWT_SECRET=your_jwt_secret
-        NEXTAUTH_SECRET=your_nextauth_secret
-        NEXTAUTH_URL=http://localhost:3000
         
         # Email Configuration (for password reset)
-        EMAIL_SERVER_HOST=smtp.example.com
-        EMAIL_SERVER_PORT=587
-        EMAIL_SERVER_USER=user@example.com
-        EMAIL_SERVER_PASSWORD=your_email_password
-        EMAIL_FROM=noreply@example.com
-        
-        # API Configuration
-        API_KEY_EXPIRATION_DAYS=30
-        TEMP_API_KEY_EXPIRATION_MINUTES=60
-        MAX_GEOMETRY_PER_REQUEST=100
-        
-        # Integration Services
-        ASSET_REGISTRY_API_URL=https://api.assetregistry.org
-        GEE_API_KEY=your_gee_api_key
-        
-        # Application Settings
-        NEXT_PUBLIC_APP_URL=http://localhost:3000
-        RESULTS_STORAGE_PATH=/absolute/path/to/temp
+        EMAIL_SERVICE=smtp.example.com
+        EMAIL_USER=user@example.com
+        EMAIL_PASS=your_email_password
         ```
 
     - Create a `credentials.json` in the root directory with your Google Earth Engine service account details.
 
 5. **Create a Temp Folder**
 
-    Create a `temp` directory at the root to store analyses locally. This folder will be used for temporary storage during the geospatial analysis process.
+    If not created already, create a `temp` directory at the root to store analyses locally. This folder will be used for temporary storage during the geospatial analysis process.
 
 6. **Run the Application**
 
