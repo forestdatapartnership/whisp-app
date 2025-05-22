@@ -7,6 +7,10 @@ import { useParams } from 'next/navigation';
 import { useStore } from "@/store";
 import './styles.css';
 import { ColumnDef } from '@tanstack/react-table';
+import { FeatureCollection, Feature, Geometry, GeoJsonProperties } from 'geojson';
+
+// Define types for data
+type RecordData = Record<string, any>;
 
 // Define a type for alerts to keep track of type and message
 type AlertData = {
@@ -20,8 +24,8 @@ const Results: React.FC = () => {
     const [alert, setAlert] = useState<AlertData>(null);
     const [notFound, setNotFound] = useState<boolean>(false);
     const [geoIds, setGeoIds] = useState<string[]>([]);
-    const [tableData, setTableData] = useState<any[]>([]);
-    const [columns, setColumns] = useState<any[]>([]);
+    const [tableData, setTableData] = useState<Record<string, any>[]>([]);
+    const [columns, setColumns] = useState<ColumnDef<Record<string, any>, any>[]>([]);
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
     const clearAlert = () => setAlert(null);
@@ -45,18 +49,56 @@ const Results: React.FC = () => {
 
     const csvUrl = `/api/download-csv/${token || id}`;
 
-    const createColumnDefs = (data: Record<string, any>[]): ColumnDef<Record<string, any>>[] => {
-        if (data.length === 0) return [];
-        const sample = data[0];
-        return Object.keys(sample).map((key) => ({
-            accessorKey: key,
-            header: key,
-        }));
+    // Process GeoJSON data into a format suitable for the DataTable
+    const processGeoJSONData = (geoJSON: any): RecordData[] => {
+        // Check if it's a valid GeoJSON FeatureCollection
+        if (!geoJSON || !geoJSON.features || !Array.isArray(geoJSON.features)) {
+            return [];
+        }
+
+        // Transform features into rows for the table
+        return geoJSON.features.map((feature: Feature<Geometry, GeoJsonProperties>) => {
+            // Combine properties with geometry
+            return {
+                ...feature.properties,
+                geometry: feature.geometry
+            };
+        });
+    };
+
+    const createColumnDefs = (data: any): ColumnDef<Record<string, any>, any>[] => {
+        
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            console.log('No valid array data available for column creation');
+            return [];
+        }
+        
+        try {
+            // Find the first non-null object in the data array
+            const sampleIndex = data.findIndex(item => item && typeof item === 'object' && Object.keys(item).length > 0);
+            
+            if (sampleIndex === -1) {
+                console.log('No valid sample found for column creation');
+                return [];
+            }
+            
+            const sample = data[sampleIndex];
+            console.log("Creating columns from sample with keys:", Object.keys(sample));
+            
+            // Create column definitions from properties, properly formatted for the DataTable component
+            return Object.keys(sample).map((key) => ({
+                accessorKey: key,
+                header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '), // Format header for display
+                enableHiding: true,
+            })) as ColumnDef<Record<string, any>, any>[];
+        } catch (error) {
+            console.error('Error creating column definitions:', error);
+            return [];
+        }
     };
 
     useEffect(() => {
         const fetchData = async () => {
-
             setIsLoading(true);
             setNotFound(false);
             try {
@@ -65,9 +107,13 @@ const Results: React.FC = () => {
                     setNotFound(true);
                     throw new Error('Failed to fetch report');
                 }
+
                 const fetchedData = await response.json();
-                setTableData(fetchedData.data);
-                const columnDefs = createColumnDefs(fetchedData.data);
+
+                const processedData = processGeoJSONData(fetchedData.data);
+                
+                setTableData(processedData);
+                const columnDefs = createColumnDefs(processedData);
                 setColumns(columnDefs);
             } catch (error: any) {
                 console.error(error);
@@ -78,14 +124,15 @@ const Results: React.FC = () => {
             }
         };
 
-        if (!data || data.length === 0) {
+        // Check if we have data from the store
+        if (!data) {
             fetchData();
-            setIsLoading(false);
         } else {
-            setTableData(data);
-            const columnDefs = createColumnDefs(data);
+            const processedData = processGeoJSONData(data);
+            setTableData(processedData);
+            const columnDefs = createColumnDefs(processedData);
             setColumns(columnDefs);
-            setGeoIds(data.map((item: any) => item.geoid));
+            setGeoIds(processedData.map((item: any) => item.geoid).filter(Boolean));
         }
     }, [id, data]);
 
@@ -99,15 +146,15 @@ const Results: React.FC = () => {
 
     const handleDownloadCsv = async () => {
         if (isCsvDisabled) return;
-        
+
         setIsDownloading(true);
         try {
             const response = await fetch(csvUrl);
-            
+
             if (!response.ok) {
                 throw new Error(`Failed to download CSV: ${response.statusText}`);
             }
-            
+
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -117,7 +164,7 @@ const Results: React.FC = () => {
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-            
+
             setAlert({ type: 'success', message: "CSV downloaded successfully" });
         } catch (error: any) {
             console.error('Download failed:', error);
@@ -162,7 +209,12 @@ const Results: React.FC = () => {
                         </div>
                     </div>
                     {alert && <Alert type={alert.type} message={alert.message} onClose={alert.type === 'error' ? clearStoreError : clearAlert} />}
-                    <DataTable columns={columns} data={tableData} />
+                    {tableData && columns && columns.length > 0 && (
+                        <DataTable
+                            columns={columns}
+                            data={tableData} 
+                        />
+                    )}
                 </>
             )}
         </div>

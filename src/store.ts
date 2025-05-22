@@ -33,7 +33,7 @@ type UserProfile = {
 
 type StoreState = {
     token: string,
-    data: RecordData[],
+    data: {} | null,
     error: string,
     geoIds: string[],
     selectedFile: string,
@@ -47,7 +47,7 @@ type StoreState = {
 
 const initialState: Omit<StoreState, 'reset' | 'setUser' | 'setIsAuthenticated'> = {
     token: "",
-    data: [],
+    data: null,
     error: "",
     geoIds: [""],
     selectedFile: "",

@@ -79,47 +79,50 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
                 }
             }
 
-            let data, response;
+            let fetchedData, response;
             // Use the utility function to create headers with the retrieved API key
             const headers = createApiHeaders(apiKey);
             
             // Always use the secure endpoints
-            const apiBasePath = '/api/submit/';
+            const apiBasePath = '/api/submit';
+
+            let endpoint = '';
+            let body: any = {};
 
             if (type === 'wkt') {
-                response = await fetch(`${apiBasePath}wkt`, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify({ wkt }),
-                });
-
-                data = await response.json();
+                endpoint = `${apiBasePath}/wkt`;
+                body = { wkt };
             } else if (type === 'json') {
-                response = await fetch(`${apiBasePath}geojson`, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify({ ...geojson }),
-                });
-
-                data = await response.json();
+                endpoint = `${apiBasePath}/geojson`;
+                body = geojson;
             }
 
-            if (!data || !response) {
+            if (endpoint) {
+                response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(body),
+                });
+                fetchedData = await response.json();
+            }
+
+            if (!fetchedData || !response) {
                 throw new Error(`No response from the server`);
             }
 
-            if (!response.ok && data['error']) {
-                throw new Error(`${data['error']}`);
+            if (!response.ok && fetchedData['error']) {
+                throw new Error(`${fetchedData['error']}`);
             }
 
             if (!response.ok) {
                 throw new Error(`Server error with status ${response.status}`);
             }
 
-            if (data) {
+            if (fetchedData) {
                 resetStore();
-                useStore.setState({ token: data.token, data: data.data });
-                safePush(`/results/${data.token}`);
+                const { token, data } = fetchedData;
+                useStore.setState({ token, data });
+                safePush(`/results/${token}`);
             }
         } catch (error: any) {
             useStore.setState({ error: error.message });
