@@ -56,5 +56,5 @@ export const POST = compose(
 
   let featureCollection = await wktToFeatureCollection(wkt, generateGeoids) as object;
   featureCollection = { ...featureCollection, generateGeoids };
-  return await analyzePlots(featureCollection, log);
+  return await analyzePlots(featureCollection, log, req);
 });

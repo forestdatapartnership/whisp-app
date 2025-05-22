@@ -1,15 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import path from "path";
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import { analyzeGeoJson } from "@/lib/utils/runPython";
 import { LogFunction } from "@/lib/logger";
 
-export const analyzePlots = async (payload: any, log: LogFunction) => {
+export const analyzePlots = async (payload: any, log: LogFunction, req?: NextRequest) => {
 
     const token = uuidv4();
     const filePath = path.join(process.cwd(), 'temp');
     const logSource = "analyzePlots.ts";
+    
+    // Check for legacy format header
+    const useLegacyFormat = req?.headers.get('x-legacy-format') === 'true';
+    if (useLegacyFormat) {
+        log("info", "Using legacy format output based on x-legacy-format header", logSource);
+    }
 
     let fileHandle;
     try {
@@ -18,8 +24,8 @@ export const analyzePlots = async (payload: any, log: LogFunction) => {
 
         log("debug", `Starting analysis: ${token}`, logSource);
 
-        // Attempt to analyze the plots
-        const analyzed = await analyzeGeoJson(token, log);
+        // Pass the legacy format flag to analyzeGeoJson
+        const analyzed = await analyzeGeoJson(token, log, undefined, useLegacyFormat);
  
         if (analyzed) {
             // Read and parse the analysis results

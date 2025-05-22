@@ -55,6 +55,6 @@ export const POST = compose(
     generateGeoids: true
   };
 
-  return await analyzePlots(featureCollection, log);
+  return await analyzePlots(featureCollection, log, req);
 });
 

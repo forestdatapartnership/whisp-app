@@ -77,6 +77,6 @@ export const POST = compose(
 
     featureCollection = { ...featureCollection, generateGeoids };
 
-    return await analyzePlots(featureCollection, log);
+    return await analyzePlots(featureCollection, log, req);
 });
 

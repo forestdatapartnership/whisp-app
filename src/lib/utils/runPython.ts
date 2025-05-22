@@ -138,19 +138,24 @@ const killProcess = (childProcess: ChildProcess) => {
  * @param {string} token - A unique identifier for the data file to be analyzed.
  * @param {LogFunction} log - Function for logging messages
  * @param {PythonScriptOptions} options - Additional options for running the script
+ * @param {boolean} useLegacyFormat - Whether to use the legacy format output
  * @return {Promise<boolean>} - A promise that resolves to `true` if the analysis is successful,
  *                              and rejects with an error message if it fails.
  */
 export const analyzeGeoJson = async (
   token: string, 
   log: LogFunction,
-  options?: PythonScriptOptions
+  options?: PythonScriptOptions,
+  useLegacyFormat: boolean = false
 ): Promise<boolean> => {
   const scriptPath = 'src/python/analysis.py';
   const dataPath = `temp/${token}.json`;
   
+  // Add the "legacy" argument when useLegacyFormat is true
+  const args = useLegacyFormat ? [dataPath, "legacy"] : [dataPath];
+  
   try {
-    await runPythonScript(scriptPath, [dataPath], log, options);
+    await runPythonScript(scriptPath, args, log, options);
     return true;
   } catch (error) {
     throw error; // Re-throw to maintain the original error handling
