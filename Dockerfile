@@ -1,7 +1,7 @@
-# Base stage with Node.js
 FROM node:20-slim AS base
 RUN apt-get update && apt-get install -y python3 python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
 RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -25,6 +25,7 @@ WORKDIR /app
 # Install Python and create venv
 RUN apt-get update && apt-get install -y python3 python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
 RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
