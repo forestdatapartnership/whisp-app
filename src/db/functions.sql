@@ -308,7 +308,7 @@ BEGIN
   LIMIT 1;
 
   IF temp_key IS NULL THEN
-    RAISE EXCEPTION 'No temp API key found for user -1000';
+    RAISE EXCEPTION 'No temp API key found.';
   END IF;
 
   RETURN temp_key;
