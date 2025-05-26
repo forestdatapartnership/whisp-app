@@ -9,7 +9,6 @@ import { assertEnvVar } from "@/lib/utils";
 
 export const POST = compose(
     withLogging,
-    withErrorHandling,
     withRequiredJsonBody
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
     const [log, body] = args;
