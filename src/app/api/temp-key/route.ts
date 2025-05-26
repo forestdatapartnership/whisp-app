@@ -6,7 +6,6 @@ import { LogFunction } from "@/lib/logger";
 import { getPool } from "@/lib/db";
 import { headers } from "next/headers";
 
-// UI Secret Key - this should match what's used in your frontend
 const UI_CLIENT_SECRET = process.env.UI_CLIENT_SECRET || 'whisp-ui-client-access';
 
 export const GET = compose(
@@ -18,10 +17,8 @@ export const GET = compose(
   try {
     // Get request headers
     const headersList = headers();
-    const referer = headersList.get('referer');
     const origin = headersList.get('origin');
     const clientSecret = headersList.get('x-client-secret');
-    const csrfToken = headersList.get('x-csrf-token');
 
     // Check the client secret
     if (clientSecret !== UI_CLIENT_SECRET) {
@@ -42,19 +39,12 @@ export const GET = compose(
       );
     }
 
-    // Additional rate limiting check
-    // You could implement a more sophisticated rate-limiting strategy here
-    const requestIp = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
-    
-    // Get a client from the pool instead of using pool directly
     const pool = await getPool();
     const client = await pool.connect();
     
     try {
-      // First generate a temp API key
       await client.query('SELECT generate_temp_api_key()');
       
-      // Then retrieve the generated key
       const result = await client.query('SELECT get_temp_api_key() AS api_key');
       const apiKey = result.rows[0].api_key;
       
@@ -67,7 +57,6 @@ export const GET = compose(
         },
         {
           headers: {
-            // Set security headers to prevent caching
             'Cache-Control': 'no-store, max-age=0, must-revalidate',
             'Pragma': 'no-cache',
             'Expires': '0'
@@ -75,7 +64,6 @@ export const GET = compose(
         }
       );
     } finally {
-      // Always release the client back to the pool
       client.release();
     }
   } catch (error: any) {
