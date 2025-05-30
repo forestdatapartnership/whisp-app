@@ -45,33 +45,9 @@ const Navbar: React.FC = () => {
                         About
                     </Link>
 
-                    {/* Documentation Dropdown - Second Item */}
-                    <div className="relative mx-4">
-                        <button 
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="hover:text-gray-300"
-                        >
-                            Documentation
-                        </button>
-                        {isDropdownOpen && (
-                            <div className="absolute top-full right-0 mt-2 w-48 bg-gray-700 shadow-lg rounded-lg z-10">
-                                <Link 
-                                    href="/documentation/layers" 
-                                    className="block px-4 py-2 hover:bg-gray-600 rounded-t-lg"
-                                    onClick={() => setIsDropdownOpen(false)}
-                                >
-                                    Layers
-                                </Link>
-                                <Link 
-                                    href="/documentation/api-guide" 
-                                    className="block px-4 py-2 hover:bg-gray-600 rounded-b-lg"
-                                    onClick={() => setIsDropdownOpen(false)}
-                                >
-                                    API Guide
-                                </Link>
-                            </div>
-                        )}
-                    </div>
+                    <Link target="_blank" href="/documentation/api-guide" className="hover:text-gray-300 mx-4">
+                        Documentation
+                    </Link>
 
                     {/* Login/Profile - Third Item */}
                     {isAuthenticated && user ? (
