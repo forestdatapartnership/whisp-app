@@ -47,6 +47,7 @@ credentials.*
 
 # Ignore any deploy file
 *.sh
+*.yaml
 
 venv/
 /lib
