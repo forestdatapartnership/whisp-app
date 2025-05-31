@@ -45,7 +45,7 @@ const Navbar: React.FC = () => {
                         About
                     </Link>
 
-                    <Link target="_blank" href="/documentation/api-guide" className="hover:text-gray-300 mx-4">
+                    <Link href="/documentation/api-guide" className="hover:text-gray-300 mx-4">
                         Documentation
                     </Link>
 
