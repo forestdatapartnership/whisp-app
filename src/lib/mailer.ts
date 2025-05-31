@@ -1,17 +1,15 @@
 import nodemailer from "nodemailer";
 
 // Host URL for email assets
-const getHostUrl = () => {
-	const hostUrl = process.env.HOST_URL || 'http://localhost:3000';
-	// Ensure there's no trailing slash in the host URL
-	return hostUrl.endsWith('/') ? hostUrl.slice(0, -1) : hostUrl;
+const getHostUrl = (): string => {
+	const hostUrl = process.env.HOST_URL?.trim() || '';
+	return hostUrl.replace(/\/+$/, ''); // Remove trailing slashes
 };
 
-// Common email template parts
-const getEmailHeader = () => {
+const getEmailHeader = (): string => {
 	const baseUrl = getHostUrl();
 	const logoUrl = `${baseUrl}/whisp_logo.svg`;
-	
+
 	return `
 		<div style="text-align: center; margin-bottom: 20px;">
 			<img src="${logoUrl}" alt="Whisp Logo" style="width: 100px; height: auto;" />
