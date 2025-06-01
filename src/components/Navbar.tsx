@@ -9,7 +9,7 @@ import { hasCookie } from '@/lib/utils';
 
 const Navbar: React.FC = () => {
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-    const profileDropdownRef = useRef<HTMLDivElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const { user, isAuthenticated, loading, logout } = useUserProfile();
 
@@ -21,16 +21,19 @@ const Navbar: React.FC = () => {
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsProfileDropdownOpen(false);
             }
         };
-        
-        document.addEventListener('mousedown', handleClickOutside);
+
+        if (isProfileDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, []);
+    }, [isProfileDropdownOpen]);
 
     const handleLogout = async () => {
         await logout();
@@ -65,7 +68,7 @@ const Navbar: React.FC = () => {
 
                     {/* Login/Profile - Third Item */}
                     {isAuthenticated && user ? (
-                        <div className="relative mx-4" ref={profileDropdownRef}>
+                        <div className="relative mx-4" ref={dropdownRef}>
                             <button 
                                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                                 className="flex items-center hover:text-gray-300"
