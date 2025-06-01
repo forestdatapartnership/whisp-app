@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import path from "path";
 
 // Host URL for email assets
 const getHostUrl = (): string => {
@@ -12,7 +13,7 @@ const getEmailHeader = (): string => {
 
 	return `
 		<div style="text-align: center; margin-bottom: 20px;">
-			<img src="${logoUrl}" alt="Whisp Logo" style="width: 100px; height: auto;" />
+			<img src="cid:whisp-logo" alt="Whisp Logo" style="width: 100px; height: auto;" />
 		</div>
 	`;
 };
@@ -83,6 +84,13 @@ export async function sendVerificationEmail(email: string, token: string) {
 			</body>
 			</html>
 		`,
+		attachments: [
+			{
+			  filename: 'whisp_logo.png',
+			  path: path.resolve('public/whisp_logo.png'), // resolves to absolute path
+			  cid: 'whisp-logo',
+			},
+		],
 	});
 }
 
