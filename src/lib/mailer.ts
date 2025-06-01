@@ -8,9 +8,6 @@ const getHostUrl = (): string => {
 };
 
 const getEmailHeader = (): string => {
-	const baseUrl = getHostUrl();
-	const logoUrl = `${baseUrl}/whisp_logo.png`;
-
 	return `
 		<div style="text-align: center; margin-bottom: 20px;">
 			<img src="cid:whisp-logo" alt="Whisp Logo" style="width: 100px; height: auto;" />
