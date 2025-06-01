@@ -86,11 +86,6 @@ function ResetPasswordContent() {
       }
 
       setIsSubmitSuccessful(true);
-      
-      // Redirect to login page after a short delay
-      setTimeout(() => {
-        router.push('/login');
-      }, 3000);
     } catch (err: any) {
       setError(err.message);
     }
@@ -149,7 +144,7 @@ function ResetPasswordContent() {
               Your password has been reset successfully.
             </p>
             <p className="text-gray-400 mb-6">
-              Redirecting you to the login page...
+              You can now log in with your new password.
             </p>
             <Link 
               href="/login" 
