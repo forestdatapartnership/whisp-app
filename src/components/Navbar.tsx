@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
 import { useRouter } from 'next/navigation';
 import { hasCookie } from '@/lib/utils';
 
 const Navbar: React.FC = () => {
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+    const profileDropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const { user, isAuthenticated, loading, logout } = useUserProfile();
 
@@ -17,6 +17,20 @@ const Navbar: React.FC = () => {
     useEffect(() => {
         const hasAuthCookie = hasCookie('token') || hasCookie('refreshToken');
     }, [isAuthenticated, loading]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+                setIsProfileDropdownOpen(false);
+            }
+        };
+        
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const handleLogout = async () => {
         await logout();
@@ -51,7 +65,7 @@ const Navbar: React.FC = () => {
 
                     {/* Login/Profile - Third Item */}
                     {isAuthenticated && user ? (
-                        <div className="relative mx-4">
+                        <div className="relative mx-4" ref={profileDropdownRef}>
                             <button 
                                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                                 className="flex items-center hover:text-gray-300"
