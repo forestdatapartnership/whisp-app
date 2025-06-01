@@ -1,28 +1,34 @@
 'use client'
 import React, { useState } from 'react';
-import ErrorAlert from '@/components/ErrorBar';
+import Alert from '@/components/Alert';
 import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
-import { useSafeRouterPush } from '@/utils/safePush';
-import { parseWKTAndJSONFile } from "@/utils/fileParser";
+import { useSafeRouterPush } from '@/lib/utils/safePush';
+import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
 import Link from 'next/link';
+import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 
-const SubmitGeometry: React.FC = () => {
+interface SubmitGeometryProps {
+    useTempKey?: boolean;
+}
+
+const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) => {
     const [wkt, setWkt] = useState<string>('');
     const [geojson, setGeojson] = useState<any>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
-    const { error } = useStore();
+    const { error, user } = useStore();
     const [type, setType] = useState<string>('');
 
     const safePush = useSafeRouterPush();
-
     const resetStore = useStore((state) => state.reset);
 
+    const clearError = () => useStore.setState({ error: "" });
+
     const handleFileChange = async (file: File) => {
-        useStore.setState({ error: "" });
+        clearError();
         if (file) {
             const result = await parseWKTAndJSONFile(file);
 
@@ -46,78 +52,91 @@ const SubmitGeometry: React.FC = () => {
 
     const clearInput = () => {
         setIsDisabled(true);
-        useStore.setState({ error: "", selectedFile: "" });
-    }
+        clearError();
+        useStore.setState({ selectedFile: "" });
+    };
 
     const analyze = async () => {
-
-        setIsLoading(true)
+        setIsLoading(true);
 
         try {
-            let data, response;
-            if (type === 'wkt') {
-                response = await fetch('/api/wkt', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ wkt: wkt }),
-                });
-
-                data = await response.json();
-
-            } else if (type === ('json')) {
-
-                response = await fetch('/api/geojson', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ ...geojson }),
-                })
-
-                data = await response.json();
+            // Get the appropriate API key based on useTempKey flag
+            let apiKey = null;
+            if (useTempKey) {
+                try {
+                    apiKey = await fetchTempApiKey('submit-geometry');
+                } catch (err) {
+                    console.error('Error fetching temp API key:', err);
+                    throw new Error("Failed to get API key for authentication");
+                }
+            } else {
+                // For authenticated users, fetch their own API key
+                try {
+                    apiKey = await fetchUserApiKey();
+                } catch (err) {
+                    console.error('Error fetching user API key:', err);
+                    throw new Error("Failed to get API key for authenticated user");
+                }
             }
 
-            if (!data || !response) {
+            let fetchedData, response;
+            // Use the utility function to create headers with the retrieved API key
+            const headers = createApiHeaders(apiKey);
+            
+            // Always use the secure endpoints
+            const apiBasePath = '/api/submit';
+
+            let endpoint = '';
+            let body: any = {};
+
+            if (type === 'wkt') {
+                endpoint = `${apiBasePath}/wkt`;
+                body = { wkt };
+            } else if (type === 'json') {
+                endpoint = `${apiBasePath}/geojson`;
+                body = geojson;
+            }
+
+            if (endpoint) {
+                response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(body),
+                });
+                fetchedData = await response.json();
+            }
+
+            if (!fetchedData || !response) {
                 throw new Error(`No response from the server`);
             }
 
-            if (!response.ok && data['error']) {
-                throw new Error(`${data['error']}`);
+            if (!response.ok && fetchedData['error']) {
+                throw new Error(`${fetchedData['error']}`);
             }
 
             if (!response.ok) {
                 throw new Error(`Server error with status ${response.status}`);
             }
 
-            if (data) {
+            if (fetchedData) {
                 resetStore();
-                useStore.setState({ token: data.token, data: data.data, error: "" });
-                safePush(`/results/${data.token}`);
+                const { token, data } = fetchedData;
+                useStore.setState({ token, data });
+                safePush(`/results/${token}`);
             }
-
         } catch (error: any) {
             useStore.setState({ error: error.message });
+        } finally {
             setIsLoading(false);
         }
     };
 
     const downloadSampleDocument = () => {
-        console.log('Downloading sample document...');
-
         const element = document.createElement('a');
-
         element.setAttribute('href', '/whisp_example_polys.geojson');
-
         element.setAttribute('download', 'whisp_example_polys.geojson');
-
         document.body.appendChild(element);
-
-        // Programmatically click the anchor to trigger the download
         element.click();
-
-        // Remove the anchor from the body once the download is initiated
         document.body.removeChild(element);
     };
 
@@ -129,7 +148,7 @@ const SubmitGeometry: React.FC = () => {
         >
             <Image
                 className='mr-2'
-                onClick={() => useStore.setState({ error: '' })}
+                onClick={clearError}
                 src="/download-outline.svg"
                 alt="download-outline"
                 width={20}
@@ -137,12 +156,12 @@ const SubmitGeometry: React.FC = () => {
             />
             Example
         </button>
-    )
+    );
 
     const accept = {
         'text/plain': ['.txt'],
         'application/json': ['.json', '.geojson']
-    }
+    };
 
     return (
         <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
@@ -153,7 +172,7 @@ const SubmitGeometry: React.FC = () => {
             )}
             <h1 className="text-2xl font-semibold text-center mb-2">Submit Geometry</h1>
             <div className="mx-2">
-                {error && <ErrorAlert />}
+                {error && <Alert type="error" message={error} onClose={clearError} />}
             </div>
             <div className="p-2 rounded-b-lg">
                 <FileInput
@@ -164,10 +183,11 @@ const SubmitGeometry: React.FC = () => {
             </div>
             <div className="flex items-center mx-2 justify-between">
                 {renderExampleButton()}
-
             </div>
             <div className="flex items-center justify-between">
-                <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">Terms of Service</Link>
+                <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">
+                    Terms of Service
+                </Link>
                 <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
             </div>
         </div>
@@ -175,3 +195,4 @@ const SubmitGeometry: React.FC = () => {
 };
 
 export default SubmitGeometry;
+

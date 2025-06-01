@@ -1,42 +1,35 @@
-FROM python:3.11-slim AS base
-
-# Install Node.js v20.9.0, git, and necessary libraries for numpy
-RUN apt-get update && apt-get install -y curl gnupg git && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
-
-# Verify Node.js, npm, and git installations
-RUN node -v && npm -v && git --version
-
-# Install Python packages from requirements.txt
+FROM node:20-slim AS base
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies only when needed
+# Dependencies stage
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Rebuild the source code only when needed
+# Build stage
 FROM base AS builder
 WORKDIR /app
 COPY . .
-COPY credentials.json /app
 COPY --from=deps /app/node_modules ./node_modules
 RUN npm run build
 # RUN npm run test
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# Production image
+FROM node:20-slim AS runner
 WORKDIR /app
+# Install Python and create venv
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-ENV NODE_ENV=production
-
-# Create the temp directory here
 RUN mkdir -p /app/temp
-
-# Copy all necessary files from the builder stage
 COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
@@ -44,7 +37,5 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/src/python /app/src/python
 COPY --from=builder /app/credentials.json ./
-
 EXPOSE 3000
-
 CMD ["npm", "start"]
