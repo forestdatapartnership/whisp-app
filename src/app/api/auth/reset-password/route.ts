@@ -36,7 +36,7 @@ export const POST = compose(
     
     const status = result.rows[0].reset_password_with_token;
 
-    if (status !== 'Password reset successfully') {
+    if (status !== 'Password reset successful') {
       log("warn", `Password reset failed: ${status}`, logSource);
       return NextResponse.json(
         { error: status },
