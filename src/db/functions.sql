@@ -232,7 +232,7 @@ BEGIN
   WHERE token = u_token AND revoked = FALSE AND expires_at > NOW();
 
   IF resolved_user_id IS NULL THEN
-    RETURN 'Invalid or expired token';
+    RETURN 'INVALID_OR_EXPIRED_TOKEN';
   END IF;
 
   validation_error := validate_password(u_new_password);
@@ -248,7 +248,7 @@ BEGIN
   SET revoked = TRUE
   WHERE token = u_token;
 
-  RETURN 'Password reset successful';
+  RETURN 'PASSWORD_RESET_SUCCESSFUL';
 END;
 $$ LANGUAGE plpgsql;
 
