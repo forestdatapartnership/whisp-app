@@ -29,7 +29,7 @@ export function getLogLevel() {
  */
 export function hasCookie(name: string): boolean {
   if (typeof document === 'undefined') {
-    return false; // Running on server side
+    return false;
   }
   
   const cookies = document.cookie.split(';');

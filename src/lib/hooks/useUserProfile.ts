@@ -75,9 +75,8 @@ export function useUserProfile(redirectToLogin = false) {
       setUser(null);
       setIsAuthenticated(false);
       
-      if (redirectToLogin) {
-        router.push('/login');
-      }
+      // Always redirect to login page on logout
+      router.push('/login');
       return true;
     } catch (error) {
       console.error('Error logging out:', error);

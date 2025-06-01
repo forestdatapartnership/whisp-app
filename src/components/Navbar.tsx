@@ -38,7 +38,7 @@ const Navbar: React.FC = () => {
     const handleLogout = async () => {
         await logout();
         setIsProfileDropdownOpen(false);
-        router.push('/login');
+        // Remove duplicate router.push('/login') since logout() now handles the redirect
     };
 
     return (
