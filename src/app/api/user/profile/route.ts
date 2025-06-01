@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { getPool } from "@/lib/db";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 
 export const GET = compose(
-  withLogging,
-  withErrorHandling
+  withLogging
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
   const [log] = args;
   
@@ -42,8 +40,7 @@ export const GET = compose(
 });
 
 export const PUT = compose(
-  withLogging,
-  withErrorHandling
+  withLogging
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
   const [log] = args;
   const logSource = "profile/route.ts";
@@ -102,8 +99,7 @@ export const PUT = compose(
 });
 
 export const DELETE = compose(
-  withLogging,
-  withErrorHandling
+  withLogging
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
   const [log] = args;
   const logSource = "profile/route.ts";

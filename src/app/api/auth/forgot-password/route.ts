@@ -3,13 +3,11 @@ import { getPool } from '@/lib/db';
 import { randomBytes } from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/mailer';
 import { withLogging } from '@/lib/hooks/withLogging';
-import { withErrorHandling } from '@/lib/hooks/withErrorHandling';
 import { withRequiredJsonBody } from '@/lib/hooks/withRequiredJsonBody';
 import { compose } from '@/lib/utils/compose';
 
 export const POST = compose(
   withLogging,
-  withErrorHandling,
   withRequiredJsonBody
 )(async (request: NextRequest, ...args): Promise<NextResponse> => {
   const [log, body] = args;

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 import { LogFunction } from "@/lib/logger";
@@ -9,8 +8,7 @@ import { headers } from "next/headers";
 const UI_CLIENT_SECRET = process.env.UI_CLIENT_SECRET || 'whisp-ui-client-access';
 
 export const GET = compose(
-  withLogging,
-  withErrorHandling
+  withLogging
 )(async (req: NextRequest, log: LogFunction): Promise<NextResponse> => {
   const logSource = "temp-key/route.ts";
   

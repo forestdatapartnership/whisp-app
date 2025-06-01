@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { compose } from "@/lib/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { getAuthUser } from "@/lib/auth";
 import { getPool } from "@/lib/db";
 
 export const GET = compose(
-  withLogging,
-  withErrorHandling
+  withLogging
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
   const logSource = "api-key/metadata/route.ts";
   const [log] = args;

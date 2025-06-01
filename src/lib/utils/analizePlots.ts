@@ -42,7 +42,6 @@ export const analyzePlots = async (payload: any, log: LogFunction, req?: NextReq
             throw new Error("Analysis failed.");
         }
     } catch (error) {
-        // logged at higher withErrorHandling level
         throw error;
     } finally {
         // Explicitly close the file handle if it was opened

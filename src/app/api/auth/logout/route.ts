@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { serialize } from "cookie";
 import { compose } from "@/lib/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 
 export const GET = compose(
-    withLogging,
-    withErrorHandling
+    withLogging
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
     const [log] = args;
     const logSource = "logout/route.ts";
