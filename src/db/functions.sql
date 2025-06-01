@@ -224,14 +224,14 @@ CREATE OR REPLACE FUNCTION reset_password_with_token(
 )
 RETURNS TEXT AS $$
 DECLARE
-  user_id INT;
+  resolved_user_id INT;
   validation_error TEXT;
 BEGIN
-  SELECT user_id INTO user_id
+  SELECT user_id INTO resolved_user_id
   FROM password_reset_tokens
   WHERE token = u_token AND revoked = FALSE AND expires_at > NOW();
 
-  IF user_id IS NULL THEN
+  IF resolved_user_id IS NULL THEN
     RETURN 'Invalid or expired token';
   END IF;
 
@@ -242,7 +242,7 @@ BEGIN
 
   UPDATE users
   SET password_hash = crypt(u_new_password, gen_salt('bf'))
-  WHERE id = user_id;
+  WHERE id = resolved_user_id;
 
   UPDATE password_reset_tokens
   SET revoked = TRUE
