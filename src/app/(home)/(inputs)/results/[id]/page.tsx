@@ -144,8 +144,13 @@ const Results: React.FC = () => {
             fetchData();
         } else {
             // Store the original GeoJSON data for the map
-            setGeoJsonData(data);
-
+            // Type check to ensure data is a valid FeatureCollection
+            if (data && typeof data === 'object' && 'type' in data && data.type === 'FeatureCollection') {
+                setGeoJsonData(data as FeatureCollection);
+            } else {
+                setGeoJsonData(null);
+            }
+            
             const processedData = processGeoJSONData(data);
             setTableData(processedData);
             const columnDefs = createColumnDefs(processedData);
