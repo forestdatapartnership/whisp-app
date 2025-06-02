@@ -23,11 +23,15 @@ import React from "react"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[] | import('geojson').FeatureCollection
+  onRowClick?: (rowIndex: number) => void
+  selectedRowIndex?: number
 }
  
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onRowClick,
+  selectedRowIndex
 }: DataTableProps<TData, TValue>) {
   // Process FeatureCollection to array if needed
   const processedData = React.useMemo(() => {
@@ -147,7 +151,9 @@ export function DataTable<TData, TValue>({
             <TableBody>
             {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow key={row.id} 
+                    onClick={() => onRowClick?.(row.index)} 
+                    className={`cursor-pointer hover:bg-gray-700 ${selectedRowIndex === row.index ? 'bg-blue-900 bg-opacity-50' : ''}`}>
                     {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="px-6 py-4 whitespace-nowrap">
                         {formatValue(cell.column.id, cell.getValue())}
