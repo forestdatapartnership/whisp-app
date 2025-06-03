@@ -2,8 +2,32 @@
 
 import SubmitGeometry from '@/components/SubmitGeometry';
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUserProfile } from '@/lib/hooks/useUserProfile';
 
 export default function Home() {
+  const router = useRouter();
+  const { isAuthenticated, loading } = useUserProfile(false); // Don't redirect automatically
+
+  useEffect(() => {
+    // If user is authenticated, redirect to submit-geometry page
+    if (isAuthenticated && !loading) {
+      router.push('/submit-geometry');
+    }
+  }, [isAuthenticated, loading, router]);
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen p-8 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p className="mt-4 text-gray-300">Loading...</p>
+      </div>
+    );
+  }
+
+  // Only show the welcome page if user is not authenticated
   return (
     <main className="text-center mx-auto px-2 max-w-3xl">
       <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 my-4 rounded shadow">

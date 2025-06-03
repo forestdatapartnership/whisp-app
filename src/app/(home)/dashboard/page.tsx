@@ -132,7 +132,7 @@ export default function Dashboard() {
         <div>
           <Link
             href="/settings"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-300 bg-gray-800 hover:bg-gray-700 hover:text-white transition-colors"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-md font-medium rounded-md text-indigo-300 bg-gray-800 hover:bg-gray-700 hover:text-white transition-colors"
           >
             Account Settings
           </Link>
