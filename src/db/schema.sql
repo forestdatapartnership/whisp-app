@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   organization TEXT,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
-  email_verified BOOLEAN DEFAULT FALSE
+  email_verified BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS email_verification_tokens (
