@@ -16,14 +16,14 @@ export const withAuth: MiddlewareFactory = (next) => {
         // Get token from cookies
         const token = request.cookies.get("token")?.value;
         
-        // Check if user is on home page and has a valid token - redirect to dashboard
+        // Check if user is on home page and has a valid token - redirect to submit-geometry
         if (pathname === "/" || pathname === "/index") {
             if (token) {
                 try {
                     // Verify token validity
                     await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
-                    // Redirect to dashboard if token is valid
-                    return NextResponse.redirect(new URL("/dashboard", request.url));
+                    // Redirect to submit-geometry if token is valid
+                    return NextResponse.redirect(new URL("/submit-geometry", request.url));
                 } catch (error) {
                     // Token is invalid, continue to home page
                     console.error("Token verification failed on home page:", error);

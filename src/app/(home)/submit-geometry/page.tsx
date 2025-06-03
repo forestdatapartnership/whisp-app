@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
 import SubmitGeometry from '@/components/SubmitGeometry';
+import Link from 'next/link';
 
 export default function SubmitGeometryPage() {
   const { user, isAuthenticated, loading } = useUserProfile(true);
@@ -26,14 +27,21 @@ export default function SubmitGeometryPage() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto">
-      <div className="mb-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto relative">
+      <div className="mb-8 flex items-center justify-between">
+      <div>
         <h1 className="text-3xl font-bold text-white">Submit Geometry</h1>
         <p className="mt-2 text-gray-400">
-          Upload your GeoJSON or WKT data for analysis
+        Upload your GeoJSON or WKT data for analysis
         </p>
       </div>
-
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center px-4 py-2 border border-transparent text-md font-medium rounded-md text-indigo-300 bg-gray-800 hover:bg-gray-700 hover:text-white transition-colors ml-4"
+      >
+        Dashboard
+      </Link>
+      </div>
       {/* Use the existing SubmitGeometry component with useTempKey set to false */}
       <SubmitGeometry useTempKey={false} />
     </div>
