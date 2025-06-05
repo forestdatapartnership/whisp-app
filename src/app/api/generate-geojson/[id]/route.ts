@@ -1,8 +1,6 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import fs from 'fs/promises';
 import path from "path";
-import { Feature, FeatureCollection } from 'geojson';
 
 export async function GET(request: NextRequest, { params }: any) {
 
@@ -11,28 +9,6 @@ export async function GET(request: NextRequest, { params }: any) {
 	}
 
 	const { id } = params;
-
-	function combineGeometriesToFeatureCollection(data: any): any {
-		const features: Feature[] = data.map((item: any) => (
-			{
-				type: "Feature",
-				properties: { name: String(item.plotId) },
-				geometry: item.geojson
-			}
-		));
-
-		return {
-			type: "FeatureCollection",
-			features: features,
-			name: {
-
-				"en": "WHISP Plots",
-				"fr": "Parcelles WHISP",
-				"pt": "Parcelas WHISP",
-				"es": "Parcelas WHISP"
-			},
-		};
-	}
 
 	try {
 		const filePath = path.join(process.cwd(), 'temp');
@@ -49,7 +25,16 @@ export async function GET(request: NextRequest, { params }: any) {
 			return NextResponse.json({ error: 'Failed to parse JSON data.' }, { status: 500 });
 		}
 
-		const geojson = combineGeometriesToFeatureCollection(parsedData);
+		// Add the multilingual name property to the parsed data
+		const geojson = {
+			...parsedData,
+			name: {
+				"en": "WHISP Plots",
+				"fr": "Parcelles WHISP",
+				"pt": "Parcelas WHISP",
+				"es": "Parcelas WHISP"
+			}
+		};
 
 		return NextResponse.json(geojson);
 
