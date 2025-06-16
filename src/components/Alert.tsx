@@ -30,12 +30,17 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose }) => {
       borderColor: 'border-green-500',
       textColor: 'text-green-500',
       iconPath: (
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          strokeWidth={2} 
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
-        />
+        <>
+          <circle cx="10" cy="10" r="8" fill="currentColor" />
+          <path 
+            d="M7 10l1.5 1.5 4-4"
+            stroke="#121E24"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </>
       )
     },
     warning: {
