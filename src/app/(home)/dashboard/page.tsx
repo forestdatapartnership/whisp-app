@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<{ key: string; } | null>(null);
   const [showCreateKeyForm, setShowCreateKeyForm] = useState(false);
   const [showDeleteKeyConfirm, setShowDeleteKeyConfirm] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Fetch API key metadata once authentication is confirmed
   useEffect(() => {
@@ -39,6 +40,23 @@ export default function Dashboard() {
       setLoading(false);
     }
   }, [isAuthenticated, user, authLoading]);
+
+  // Reset copied state after 2 seconds
+  useEffect(() => {
+    if (isCopied) {
+      const timer = setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCopied]);
+
+  // Reset copied state when new key is created or dismissed
+  useEffect(() => {
+    if (!newlyCreatedKey) {
+      setIsCopied(false);
+    }
+  }, [newlyCreatedKey]);
 
   const fetchApiKeyMetadata = async () => {
     try {
@@ -164,37 +182,112 @@ export default function Dashboard() {
           <div className="mb-8">
             {apiKeyMetadata ? (
               <div className="p-4 border border-gray-700 rounded-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-medium text-white">Your API Key</h3>
-                    <p className="text-gray-400 mt-1">
-                      Created: <span className="text-white">{new Date(apiKeyMetadata.createdAt).toLocaleDateString()}</span>
-                    </p>
-                    {apiKeyMetadata.expiresAt && (
-                      <p className="text-gray-400 mt-1">
-                        Expires: <span className="text-white">{new Date(apiKeyMetadata.expiresAt).toLocaleDateString()}</span>
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => setShowCreateKeyForm(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      Replace Key
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteKeyConfirm(true)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                    >
-                      Delete Key
-                    </button>
-                  </div>
-                </div>
-                <Alert
-                  type="warning"
-                  message="For security reasons, we don't display your API key. If you need a new key, you can create a replacement, but note that your current key will be invalidated immediately."
-                />
+                {!showCreateKeyForm && !showDeleteKeyConfirm ? (
+                  // Default view - show existing key info
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-medium text-white">Your API Key</h3>
+                        <p className="text-gray-400 mt-1">
+                          Created: <span className="text-white">{new Date(apiKeyMetadata.createdAt).toLocaleDateString()}</span>
+                        </p>
+                        {apiKeyMetadata.expiresAt && (
+                          <p className="text-gray-400 mt-1">
+                            Expires: <span className="text-white">{new Date(apiKeyMetadata.expiresAt).toLocaleDateString()}</span>
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={() => setShowCreateKeyForm(true)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          Replace Key
+                        </button>
+                        <button
+                          onClick={() => setShowDeleteKeyConfirm(true)}
+                          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        >
+                          Delete Key
+                        </button>
+                      </div>
+                    </div>
+                    <Alert
+                      type="warning"
+                      message="For security reasons, we don't display your API key. If you need a new key, you can create a replacement, but note that your current key will be invalidated immediately."
+                    />
+                  </>
+                ) : showCreateKeyForm ? (
+                  // Replace key form
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium text-white">Create a New API Key</h3>
+                      <button
+                        onClick={() => setShowCreateKeyForm(false)}
+                        className="text-gray-400 hover:text-gray-200"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                    <Alert
+                      type="error"
+                      message={<span><strong>Warning:</strong> Creating a new API key will immediately invalidate your current key.
+                        Any applications or scripts using your current key will stop working.</span>}
+                    />
+                    <div className="flex gap-2 justify-end mt-4">
+                      <button
+                        onClick={createApiKey}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        Create New Key
+                      </button>
+                      <button
+                        onClick={() => setShowCreateKeyForm(false)}
+                        className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  // Delete key confirmation
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium text-white">Delete API Key</h3>
+                      <button
+                        onClick={() => setShowDeleteKeyConfirm(false)}
+                        className="text-gray-400 hover:text-gray-200"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                    <Alert
+                      type="error"
+                      message={<span><strong>Warning:</strong> Deleting your API key will immediately revoke access.
+                        Any applications or scripts using this key will stop working.</span>}
+                    />
+                    <div className="flex justify-end gap-2 mt-4">
+                      <button
+                        onClick={() => {
+                          deleteApiKey();
+                        }}
+                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                      >
+                        Delete Key
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteKeyConfirm(false)}
+                        className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <div className="p-4 border border-gray-700 rounded-lg">
@@ -210,84 +303,6 @@ export default function Dashboard() {
                 </button>
               </div>
             )}
-          </div>
-        )}
-
-        {/* Create Key Form */}
-        {showCreateKeyForm && !keyBeingCreated && !newlyCreatedKey && (
-          <div className="mb-8 p-4 border border-gray-700 rounded-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-white">Create a New API Key</h3>
-              <button
-                onClick={() => setShowCreateKeyForm(false)}
-                className="text-gray-400 hover:text-gray-200"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-
-            <Alert
-              type="error"
-              message={<span><strong>Warning:</strong> Creating a new API key will immediately invalidate your current key.
-                Any applications or scripts using your current key will stop working.</span>}
-            />
-
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={createApiKey}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Create New Key
-              </button>
-              <button
-                onClick={() => setShowCreateKeyForm(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Key Confirmation */}
-        {showDeleteKeyConfirm && (
-          <div className="mb-8 p-4 border border-gray-700 rounded-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-white">Delete API Key</h3>
-              <button
-                onClick={() => setShowDeleteKeyConfirm(false)}
-                className="text-gray-400 hover:text-gray-200"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-
-            <Alert
-              type="error"
-              message={<span><strong>Warning:</strong> Deleting your API key will immediately revoke access.
-                Any applications or scripts using this key will stop working.</span>}
-            />
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  deleteApiKey();
-                }}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-              >
-                Delete Key
-              </button>
-              <button
-                onClick={() => setShowDeleteKeyConfirm(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         )}
 
@@ -333,10 +348,20 @@ export default function Dashboard() {
                 onClick={() => {
                   navigator.clipboard.writeText(newlyCreatedKey.key);
                   setSuccessMessage('API key copied to clipboard');
+                  setIsCopied(true);
                 }}
                 className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap"
               >
-                Copy to Clipboard
+                {isCopied ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Copied!
+                  </span>
+                ) : (
+                  'Copy to Clipboard'
+                )}
               </button>
             </div>
           </div>
