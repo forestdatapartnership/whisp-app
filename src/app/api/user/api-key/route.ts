@@ -16,10 +16,10 @@ export const GET = compose(
   const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const pool = await getPool();
+  const pool = getPool();
   const client = await pool.connect();
   try {
-    // First check if the user already has an API key
+    // Check if the user has an existing valid API key
     const existingKey: QueryResult = await client.query(
       "SELECT api_key FROM api_keys WHERE user_id = $1 AND revoked = false AND expires_at > NOW()",
       [user.id]
@@ -31,7 +31,30 @@ export const GET = compose(
       return NextResponse.json({ apiKey: existingKey.rows[0].api_key });
     }
 
-    // Otherwise, create a new API key
+    // No valid API key found
+    log("info", `No valid API key found for user ${user.id}`, logSource);
+    return NextResponse.json({ apiKey: null });
+  } catch (error) {
+    log("error", error, logSource);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } finally {
+    client.release();
+  }
+});
+
+export const POST = compose(
+  withLogging
+)(async (req: NextRequest, ...args): Promise<NextResponse> => {
+  const logSource = "apikey/route.ts";
+  const [log] = args;
+
+  const user = await getAuthUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    // Create a new API key (this will replace any existing one)
     const key = randomUUID();
     const expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365); // 1 year (365 days)
 
@@ -40,8 +63,8 @@ export const GET = compose(
       [user.id, key, expires_at]
     );
 
-    log("debug", `Created new API key for user ${user.id}`, logSource);
-    return NextResponse.json({ apiKey: key }); // Return with consistent property name
+    log("debug", `Created/replaced API key for user ${user.id}`, logSource);
+    return NextResponse.json({ apiKey: key });
   } catch (error) {
     log("error", error, logSource);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
@@ -51,8 +74,7 @@ export const GET = compose(
 });
 
 export const DELETE = compose(
-  withLogging,
-  withErrorHandling
+  withLogging
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
   const logSource = "apikey/route.ts";
   const [log] = args;
@@ -60,7 +82,7 @@ export const DELETE = compose(
   const user = await getAuthUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const pool = await getPool();
+  const pool = getPool();
   const client = await pool.connect();
 
   try {

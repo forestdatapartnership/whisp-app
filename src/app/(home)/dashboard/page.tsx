@@ -67,7 +67,7 @@ export default function Dashboard() {
 
     try {
       const response = await fetch('/api/user/api-key', {
-        method: 'GET',
+        method: 'POST',
       });
 
       if (response.ok) {
