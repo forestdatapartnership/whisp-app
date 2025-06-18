@@ -8,7 +8,6 @@ import {
     coordinatesLikelyInMeters,
     validateCrs 
 } from "@/lib/utils/geojsonUtils";
-import { GEOMETRY_LIMIT } from "@/lib/utils/constants";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
@@ -66,10 +65,6 @@ export const POST = compose(
     }
 
     let featureCollection = createFeatureCollection(body);
-
-    if (featureCollection.features.length > GEOMETRY_LIMIT) {
-        return useBadRequestResponse(`There are more than ${GEOMETRY_LIMIT} features in this collection. Please do not exceed more than ${GEOMETRY_LIMIT} individual features.`);
-    }
 
     if (generateGeoids) {
         featureCollection = await addGeoId(featureCollection);
