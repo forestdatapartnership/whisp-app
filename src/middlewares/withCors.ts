@@ -22,8 +22,6 @@ export const withCors : MiddlewareFactory = (next) => {
         const isAllowedOrigin = allowedOrigins.includes(origin);
         const isPreflight = request.method === 'OPTIONS';
 
-        console.log(`[CORS] ${request.method} ${request.nextUrl.pathname} from ${origin} - Allowed: ${isAllowedOrigin}`);
-
         if (isPreflight) {
             const preflightHeaders = {
                 ...(isAllowedOrigin && { 'Access-Control-Allow-Origin': origin }),
