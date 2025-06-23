@@ -178,11 +178,29 @@ const Results: React.FC = () => {
                 throw new Error(`Failed to download CSV: ${response.statusText}`);
             }
 
+            // Extract filename from Content-Disposition header
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = `${token || id}.csv`; // fallback filename
+            
+            if (contentDisposition) {
+                // First try to parse the simple filename= format
+                const simpleFilenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+                if (simpleFilenameMatch && simpleFilenameMatch[1]) {
+                    filename = simpleFilenameMatch[1];
+                } else {
+                    // Fallback to RFC 5987 format (filename*=UTF-8'')
+                    const rfc5987Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/);
+                    if (rfc5987Match && rfc5987Match[1]) {
+                        filename = decodeURIComponent(rfc5987Match[1]);
+                    }
+                }
+            }
+
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${token || id}.csv`;
+            a.download = filename; // Use the filename from the server
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

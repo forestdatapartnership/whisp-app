@@ -14,11 +14,21 @@ export async function GET(request: NextRequest, context: { params: any }) {
         fileHandle = await fs.promises.open(filePath, 'r'); // Explicitly open the file
         const fileContents = await fileHandle.readFile('utf8'); 
 
+        // Generate timestamp for filename
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const filename = `whisp_analysis_${year}_${month}_${day}_${hours}_${minutes}.csv`;
+
         // Return the CSV file with appropriate headers
         return new Response(fileContents, {
             headers: {
-                'Content-Type': 'text/csv',
-                'Content-Disposition': `attachment; filename="${token}.csv"`
+                'Content-Type': 'text/csv; charset=utf-8',
+                'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(filename)}; filename="${filename}"`,
+                'Cache-Control': 'no-cache'
             }
         });
     } catch (error) {
