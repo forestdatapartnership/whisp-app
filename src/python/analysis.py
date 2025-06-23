@@ -13,12 +13,12 @@ if not os.path.exists(CREDENTIAL_PATH):
 whisp.initialize_ee(CREDENTIAL_PATH)
 
 def main(file_path, legacy_mode=False):
-    whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path)
+    whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path, national_codes=['co', 'ci', 'br'])
 
     csv_file_path = os.path.splitext(file_path)[0] + '-result.csv'
     json_file_path = os.path.splitext(file_path)[0] + '-result.json'
 
-    whisp_df_risk = whisp.whisp_risk(whisp_df)
+    whisp_df_risk = whisp.whisp_risk(whisp_df, national_codes=['co', 'ci', 'br'])
 
     for col in whisp_df_risk.columns:
         if pd.api.types.is_numeric_dtype(whisp_df_risk[col]):
