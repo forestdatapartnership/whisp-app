@@ -5,11 +5,37 @@
     "version": "1.0.0",
     "description": "API for Whisp - An analytical tool for the support of zero-deforestation regulation claims"
   },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current host"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY",
+        "description": "API key for authentication. This key is automatically provided by the documentation UI."
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
   "paths": {
-    "/api/geojson": {
+    "/api/submit/geojson": {
       "post": {
         "summary": "Submit GeoJSON for Analysis",
         "description": "Accepts a GeoJSON object, specifically a Feature with a Polygon geometry, for analysis.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -128,14 +154,25 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized - API key is missing or invalid"
+          },
+          "400": {
+            "description": "Bad request - Invalid input data"
           }
         }
       }
     },        
-    "/api/wkt": {
+    "/api/submit/wkt": {
       "post": {
         "summary": "Submit WKT for Analysis",
         "description": "Accepts a WKT (Well-Known Text) string for analysis.",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -175,6 +212,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized - API key is missing or invalid"
+          },
+          "400": {
+            "description": "Bad request - Invalid input data"
           }
         }
       }

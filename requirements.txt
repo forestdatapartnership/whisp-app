@@ -1,5 +1,2 @@
-numpy==1.26.3
-geemap==0.29.6
-geopandas==0.14.1
-pandas==2.1.4
-earthengine-api==0.1.410
+pandas
+openforis-whisp==2.0.0a3

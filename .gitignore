@@ -47,3 +47,12 @@ credentials.*
 
 # Ignore any deploy file
 *.sh
+*.yaml
+
+# Ignore Python virtual environments
+venv/
+/lib
+/bin
+
+# Any log files
+*.log

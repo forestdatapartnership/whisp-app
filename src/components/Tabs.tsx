@@ -1,7 +1,7 @@
 import { FileInput } from "./FileInput";
 import { ManualInput } from "./ManualInput";
 import { useStore } from "@/store";
-import { parseGeoIdFile } from "@/utils/fileParser";
+import { parseGeoIdFile } from "@/lib/utils/fileParser";
 
 export const Tabs: React.FC<{ activeTab: number; setActiveTab: (index: number) => void }> = ({ activeTab, setActiveTab }) => {
 
