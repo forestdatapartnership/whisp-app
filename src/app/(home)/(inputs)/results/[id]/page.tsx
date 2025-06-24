@@ -161,8 +161,8 @@ const Results: React.FC = () => {
 
     const generateEarthMap = () => {
         if (tableData.length > 0) {
-            const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`
-            const url = `https://whisp.earthmap.org/?fetchJson=${downloadUrl}`
+            const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`;
+            const url = `https://whisp.earthmap.org/?fetchJson=${downloadUrl}&aoi=WHISP_global`;
             window.open(url, '_blank');
         }
     }
