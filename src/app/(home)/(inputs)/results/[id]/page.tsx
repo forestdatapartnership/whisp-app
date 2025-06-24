@@ -163,7 +163,6 @@ const Results: React.FC = () => {
         if (tableData.length > 0) {
             const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`;
             const url = `https://whisp.earthmap.org/?aoi=WHISP&fetchJson=${downloadUrl}`;
-            console.log(url);
             window.open(url, '_blank');
         }
     }
