@@ -53,6 +53,7 @@ export const withAuth: MiddlewareFactory = (next) => {
             "/settings",
             "/api/protected-data",
             "/dashboard",
+            "/submit-geometry",
         ];
 
         if (!privatePaths.some(path => pathname.startsWith(path))) {
