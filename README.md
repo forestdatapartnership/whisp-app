@@ -141,6 +141,9 @@ To get started with Whisp, ensure you have [Node.js](https://nodejs.org), [Postg
         EMAIL_SERVICE=smtp.example.com
         EMAIL_USER=user@example.com
         EMAIL_PASS=your_email_password
+        
+        # Google Maps API Key (for satellite view - with referrer restrictions)
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
         ```
 
     - Create a `credentials.json` in the root directory with your Google Earth Engine service account details.

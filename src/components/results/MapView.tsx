@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapContainer, TileLayer, GeoJSON, LayersControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FeatureCollection, Feature, Geometry, GeoJsonProperties } from 'geojson';
@@ -23,6 +23,15 @@ interface MapViewProps {
 const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, onFeatureClick }) => {
   const mapRef = useRef<L.Map | null>(null);
   const geoJsonLayerRef = useRef<L.GeoJSON | null>(null);
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState<string | null>(null);
+
+  // Get Google Maps API key from environment
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (apiKey) {
+      setGoogleMapsApiKey(apiKey);
+    }
+  }, []);
 
   // Center map on selected feature
   useEffect(() => {
@@ -110,11 +119,43 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
         style={{ backgroundColor: '#1f2937' }}
         attributionControl={true}
       >
-        {/* Dark mode tile layer */}
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        />
+        <LayersControl position="topright">
+          {/* Dark mode tile layer */}
+          <LayersControl.BaseLayer checked name="Dark Map">
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            />
+          </LayersControl.BaseLayer>
+
+          {/* Google Satellite layer with API key */}
+          {googleMapsApiKey ? (
+            <LayersControl.BaseLayer name="Satellite">
+              <TileLayer
+                url={`https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${googleMapsApiKey}`}
+                attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+                maxZoom={20}
+              />
+            </LayersControl.BaseLayer>
+          ) : (
+            // Fallback satellite layer without API key (limited usage)
+            <LayersControl.BaseLayer name="Satellite">
+              <TileLayer
+                url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+                attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+                maxZoom={18}
+              />
+            </LayersControl.BaseLayer>
+          )}
+
+          {/* Street Map layer */}
+          <LayersControl.BaseLayer name="Street Map">
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+          </LayersControl.BaseLayer>
+        </LayersControl>
         
         <GeoJSON
           ref={geoJsonLayerRef}
