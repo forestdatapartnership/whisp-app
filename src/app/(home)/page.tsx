@@ -2,11 +2,13 @@
 
 import SubmitGeometry from '@/components/SubmitGeometry';
 import Link from 'next/link';
+import { useStore } from '@/store';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
 
 export default function Home() {
+  const resetStore = useStore((state) => state.reset);
   const router = useRouter();
   const { isAuthenticated, loading } = useUserProfile(false); // Don't redirect automatically
 
