@@ -162,7 +162,8 @@ WHISP offers multiple access methods to accommodate different user needs:
     - Create a database user with appropriate permissions
 
 4. **Environment Configuration**
-   Create `.env.local` file:
+
+   - Create `.env.local` file:
    ```env
    # Python Configuration
    PYTHON_PATH=/path/to/your/python
@@ -192,7 +193,8 @@ WHISP offers multiple access methods to accommodate different user needs:
     ```
 
 5. **Google Earth Engine Setup**
-   Place your service account credentials in `credentials.json` at the root directory.
+
+   - Place your service Google Earth engine account credentials in `credentials.json` at the root directory.
 
 6. **Create Temp Directory**
    ```bash
