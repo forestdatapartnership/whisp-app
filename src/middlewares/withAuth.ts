@@ -12,37 +12,36 @@ export const withAuth: MiddlewareFactory = (next) => {
         // Assert JWT secret is present at startup
         const SECRET_KEY = assertEnvVar('JWT_SECRET');
         const { pathname } = request.nextUrl;
-        
         // Get token from cookies
         const token = request.cookies.get("token")?.value;
-        
-        // Check if user is on home page and has a valid token - redirect to submit-geometry
-        if (pathname === "/" || pathname === "/index") {
+        const refreshToken = request.cookies.get("refreshToken")?.value;
+
+        // Helper to verify either token or refreshToken
+        const verifyAnyToken = async () => {
+            try {
             if (token) {
-                try {
-                    // Verify token validity
-                    await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
-                    // Redirect to submit-geometry if token is valid
-                    return NextResponse.redirect(new URL("/submit-geometry", request.url));
-                } catch (error) {
-                    // Token is invalid, continue to home page
-                    console.error("Token verification failed on home page:", error);
-                }
+                await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
+                return true;
             }
-        }
-        
-        // Check if user is on login or register page and has a valid token - redirect to dashboard
-        if (pathname === "/login" || pathname === "/register") {
-            if (token) {
-                try {
-                    // Verify token validity
-                    await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
-                    // Redirect to dashboard if token is valid
-                    return NextResponse.redirect(new URL("/dashboard", request.url));
-                } catch (error) {
-                    // Token is invalid, continue to login/register page
-                    console.error(`Token verification failed on ${pathname} page:`, error);
-                }
+            if (refreshToken) {
+                await jwtVerify(refreshToken, new TextEncoder().encode(SECRET_KEY));
+                return true;
+            }
+            } catch (error) {
+            return false;
+            }
+            return false;
+        };
+
+        // Check if user is on home, login, or register page and has a valid token or refresh token - redirect to submit-geometry
+        if (
+            pathname === "/" ||
+            pathname === "/index" ||
+            pathname === "/login" ||
+            pathname === "/register"
+        ) {
+            if (await verifyAnyToken()) {
+            return NextResponse.redirect(new URL("/submit-geometry", request.url));
             }
         }
 
@@ -54,14 +53,12 @@ export const withAuth: MiddlewareFactory = (next) => {
             "/settings",
             "/api/protected-data",
             "/dashboard",
+            "/submit-geometry",
         ];
 
         if (!privatePaths.some(path => pathname.startsWith(path))) {
             return NextResponse.next();
         }
-
-        // Moved token and refreshToken variables up since we check token earlier in the function
-        const refreshToken = request.cookies.get("refreshToken")?.value;
 
         if (token) {
             try {

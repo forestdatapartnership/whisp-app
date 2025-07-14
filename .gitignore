@@ -55,4 +55,4 @@ venv/
 /bin
 
 # Any log files
-*.log
+/logs

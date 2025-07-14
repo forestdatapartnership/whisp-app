@@ -181,8 +181,17 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
                     accept={accept}
                 />
             </div>
-            <div className="flex items-center mx-2 justify-between">
+            <div className="flex items-center justify-between mx-2">
                 {renderExampleButton()}
+                <Link
+                    href="/submit-geo-ids"
+                    onClick={() => {
+                        resetStore();
+                    }}
+                    className="text-blue-500 hover:underline"
+                >
+                    Submit Geo IDs
+                </Link>
             </div>
             <div className="flex items-center justify-between">
                 <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">

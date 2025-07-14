@@ -9,6 +9,7 @@ import './styles.css';
 import { ColumnDef } from '@tanstack/react-table';
 import { FeatureCollection, Feature, Geometry, GeoJsonProperties } from 'geojson';
 import dynamic from 'next/dynamic';
+import { DownloadDropdown } from "@/components/results/DownloadDropdown";
 
 // Dynamically import MapView with no SSR to avoid window undefined error
 const MapView = dynamic(() => import("@/components/results/MapView"), {
@@ -161,8 +162,8 @@ const Results: React.FC = () => {
 
     const generateEarthMap = () => {
         if (tableData.length > 0) {
-            const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`
-            const url = `https://whisp.earthmap.org/?fetchJson=${downloadUrl}`
+            const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`;
+            const url = `https://whisp.earthmap.org/?aoi=WHISP&fetchJson=${downloadUrl}`;
             window.open(url, '_blank');
         }
     }
@@ -216,6 +217,49 @@ const Results: React.FC = () => {
         }
     };
 
+    const handleDownloadGeoJson = async () => {
+        setIsDownloading(true);
+        try {
+            const geoJsonUrl = `/api/generate-geojson/${token || id}`;
+            const response = await fetch(geoJsonUrl);
+
+            if (!response.ok) {
+                throw new Error(`Failed to download GeoJSON: ${response.statusText}`);
+            }
+
+            const geoJsonData = await response.json();
+            
+            // Generate timestamp for filename
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const filename = `whisp_analysis_${year}_${month}_${day}_${hours}_${minutes}.geojson`;
+
+            const blob = new Blob([JSON.stringify(geoJsonData, null, 2)], { 
+                type: 'application/geo+json' 
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            setAlert({ type: 'success', message: "GeoJSON downloaded successfully" });
+        } catch (error: any) {
+            console.error('GeoJSON download failed:', error);
+            setAlert({ type: 'error', message: error.message });
+            useStore.setState({ error: error.message });
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     return (
         <div className="p-4 border border-gray-300 bg-gray-800 rounded shadow-md my-4 relative">
             {isLoading && (
@@ -255,12 +299,12 @@ const Results: React.FC = () => {
                             </button>
                         </div>
                         <div className="w-full sm:w-52">
-                            <button
-                                onClick={handleDownloadCsv}
-                                disabled={isCsvDisabled || isDownloading}
-                                className={`w-full text-white font-bold py-1 px-2 text-sm rounded text-center ${isCsvDisabled ? 'bg-yellow-300' : isDownloading ? 'bg-yellow-400' : 'bg-yellow-500 hover:bg-yellow-700'}`}>
-                                {isDownloading ? 'Downloading...' : 'Download CSV'}
-                            </button>
+                            <DownloadDropdown
+                                onDownloadCsv={handleDownloadCsv}
+                                onDownloadGeoJson={handleDownloadGeoJson}
+                                isDisabled={isCsvDisabled}
+                                isDownloading={isDownloading}
+                            />
                         </div>
                     </div>
                     {alert && <Alert type={alert.type} message={alert.message} onClose={alert.type === 'error' ? clearStoreError : clearAlert} />}
