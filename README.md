@@ -27,6 +27,7 @@ graph TB
         B[API Access]
         C[Python Package]
         D[Whisp in Earthmap]
+        N[QGIS Whisp Plugin]
     end
     
     subgraph "Application Layer"
