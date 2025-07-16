@@ -40,8 +40,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ vars.SERVICE_ACCOUNT }}
-          service_account: ${{ vars.WORKLOAD_ID_PROVIDER }}
+          workload_identity_provider: ${{ vars.WORKLOAD_ID_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ vars.REGISTRY }}
