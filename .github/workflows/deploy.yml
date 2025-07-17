@@ -25,19 +25,16 @@ jobs:
         run: |
           if [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "environment=development" >> $GITHUB_OUTPUT
-            echo "version=latest" >> $GITHUB_OUTPUT
-            echo "service_suffix=-development" >> $GITHUB_OUTPUT
+            echo "version=dev" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref_name }}" == release/* ]]; then
             echo "environment=production" >> $GITHUB_OUTPUT
             version=$(echo "${{ github.ref_name }}" | sed 's/release\/v//')
             echo "version=${version}" >> $GITHUB_OUTPUT
-            echo "service_suffix=" >> $GITHUB_OUTPUT
           else
             echo "environment=development" >> $GITHUB_OUTPUT
             # Use branch name as version, replacing / with - for valid Docker tags
             version=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
             echo "version=${version}" >> $GITHUB_OUTPUT
-            echo "service_suffix=-development" >> $GITHUB_OUTPUT
           fi
 
       - name: Authenticate to Google Cloud
@@ -56,16 +53,14 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.extract.outputs.version }} .
-          docker tag ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.extract.outputs.version }} ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ github.sha }}
 
       - name: Push Docker image
         run: |
           docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.extract.outputs.version }}
-          docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ github.sha }}
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy ${{ vars.SERVICE }}${{ steps.extract.outputs.service_suffix }} \
+          gcloud run deploy ${{ vars.SERVICE }} \
             --image ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.extract.outputs.version }} \
             --region ${{ vars.REGION }} \
             --platform managed \
