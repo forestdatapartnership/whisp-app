@@ -75,7 +75,6 @@ jobs:
       - name: Clean up untagged images
         run: |
           gcloud artifacts docker images list ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }} \
-            --filter="-tags:*" \
-            --format="get(package)" \
-            --limit=unlimited | \
+            --include-tags --filter="-tags:*" \
+            --format="value[separator='@'](IMAGE,DIGEST)" | \
             xargs -I {} gcloud artifacts docker images delete "{}" --quiet --async || true 
