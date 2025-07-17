@@ -49,6 +49,10 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ vars.REGISTRY }}
 
+      - name: Create Google Earth Engine credentials
+        run: |
+          echo '${{ secrets.GEE_CREDENTIALS_JSON }}' > credentials.json
+        
       - name: Build Docker image
         run: |
           docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.extract.outputs.version }} .
