@@ -68,7 +68,7 @@ const GeoIdInput: React.FC = () => {
                     }
 
                     if (data) {
-                        useStore.setState({ token: data.token, data: data.data, shpBase64: data.plotFileBase64, selectedFile: "" });
+                        useStore.setState({ token: data.token, data: data.data, selectedFile: "" });
                         safePush(`/results/${data.token}`);
                     }
                 } catch (error: any) {
