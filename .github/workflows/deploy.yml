@@ -71,3 +71,12 @@ jobs:
             --max-instances 10 \
             --timeout 300 \
             --tag ${{ steps.extract.outputs.version }} 
+
+      - name: Clean up untagged images
+        run: |
+          gcloud artifacts docker images delete \
+            --delete-tags \
+            --filter="tags.empty" \
+            --async \
+            --quiet \
+            ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }} || true 
