@@ -77,8 +77,13 @@ jobs:
           gcloud run services update ${{ vars.SERVICE }} \
             --region ${{ vars.REGION }} \
             --set-env-vars "HOST_URL=${SERVICE_URL},NEXT_PUBLIC_WHISP_URL=${SERVICE_URL}" \
-            --update-secrets "/app/secrets/environment/.env.local=whisp-app-env-${{ steps.extract.outputs.environment }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest" \
-            --traffic ${{ steps.extract.outputs.version }}=100
+            --update-secrets "/app/secrets/environment/.env.local=whisp-app-env-${{ steps.extract.outputs.environment }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
+
+      - name: Route traffic to new revision
+        run: |
+          gcloud run services update-traffic ${{ vars.SERVICE }} \
+            --region ${{ vars.REGION }} \
+            --to-tags ${{ steps.extract.outputs.version }}=100
 
             
       - name: Clean up untagged images
