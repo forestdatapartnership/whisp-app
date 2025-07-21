@@ -46,10 +46,6 @@ credentials.*
 # Ignore vs code config files
 .vscode/
 
-# Ignore any deploy file
-*.sh
-*.yaml
-
 # Ignore Python virtual environments
 venv/
 /lib

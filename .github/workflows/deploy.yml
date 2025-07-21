@@ -46,10 +46,6 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ vars.REGISTRY }}
 
-      - name: Create Google Earth Engine credentials
-        run: |
-          echo '${{ secrets.GEE_CREDENTIALS_JSON }}' > credentials.json
-        
       - name: Build Docker image
         run: |
           docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.extract.outputs.version }} .
@@ -70,8 +66,18 @@ jobs:
             --cpu 1 \
             --max-instances 10 \
             --timeout 300 \
-            --tag ${{ steps.extract.outputs.version }} 
+            --tag ${{ steps.extract.outputs.version }} \
+            --no-traffic \
+            --add-cloudsql-instances fao-fdp-review:europe-west1:whisp-db-dev \
+            --update-secrets "/app/secrets/environment/.env.local=whisp-app-env-${{ steps.extract.outputs.environment }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
 
+      - name: Get service URL and update with environment variables
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ vars.SERVICE }} --region ${{ vars.REGION }} --format="value(status.url)")
+          gcloud run services update ${{ vars.SERVICE }} \
+            --region ${{ vars.REGION }} \
+            --set-env-vars "HOST_URL=${SERVICE_URL},NEXT_PUBLIC_WHISP_URL=${SERVICE_URL}" \
+            
       - name: Clean up untagged images
         run: |
           gcloud artifacts docker images list ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }} \
