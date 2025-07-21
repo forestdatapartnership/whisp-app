@@ -69,6 +69,7 @@ jobs:
             --tag ${{ steps.extract.outputs.version }} \
             --no-traffic \
             --add-cloudsql-instances fao-fdp-review:europe-west1:whisp-db-dev \
+            --clear-secrets \
             --update-secrets "/app/secrets/environment/.env.local=whisp-app-env-${{ steps.extract.outputs.environment }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
 
       - name: Get service URL and update with environment variables
