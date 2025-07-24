@@ -76,6 +76,7 @@ jobs:
           SERVICE_URL=$(gcloud run services describe ${{ vars.SERVICE }} --region ${{ vars.REGION }} --format="value(status.url)")
           gcloud run services update ${{ vars.SERVICE }} \
             --region ${{ vars.REGION }} \
+            --tag ${{ steps.extract.outputs.version }} \
             --set-env-vars "HOST_URL=${SERVICE_URL},NEXT_PUBLIC_WHISP_URL=${SERVICE_URL}" \
             --update-secrets "/app/secrets/environment/.env.local=whisp-app-env-${{ steps.extract.outputs.environment }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
 
