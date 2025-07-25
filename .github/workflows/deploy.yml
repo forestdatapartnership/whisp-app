@@ -66,7 +66,6 @@ jobs:
             --cpu 1 \
             --max-instances 10 \
             --timeout 300 \
-            --tag ${{ steps.extract.outputs.version }} \
             --no-traffic \
             --add-cloudsql-instances fao-fdp-review:europe-west1:whisp-db-dev \
             --clear-secrets
