@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "db:setup": "node src/db/dbSetup.js",
+    "db:migrate": "node db/migrate.js",
+    "db:status": "node db/migrate.js status",
     "lint": "next lint",
     "test": "jest"
   },

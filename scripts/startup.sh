@@ -35,5 +35,13 @@ if [ -d "/app/secrets" ]; then
     echo "Secrets processed."
 fi
 
+echo "Running database migrations..."
+if npm run db:migrate; then
+    echo "Database migrations completed successfully."
+else
+    echo "Database migrations failed. Exiting."
+    exit 1
+fi
+
 echo "Starting app..."
 exec npm start 
