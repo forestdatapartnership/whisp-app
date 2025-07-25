@@ -5,7 +5,7 @@ const { Client } = require('pg');
 
 class MigrationRunner {
     constructor() {
-        const requiredEnvVars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
+        const requiredEnvVars = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
         
         for (const envVar of requiredEnvVars) {
             if (!process.env[envVar]) {
@@ -15,7 +15,7 @@ class MigrationRunner {
         
         this.config = {
             host: process.env.DB_HOST,
-            port: parseInt(process.env.DB_PORT),
+            port: parseInt(process.env.DB_PORT) || 5432,
             database: process.env.DB_NAME,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
