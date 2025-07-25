@@ -67,7 +67,7 @@ jobs:
             --max-instances 10 \
             --timeout 300 \
             --no-traffic \
-            --add-cloudsql-instances fao-fdp-review:europe-west1:whisp-db-dev \
+            --add-cloudsql-instances ${{ vars.CLOUDSQL_INSTANCE }} \
             --clear-secrets
             
       - name: Get service URL and update with environment variables
