@@ -35,13 +35,19 @@ if [ -d "/app/secrets" ]; then
     echo "Secrets processed."
 fi
 
-echo "Running database migrations..."
-if npm run db:migrate; then
-    echo "Database migrations completed successfully."
+#TODO: implement a global check for environment variables
+if [ -f "/app/.env.local" ]; then    
+    echo "Running database migrations..."
+    if npm run db:migrate; then
+        echo "Database migrations completed successfully."
+    else
+        echo "Database migrations failed. Exiting."
+        exit 1
+    fi
+    
+    echo "Starting app..."
+    exec npm start
 else
-    echo "Database migrations failed. Exiting."
-    exit 1
-fi
-
-echo "Starting app..."
-exec npm start 
+    echo "No configuration file found, exiting."
+    exit 0
+fi 
