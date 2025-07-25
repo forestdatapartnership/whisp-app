@@ -44,10 +44,9 @@ if [ -f "/app/.env.local" ]; then
         echo "Database migrations failed. Exiting."
         exit 1
     fi
-    
-    echo "Starting app..."
-    exec npm start
 else
-    echo "No configuration file found, exiting."
-    exit 0
-fi 
+    echo "No .env.local found - skipping migrations."
+fi
+
+echo "Starting app..."
+exec npm start 
