@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
-import SubmitGeometry from '@/components/SubmitGeometry';
+import DataSubmission from '@/components/DataSubmission';
 import Link from 'next/link';
 
 export default function SubmitGeometryPage() {
@@ -42,8 +42,8 @@ export default function SubmitGeometryPage() {
         Dashboard
       </Link>
       </div>
-      {/* Use the existing SubmitGeometry component with useTempKey set to false */}
-      <SubmitGeometry useTempKey={false} />
+      {/* Use the DataSubmission component with useTempKey set to false */}
+      <DataSubmission useTempKey={false} />
     </div>
   );
 }

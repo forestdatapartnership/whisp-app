@@ -7,7 +7,6 @@ import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/utils/safePush';
 import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
-import Link from 'next/link';
 import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 
 interface SubmitGeometryProps {
@@ -19,7 +18,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
     const [geojson, setGeojson] = useState<any>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
-    const { error, user } = useStore();
+    const { error } = useStore();
     const [type, setType] = useState<string>('');
 
     const safePush = useSafeRouterPush();
@@ -164,16 +163,17 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
     };
 
     return (
-        <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
+        <div className="relative">
             {isLoading && (
-                <div className="absolute top-0 left-0 right-0 bottom-0 bg-gray-200 bg-opacity-75 flex items-center justify-center z-10">
+                <div className="absolute top-0 left-0 right-0 bottom-0 bg-gray-200 bg-opacity-75 flex items-center justify-center z-10 rounded">
                     <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-8 h-8 animate-spin"></div>
                 </div>
             )}
-            <h1 className="text-2xl font-semibold text-center mb-2">Submit Geometry</h1>
-            <div className="mx-2">
+            
+            <div className="mx-2 mb-4">
                 {error && <Alert type="error" message={error} onClose={clearError} />}
             </div>
+            
             <div className="p-2 rounded-b-lg">
                 <FileInput
                     innerMessage="Only .txt, .json and .geojson files are accepted."
@@ -181,22 +181,13 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
                     accept={accept}
                 />
             </div>
-            <div className="flex items-center justify-between mx-2">
+            
+            <div className="flex items-center mx-2 justify-between mt-4">
                 {renderExampleButton()}
-                <Link
-                    href="/submit-geo-ids"
-                    onClick={() => {
-                        resetStore();
-                    }}
-                    className="text-blue-500 hover:underline"
-                >
-                    Submit Geo IDs
-                </Link>
             </div>
-            <div className="flex items-center justify-between">
-                <Link href="https://openforis.org/whisp-terms-of-service/" target="_blank" className="text-blue-500 mx-1">
-                    Terms of Service
-                </Link>
+            
+            <div className="flex items-center justify-between mt-4">
+                <div></div>
                 <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
             </div>
         </div>

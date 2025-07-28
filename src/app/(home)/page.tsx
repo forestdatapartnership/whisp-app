@@ -1,6 +1,6 @@
 'use client'
 
-import SubmitGeometry from '@/components/SubmitGeometry';
+import DataSubmission from '@/components/DataSubmission';
 import Link from 'next/link';
 import { useStore } from '@/store';
 import { useEffect } from 'react';
@@ -82,7 +82,7 @@ export default function Home() {
       </section>
 
       <div className='my-8'>
-        <SubmitGeometry />
+        <DataSubmission />
       </div>
 
       <section className="mt-8">
