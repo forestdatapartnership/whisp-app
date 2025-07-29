@@ -52,7 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           MILESTONE_NUMBER=$(gh api repos/${{ github.repository }}/milestones \
-            --jq ".[] | select(.title == \"${{ steps.package_version.outputs.version }}\") | .number" \
+            --jq ".[] | select(.title == \"v${{ steps.package_version.outputs.version }}\") | .number" \
             || echo "")
           
           if [ -n "$MILESTONE_NUMBER" ]; then
@@ -60,7 +60,7 @@ jobs:
             echo "Found milestone: $MILESTONE_NUMBER"
           else
             echo "milestone_number=" >> $GITHUB_OUTPUT
-            echo "No milestone found for version ${{ steps.package_version.outputs.version }}"
+            echo "No milestone found for version v${{ steps.package_version.outputs.version }}"
           fi
 
       - name: Generate release notes from milestone issues
@@ -93,7 +93,7 @@ jobs:
           fi
           
           if [ -z "$ISSUES" ] && [ -z "$PRS" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'"No issues or pull requests found in milestone ${{ steps.package_version.outputs.version }}"
+            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'"No issues or pull requests found in milestone v${{ steps.package_version.outputs.version }}"
           fi
           
           # Save to file and output
@@ -105,7 +105,7 @@ jobs:
         id: fallback_notes
         if: steps.find_milestone.outputs.milestone_number == ''
         run: |
-          RELEASE_NOTES="## Release v${{ steps.package_version.outputs.version }}"$'\n'$'\n'"This release includes various improvements and bug fixes."$'\n'$'\n'"No milestone was found for version ${{ steps.package_version.outputs.version }}."
+          RELEASE_NOTES="## Release v${{ steps.package_version.outputs.version }}"$'\n'$'\n'"This release includes various improvements and bug fixes."$'\n'$'\n'"No milestone was found for version v${{ steps.package_version.outputs.version }}."
           echo "$RELEASE_NOTES" > release_notes.md
           echo "Generated fallback release notes:"
           cat release_notes.md
