@@ -12,7 +12,6 @@ jobs:
     permissions:
       contents: write
       issues: read
-      pull-requests: read
       
     steps:
       - name: Checkout code
@@ -48,8 +47,6 @@ jobs:
 
       - name: Find milestone by version
         id: find_milestone
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           MILESTONE_NUMBER=$(gh api repos/${{ github.repository }}/milestones \
             --jq ".[] | select(.title == \"v${{ steps.package_version.outputs.version }}\") | .number" \
@@ -66,34 +63,21 @@ jobs:
       - name: Generate release notes from milestone issues
         id: release_notes
         if: steps.find_milestone.outputs.milestone_number != ''
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           MILESTONE_NUMBER="${{ steps.find_milestone.outputs.milestone_number }}"
           
           # Get closed issues from the milestone
           ISSUES=$(gh api repos/${{ github.repository }}/issues \
-            --jq '.[] | select(.milestone.number == '$MILESTONE_NUMBER' and .state == "closed" and .pull_request == null) | "- " + .title + " (#" + (.number | tostring) + ")"' \
+            --jq '.[] | select(.pull_request == null) | "- " + .title + " (#" + (.number | tostring) + ")"' \
             -f milestone=$MILESTONE_NUMBER -f state=closed)
           
-          # Get merged PRs from the milestone
-          PRS=$(gh api repos/${{ github.repository }}/issues \
-            --jq '.[] | select(.milestone.number == '$MILESTONE_NUMBER' and .state == "closed" and .pull_request != null) | "- " + .title + " (#" + (.number | tostring) + ")"' \
-            -f milestone=$MILESTONE_NUMBER -f state=closed)
-          
-          # Combine into release notes
+          # Create release notes
           RELEASE_NOTES="## What's Changed"$'\n'
           
-          if [ -n "$PRS" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'"### Pull Requests"$'\n'"${PRS}"$'\n'
-          fi
-          
           if [ -n "$ISSUES" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'"### Issues Fixed"$'\n'"${ISSUES}"$'\n'
-          fi
-          
-          if [ -z "$ISSUES" ] && [ -z "$PRS" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'"No issues or pull requests found in milestone v${{ steps.package_version.outputs.version }}"
+            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'$'\n'"${ISSUES}"
+          else
+            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'$'\n'"No issues found in milestone v${{ steps.package_version.outputs.version }}"
           fi
           
           # Save to environment variable
@@ -118,8 +102,6 @@ jobs:
           echo "$RELEASE_NOTES"
 
       - name: Create GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "v${{ steps.package_version.outputs.version }}" \
             --title "Release v${{ steps.package_version.outputs.version }}" \
