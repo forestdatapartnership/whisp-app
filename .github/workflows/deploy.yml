@@ -10,17 +10,16 @@ on:
       environment:
         description: 'Environment to deploy to'
         required: false
-        default: 'auto'
+        default: 'development'
         type: choice
         options:
-          - auto
           - development
           - production
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment == 'auto' && (startsWith(github.ref_name, 'release/') && 'production' || 'development') || github.event.inputs.environment }}
+    environment: ${{ github.event.inputs.environment }}
     permissions:
       id-token: write
       contents: read
@@ -72,7 +71,7 @@ jobs:
             --region ${{ vars.REGION }} \
             --tag ${{ steps.package_version.outputs.version }} \
             --set-env-vars "HOST_URL=${SERVICE_URL},NEXT_PUBLIC_WHISP_URL=${SERVICE_URL}" \
-            --update-secrets "/app/secrets/environment/.env.local=${{ vars.ENV_SECRET }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
+            --update-secrets "/app/secrets/environment/.env.local=${{ vars.ENV_SECRET_NAME }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
 
       - name: Route traffic to new revision
         run: |
