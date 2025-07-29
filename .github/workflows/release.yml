@@ -1,0 +1,123 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'release/**'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: read
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from package.json
+        id: package_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ steps.package_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.package_version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.package_version.outputs.version }} does not exist"
+          fi
+
+      - name: Create git tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ steps.package_version.outputs.version }}" -m "Release v${{ steps.package_version.outputs.version }}"
+          git push origin "v${{ steps.package_version.outputs.version }}"
+
+      - name: Find milestone by version
+        id: find_milestone
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MILESTONE_NUMBER=$(gh api repos/${{ github.repository }}/milestones \
+            --jq ".[] | select(.title == \"${{ steps.package_version.outputs.version }}\") | .number" \
+            || echo "")
+          
+          if [ -n "$MILESTONE_NUMBER" ]; then
+            echo "milestone_number=${MILESTONE_NUMBER}" >> $GITHUB_OUTPUT
+            echo "Found milestone: $MILESTONE_NUMBER"
+          else
+            echo "milestone_number=" >> $GITHUB_OUTPUT
+            echo "No milestone found for version ${{ steps.package_version.outputs.version }}"
+          fi
+
+      - name: Generate release notes from milestone issues
+        id: release_notes
+        if: steps.find_milestone.outputs.milestone_number != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MILESTONE_NUMBER="${{ steps.find_milestone.outputs.milestone_number }}"
+          
+          # Get closed issues from the milestone
+          ISSUES=$(gh api repos/${{ github.repository }}/issues \
+            --jq '.[] | select(.milestone.number == '$MILESTONE_NUMBER' and .state == "closed" and .pull_request == null) | "- " + .title + " (#" + (.number | tostring) + ")"' \
+            -f milestone=$MILESTONE_NUMBER -f state=closed)
+          
+          # Get merged PRs from the milestone
+          PRS=$(gh api repos/${{ github.repository }}/issues \
+            --jq '.[] | select(.milestone.number == '$MILESTONE_NUMBER' and .state == "closed" and .pull_request != null) | "- " + .title + " (#" + (.number | tostring) + ")"' \
+            -f milestone=$MILESTONE_NUMBER -f state=closed)
+          
+          # Combine into release notes
+          RELEASE_NOTES="## What's Changed"$'\n'
+          
+          if [ -n "$PRS" ]; then
+            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'"### Pull Requests"$'\n'"${PRS}"$'\n'
+          fi
+          
+          if [ -n "$ISSUES" ]; then
+            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'"### Issues Fixed"$'\n'"${ISSUES}"$'\n'
+          fi
+          
+          if [ -z "$ISSUES" ] && [ -z "$PRS" ]; then
+            RELEASE_NOTES="${RELEASE_NOTES}"$'\n'"No issues or pull requests found in milestone ${{ steps.package_version.outputs.version }}"
+          fi
+          
+          # Save to file and output
+          echo "$RELEASE_NOTES" > release_notes.md
+          echo "Generated release notes:"
+          cat release_notes.md
+
+      - name: Generate fallback release notes
+        id: fallback_notes
+        if: steps.find_milestone.outputs.milestone_number == ''
+        run: |
+          RELEASE_NOTES="## Release v${{ steps.package_version.outputs.version }}"$'\n'$'\n'"This release includes various improvements and bug fixes."$'\n'$'\n'"No milestone was found for version ${{ steps.package_version.outputs.version }}."
+          echo "$RELEASE_NOTES" > release_notes.md
+          echo "Generated fallback release notes:"
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.package_version.outputs.version }}" \
+            --title "Release v${{ steps.package_version.outputs.version }}" \
+            --notes-file release_notes.md \
+            --target ${{ github.sha }}
+
+      - name: Clean up
+        run: rm -f release_notes.md 
