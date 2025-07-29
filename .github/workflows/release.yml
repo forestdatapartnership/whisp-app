@@ -13,7 +13,6 @@ jobs:
       contents: write
       issues: read
       pull-requests: read
-      repository-projects: read
       
     steps:
       - name: Checkout code
@@ -97,19 +96,26 @@ jobs:
             RELEASE_NOTES="${RELEASE_NOTES}"$'\n'"No issues or pull requests found in milestone v${{ steps.package_version.outputs.version }}"
           fi
           
-          # Save to file and output
-          echo "$RELEASE_NOTES" > release_notes.md
+          # Save to environment variable
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "$RELEASE_NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
           echo "Generated release notes:"
-          cat release_notes.md
+          echo "$RELEASE_NOTES"
 
       - name: Generate fallback release notes
         id: fallback_notes
         if: steps.find_milestone.outputs.milestone_number == ''
         run: |
           RELEASE_NOTES="## Release v${{ steps.package_version.outputs.version }}"$'\n'$'\n'"This release includes various improvements and bug fixes."$'\n'$'\n'"No milestone was found for version v${{ steps.package_version.outputs.version }}."
-          echo "$RELEASE_NOTES" > release_notes.md
+          
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "$RELEASE_NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
           echo "Generated fallback release notes:"
-          cat release_notes.md
+          echo "$RELEASE_NOTES"
 
       - name: Create GitHub Release
         env:
@@ -117,8 +123,7 @@ jobs:
         run: |
           gh release create "v${{ steps.package_version.outputs.version }}" \
             --title "Release v${{ steps.package_version.outputs.version }}" \
-            --notes-file release_notes.md \
+            --notes "$RELEASE_NOTES" \
             --target ${{ github.sha }}
 
-      - name: Clean up
-        run: rm -f release_notes.md 
+ 
