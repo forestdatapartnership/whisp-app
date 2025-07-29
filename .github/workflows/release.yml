@@ -46,14 +46,22 @@ jobs:
         run: |
           if [ -n "$MID" ]; then
             BODY=$(gh issue list --state closed --milestone "$TAG" \
-                   --repo "$GITHUB_REPOSITORY" \
-                   --json title,number \
-                   --jq '.[] | "- " + .title + " (#" + (.number|tostring) + ")"')
-            NOTES="## What's Changed\n\n${BODY:-No closed issues in this milestone.}"
+                    --repo "$GITHUB_REPOSITORY" \
+                    --json title,number \
+                    --jq '.[] | "- " + .title + " (#" + (.number|tostring) + ")"' || true)
+            if [ -z "$BODY" ]; then
+              BODY="No closed issues in this milestone."
+            fi
+            {
+              echo "## What's Changed"
+              echo
+              echo "$BODY"
+            } > RELEASE_NOTES.md
           else
-            NOTES="## Release $TAG\n\nNo milestone named $TAG was found."
+            {
+              echo "No changes since last release."
+            } > RELEASE_NOTES.md
           fi
-          printf '%s\n' "$NOTES" > RELEASE_NOTES.md
           echo "NOTES_PATH=RELEASE_NOTES.md" >> $GITHUB_ENV
 
       - name: Publish GitHub release
