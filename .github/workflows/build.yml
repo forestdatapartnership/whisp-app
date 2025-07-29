@@ -1,0 +1,45 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: 
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: development
+    permissions:
+      id-token: write
+      contents: read
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from package.json
+        id: package_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WORKLOAD_ID_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.REGISTRY }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }} .
+          docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }}
+
+      - name: Clean up untagged images
+        run: |
+          gcloud artifacts docker images list ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }} \
+            --include-tags --filter="-tags:*" \
+            --format="value[separator='@'](IMAGE,DIGEST)" | \
+            xargs -I {} gcloud artifacts docker images delete "{}" --quiet --async || true

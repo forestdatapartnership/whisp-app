@@ -7,11 +7,20 @@ on:
         description: 'Branch to deploy (leave empty to use current branch)'
         required: false
         default: ''
+      environment:
+        description: 'Environment to deploy to'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - development
+          - production
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ startsWith(github.ref_name, 'release/') && 'production' || 'development' }}
+    environment: ${{ github.event.inputs.environment == 'auto' && (startsWith(github.ref_name, 'release/') && 'production' || 'development') || github.event.inputs.environment }}
     permissions:
       id-token: write
       contents: read
@@ -20,22 +29,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Extract environment and version
-        id: extract
+      - name: Extract version from package.json
+        id: package_version
         run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "environment=development" >> $GITHUB_OUTPUT
-            echo "version=dev" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref_name }}" == release/* ]]; then
-            echo "environment=production" >> $GITHUB_OUTPUT
-            version=$(echo "${{ github.ref_name }}" | sed 's/release\/v//')
-            echo "version=${version}" >> $GITHUB_OUTPUT
-          else
-            echo "environment=development" >> $GITHUB_OUTPUT
-            # Use branch name as version, replacing / with - for valid Docker tags
-            version=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
-            echo "version=${version}" >> $GITHUB_OUTPUT
-          fi
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -43,21 +41,18 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_ID_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ vars.REGISTRY }}
-
-      - name: Build Docker image
+      - name: Verify image exists
         run: |
-          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.extract.outputs.version }} .
-
-      - name: Push Docker image
-        run: |
-          docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.extract.outputs.version }}
+          echo "Checking if image exists: ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }}"
+          gcloud artifacts docker images describe ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }} || {
+            echo "❌ Image not found! Make sure you've built version ${{ steps.package_version.outputs.version }} from main branch first."
+            exit 1
+          }
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ vars.SERVICE }} \
-            --image ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.extract.outputs.version }} \
+            --image ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }} \
             --region ${{ vars.REGION }} \
             --platform managed \
             --allow-unauthenticated \
@@ -75,20 +70,12 @@ jobs:
           SERVICE_URL=$(gcloud run services describe ${{ vars.SERVICE }} --region ${{ vars.REGION }} --format="value(status.url)")
           gcloud run services update ${{ vars.SERVICE }} \
             --region ${{ vars.REGION }} \
-            --tag ${{ steps.extract.outputs.version }} \
+            --tag ${{ steps.package_version.outputs.version }} \
             --set-env-vars "HOST_URL=${SERVICE_URL},NEXT_PUBLIC_WHISP_URL=${SERVICE_URL}" \
-            --update-secrets "/app/secrets/environment/.env.local=whisp-app-env-${{ steps.extract.outputs.environment }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
+            --update-secrets "/app/secrets/environment/.env.local=${{ vars.ENV_SECRET }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
 
       - name: Route traffic to new revision
         run: |
           gcloud run services update-traffic ${{ vars.SERVICE }} \
             --region ${{ vars.REGION }} \
-            --to-tags ${{ steps.extract.outputs.version }}=100
-
-            
-      - name: Clean up untagged images
-        run: |
-          gcloud artifacts docker images list ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }} \
-            --include-tags --filter="-tags:*" \
-            --format="value[separator='@'](IMAGE,DIGEST)" | \
-            xargs -I {} gcloud artifacts docker images delete "{}" --quiet --async || true 
+            --to-tags ${{ steps.package_version.outputs.version }}=100
