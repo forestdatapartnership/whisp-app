@@ -32,7 +32,9 @@ jobs:
         id: package_version
         run: |
           VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION=$(echo "${VERSION}" | tr '.' '-')
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag_version=v${TAG_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -69,7 +71,7 @@ jobs:
           SERVICE_URL=$(gcloud run services describe ${{ vars.SERVICE }} --region ${{ vars.REGION }} --format="value(status.url)")
           gcloud run services update ${{ vars.SERVICE }} \
             --region ${{ vars.REGION }} \
-            --tag ${{ steps.package_version.outputs.version }} \
+            --tag "${{ steps.package_version.outputs.tag_version }}" \
             --set-env-vars "HOST_URL=${SERVICE_URL},NEXT_PUBLIC_WHISP_URL=${SERVICE_URL}" \
             --update-secrets "/app/secrets/environment/.env.local=${{ vars.ENV_SECRET_NAME }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
 
@@ -77,4 +79,4 @@ jobs:
         run: |
           gcloud run services update-traffic ${{ vars.SERVICE }} \
             --region ${{ vars.REGION }} \
-            --to-tags ${{ steps.package_version.outputs.version }}=100
+            --to-tags "${{ steps.package_version.outputs.tag_version }}=100"
