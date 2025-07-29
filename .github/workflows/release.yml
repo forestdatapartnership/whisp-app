@@ -13,6 +13,7 @@ jobs:
       contents: write
       issues: read
       pull-requests: read
+      repository-projects: read
       
     steps:
       - name: Checkout code
