@@ -1,6 +1,7 @@
 {
-  "name": "safe-ui",
+  "name": "whisp-app",
   "version": "0.2.0",
+  "description": "WHISP - A Next.js geospatial analysis tool for zero-deforestation regulation claims, providing risk assessment through satellite imagery and forest data analysis",
   "private": true,
   "scripts": {
     "dev": "next dev",
