@@ -82,3 +82,13 @@ jobs:
             --title "Release $TAG" \
             --notes-file "$NOTES_PATH" \
             --target ${{ github.sha }}
+
+      - name: Bump package.json version (major/minor/patch)
+        run: |
+          BUMP_TYPE="${{ github.event.inputs.bump-type || 'patch' }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version "$BUMP_TYPE" -m "chore: bump version to %s [skip ci]"
+          git push origin HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
