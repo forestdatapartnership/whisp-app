@@ -2,6 +2,16 @@ name: Create Release
 
 on:
   workflow_dispatch:
+    inputs:
+      bump-type:
+        description: 'Which version segment to bump: major, minor, or patch'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
   push:
     branches:
       - 'release/**'
