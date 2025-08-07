@@ -41,3 +41,11 @@ export function hasCookie(name: string): boolean {
   }
   return false;
 }
+
+export function getAppVersion(): string {
+  if (typeof process !== 'undefined') {
+    const v = process.env.NEXT_PUBLIC_APP_VERSION
+    if (v && v.length > 0) return v
+  }
+  return '0.0.0'
+}
