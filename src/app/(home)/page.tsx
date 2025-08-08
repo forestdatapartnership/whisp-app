@@ -32,11 +32,6 @@ export default function Home() {
   // Only show the welcome page if user is not authenticated
   return (
     <main className="text-center mx-auto px-2 max-w-3xl">
-      <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 my-4 rounded shadow">
-        <p className="font-semibold">
-          Please see  <Link href="/update-notice-may-21" className="underline hover:text-blue-800">update notice</Link> for important changes to the API.
-        </p>
-      </div>
       <h1 className="text-3xl font-semibold mt-8">Welcome to Whisp</h1>
       <section className="mt-8">
         <p className="text-lg text-gray-400">
