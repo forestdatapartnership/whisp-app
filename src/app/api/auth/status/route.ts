@@ -1,14 +1,15 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { assertEnvVar } from "@/lib/utils";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  const secret = assertEnvVar("JWT_SECRET");
-  const token = req.cookies.get("token")?.value;
-  const refreshToken = req.cookies.get("refreshToken")?.value;
+  const access = req.cookies.get("token")?.value;
+  const refresh = req.cookies.get("refreshToken")?.value;
+  const secret = process.env.JWT_SECRET;
 
   const verify = async (value?: string) => {
-    if (!value) return false;
+    if (!value || !secret) return false;
     try {
       await jwtVerify(value, new TextEncoder().encode(secret));
       return true;
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
   };
 
-  const authenticated = (await verify(token)) || (await verify(refreshToken));
+  const authenticated = (await verify(access)) || (await verify(refresh));
   return NextResponse.json({ authenticated });
 }
 
