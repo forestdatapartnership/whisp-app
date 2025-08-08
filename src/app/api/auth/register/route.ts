@@ -6,6 +6,10 @@ import { randomBytes } from "crypto";
 import { sendVerificationEmail } from "@/lib/mailer";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 
+const emailAttemptCache = new Map<string, { count: number; firstAttempt: number }>();
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 10 * 60 * 1000;
+
 const validatePassword = (password: string): boolean => {
 	const minLength = 8;
 	const hasUpperCase = /[A-Z]/.test(password);
@@ -30,6 +34,23 @@ export const POST = compose(
 	const [log, body] = args;
 	const { name, lastName, organization, email, password } = body;
 
+	const genericRegistrationMessage = "If your email is new or not verified, you will receive a verification email.";
+
+	const now = Date.now();
+	const attemptRecord = emailAttemptCache.get(email);
+
+	if (attemptRecord && now - attemptRecord.firstAttempt < WINDOW_MS && attemptRecord.count >= MAX_ATTEMPTS) {
+		log("warn", `Rate limit exceeded for email ${email}`, logSource);
+		return NextResponse.json({ message: genericRegistrationMessage }, { status: 200 });
+	}
+
+	if (!attemptRecord || now - attemptRecord.firstAttempt >= WINDOW_MS) {
+		emailAttemptCache.set(email, { count: 1, firstAttempt: now });
+	} else {
+		attemptRecord.count += 1;
+		emailAttemptCache.set(email, attemptRecord);
+	}
+
 	if (!name || !lastName || !email || !password) {
 		return NextResponse.json({ error: "All fields are required" }, { status: 400 });
 	}
@@ -50,8 +71,14 @@ export const POST = compose(
 
 		const message = result.rows[0].message;
 
+		const genericRegistrationMessage = "If your email is new or not verified, you will receive a verification email.";
+
+		if (message === "Email already exists") {
+			return NextResponse.json({ message: genericRegistrationMessage }, { status: 200 });
+		}
+
 		if (message !== "User registered successfully") {
-			return NextResponse.json({ error: message }, { status: 400 });
+			return NextResponse.json({ error: "Registration failed" }, { status: 400 });
 		}
 
 		const token = randomBytes(32).toString("hex");
@@ -64,7 +91,7 @@ export const POST = compose(
 
 		await sendVerificationEmail(email, token);
 
-		return NextResponse.json({ message: "User registered. Verification email sent." }, { status: 201 });
+		return NextResponse.json({ message: genericRegistrationMessage }, { status: 200 });
 	} catch (error) {
 		log("error", error, logSource);
 		return NextResponse.json({ error: "Server error" }, { status: 500 });

@@ -153,12 +153,12 @@ const RegisterPage: React.FC = () => {
                 </svg>
               </div>
             </div>
-            <h2 className="text-xl font-semibold mb-2">Email Sent</h2>
+            <h2 className="text-xl font-semibold mb-2">Next Steps</h2>
             <p className="text-gray-400 mb-4">
-              A verification link has been sent to your email address.
+              If your address is eligible, you will receive a verification link shortly.
             </p>
             <p className="text-gray-400 mb-6">
-              Remember to check your spam folder if you don't see it in your inbox.
+              Check your spam folder if you don’t see an email within a few minutes.
             </p>
             <Link
               href="/login"

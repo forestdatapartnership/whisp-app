@@ -27,15 +27,25 @@ export function useUserProfile(redirectToLogin = false) {
     fetchInProgress.current = true;
 
     try {
+      const statusRes = await fetch('/api/auth/status', { credentials: 'include' });
+      if (statusRes.ok) {
+        const status = await statusRes.json();
+        if (!status.authenticated) {
+          setIsAuthenticated(false);
+          setUser(null);
+          return false;
+        }
+      }
+
       const response = await fetch('/api/user/profile', {
         credentials: 'include' // Include cookies in the request
       });
       
       if (response.ok) {
         const data = await response.json();
-        setUser(data.user);
-        setIsAuthenticated(true);
-        return true;
+        setIsAuthenticated(!!data.user);
+        setUser(data.user ?? null);
+        return !!data.user;
       } else {
         if (response.status === 401) {
           if (redirectToLogin) {
@@ -75,8 +85,8 @@ export function useUserProfile(redirectToLogin = false) {
       setUser(null);
       setIsAuthenticated(false);
       
-      // Always redirect to login page on logout
-      router.push('/login');
+      // Always redirect to homepage on logout
+      window.location.href = '/';
       return true;
     } catch (error) {
       console.error('Error logging out:', error);
