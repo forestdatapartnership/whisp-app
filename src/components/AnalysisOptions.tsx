@@ -74,15 +74,15 @@ export default function AnalysisOptions({ value, onChange, disabled = false }: A
         <CollapsibleContent>
           <div className="p-3 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2">
-              <span className="text-sm">Country Data</span>
+            <div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={disabled}>
-                    {countriesLabel}
+                  <Button variant="outline" size="sm" disabled={disabled} className="w-full justify-center">
+                    <span className="font-medium">Country Data:</span>
+                    <span className="ml-2 font-normal">{countriesLabel}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-72" onCloseAutoFocus={(e) => e.preventDefault()}>
+                  <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={(e) => e.preventDefault()}>
                     <div className="flex items-center space-x-2 px-1 py-1">
                       <Button variant="outline" size="sm" onClick={selectNoneCountries}>Select None</Button>
                       <Button variant="outline" size="sm" onClick={selectAllCountries}>Select All</Button>
@@ -102,15 +102,15 @@ export default function AnalysisOptions({ value, onChange, disabled = false }: A
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm">Units</span>
+            <div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={disabled}>
-                    {unitLabel}
+                  <Button variant="outline" size="sm" disabled={disabled} className="w-full justify-center">
+                    <span className="font-medium">Units:</span>
+                    <span className="ml-2 font-normal">{unitLabel}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuContent align="start" className="w-64">
                   <DropdownMenuLabel>Select unit</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuRadioGroup
