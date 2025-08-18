@@ -33,6 +33,7 @@ export const POST = compose(
     // Removed duplicate logging since it's now handled in validateApiKey
     
     const generateGeoids = body.generateGeoids || false;
+    const analysisOptions = body.analysisOptions;
 
     const geojsonErrors = validateGeoJSON(JSON.stringify(body));
     if (geojsonErrors.length > 0) {
@@ -71,6 +72,9 @@ export const POST = compose(
     }
 
     featureCollection = { ...featureCollection, generateGeoids };
+    if (analysisOptions) {
+        featureCollection = { ...featureCollection, analysisOptions };
+    }
 
     return await analyzePlots(featureCollection, log, req);
 });

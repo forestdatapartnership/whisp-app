@@ -23,6 +23,7 @@ export const POST = compose(
   }
   
   const geoIds = body['geoIds'];
+  const analysisOptions = body.analysisOptions;
   if (!geoIds || !Array.isArray(geoIds)) {
     return useBadRequestResponse('Request body is missing geoId.');
   }
@@ -52,7 +53,8 @@ export const POST = compose(
   const featureCollection = {
     type: 'FeatureCollection',
     features: geoJsonArray,
-    generateGeoids: true
+    generateGeoids: true,
+    ...(analysisOptions ? { analysisOptions } : {})
   };
 
   return await analyzePlots(featureCollection, log, req);

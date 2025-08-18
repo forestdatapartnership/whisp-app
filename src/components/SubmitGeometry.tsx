@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/utils/safePush';
 import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
 import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
+import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 
 interface SubmitGeometryProps {
     useTempKey?: boolean;
@@ -20,6 +21,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
     const { error } = useStore();
     const [type, setType] = useState<string>('');
+    const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
 
     const safePush = useSafeRouterPush();
     const resetStore = useStore((state) => state.reset);
@@ -90,10 +92,14 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
 
             if (type === 'wkt') {
                 endpoint = `${apiBasePath}/wkt`;
-                body = { wkt };
+                body = { wkt, analysisOptions };
             } else if (type === 'json') {
                 endpoint = `${apiBasePath}/geojson`;
-                body = geojson;
+                const geojsonWithOptions = {
+                    ...geojson,
+                    analysisOptions
+                };
+                body = geojsonWithOptions;
             }
 
             if (endpoint) {
@@ -182,6 +188,10 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
                 />
             </div>
             
+            <div className="mx-2 mt-4">
+                <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} disabled={isLoading} />
+            </div>
+
             <div className="flex items-center mx-2 justify-between mt-4">
                 {renderExampleButton()}
             </div>

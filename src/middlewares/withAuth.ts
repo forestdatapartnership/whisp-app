@@ -46,8 +46,7 @@ export const withAuth: MiddlewareFactory = (next) => {
         }
 
         const privatePaths = [
-            "/api/api-key",
-            "/api/user/profile",
+            "/api/user",
             "/auth/logout",
             "/auth/change-password",
             "/settings",
@@ -103,7 +102,7 @@ export const withAuth: MiddlewareFactory = (next) => {
                 // Set new tokens as cookies
                 response.cookies.set('token', newAccessToken, {
                     httpOnly: true,
-                    secure: true,
+                    secure: process.env.NODE_ENV === 'production',
                     sameSite: 'strict',
                     path: '/',
                     maxAge: 900 // 15 minutes
@@ -111,7 +110,7 @@ export const withAuth: MiddlewareFactory = (next) => {
 
                 response.cookies.set('refreshToken', newRefreshToken, {
                     httpOnly: true,
-                    secure: true,
+                    secure: process.env.NODE_ENV === 'production',
                     sameSite: 'strict',
                     path: '/',
                     maxAge: 604800 // 7 days

@@ -28,6 +28,7 @@ export const POST = compose(
   // Removed duplicate logging since it's now handled in validateApiKey
 
   const generateGeoids = body.generateGeoids || false;
+  const analysisOptions = body.analysisOptions;
   const { wkt } = body;
 
   if (!wkt) return useBadRequestResponse("Missing attribute 'wkt'");
@@ -54,7 +55,10 @@ export const POST = compose(
     return useBadRequestResponse("Error processing WKT coordinates.");
   }
 
-  let featureCollection = await wktToFeatureCollection(wkt, generateGeoids) as object;
+  let featureCollection = await wktToFeatureCollection(wkt, generateGeoids) as any;
   featureCollection = { ...featureCollection, generateGeoids };
+  if (analysisOptions) {
+    featureCollection = { ...featureCollection, analysisOptions };
+  }
   return await analyzePlots(featureCollection, log, req);
 });

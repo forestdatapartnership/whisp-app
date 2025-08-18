@@ -12,13 +12,37 @@ if not os.path.exists(CREDENTIAL_PATH):
 
 whisp.initialize_ee(CREDENTIAL_PATH)
 
+class AnalysisOptions:
+    def __init__(self, d: dict | None):
+        d = d or {}
+        self.external_id_column = d.get('externalIdColumn')
+        self.unit_type = d.get('unitType')
+        nc = d.get('nationalCodes')
+        self.national_codes = [str(c).lower() for c in nc] if isinstance(nc, list) and nc else None
+
 def main(file_path, legacy_mode=False):
-    whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path, national_codes=['co', 'ci', 'br'])
+    opts = AnalysisOptions(None)
+    try:
+        with open(file_path, 'r') as f:
+            payload = json.load(f)
+            opts = AnalysisOptions(payload.get('analysisOptions') if isinstance(payload, dict) else None)
+    except Exception:
+        pass
+    df_kwargs = {}
+    if opts.national_codes: df_kwargs['national_codes'] = opts.national_codes
+    #else: df_kwargs['national_codes'] = ['co','ci','br']
+    if opts.external_id_column: df_kwargs['external_id_column'] = opts.external_id_column
+    if opts.unit_type: df_kwargs['unit_type'] = opts.unit_type
+    whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path, **df_kwargs)
 
     csv_file_path = os.path.splitext(file_path)[0] + '-result.csv'
     json_file_path = os.path.splitext(file_path)[0] + '-result.json'
 
-    whisp_df_risk = whisp.whisp_risk(whisp_df, national_codes=['co', 'ci', 'br'])
+    whisp_df_risk = whisp.whisp_risk(
+        whisp_df,
+        explicit_unit_type=opts.unit_type if opts.unit_type else None,
+        national_codes=opts.national_codes if opts.national_codes else None
+    )
 
     for col in whisp_df_risk.columns:
         if pd.api.types.is_numeric_dtype(whisp_df_risk[col]):

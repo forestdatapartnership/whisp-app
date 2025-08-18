@@ -7,6 +7,7 @@ import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/utils/safePush';
 import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
+import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 
 interface SubmitGeoIdsProps {
     useTempKey?: boolean;
@@ -16,6 +17,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [activeTab, setActiveTab] = useState<number>(0);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
+    const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
 
     const { error, geoIds } = useStore();
     const safePush = useSafeRouterPush();
@@ -58,7 +60,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                     const response = await fetch('/api/geo-ids', {
                         method: 'POST',
                         headers,
-                        body: JSON.stringify({ geoIds: cleanGeoIds }),
+                        body: JSON.stringify({ geoIds: cleanGeoIds, analysisOptions }),
                     });
 
                     const data = await response.json();
@@ -134,11 +136,17 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
             />
+
+            <div className="mx-2 mt-4">
+                <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} disabled={isLoading} />
+            </div>
             
             <div className="flex items-center mx-2 justify-between mt-4">
                 {renderExampleButton()}
             </div>
             
+            
+
             <div className="flex items-center justify-between mt-4">
                 <div></div>
                 <Buttons clearInput={clearInput} analyze={analyze} isDisabled={isDisabled} />
