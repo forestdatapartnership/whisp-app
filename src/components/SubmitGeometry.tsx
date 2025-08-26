@@ -125,9 +125,18 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
 
             if (fetchedData) {
                 resetStore();
-                const { token, data } = fetchedData;
-                useStore.setState({ token, data });
-                safePush(`/results/${token}`);
+
+                // Always handle as async response - redirect to results page for polling
+                if (fetchedData.status === 'processing') {
+                    const { token } = fetchedData;
+                    useStore.setState({ token });
+                    safePush(`/results/${token}`);
+                } else {
+                    // Fallback for synchronous response (for backwards compatibility)
+                    const { token, data } = fetchedData;
+                    useStore.setState({ token, data });
+                    safePush(`/results/${token}`);
+                }
             }
         } catch (error: any) {
             useStore.setState({ error: error.message });

@@ -57,7 +57,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                 const cleanGeoIds = geoIds.filter(geoId => geoId.trim() !== '');
                 try {
                     const headers = createApiHeaders(apiKey);
-                    const response = await fetch('/api/geo-ids', {
+                    const response = await fetch('/api/submit/geo-ids', {
                         method: 'POST',
                         headers,
                         body: JSON.stringify({ geoIds: cleanGeoIds, analysisOptions }),
@@ -78,8 +78,15 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                     }
 
                     if (data) {
-                        useStore.setState({ token: data.token, data: data.data, selectedFile: "" });
-                        safePush(`/results/${data.token}`);
+                        // Always handle as async response - redirect to results page for polling
+                        if (data.status === 'processing') {
+                            useStore.setState({ token: data.token, selectedFile: "" });
+                            safePush(`/results/${data.token}`);
+                        } else {
+                            // Fallback for synchronous response (for backwards compatibility)
+                            useStore.setState({ token: data.token, data: data.data, selectedFile: "" });
+                            safePush(`/results/${data.token}`);
+                        }
                     }
                 } catch (error: any) {
                     useStore.setState({ error: error.message });

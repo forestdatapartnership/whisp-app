@@ -255,16 +255,56 @@ export function validateCrs(geojson: any): { isValid: boolean; message: string }
         if (validCrs.some(valid => crsName.includes(valid) || crsName.includes("4326"))) {
             return { isValid: true, message: "" };
         }
-        
-        return { 
-            isValid: false, 
-            message: `Invalid CRS: ${geojson.crs.properties.name}. Only EPSG:4326 (WGS84) coordinate system is supported.` 
+
+        return {
+            isValid: false,
+            message: `Invalid CRS: ${geojson.crs.properties.name}. Only EPSG:4326 (WGS84) coordinate system is supported.`
         };
     }
-    
-    return { 
-        isValid: false, 
-        message: "Invalid CRS specification. Only EPSG:4326 (WGS84) coordinate system is supported." 
+
+    return {
+        isValid: false,
+        message: "Invalid CRS specification. Only EPSG:4326 (WGS84) coordinate system is supported."
     };
 }
+
+// Type for table data records
+export type RecordData = Record<string, any>;
+
+export const processGeoJSONData = (geoJSON: any): RecordData[] => {
+  if (!geoJSON || !geoJSON.features || !Array.isArray(geoJSON.features)) {
+    return [];
+  }
+
+  return geoJSON.features.map((feature: Feature<Geometry, GeoJsonProperties>) => {
+    return {
+      ...feature.properties,
+      geometry: feature.geometry
+    };
+  });
+};
+
+export const validateAndProcessGeoJSON = (geoJSON: any): { data: RecordData[], error?: string } => {
+  try {
+    if (!geoJSON) {
+      return { data: [], error: 'No data available' };
+    }
+
+    if (!geoJSON.features || !Array.isArray(geoJSON.features)) {
+      return { data: [], error: 'Invalid GeoJSON format: missing features array' };
+    }
+
+    if (geoJSON.features.length === 0) {
+      return { data: [], error: 'No features found in GeoJSON data' };
+    }
+
+    const processedData = processGeoJSONData(geoJSON);
+    return { data: processedData };
+  } catch (error) {
+    return {
+      data: [],
+      error: error instanceof Error ? error.message : 'Failed to process GeoJSON data'
+    };
+  }
+};
 

@@ -1,5 +1,5 @@
 "use client"
- 
+
 import {
   ColumnDef,
   flexRender,
@@ -7,7 +7,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table"
- 
+
 import {
   Table,
   TableBody,
@@ -19,6 +19,7 @@ import {
 import { DataTablePagination } from "./DataTablePagination"
 import { DataTableViewOptions } from "./DataTableViewOptions"
 import React from "react"
+import { processGeoJSONData, RecordData } from "@/lib/utils/geojsonUtils"
  
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -26,6 +27,8 @@ interface DataTableProps<TData, TValue> {
   onRowClick?: (rowIndex: number) => void
   selectedRowIndex?: number
 }
+
+type TableData = RecordData;
  
 export function DataTable<TData, TValue>({
   columns,
@@ -36,18 +39,15 @@ export function DataTable<TData, TValue>({
   // Process FeatureCollection to array if needed
   const processedData = React.useMemo(() => {
     if (!data) return [];
-    
+
     // Check if data is a FeatureCollection
-    if (typeof data === 'object' && data !== null && 
-        'type' in data && data.type === 'FeatureCollection' && 
+    if (typeof data === 'object' && data !== null &&
+        'type' in data && data.type === 'FeatureCollection' &&
         'features' in data && Array.isArray(data.features)) {
-      // Transform FeatureCollection features to a data array
-      return data.features.map((feature: any) => ({
-        ...feature.properties,
-        geometry: feature.geometry
-      })) as TData[];
+      // Use the unified processing function
+      return processGeoJSONData(data) as TData[];
     }
-    
+
     return data as TData[];
   }, [data]);
   

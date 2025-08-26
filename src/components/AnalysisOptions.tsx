@@ -13,6 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/DropdownMenu'
+
 import { ChevronDown, SlidersHorizontal } from 'lucide-react'
 
 export type UnitType = 'ha' | 'percent'
@@ -21,12 +22,14 @@ export interface AnalysisOptionsValue {
   externalIdColumn?: string
   nationalCodes: string[]
   unitType: UnitType
+  async: boolean
 }
 
 export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptionsValue = {
   externalIdColumn: '',
   nationalCodes: ['co', 'ci', 'br'],
   unitType: 'ha',
+  async: true,
 }
 
 interface AnalysisOptionsProps {
@@ -124,6 +127,7 @@ export default function AnalysisOptions({ value, onChange, disabled = false }: A
               </DropdownMenu>
             </div>
           </div>
+
           </div>
         </CollapsibleContent>
       </div>

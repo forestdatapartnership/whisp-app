@@ -8,30 +8,109 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/DropdownMenu";
+import { useStore } from "@/store";
 
 interface DownloadDropdownProps {
-  onDownloadCsv: () => void;
-  onDownloadGeoJson: () => void;
+  token?: string;
+  id: string;
   isDisabled?: boolean;
-  isDownloading?: boolean;
 }
 
 export function DownloadDropdown({ 
-  onDownloadCsv, 
-  onDownloadGeoJson, 
-  isDisabled = false, 
-  isDownloading = false 
+  token, 
+  id, 
+  isDisabled = false 
 }: DownloadDropdownProps) {
   const [open, setOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  const handleCsvDownload = () => {
-    onDownloadCsv();
-    setOpen(false);
+  const handleDownloadCsv = async () => {
+    if (isDisabled) return;
+
+    setIsDownloading(true);
+    try {
+      const csvUrl = `/api/download-csv/${token || id}`;
+      const response = await fetch(csvUrl);
+
+      if (!response.ok) {
+        throw new Error(`Failed to download CSV: ${response.statusText}`);
+      }
+
+      // Extract filename from Content-Disposition header
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `${token || id}.csv`; // fallback filename
+      
+      if (contentDisposition) {
+        // First try to parse the simple filename= format
+        const simpleFilenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+        if (simpleFilenameMatch && simpleFilenameMatch[1]) {
+          filename = simpleFilenameMatch[1];
+        } else {
+          // Fallback to RFC 5987 format (filename*=UTF-8'')
+          const rfc5987Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/);
+          if (rfc5987Match && rfc5987Match[1]) {
+            filename = decodeURIComponent(rfc5987Match[1]);
+          }
+        }
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Download failed:', error);
+      useStore.setState({ error: error.message });
+    } finally {
+      setIsDownloading(false);
+      setOpen(false);
+    }
   };
 
-  const handleGeoJsonDownload = () => {
-    onDownloadGeoJson();
-    setOpen(false);
+  const handleDownloadGeoJson = async () => {
+    setIsDownloading(true);
+    try {
+      const geoJsonUrl = `/api/generate-geojson/${token || id}`;
+      const response = await fetch(geoJsonUrl);
+
+      if (!response.ok) {
+        throw new Error(`Failed to download GeoJSON: ${response.statusText}`);
+      }
+
+      const geoJsonData = await response.json();
+      
+      // Generate timestamp for filename
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const filename = `whisp_analysis_${year}_${month}_${day}_${hours}_${minutes}.geojson`;
+
+      const blob = new Blob([JSON.stringify(geoJsonData, null, 2)], { 
+        type: 'application/geo+json' 
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('GeoJSON download failed:', error);
+      useStore.setState({ error: error.message });
+    } finally {
+      setIsDownloading(false);
+      setOpen(false);
+    }
   };
 
   return (
@@ -55,7 +134,7 @@ export function DownloadDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem
-          onClick={handleCsvDownload}
+          onClick={handleDownloadCsv}
           disabled={isDisabled || isDownloading}
           className="cursor-pointer"
         >
@@ -65,7 +144,7 @@ export function DownloadDropdown({
           Download CSV
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={handleGeoJsonDownload}
+          onClick={handleDownloadGeoJson}
           disabled={isDisabled || isDownloading}
           className="cursor-pointer"
         >

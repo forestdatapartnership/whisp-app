@@ -8,7 +8,7 @@ import { GEOMETRY_LIMIT } from "@/lib/utils/constants";
 import { useBadRequestResponse } from "@/lib/hooks/responses";
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
-
+    const isAsync = featureCollection.analysisOptions?.async === true;
     const token = uuidv4();
     const filePath = path.join(process.cwd(), 'temp');
     const logSource = "analyzePlots.ts";
@@ -29,6 +29,30 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
     try {
         // Write the payload to a file
         await fs.writeFile(`${filePath}/${token}.json`, JSON.stringify(featureCollection), 'utf8');
+
+        if (isAsync) {
+            // Start background processing (don't await)
+            analyzeGeoJson(token, log, undefined, useLegacyFormat).catch(async (error) => {
+                log("error", `Async analysis failed for token ${token}: ${error.message}`, logSource);
+               
+                try {
+                    await fs.writeFile(
+                        `${filePath}/${token}-error.json`,
+                        JSON.stringify({ error: error.message }),
+                        'utf8'
+                    );
+                } catch (writeError: any) {
+                    log("error", `Failed to write error file for token ${token}: ${writeError.message}`, logSource);
+                }
+            });
+            
+            return NextResponse.json({
+                token,
+                status: 'processing',
+                statusUrl: `/api/status/${token}`,
+                resultUrl: `/api/report/${token}`
+            });
+        }
 
         // Pass the legacy format flag to analyzeGeoJson
         const analyzed = await analyzeGeoJson(token, log, undefined, useLegacyFormat);

@@ -1,2 +1,2 @@
 pandas
-openforis-whisp==2.0.0a5
+openforis-whisp==2.0.0a6
