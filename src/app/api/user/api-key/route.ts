@@ -6,15 +6,19 @@ import { getAuthUser } from "@/lib/auth";
 import { getPool } from "@/lib/db";
 import { randomUUID } from "crypto";
 import { QueryResult } from "pg";
+import { SystemCode } from "@/types/systemCodes";
+import { useResponse } from "@/lib/hooks/responses";
+import { SystemError } from "@/types/systemError";
+import { LogFunction } from "@/lib/logger";
 
 export const GET = compose(
-  withLogging
-)(async (req: NextRequest, ...args): Promise<NextResponse> => {
+  withLogging,
+  withErrorHandling
+)(async (req: NextRequest, log: LogFunction): Promise<NextResponse> => {
   const logSource = "apikey/route.ts";
-  const [log] = args;
 
   const user = await getAuthUser(req);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
 
   const pool = getPool();
   const client = await pool.connect();
@@ -27,29 +31,23 @@ export const GET = compose(
 
     // If user has an existing valid API key, return it
     if (existingKey.rowCount && existingKey.rowCount > 0) {
-      log("info", `Retrieved existing API key for user ${user.id}`, logSource);
-      return NextResponse.json({ apiKey: existingKey.rows[0].api_key });
+      return useResponse(SystemCode.AUTH_STATUS_AUTHENTICATED, { apiKey: existingKey.rows[0].api_key });
     }
 
     // No valid API key found
     log("info", `No valid API key found for user ${user.id}`, logSource);
-    return NextResponse.json({ apiKey: null });
-  } catch (error) {
-    log("error", error, logSource);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return useResponse(SystemCode.AUTH_STATUS_AUTHENTICATED, { apiKey: null });
   } finally {
     client.release();
   }
 });
 
 export const POST = compose(
+  withErrorHandling,
   withLogging
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
-  const logSource = "apikey/route.ts";
-  const [log] = args;
-
   const user = await getAuthUser(req);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
 
   const pool = getPool();
   const client = await pool.connect();
@@ -63,34 +61,26 @@ export const POST = compose(
       [user.id, key, expires_at]
     );
 
-    log("debug", `Created/replaced API key for user ${user.id}`, logSource);
-    return NextResponse.json({ apiKey: key });
-  } catch (error) {
-    log("error", error, logSource);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return useResponse(SystemCode.USER_API_KEY_CREATED_SUCCESS, { apiKey: key });
   } finally {
     client.release();
   }
 });
 
 export const DELETE = compose(
+  withErrorHandling,
   withLogging
 )(async (req: NextRequest, ...args): Promise<NextResponse> => {
-  const logSource = "apikey/route.ts";
-  const [log] = args;
 
   const user = await getAuthUser(req);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
 
   const pool = getPool();
   const client = await pool.connect();
 
   try {
     await client.query("SELECT delete_api_key_by_user($1)", [user.id]);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    log("error", error, logSource);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return useResponse(SystemCode.USER_API_KEY_DELETED_SUCCESS);
   } finally {
     client.release();
   }

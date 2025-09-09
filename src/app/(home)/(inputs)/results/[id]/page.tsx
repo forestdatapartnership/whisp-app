@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import StatusCard from '@/components/StatusCard'
@@ -8,6 +8,7 @@ import { useStatusPolling } from '@/lib/hooks/useStatusPolling'
 import { DownloadDropdown } from "@/components/results/DownloadDropdown";
 import { DataTable } from "@/components/results/DataTable"
 import { useStore } from "@/store";
+import { SystemCode } from '@/types/systemCodes'
 import './styles.css'
 import { ColumnDef } from '@tanstack/react-table'
 import dynamic from 'next/dynamic';
@@ -29,20 +30,12 @@ export default function ResultsPage() {
   const [showMap, setShowMap] = useState<boolean>(false);
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | undefined>(undefined);
+  const [dataError, setDataError] = useState<string | null>(null);
   const { token } = useStore();
-
-  const { status, setFailed } = useStatusPolling({
-    id,
-    onCompleted: (resultUrl) => {
-      if (resultUrl) {
-        loadResultData(resultUrl);
-      }
-    }
-  });
 
   const createColumnDefs = (data: RecordData[]): ColumnDef<RecordData, any>[] => {
       if (!data || !Array.isArray(data) || data.length === 0) {
-          setFailed('No valid data available for display');
+          setDataError('No valid data available for display');
           return [];
       }
 
@@ -50,7 +43,7 @@ export default function ResultsPage() {
           const sampleIndex = data.findIndex(item => item && typeof item === 'object' && Object.keys(item).length > 0);
 
           if (sampleIndex === -1) {
-              setFailed('Unable to process data format for display');
+              setDataError('Unable to process data format for display');
               return [];
           }
 
@@ -62,10 +55,41 @@ export default function ResultsPage() {
               enableHiding: true,
           })) as ColumnDef<Record<string, any>, any>[];
       } catch (error) {
-          setFailed('Failed to process data for display');
+          setDataError('Failed to process data for display');
           return [];
       }
   };
+
+  const processResultData = useCallback((resultData: any) => {
+    try {
+      if (resultData) {
+        setGeoJsonData(resultData);
+        const { data: processedData, error } = validateAndProcessGeoJSON(resultData);
+
+        if (error) {
+          setDataError(error);
+          return;
+        }
+
+        setTableData(processedData);
+        const columnDefs = createColumnDefs(processedData);
+        setColumns(columnDefs);
+      }
+    } catch (error) {
+      setDataError('Failed to process analysis results');
+    }
+  }, []);
+
+  const handleCompleted = useCallback((resultData: any) => {
+    if (resultData) {
+      processResultData(resultData);
+    }
+  }, [processResultData]);
+
+  const { response, error: pollingError, isLoading } = useStatusPolling({
+    id,
+    onCompleted: handleCompleted
+  });
 
   const generateEarthMap = () => {
     if (tableData.length > 0) {
@@ -75,33 +99,13 @@ export default function ResultsPage() {
     }
   }
 
-  const loadResultData = async (resultUrl: string) => {
-    try {
-      const response = await fetch(resultUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to load result data: ${response.statusText}`);
-      }
-      const result = await response.json();
+  const responseCode = response?.code;
+  const isPollingLoading = isLoading || responseCode === SystemCode.ANALYSIS_PROCESSING;
+  const hasPollingError = pollingError || (responseCode && responseCode !== SystemCode.ANALYSIS_PROCESSING && responseCode !== SystemCode.ANALYSIS_COMPLETED);
+  const hasAnyError = hasPollingError || dataError;
 
-      if (result.data) {
-        setGeoJsonData(result.data);
-        const { data: processedData, error } = validateAndProcessGeoJSON(result.data);
-
-        if (error) {
-          setFailed(error);
-          return;
-        }
-
-        setTableData(processedData);
-        const columnDefs = createColumnDefs(processedData);
-        setColumns(columnDefs);
-      }
-    } catch (error) {
-      setFailed('Failed to load analysis results');
-    }
-  };
-
-  if (!status || status.status === 'processing') {
+  // Show loading state while processing
+  if (isPollingLoading) {
     return (
       <StatusCard
         title="Analysis in Progress"
@@ -113,26 +117,46 @@ export default function ResultsPage() {
     )
   }
 
-  if (status?.status === 'not_found') {
-    return (
-      <StatusCard
-        title="404 - Not Found"
-        message="The requested analysis could not be found."
-      />
-    )
-  }
+  // Handle error states
+  if (hasAnyError) {
+    const getErrorTitle = () => {
+      switch (responseCode) {
+        case SystemCode.ANALYSIS_JOB_NOT_FOUND: return '404 - Analysis Not Found';
+        case SystemCode.ANALYSIS_REPORT_NOT_FOUND: return '404 - Report Not Found';
+        case SystemCode.ANALYSIS_ERROR: return 'Analysis Failed';
+        case SystemCode.ANALYSIS_TIMEOUT: return 'Analysis Timeout';
+        case SystemCode.ANALYSIS_PROCESS_FAILED: return 'Process Failed';
+        default: return 'Error';
+      }
+    };
 
-  if (status?.status === 'failed') {
+    const getErrorMessage = () => {
+      // Prioritize data processing errors
+      if (dataError) {
+        return dataError;
+      }
+      
+      // Handle polling errors
+      if (pollingError) {
+        return `Network error: ${pollingError.message}`;
+      }
+      
+      // Handle system code-based errors
+      if (response?.message) {
+        return response.message;
+      }
+      
+      return 'An unexpected error occurred.';
+    };
+
     return (
       <StatusCard
-        title="Analysis Failed"
-        message={status?.error || 'An error occurred during analysis.'}
+        title={getErrorTitle()}
+        message={getErrorMessage()}
       >
         <Button
           variant="secondary"
-          onClick={() => {
-            window.history.back();
-          }}
+          onClick={() => window.history.back()}
           className="bg-gray-600 hover:bg-gray-700 text-white"
         >
           Go Back
@@ -141,61 +165,79 @@ export default function ResultsPage() {
     )
   }
 
-  if (status?.status === 'completed') {
+  // Handle successful completion
+  if (responseCode === SystemCode.ANALYSIS_COMPLETED) {
+    // Check if we have data to display
+    if (!tableData || tableData.length === 0 || !columns || columns.length === 0) {
+      return (
+        <StatusCard
+          title="Analysis Complete"
+          message="The analysis completed successfully, but no data is available to display."
+        >
+          <Button
+            variant="secondary"
+            onClick={() => window.history.back()}
+            className="bg-gray-600 hover:bg-gray-700 text-white"
+          >
+            Go Back
+          </Button>
+        </StatusCard>
+      )
+    }
+
     return (
       <StatusCard
         title="Results"
       >
         <div className="flex justify-center my-4">
-            <label className="flex items-center gap-2 text-white cursor-pointer">
-                <input
-                    type="checkbox"
-                    checked={showMap}
-                    onChange={(e) => setShowMap(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium">Map View</span>
-            </label>
+          <label className="flex items-center gap-2 text-white cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showMap}
+              onChange={(e) => setShowMap(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm font-medium">Map View</span>
+          </label>
         </div>
         
         <div className="flex flex-wrap justify-center my-4 gap-2">
-            <div className="w-full sm:w-52">
-                <button
-                    onClick={() => generateEarthMap()}
-                    className={`w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700`}
-                    disabled={tableData.length === 0 ? true : false}
-                >
-                    View in Whisp Map
-                </button>
-            </div>
-            <div className="w-full sm:w-52">
-                <DownloadDropdown
-                    token={token}
-                    id={id}
-                />
-            </div>
+          <div className="w-full sm:w-52">
+            <button
+              onClick={() => generateEarthMap()}
+              className="w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700 disabled:bg-gray-500"
+              disabled={tableData.length === 0}
+            >
+              View in Whisp Map
+            </button>
+          </div>
+          <div className="w-full sm:w-52">
+            <DownloadDropdown
+              token={token}
+              id={id}
+            />
+          </div>
         </div>
+        
         <div className={`${showMap ? 'flex flex-col lg:flex-row gap-4' : ''}`}>
-            <div className={`${showMap ? 'lg:w-1/2' : 'w-full'}`}>
-                {tableData && columns && columns.length > 0 && (
-                    <DataTable
-                        columns={columns}
-                        data={tableData}
-                        onRowClick={(rowIndex) => setSelectedRowIndex(rowIndex)}
-                        selectedRowIndex={selectedRowIndex}
-                    />
-                )}
-            </div>
+          <div className={`${showMap ? 'lg:w-1/2' : 'w-full'}`}>
+            <DataTable
+              columns={columns}
+              data={tableData}
+              onRowClick={(rowIndex) => setSelectedRowIndex(rowIndex)}
+              selectedRowIndex={selectedRowIndex}
+            />
+          </div>
 
-            {showMap && geoJsonData && (
-                <div className="lg:w-1/2 h-96 lg:h-[600px]">
-                    <MapView
-                        geoJsonData={geoJsonData}
-                        selectedFeatureIndex={selectedRowIndex}
-                        onFeatureClick={(featureIndex) => setSelectedRowIndex(featureIndex)}
-                    />
-                </div>
-            )}
+          {showMap && geoJsonData && (
+            <div className="lg:w-1/2 h-96 lg:h-[600px]">
+              <MapView
+                geoJsonData={geoJsonData}
+                selectedFeatureIndex={selectedRowIndex}
+                onFeatureClick={(featureIndex) => setSelectedRowIndex(featureIndex)}
+              />
+            </div>
+          )}
         </div>
       </StatusCard>
     )

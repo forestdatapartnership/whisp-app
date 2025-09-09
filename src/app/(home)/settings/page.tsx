@@ -72,11 +72,11 @@ export default function Settings() {
 
       if (response.ok) {
         const data = await response.json();
-        setSuccessMessage('Profile updated successfully');
-        await fetchUserProfile(); // Refresh user data
+        setSuccessMessage(data.message || 'Profile updated successfully');
+        await fetchUserProfile();
       } else {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to update profile');
+        throw new Error(data.message || 'Failed to update profile');
       }
     } catch (error: any) {
       console.error('Error updating profile:', error);
@@ -112,7 +112,7 @@ export default function Settings() {
         router.push('/');
       } else {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to delete account');
+        throw new Error(data.message || 'Failed to delete account');
       }
     } catch (error: any) {
       console.error('Error deleting account:', error);

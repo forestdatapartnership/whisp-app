@@ -2,33 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJsonfromGeoId } from "@/lib/utils/assetRegistry";
 import { analyzePlots } from "@/lib/utils/analizePlots";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { useBadRequestResponse, useErrorResponse } from "@/lib/hooks/responses";
+import { SystemCode } from "@/types/systemCodes";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { LogFunction } from "@/lib/logger";
 import { compose } from "@/lib/utils/compose";
 import { validateApiKey } from "@/lib/utils/apiKeyValidator";
+import { SystemError } from "@/types/systemError";
 
 export const POST = compose(
   withLogging,
   withErrorHandling,
   withRequiredJsonBody
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
-  const logSource = "geo-ids/route.ts";
 
-  // Validate API key directly in the route handler, passing the log function
-  const { error, userId } = await validateApiKey(req, log);
-  if (error) {
-    return error;
-  }
+  await validateApiKey(req);
   
   const geoIds = body['geoIds'];
   const analysisOptions = body.analysisOptions;
   if (!geoIds || !Array.isArray(geoIds)) {
-    return useBadRequestResponse('Request body is missing geoId.');
-  }
-  if (geoIds.length > 100) {
-    return useBadRequestResponse("Your input contains more than 100 geometries, please submit 100 or less.");
+    throw new SystemError(SystemCode.VALIDATION_MISSING_GEOIDS);
   }
 
   const geoJsonArray = await Promise.all(geoIds.map(async (geoid: string) => {
@@ -42,12 +35,12 @@ export const POST = compose(
         return "";
       }
     } catch {
-      return useErrorResponse("Asset registry is currently unavailable.", 502);
+      throw new SystemError(SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE);
     }
   }));
 
   if (!geoJsonArray || geoJsonArray.length === 0) {
-    return useBadRequestResponse("One or more of the values submitted is not valid.");
+    throw new SystemError(SystemCode.VALIDATION_INVALID_GEOJSON, ["One or more of the GeoIDs submitted is not valid."]);
   }
 
   const featureCollection = {

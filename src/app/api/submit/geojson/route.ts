@@ -10,59 +10,47 @@ import {
 } from "@/lib/utils/geojsonUtils";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
-import { useBadRequestResponse } from "@/lib/hooks/responses";
+import { useResponse } from "@/lib/hooks/responses";
+import { SystemCode } from "@/types/systemCodes";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 import { validateApiKey } from "@/lib/utils/apiKeyValidator";
+import { SystemError } from "@/types/systemError";
+import { LogFunction } from "@/lib/logger";
 
 export const POST = compose(
     withLogging,
     withErrorHandling,
     withRequiredJsonBody
-)(async (req: NextRequest, ...args): Promise<NextResponse> => {
+)(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
 
-    const [log, body] = args;
-    const logSource = "geojson/route.ts";
-    
-    // Validate API key directly in the route handler, passing the log function
-    const { error, userId } = await validateApiKey(req, log);
-    if (error) {
-        return error;
-    }
-    
-    // Removed duplicate logging since it's now handled in validateApiKey
+    await validateApiKey(req);
     
     const generateGeoids = body.generateGeoids || false;
     const analysisOptions = body.analysisOptions;
 
     const geojsonErrors = validateGeoJSON(JSON.stringify(body));
     if (geojsonErrors.length > 0) {
-        return useBadRequestResponse(
-            `The body does not contain a valid GeoJSON. Errors:\n${geojsonErrors
-                .map(error => `- ${error.message}`)
-                .join('\n')}`
+        throw new SystemError(
+            SystemCode.VALIDATION_INVALID_GEOJSON,
+            [geojsonErrors.map(error => `- ${error.message}`).join('\n')]
         );
     }
 
     // Validate CRS to ensure only EPSG:4326 is allowed
     const crsValidation = validateCrs(body);
     if (!crsValidation.isValid) {
-        return useBadRequestResponse(crsValidation.message);
+        throw new SystemError(SystemCode.VALIDATION_INVALID_CRS);
     }
 
-    try {
-        // Check if coordinates are in a projected system (like meters)
-        if (coordinatesLikelyInMeters(body)) {
-            return useBadRequestResponse("Invalid coordinate reference system. Coordinates appear to be in meters rather than degrees. Please use EPSG:4326 (WGS84) coordinates.");
-        }
-        
-        // Check if coordinates are valid WGS84 values
-        if (!isValidWgs84Coordinates(body)) {
-            return useBadRequestResponse("Invalid coordinates. Please ensure your data is in EPSG:4326 (WGS84) coordinate reference system.");
-        }
-    } catch (error) {
-        log("error", `Error validating GeoJSON coordinates: ${error}`, logSource);
-        return useBadRequestResponse("Error processing GeoJSON coordinates.");
+    // Check if coordinates are in a projected system (like meters)
+    if (coordinatesLikelyInMeters(body)) {
+        throw new SystemError(SystemCode.VALIDATION_COORDINATES_IN_METERS);
+    }
+    
+    // Check if coordinates are valid WGS84 values
+    if (!isValidWgs84Coordinates(body)) {
+        throw new SystemError(SystemCode.VALIDATION_INVALID_COORDINATES);
     }
 
     let featureCollection = createFeatureCollection(body);

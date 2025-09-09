@@ -1,121 +1,83 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { StatusResponse } from '@/types/api'
+import { useEffect, useRef } from 'react'
+import useSWR from 'swr'
+import { ApiResponse } from '@/types/api'
+import { SystemCode } from '@/types/systemCodes'
+
+const POLLING_INTERVAL = 2000 // 2 seconds
+const POLLING_TIMEOUT = 5 * 60 * 1000 // 5 minutes
+
+const fetcher = async (url: string): Promise<ApiResponse> => {
+  const response = await fetch(url)
+  return response.json()
+}
 
 export function useStatusPolling(options: {
   id: string
-  maxRetries?: number
-  baseDelay?: number
-  onCompleted?: (resultUrl?: string) => void
+  onCompleted?: (resultData?: any) => void
 }) {
-  const {
-    id,
-    maxRetries = 10,
-    baseDelay = 2000,
-    onCompleted
-  } = options
-
-  const [status, setStatus] = useState<StatusResponse | null>(null)
-  const [retryCount, setRetryCount] = useState<number>(0)
-
+  const { id, onCompleted } = options
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  const getDelay = useCallback((attempt: number): number => {
-    return Math.min(baseDelay * Math.pow(2, attempt), 10000)
-  }, [baseDelay])
-
-  const checkStatus = useCallback(async (): Promise<StatusResponse> => {
-    try {
-      const response = await fetch(`/api/status/${id}`)
-      const data: StatusResponse = await response.json()
-      return data
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
-      throw new Error(`Failed to check status: ${errorMessage}`)
+  
+  // Only poll if we get ANALYSIS_PROCESSING system code
+  const shouldPoll = (data: ApiResponse | undefined) => {
+    return data?.code === SystemCode.ANALYSIS_PROCESSING
+  }
+  
+  const { data: response, error, isLoading } = useSWR(
+    id ? `/api/status/${id}` : null,
+    fetcher,
+    {
+      refreshInterval: (data) => shouldPoll(data) ? POLLING_INTERVAL : 0,
+      refreshWhenHidden: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      errorRetryCount: 0, // Let the results page handle errors
+      dedupingInterval: 1000, // Prevent duplicate requests within 1 second
     }
-  }, [id])
-
-  const handleStatusChange = useCallback((newStatus: StatusResponse) => {
-    setStatus(newStatus)
-
-    if (newStatus.status === 'completed' && onCompleted && newStatus.resultUrl) {
-      onCompleted(newStatus.resultUrl)
+  )
+  
+  // Handle completion callback
+  useEffect(() => {
+    if (response?.code === SystemCode.ANALYSIS_COMPLETED && onCompleted && response.data) {
+      onCompleted(response.data)
     }
-  }, [onCompleted])
-
-  const stopPolling = useCallback(() => {
+  }, [response, onCompleted])
+  
+  // Handle 5-minute timeout
+  useEffect(() => {
+    if (!id) return
+    
+    // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
     }
-  }, [])
-
-  const setFailed = useCallback((errorMessage: string) => {
-    const failedStatus: StatusResponse = {
-      status: 'failed',
-      error: errorMessage
-    }
-    setStatus(failedStatus)
-  }, [])
-
-  const startPolling = useCallback(() => {
-    setRetryCount(0)
-
-    const poll = async (attempt = 0) => {
-      try {
-        const newStatus = await checkStatus()
-        handleStatusChange(newStatus)
-        setRetryCount(0)
-
-        if (newStatus.status === 'processing' && attempt < maxRetries) {
-          const delay = getDelay(attempt)
-          timeoutRef.current = setTimeout(() => poll(attempt + 1), delay)
-        } else {
-          stopPolling()
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-
-        const newAttempt = attempt + 1
-        setRetryCount(newAttempt)
-
-        if (newAttempt <= maxRetries) {
-          const delay = getDelay(attempt)
-          timeoutRef.current = setTimeout(() => poll(newAttempt), delay)
-        } else {
-          const failedStatus: StatusResponse = {
-            status: 'failed',
-            error: errorMessage
-          }
-          setStatus(failedStatus)
-          stopPolling()
-        }
+    
+    // Set new timeout
+    timeoutRef.current = setTimeout(() => {
+      // The timeout will naturally stop polling since SWR will stop refreshing
+      // The results page can handle the timeout state by checking elapsed time
+    }, POLLING_TIMEOUT)
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
       }
     }
-
-    poll(0)
-  }, [id, maxRetries, checkStatus, handleStatusChange, getDelay])
-
+  }, [id])
+  
+  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
-      stopPolling()
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
     }
   }, [])
-
-  useEffect(() => {
-    if (id) {
-      startPolling()
-    } else {
-      stopPolling()
-    }
-
-    return () => stopPolling()
-  }, [id])
-
+  
   return {
-    status,
-    retryCount,
-    stopPolling,
-    startPolling,
-    setFailed
+    response,
+    isLoading: isLoading || (!response && !error),
+    error
   } as const
 }

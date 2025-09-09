@@ -1,6 +1,7 @@
-export type StatusResponse = {
-  status: 'completed' | 'failed' | 'processing' | 'not_found' | 'error'
-  error?: string
-  message?: string
-  resultUrl?: string
+import { SystemCode } from '@/types/systemCodes';
+
+export interface ApiResponse<T = any> {
+  code?: SystemCode;     
+  message?: string;     
+  data?: T;            
 }

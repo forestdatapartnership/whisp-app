@@ -57,8 +57,8 @@ export async function fetchUserApiKey(): Promise<string> {
     
     const data = await response.json();
     
-    if (data.apiKey) {
-      return data.apiKey;
+    if (data.data.apiKey) {
+      return data.data.apiKey;
     } else {
       throw new Error('No API key found for user');
     }

@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { compose } from "@/lib/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
+import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { useResponse } from "@/lib/hooks/responses";
+import { SystemCode } from "@/types/systemCodes";
+import { LogFunction } from "@/lib/logger";
 
 export const GET = compose(
-    withLogging
-)(async (req: NextRequest, ...args): Promise<NextResponse> => {
-    const [log] = args;
-    const logSource = "logout/route.ts";
+    withLogging,
+    withErrorHandling
+)(async (req: NextRequest, log: LogFunction): Promise<NextResponse> => {
     
-    const response = NextResponse.json({ message: "Logout successful" });
+    const response = useResponse(SystemCode.AUTH_LOGOUT_SUCCESS);
     
     // Clear the access token cookie
     response.cookies.set('token', '', {
@@ -27,8 +30,6 @@ export const GET = compose(
         path: "/",
         maxAge: 0
     });
-
-    log("debug", "User successfully logged out", logSource);
 
     return response;
 });

@@ -3,28 +3,24 @@ import { getPool } from '@/lib/db';
 import { withLogging } from '@/lib/hooks/withLogging';
 import { withRequiredJsonBody } from '@/lib/hooks/withRequiredJsonBody';
 import { compose } from '@/lib/utils/compose';
+import { SystemCode } from '@/types/systemCodes';
+import { useResponse } from '@/lib/hooks/responses';
+import { withErrorHandling } from '@/lib/hooks/withErrorHandling';
+import { validateRequiredFields } from '@/lib/utils/fieldValidation';
+import { SystemError } from '@/types/systemError';
+import { LogFunction } from '@/lib/logger';
 
 export const POST = compose(
   withLogging,
+  withErrorHandling,
   withRequiredJsonBody
-)(async (request: NextRequest, ...args): Promise<NextResponse> => {
-  const [log, body] = args;
+)(async (request: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
   const logSource = "reset-password/route.ts";
   
-  try {
-    const { token, newPassword } = body;
-
-    if (!token || !newPassword) {
-      log("warn", "Missing required fields in reset password request", logSource);
-      return NextResponse.json(
-        { error: 'Token and new password are required' },
-        { status: 400 }
-      );
-    }
-
-    log("debug", "Attempting password reset with token", logSource);
+  const { token, newPassword } = body;
+  validateRequiredFields(body, ['token', 'newPassword']);
     
-    const pool = await getPool();
+    const pool = getPool();
     const client = await pool.connect();
     
     try {
@@ -39,33 +35,16 @@ export const POST = compose(
       switch (status) {
         case 'PASSWORD_RESET_SUCCESSFUL':
           log("debug", "Password reset successfully", logSource);
-          return NextResponse.json(
-            { message: 'Your password has been reset successfully' },
-            { status: 200 }
-          );
+          return useResponse(SystemCode.AUTH_PASSWORD_RESET_SUCCESS);
       
         case 'INVALID_OR_EXPIRED_TOKEN':
-          log("warn", `Password reset failed: ${status}`, logSource);
-          return NextResponse.json(
-            { error: 'Invalid or expired token' },
-            { status: 400 }
-          );
+          throw new SystemError(SystemCode.AUTH_INVALID_TOKEN);
       
         default:
           log("warn", `Password reset failed: ${status}`, logSource);
-          return NextResponse.json(
-            { error: status },
-            { status: 400 }
-          );
+          return useResponse(SystemCode.SYSTEM_BAD_REQUEST);
       }
     } finally {
       client.release();
     }
-  } catch (error) {
-    log("error", `Password reset error: ${error}`, logSource);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
 });

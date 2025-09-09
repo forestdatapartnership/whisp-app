@@ -1,5 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
-import { LogFunction } from "@/lib/logger"
+import { LogFunction } from "@/lib/logger";
+import { SystemCode } from "@/types/systemCodes";
 
 // Define a UUID type as a branded string
 type UUID = string & { readonly __brand: unique symbol };
@@ -10,7 +11,7 @@ type UUID = string & { readonly __brand: unique symbol };
 export interface PythonScriptOptions {
   /** Path to the Python executable */
   pythonPath?: string;
-  /** Timeout in milliseconds */
+  /** Timeout in milliseconds (defaults to PYTHON_TIMEOUT_MS env var or 90000ms) */
   timeout?: number;
   /** Whether to stream stdout in real-time */
   streamOutput?: boolean;
@@ -28,14 +29,14 @@ export interface PythonScriptOptions {
  * @returns Promise that resolves to the stdout of the script or rejects with an error
  */
 export const runPythonScript = async (
-  scriptPath: string, 
-  args: string[], 
+  scriptPath: string,
+  args: string[],
   log: LogFunction,
   options?: PythonScriptOptions
 ): Promise<string> => {
   const {
     pythonPath = process.env.PYTHON_PATH || 'python',
-    timeout = 90000,
+    timeout = parseInt(process.env.PYTHON_TIMEOUT_MS || '90000'),
     streamOutput = false,
     onOutput
   } = options || {};
@@ -73,7 +74,7 @@ export const runPythonScript = async (
 
     childProcess.on('error', (error) => {
       log("error", `Failed to start Python process: ${error.message}`);
-      reject(error.message);
+      reject({ code: SystemCode.ANALYSIS_PROCESS_FAILED, message: `Failed to start Python process: ${error.message}` });
     });
 
     // Set a timeout
@@ -81,7 +82,11 @@ export const runPythonScript = async (
       if (!childProcess.killed) {
         log("error", `Analysis timed out after ${timeout/1000} seconds.`);
         killProcess(childProcess);
-        reject('Analysis timed out.');
+        reject({ 
+          code: SystemCode.ANALYSIS_TIMEOUT, 
+          message: `Analysis timed out after ${timeout/1000} seconds.`,
+          formatArgs: [timeout/1000]
+        });
       }
     }, timeout);
 
@@ -153,11 +158,6 @@ export const analyzeGeoJson = async (
   
   // Add the "legacy" argument when useLegacyFormat is true
   const args = useLegacyFormat ? [dataPath, "legacy"] : [dataPath];
-  
-  try {
-    await runPythonScript(scriptPath, args, log, options);
-    return true;
-  } catch (error) {
-    throw error; // Re-throw to maintain the original error handling
-  }
+  await runPythonScript(scriptPath, args, log, options);
+  return true;
 };

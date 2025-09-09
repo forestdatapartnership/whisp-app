@@ -1,4 +1,4 @@
-import { useErrorResponse } from "@/lib/hooks/responses";
+import { useResponse } from "@/lib/hooks/responses";
 import { geojsonToWKT } from "@terraformer/wkt";
 
 /**

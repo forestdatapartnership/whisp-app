@@ -38,6 +38,7 @@
     "react-dropzone": "^14.2.3",
     "react-leaflet": "^4.2.1",
     "swagger-ui-react": "^5.21.0",
+    "swr": "^2.3.6",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "truncate": "^3.0.0",

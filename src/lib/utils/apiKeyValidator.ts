@@ -1,6 +1,7 @@
 import { getPool } from "@/lib/db";
-import { NextRequest, NextResponse } from "next/server";
-import { LogFunction } from "@/lib/logger";
+import { NextRequest } from "next/server";
+import { SystemCode } from "@/types/systemCodes";
+import { SystemError } from "@/types/systemError";
 
 /**
  * Validates the API key in the request headers
@@ -8,22 +9,15 @@ import { LogFunction } from "@/lib/logger";
  * @param log LogFunction for logging validation activities
  * @returns NextResponse error if validation fails or null if successful along with userId
  */
-export async function validateApiKey(request: NextRequest, log: LogFunction) {
-  const logSource = "apiKeyValidator.ts";
+export async function validateApiKey(request: NextRequest) {
   const apiKey = request.headers.get("x-api-key");
   
   if (!apiKey) {
-    log("warn", "API request missing API key", logSource);
-    return { 
-      error: NextResponse.json({ error: "Missing API key" }, { status: 401 }),
-      userId: null
-    };
+    throw new SystemError(SystemCode.AUTH_MISSING_API_KEY);
   }
 
-  log("debug", "Validating API key", logSource);
-
   // Get the database pool and a client
-  const pool = await getPool();
+  const pool = getPool();
   const client = await pool.connect();
   try {
     const result = await client.query(
@@ -32,22 +26,8 @@ export async function validateApiKey(request: NextRequest, log: LogFunction) {
     );
 
     if (result.rowCount === 0) {
-      log("warn", "Invalid or expired API key used in request", logSource);
-      return { 
-        error: NextResponse.json({ error: "Invalid or expired API key" }, { status: 401 }),
-        userId: null
-      };
+      throw new SystemError(SystemCode.AUTH_INVALID_API_KEY);
     }
-
-    const userId = result.rows[0].user_id;
-    log("info", `API key validated successfully for user ID: ${userId}`, logSource);
-    return { error: null, userId };
-  } catch (error) {
-    log("error", `Error validating API key: ${error}`, logSource);
-    return {
-      error: NextResponse.json({ error: "Error validating API key" }, { status: 500 }),
-      userId: null
-    };
   } finally {
     client.release();
   }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store';
+import { SystemCode } from '@/types/systemCodes';
 
 /**
  * Custom hook for fetching and managing user profile data
@@ -30,7 +31,8 @@ export function useUserProfile(redirectToLogin = false) {
       const statusRes = await fetch('/api/auth/status', { credentials: 'include' });
       if (statusRes.ok) {
         const status = await statusRes.json();
-        if (!status.authenticated) {
+        const authenticated = status.code === SystemCode.AUTH_STATUS_AUTHENTICATED;
+        if (!authenticated) {
           setIsAuthenticated(false);
           setUser(null);
           return false;
@@ -43,9 +45,10 @@ export function useUserProfile(redirectToLogin = false) {
       
       if (response.ok) {
         const data = await response.json();
-        setIsAuthenticated(!!data.user);
-        setUser(data.user ?? null);
-        return !!data.user;
+        const userData = data.data.user;
+        setIsAuthenticated(!!userData);
+        setUser(userData ?? null);
+        return !!userData;
       } else {
         if (response.status === 401) {
           if (redirectToLogin) {

@@ -5,7 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { analyzeGeoJson } from "@/lib/utils/runPython";
 import { LogFunction } from "@/lib/logger";
 import { GEOMETRY_LIMIT } from "@/lib/utils/constants";
-import { useBadRequestResponse } from "@/lib/hooks/responses";
+import { useResponse } from "@/lib/hooks/responses";
+import { SystemCode } from "@/types/systemCodes";
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
@@ -15,9 +16,11 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
 
     const geometryCount = featureCollection.features.length;
 
-
     if (geometryCount > GEOMETRY_LIMIT) {
-        return useBadRequestResponse(`There are more than ${GEOMETRY_LIMIT} features in this collection. Please do not exceed more than ${GEOMETRY_LIMIT} individual features.`);
+        return useResponse(
+            SystemCode.VALIDATION_TOO_MANY_GEOMETRIES,
+            [GEOMETRY_LIMIT]
+        );
     }
 
     log("info", `Starting analysis: ${token}. Received GeoJSON with ${geometryCount} features`, logSource);
@@ -33,12 +36,28 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
         if (isAsync) {
             // Start background processing (don't await)
             analyzeGeoJson(token, log, undefined, useLegacyFormat).catch(async (error) => {
-                log("error", `Async analysis failed for token ${token}: ${error.message}`, logSource);
+                log("error", `Async analysis failed for token ${token}: ${error}`, logSource);
                
                 try {
+                    // Handle structured error objects with specific codes
+                    let errorInfo;
+                    if (typeof error === 'object' && error.code) {
+                        const errorObj = error as any;
+                        errorInfo = { 
+                            error: errorObj.message,
+                            code: errorObj.code,
+                            ...(errorObj.formatArgs && { formatArgs: errorObj.formatArgs })
+                        };
+                    } else {
+                        errorInfo = { 
+                            error: error.toString(),
+                            code: SystemCode.ANALYSIS_ERROR
+                        };
+                    }
+                    
                     await fs.writeFile(
                         `${filePath}/${token}-error.json`,
-                        JSON.stringify({ error: error.message }),
+                        JSON.stringify(errorInfo),
                         'utf8'
                     );
                 } catch (writeError: any) {
@@ -46,12 +65,13 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
                 }
             });
             
-            return NextResponse.json({
-                token,
-                status: 'processing',
-                statusUrl: `/api/status/${token}`,
-                resultUrl: `/api/report/${token}`
-            });
+            return useResponse(
+                SystemCode.ANALYSIS_PROCESSING,
+                {
+                    token,
+                    statusUrl: `/api/status/${token}`,
+                }
+            );
         }
 
         // Pass the legacy format flag to analyzeGeoJson
@@ -71,8 +91,6 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
         } else {
             throw new Error("Analysis failed.");
         }
-    } catch (error) {
-        throw error;
     } finally {
         // Explicitly close the file handle if it was opened
         if (fileHandle) {

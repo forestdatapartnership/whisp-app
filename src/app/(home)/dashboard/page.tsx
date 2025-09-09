@@ -90,13 +90,13 @@ export default function Dashboard() {
 
       if (response.ok) {
         const data = await response.json();
-        setNewlyCreatedKey({ key: data.apiKey });
+        setNewlyCreatedKey({ key: data.data.apiKey });
         await fetchApiKeyMetadata();
         setSuccessMessage('API key created successfully. Make sure to copy your key now - you won\'t be able to see it again!');
         setShowCreateKeyForm(false);
       } else {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to create API key');
+        throw new Error(data.message || 'Failed to create API key');
       }
     } catch (error: any) {
       console.error('Error creating API key:', error);
@@ -121,7 +121,7 @@ export default function Dashboard() {
         setShowDeleteKeyConfirm(false);
       } else {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to delete API key');
+        throw new Error(data.message || 'Failed to delete API key');
       }
     } catch (error: any) {
       console.error('Error deleting API key:', error);

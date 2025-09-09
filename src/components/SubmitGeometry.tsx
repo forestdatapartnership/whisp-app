@@ -9,6 +9,7 @@ import { useSafeRouterPush } from '@/lib/utils/safePush';
 import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
 import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
+import { SystemCode } from '@/types/systemCodes';
 
 interface SubmitGeometryProps {
     useTempKey?: boolean;
@@ -127,8 +128,8 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
                 resetStore();
 
                 // Always handle as async response - redirect to results page for polling
-                if (fetchedData.status === 'processing') {
-                    const { token } = fetchedData;
+                if (fetchedData.code === SystemCode.ANALYSIS_PROCESSING) {
+                    const { token } = fetchedData.data;
                     useStore.setState({ token });
                     safePush(`/results/${token}`);
                 } else {

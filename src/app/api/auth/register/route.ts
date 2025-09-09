@@ -5,6 +5,11 @@ import { withLogging } from "@/lib/hooks/withLogging";
 import { randomBytes } from "crypto";
 import { sendVerificationEmail } from "@/lib/mailer";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { useResponse } from "@/lib/hooks/responses";
+import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { validateRequiredFields } from "@/lib/utils/fieldValidation";
+import { SystemCode } from "@/types/systemCodes";
+import { LogFunction } from "@/lib/logger";
 
 const emailAttemptCache = new Map<string, { count: number; firstAttempt: number }>();
 const MAX_ATTEMPTS = 5;
@@ -28,20 +33,19 @@ const validatePassword = (password: string): boolean => {
 
 export const POST = compose(
 	withLogging,
+	withErrorHandling,
 	withRequiredJsonBody
-)(async (_req: NextRequest, ...args): Promise<NextResponse> => {
+)(async (_req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
 	const logSource = "register/route.ts";
-	const [log, body] = args;
 	const { name, lastName, organization, email, password } = body;
-
-	const genericRegistrationMessage = "If your email is new or not verified, you will receive a verification email.";
 
 	const now = Date.now();
 	const attemptRecord = emailAttemptCache.get(email);
 
 	if (attemptRecord && now - attemptRecord.firstAttempt < WINDOW_MS && attemptRecord.count >= MAX_ATTEMPTS) {
 		log("warn", `Rate limit exceeded for email ${email}`, logSource);
-		return NextResponse.json({ message: genericRegistrationMessage }, { status: 200 });
+		// don't reveal the rate limit exceeded error
+		return useResponse(SystemCode.USER_REGISTRATION_SUCCESS);
 	}
 
 	if (!attemptRecord || now - attemptRecord.firstAttempt >= WINDOW_MS) {
@@ -51,14 +55,10 @@ export const POST = compose(
 		emailAttemptCache.set(email, attemptRecord);
 	}
 
-	if (!name || !lastName || !email || !password) {
-		return NextResponse.json({ error: "All fields are required" }, { status: 400 });
-	}
+	validateRequiredFields(body, ['name', 'lastName', 'email', 'password']);
 
 	if (!validatePassword(password)) {
-		return NextResponse.json({
-			error: "Password must be at least 8 characters long, contain uppercase, lowercase, number, and special character."
-		}, { status: 400 });
+		return useResponse(SystemCode.USER_WEAK_PASSWORD);
 	}
 
 	const pool = await getPool();
@@ -71,14 +71,12 @@ export const POST = compose(
 
 		const message = result.rows[0].message;
 
-		const genericRegistrationMessage = "If your email is new or not verified, you will receive a verification email.";
-
 		if (message === "Email already exists") {
-			return NextResponse.json({ message: genericRegistrationMessage }, { status: 200 });
+			return useResponse(SystemCode.USER_REGISTRATION_SUCCESS);
 		}
 
 		if (message !== "User registered successfully") {
-			return NextResponse.json({ error: "Registration failed" }, { status: 400 });
+			return useResponse(SystemCode.USER_REGISTRATION_FAILED);
 		}
 
 		const token = randomBytes(32).toString("hex");
@@ -91,10 +89,7 @@ export const POST = compose(
 
 		await sendVerificationEmail(email, token);
 
-		return NextResponse.json({ message: genericRegistrationMessage }, { status: 200 });
-	} catch (error) {
-		log("error", error, logSource);
-		return NextResponse.json({ error: "Server error" }, { status: 500 });
+		return useResponse(SystemCode.USER_REGISTRATION_SUCCESS);
 	} finally {
 		client.release();
 	}

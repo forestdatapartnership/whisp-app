@@ -27,7 +27,7 @@ const LoginPage: React.FC = () => {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Invalid email or password");
+        throw new Error(data.message || "Invalid email or password");
       }
 
       router.push("/submit-geometry");

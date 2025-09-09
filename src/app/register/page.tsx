@@ -115,7 +115,7 @@ const RegisterPage: React.FC = () => {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Registration failed");
+        throw new Error(data.message || "Registration failed");
       }
 
       setRegistrationSuccess(true);
