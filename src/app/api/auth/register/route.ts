@@ -10,6 +10,7 @@ import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 import { SystemCode } from "@/types/systemCodes";
 import { LogFunction } from "@/lib/logger";
+import { SystemError } from "@/types/systemError";
 
 const emailAttemptCache = new Map<string, { count: number; firstAttempt: number }>();
 const MAX_ATTEMPTS = 5;
@@ -58,7 +59,7 @@ export const POST = compose(
 	validateRequiredFields(body, ['name', 'lastName', 'email', 'password']);
 
 	if (!validatePassword(password)) {
-		return useResponse(SystemCode.USER_WEAK_PASSWORD);
+		throw new SystemError(SystemCode.USER_WEAK_PASSWORD);
 	}
 
 	const pool = await getPool();
@@ -72,11 +73,11 @@ export const POST = compose(
 		const message = result.rows[0].message;
 
 		if (message === "Email already exists") {
-			return useResponse(SystemCode.USER_REGISTRATION_SUCCESS);
+			throw new SystemError(SystemCode.USER_EMAIL_ALREADY_EXISTS);
 		}
 
 		if (message !== "User registered successfully") {
-			return useResponse(SystemCode.USER_REGISTRATION_FAILED);
+			throw new SystemError(SystemCode.USER_REGISTRATION_FAILED);
 		}
 
 		const token = randomBytes(32).toString("hex");

@@ -32,7 +32,7 @@ export const GET = compose(
       if (message === 'Email verified successfully') {
         return useResponse(SystemCode.AUTH_EMAIL_VERIFIED_SUCCESS);
       } else {
-        return useResponse(SystemCode.AUTH_INVALID_TOKEN);
+        throw new SystemError(SystemCode.AUTH_INVALID_TOKEN);
       }
     } finally {
       client.release();

@@ -14,7 +14,11 @@ export function withErrorHandling(
     } catch (error: any) {
       if (error instanceof SystemError) {
         // Log the error with system code information
-        log('error', `SystemError: ${error.systemCode} - ${error.message}`);
+        let logMessage = `SystemError: ${error.systemCode} - ${error.message}`;
+        if (error.innerError !== undefined) {
+          logMessage += ` - InnerError: ${error.innerError}`;
+        }
+        log('error', logMessage);
         
         // Return response with system code and optional format args
         if (error.formatArgs && error.formatArgs.length > 0) {
