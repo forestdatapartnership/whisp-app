@@ -158,6 +158,15 @@ export const analyzeGeoJson = async (
   
   // Add the "legacy" argument when useLegacyFormat is true
   const args = useLegacyFormat ? [dataPath, "legacy"] : [dataPath];
+  
+  const startTime = Date.now();
+  log("debug", `Starting Python script execution for token ${token}`, "runPython.ts");
+  
   await runPythonScript(scriptPath, args, log, options);
+  
+  const endTime = Date.now();
+  const pythonDuration = endTime - startTime;
+  log("debug", `Python script completed for token ${token}. Duration: ${pythonDuration}ms`, "runPython.ts");
+  
   return true;
 };
