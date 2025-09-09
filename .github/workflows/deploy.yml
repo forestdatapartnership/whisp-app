@@ -58,8 +58,8 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --memory 512Mi \
-            --cpu 1 \
+            --memory 1Gi \
+            --cpu 2 \
             --max-instances 10 \
             --timeout 300 \
             --no-traffic \
