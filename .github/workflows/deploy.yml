@@ -60,7 +60,6 @@ jobs:
             --port 8080 \
             --memory 2Gi \
             --cpu 1 \
-            --cpu-always-allocated \
             --min-instances 1 \
             --max-instances 10 \
             --timeout 300 \
