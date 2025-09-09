@@ -74,7 +74,9 @@ jobs:
             --region ${{ vars.REGION }} \
             --tag "${{ steps.package_version.outputs.tag_version }}" \
             --set-env-vars "HOST_URL=${SERVICE_URL},NEXT_PUBLIC_WHISP_URL=${SERVICE_URL}" \
-            --update-secrets "/app/secrets/environment/.env.local=${{ vars.ENV_SECRET_NAME }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest"
+            --update-secrets "/app/secrets/environment/.env.local=${{ vars.ENV_SECRET_NAME }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest" \
+            --min-instances=1 \
+            --no-cpu-throttling
 
       - name: Route traffic to new revision
         run: |
