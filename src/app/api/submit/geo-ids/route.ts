@@ -9,6 +9,7 @@ import { LogFunction } from "@/lib/logger";
 import { compose } from "@/lib/utils/compose";
 import { validateApiKey } from "@/lib/utils/apiKeyValidator";
 import { SystemError } from "@/types/systemError";
+import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 
 export const POST = compose(
   withLogging,
@@ -17,12 +18,10 @@ export const POST = compose(
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
 
   await validateApiKey(req);
+  validateRequiredFields(body, ['geoIds']);
   
   const geoIds = body['geoIds'];
   const analysisOptions = body.analysisOptions;
-  if (!geoIds || !Array.isArray(geoIds)) {
-    throw new SystemError(SystemCode.VALIDATION_MISSING_GEOIDS);
-  }
 
   const geoJsonArray = await Promise.all(geoIds.map(async (geoid: string) => {
 

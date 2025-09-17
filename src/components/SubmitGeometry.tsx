@@ -116,8 +116,8 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
                 throw new Error(`No response from the server`);
             }
 
-            if (!response.ok && fetchedData['error']) {
-                throw new Error(`${fetchedData['error']}`);
+            if (!response.ok && fetchedData['message']) {
+                throw new Error(`${fetchedData['message']}`);
             }
 
             if (!response.ok) {

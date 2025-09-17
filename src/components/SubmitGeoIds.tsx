@@ -69,8 +69,8 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                         throw new Error(`No response from the server`);
                     }
 
-                    if (!response.ok && data['error']) {
-                        throw new Error(`${data['error']}`);
+                    if (!response.ok && data['message']) {
+                        throw new Error(`${data['message']}`);
                     }
 
                     if (!response.ok) {

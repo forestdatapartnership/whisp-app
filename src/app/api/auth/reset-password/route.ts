@@ -42,7 +42,7 @@ export const POST = compose(
       
         default:
           log("warn", `Password reset failed: ${status}`, logSource);
-          return useResponse(SystemCode.SYSTEM_BAD_REQUEST);
+          return useResponse(SystemCode.SYSTEM_INTERNAL_SERVER_ERROR);
       }
     } finally {
       client.release();

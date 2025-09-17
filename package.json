@@ -6,12 +6,13 @@
   "license": "MIT",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run update:swagger-version && next build",
     "start": "next start",
     "db:migrate": "node db/migrate.js",
     "db:status": "node db/migrate.js status",
     "lint": "next lint",
-    "test": "jest"
+    "test": "jest",
+    "update:swagger-version": "node scripts/update-swagger-version.js"
   },
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.8.0",

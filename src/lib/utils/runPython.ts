@@ -65,7 +65,7 @@ export const runPythonScript = async (
       
       if (code !== 0) {
         log("error", `Python Stderr: ${stderr}`);
-        reject(`Python script exited with code ${code}: ${stderr}`);
+        reject({ code: SystemCode.ANALYSIS_ERROR, message: `Python script exited with code ${code}: ${stderr}` });
         return;
       }
       
@@ -74,7 +74,7 @@ export const runPythonScript = async (
 
     childProcess.on('error', (error) => {
       log("error", `Failed to start Python process: ${error.message}`);
-      reject({ code: SystemCode.ANALYSIS_PROCESS_FAILED, message: `Failed to start Python process: ${error.message}` });
+      reject({ code: SystemCode.ANALYSIS_ERROR, message: `Failed to start Python process: ${error.message}` });
     });
 
     // Set a timeout

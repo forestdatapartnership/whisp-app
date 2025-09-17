@@ -4,9 +4,11 @@ import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import { analyzeGeoJson } from "@/lib/utils/runPython";
 import { LogFunction } from "@/lib/logger";
-import { GEOMETRY_LIMIT } from "@/lib/utils/constants";
 import { useResponse } from "@/lib/hooks/responses";
 import { SystemCode } from "@/types/systemCodes";
+import { SystemError } from "@/types/systemError";
+
+const GEOMETRY_LIMIT = parseInt(process.env.GEOMETRY_LIMIT || '500', 10);
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
@@ -85,11 +87,9 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
             if (Array.isArray(jsonData)) {
                 log("info", `${jsonData.length} plots successfully analysed for token ${token}`, logSource, { token: token, plots: jsonData.length });
             }
-            return NextResponse.json(
-                { data: jsonData, token: token }
-            )
+            return  useResponse(SystemCode.ANALYSIS_COMPLETED, jsonData);
         } else {
-            throw new Error("Analysis failed.");
+            throw new SystemError(SystemCode.ANALYSIS_ERROR);
         }
     } finally {
         // Explicitly close the file handle if it was opened

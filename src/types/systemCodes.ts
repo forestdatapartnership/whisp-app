@@ -1,7 +1,6 @@
 export enum SystemCode {
   // General/System Errors
   SYSTEM_INTERNAL_SERVER_ERROR = 'system_internal_server_error',
-  SYSTEM_BAD_REQUEST = 'system_bad_request', 
   SYSTEM_MISSING_REQUEST_BODY = 'system_missing_request_body',
 
   // Authentication
@@ -41,8 +40,6 @@ export enum SystemCode {
   VALIDATION_INVALID_COORDINATES = 'validation_invalid_coordinates',
   VALIDATION_INVALID_CRS = 'validation_invalid_crs',
   VALIDATION_COORDINATES_IN_METERS = 'validation_coordinates_in_meters',
-  VALIDATION_MISSING_WKT_ATTRIBUTE = 'validation_missing_wkt_attribute',
-  VALIDATION_MISSING_GEOIDS = 'validation_missing_geoids',
   VALIDATION_TOO_MANY_GEOMETRIES = 'validation_too_many_geometries',
 
   // Service/External Errors
@@ -53,8 +50,6 @@ export enum SystemCode {
   ANALYSIS_COMPLETED = 'analysis_completed',
   ANALYSIS_ERROR = 'analysis_error',
   ANALYSIS_TIMEOUT = 'analysis_timeout',
-  ANALYSIS_PROCESS_FAILED = 'analysis_process_failed',
-  ANALYSIS_REPORT_NOT_FOUND = 'analysis_report_not_found',
   ANALYSIS_JOB_NOT_FOUND = 'analysis_job_not_found',
 }
 
@@ -84,11 +79,6 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.SYSTEM_INTERNAL_SERVER_ERROR,
     message: 'An internal server error occurred. Please try again later.',
     httpStatus: 500
-  },
-  [SystemCode.SYSTEM_BAD_REQUEST]: {
-    code: SystemCode.SYSTEM_BAD_REQUEST,
-    message: 'Bad request. Please check your input and try again.',
-    httpStatus: 400
   },
   [SystemCode.SYSTEM_MISSING_REQUEST_BODY]: {
     code: SystemCode.SYSTEM_MISSING_REQUEST_BODY,
@@ -261,16 +251,6 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     message: 'Coordinates appear to be in meters rather than degrees. Please use EPSG:4326 (WGS84) coordinates.',
     httpStatus: 400
   },
-  [SystemCode.VALIDATION_MISSING_WKT_ATTRIBUTE]: {
-    code: SystemCode.VALIDATION_MISSING_WKT_ATTRIBUTE,
-    message: 'Missing required WKT attribute in request.',
-    httpStatus: 400
-  },
-  [SystemCode.VALIDATION_MISSING_GEOIDS]: {
-    code: SystemCode.VALIDATION_MISSING_GEOIDS,
-    message: 'Missing or invalid geoIds in request body.',
-    httpStatus: 400
-  },
   [SystemCode.VALIDATION_TOO_MANY_GEOMETRIES]: {
     code: SystemCode.VALIDATION_TOO_MANY_GEOMETRIES,
     message: 'Too many geometries provided. Maximum allowed is {0}.',
@@ -281,7 +261,7 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
   [SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE]: {
     code: SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE,
     message: 'Asset registry service is currently unavailable. Please try again later.',
-    httpStatus: 502
+    publicCode: SystemCode.ANALYSIS_ERROR
   },
 
   // Analysis Status
@@ -304,16 +284,6 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.ANALYSIS_TIMEOUT,
     message: 'Analysis timed out after {0} seconds. Please try with a smaller dataset or contact support.',
     httpStatus: 408
-  },
-  [SystemCode.ANALYSIS_PROCESS_FAILED]: {
-    code: SystemCode.ANALYSIS_PROCESS_FAILED,
-    message: 'Failed to start analysis process. Please try again.',
-    httpStatus: 500
-  },
-  [SystemCode.ANALYSIS_REPORT_NOT_FOUND]: {
-    code: SystemCode.ANALYSIS_REPORT_NOT_FOUND,
-    message: 'Analysis report not found or no longer available.',
-    httpStatus: 404
   },
   [SystemCode.ANALYSIS_JOB_NOT_FOUND]: {
     code: SystemCode.ANALYSIS_JOB_NOT_FOUND,

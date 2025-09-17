@@ -122,10 +122,8 @@ export default function ResultsPage() {
     const getErrorTitle = () => {
       switch (responseCode) {
         case SystemCode.ANALYSIS_JOB_NOT_FOUND: return '404 - Analysis Not Found';
-        case SystemCode.ANALYSIS_REPORT_NOT_FOUND: return '404 - Report Not Found';
         case SystemCode.ANALYSIS_ERROR: return 'Analysis Failed';
         case SystemCode.ANALYSIS_TIMEOUT: return 'Analysis Timeout';
-        case SystemCode.ANALYSIS_PROCESS_FAILED: return 'Process Failed';
         default: return 'Error';
       }
     };

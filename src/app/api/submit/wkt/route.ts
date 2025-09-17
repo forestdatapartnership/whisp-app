@@ -11,6 +11,7 @@ import { wktToFeatureCollection } from "@/lib/utils/wktUtils";
 import * as wellknown from 'wellknown';
 import { validateApiKey } from "@/lib/utils/apiKeyValidator";
 import { SystemError } from "@/types/systemError";
+import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 
 export const POST = compose(
   withLogging,
@@ -19,12 +20,12 @@ export const POST = compose(
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
 
   await validateApiKey(req);
+  validateRequiredFields(body, ['wkt']);
   
   const generateGeoids = body.generateGeoids || false;
   const analysisOptions = body.analysisOptions;
   const { wkt } = body;
 
-  if (!wkt) throw new SystemError(SystemCode.VALIDATION_MISSING_WKT_ATTRIBUTE);
 
   // Parse WKT to GeoJSON to validate coordinates
   const geoJson = wellknown.parse(wkt);
