@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { getAppVersion } from '@/lib/utils'
 
-type Props = { version: string }
-
-export default function WhatsNewLink({ version }: Props) {
+export default function VersionLink() {
+  const version = getAppVersion()
   const milestonesUrl = 'https://github.com/forestdatapartnership/whisp-app/milestones'
-  const releaseUrl = `https://github.com/forestdatapartnership/whisp-app/releases/tag/v${version}`
-  const [href, setHref] = useState<string>(milestonesUrl)
+  const releasesUrl = 'https://github.com/forestdatapartnership/whisp-app/releases'
+  const specificReleaseUrl = `https://github.com/forestdatapartnership/whisp-app/releases/tag/v${version}`
+  const [versionHref, setVersionHref] = useState<string>(milestonesUrl)
 
   useEffect(() => {
     if (!version) return
@@ -17,7 +18,7 @@ export default function WhatsNewLink({ version }: Props) {
     try {
       const cached = typeof window !== 'undefined' ? window.sessionStorage.getItem(storageKey) : null
       if (cached && /^https?:\/\//.test(cached)) {
-        setHref(cached)
+        setVersionHref(cached)
         return
       }
     } catch {}
@@ -29,10 +30,10 @@ export default function WhatsNewLink({ version }: Props) {
       .then((res) => {
         if (cancelled) return
         if (res.ok) {
-          setHref(releaseUrl)
-          try { window.sessionStorage.setItem(storageKey, releaseUrl) } catch {}
+          setVersionHref(specificReleaseUrl)
+          try { window.sessionStorage.setItem(storageKey, specificReleaseUrl) } catch {}
         } else {
-          setHref(milestonesUrl)
+          setVersionHref(milestonesUrl)
           try { window.sessionStorage.setItem(storageKey, milestonesUrl) } catch {}
         }
       })
@@ -42,11 +43,17 @@ export default function WhatsNewLink({ version }: Props) {
     return () => {
       cancelled = true
     }
-  }, [version, releaseUrl])
+  }, [version, specificReleaseUrl])
 
   return (
-    <Link href={href} target="_blank" className="text-blue-500">
-      What's New?
-    </Link>
+    <>
+      <Link href={versionHref} target="_blank" className="text-blue-500">
+        v{version}
+      </Link>
+      {' · '}
+      <Link href={releasesUrl} target="_blank" className="text-blue-500">
+        Release History
+      </Link>
+    </>
   )
 } 
