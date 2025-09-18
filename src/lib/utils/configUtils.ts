@@ -46,8 +46,8 @@ export function getLogLevel(config?: PublicConfig): string {
   return getConfig(config, 'NEXT_PUBLIC_LOG_LEVEL', 'info');
 }
 
-export function getAppVersion(config?: PublicConfig): string {
-  return getConfig(config, 'NEXT_PUBLIC_APP_VERSION', '0.0.0');
+export function getAppVersion(): string {
+  return process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0'; // bundled at build time in next.config.js
 }
 
 export function getGoogleMapsApiKey(config?: PublicConfig): string | undefined {
