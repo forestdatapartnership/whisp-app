@@ -36,10 +36,14 @@ export function getMaxRequestSizeMB(config?: PublicConfig): number | undefined {
   return maxFileSizeBytes ? Math.round(maxFileSizeBytes / (1024 * 1024) * 100) / 100 : undefined;
 }
 
-export function getProcessingTimeoutSeconds(config?: PublicConfig): number {
+export function getPythonTimeoutMs(config?: PublicConfig): number {
   const value = getConfig(config, 'NEXT_PUBLIC_PYTHON_TIMEOUT_MS', '90000');
-  const timeoutMs = parseInt(value, 10);
-  return Math.round(timeoutMs / 1000);
+  return parseInt(value, 10);
+}
+
+export function getProcessingTimeoutSeconds(config?: PublicConfig): number {
+  const value = getPythonTimeoutMs(config);
+  return Math.round(value / 1000);
 }
 
 export function getLogLevel(config?: PublicConfig): string {

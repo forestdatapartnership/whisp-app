@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import { LogFunction } from "@/lib/logger";
 import { SystemCode } from "@/types/systemCodes";
+import { getPythonTimeoutMs } from "@/lib/utils/configUtils";
 
 // Define a UUID type as a branded string
 type UUID = string & { readonly __brand: unique symbol };
@@ -36,7 +37,7 @@ export const runPythonScript = async (
 ): Promise<string> => {
   const {
     pythonPath = process.env.PYTHON_PATH || 'python',
-    timeout = parseInt(process.env.PYTHON_TIMEOUT_MS || '90000'),
+    timeout = getPythonTimeoutMs(),
     streamOutput = false,
     onOutput
   } = options || {};
