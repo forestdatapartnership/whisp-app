@@ -1,5 +1,5 @@
 import winston from "winston";
-import { getLogLevel } from "./utils";
+import { getLogLevel } from "./utils/configUtils";
 
 export type LogFunction = (level: 'debug' | 'info' | 'warn' | 'error', message: string, source?: string, meta?: Record<string, any>) => void;
 

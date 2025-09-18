@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/utils/safePush';
 import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
+import { SystemCode } from '@/types/systemCodes';
 
 interface SubmitGeoIdsProps {
     useTempKey?: boolean;
@@ -63,29 +64,31 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                         body: JSON.stringify({ geoIds: cleanGeoIds, analysisOptions }),
                     });
 
-                    const data = await response.json();
+                    const fetchedData = await response.json();
 
-                    if (!data) {
+                    if (!fetchedData) {
                         throw new Error(`No response from the server`);
                     }
 
-                    if (!response.ok && data['message']) {
-                        throw new Error(`${data['message']}`);
+                    if (!response.ok && fetchedData['message']) {
+                        throw new Error(`${fetchedData['message']}`);
                     }
 
                     if (!response.ok) {
                         throw new Error(`Server error with status ${response.status}`);
                     }
 
-                    if (data) {
+                    if (fetchedData) {
                         // Always handle as async response - redirect to results page for polling
-                        if (data.status === 'processing') {
-                            useStore.setState({ token: data.token, selectedFile: "" });
-                            safePush(`/results/${data.token}`);
+                        if (fetchedData.code === SystemCode.ANALYSIS_PROCESSING) {
+                            const { token } = fetchedData.data;
+                            useStore.setState({ token });
+                            safePush(`/results/${token}`);
                         } else {
                             // Fallback for synchronous response (for backwards compatibility)
-                            useStore.setState({ token: data.token, data: data.data, selectedFile: "" });
-                            safePush(`/results/${data.token}`);
+                            const { token, data } = fetchedData;
+                            useStore.setState({ token, data });
+                            safePush(`/results/${token}`);
                         }
                     }
                 } catch (error: any) {

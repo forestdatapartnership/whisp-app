@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getAppVersion } from '@/lib/utils'
+import { getAppVersion } from '@/lib/utils/configUtils'
+import { useConfig } from '@/lib/contexts/ConfigContext'
 
 export default function VersionLink() {
-  const version = getAppVersion()
+  const { config } = useConfig();
+  const version = getAppVersion(config)
   const milestonesUrl = 'https://github.com/forestdatapartnership/whisp-app/milestones'
   const releasesUrl = 'https://github.com/forestdatapartnership/whisp-app/releases'
   const specificReleaseUrl = `https://github.com/forestdatapartnership/whisp-app/releases/tag/v${version}`

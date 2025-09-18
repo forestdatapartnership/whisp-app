@@ -7,7 +7,7 @@ import { LogFunction } from "@/lib/logger";
 import { useResponse } from "@/lib/hooks/responses";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
-import { getMaxGeometryLimit } from "@/lib/utils";
+import { getMaxGeometryLimit } from "@/lib/utils/configUtils";
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;

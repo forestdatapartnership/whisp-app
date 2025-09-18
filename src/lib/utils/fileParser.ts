@@ -1,9 +1,11 @@
 import { isValidWkt } from './validateWkt';
+import { getMaxFileSize } from './configUtils';
 
 const checkFileSize = (file: File) : string | undefined => {
-    const maxFileSize = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_KB) || 0
-    if (maxFileSize > 0 && file.size > maxFileSize * 1024) {
-        return `The file is too large: ${(file.size/1024).toFixed(2)} KB, the maximum file size allowed is ${maxFileSize} KB.`;
+    const maxFileSizeBytes = getMaxFileSize();
+    const maxFileSizeKB = maxFileSizeBytes ? maxFileSizeBytes / 1024 : 0;
+    if (maxFileSizeKB > 0 && file.size > maxFileSizeBytes!) {
+        return `The file is too large: ${(file.size/1024).toFixed(2)} KB, the maximum file size allowed is ${maxFileSizeKB} KB.`;
     }
 };
 

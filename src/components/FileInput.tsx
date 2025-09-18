@@ -2,7 +2,8 @@
 
 import { useStore } from '@/store';
 import { Dropzone, DropzoneState } from './ui/Dropzone';
-import { getMaxFileSize } from '@/lib/utils';
+import { getMaxFileSize } from '@/lib/utils/configUtils';
+import { useConfig } from '@/lib/contexts/ConfigContext';
 import { Accept, FileRejection } from 'react-dropzone';
 
 type FileInputProps = {
@@ -19,7 +20,8 @@ export const FileInput: React.FC<FileInputProps> = ({
     accept
 }) => {
     const { selectedFile } = useStore();
-    const maxFileSize = getMaxFileSize();
+    const { config } = useConfig();
+    const maxFileSize = getMaxFileSize(config);
     return (
         <>
     {alertMessage &&

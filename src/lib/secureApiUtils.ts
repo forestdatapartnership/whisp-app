@@ -2,8 +2,10 @@
  * Utilities for secure API key management
  */
 
+import { getUIClientSecret } from './utils/configUtils';
+
 // Client secret for UI-only endpoints - should match server value
-const UI_CLIENT_SECRET = process.env.NEXT_PUBLIC_UI_CLIENT_SECRET || 'whisp-ui-client-access';
+const UI_CLIENT_SECRET = getUIClientSecret();
 
 /**
  * Fetches a temporary API key from the server with appropriate security headers

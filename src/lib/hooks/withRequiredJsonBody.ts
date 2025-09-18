@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { useJsonOrNull, getRequestBodySize } from './requests';
 import { LogFunction } from '../logger';
 import { SystemCode } from '@/types/systemCodes';
-import { getMaxFileSize } from '@/lib/utils';
+import { getMaxFileSize } from '@/lib/utils/configUtils';
 import { SystemError } from '@/types/systemError';
 
 export function withRequiredJsonBody(handler: (req: NextRequest, jsonBody: any, log: LogFunction, ...args: any[]) => Promise<NextResponse>) {
