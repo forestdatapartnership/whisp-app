@@ -30,6 +30,7 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (apiKey) {
       setGoogleMapsApiKey(apiKey);
+      console.log('Google Maps API key set from environment');
     }
   }, []);
 
