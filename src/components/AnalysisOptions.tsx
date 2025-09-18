@@ -76,13 +76,14 @@ export default function AnalysisOptions({ value, onChange, disabled = false }: A
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-3 space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Additional Country Data</label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={disabled} className="w-full justify-center">
-                    <span className="font-medium">Country Data:</span>
-                    <span className="ml-2 font-normal">{countriesLabel}</span>
+                  <Button variant="outline" size="sm" disabled={disabled} className="w-full justify-between">
+                    <span className="font-normal">{countriesLabel}</span>
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={(e) => e.preventDefault()}>
@@ -105,12 +106,13 @@ export default function AnalysisOptions({ value, onChange, disabled = false }: A
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Units</label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={disabled} className="w-full justify-center">
-                    <span className="font-medium">Units:</span>
-                    <span className="ml-2 font-normal">{unitLabel}</span>
+                  <Button variant="outline" size="sm" disabled={disabled} className="w-full justify-between">
+                    <span className="font-normal">{unitLabel}</span>
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-64">

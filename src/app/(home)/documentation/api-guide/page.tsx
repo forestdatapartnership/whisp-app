@@ -5,6 +5,7 @@ import SwaggerUI from "swagger-ui-react";
 import 'swagger-ui-react/swagger-ui.css';
 import './styles.css';
 import { fetchTempApiKey } from '@/lib/secureApiUtils';
+import { getMaxGeometryLimit, getMaxRequestSizeMB } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
@@ -20,6 +21,10 @@ const DocumentationPage = () => {
   const [isGeoJSONOpen, setIsGeoJSONOpen] = useState<boolean>(false);
   const [isWKTOpen, setIsWKTOpen] = useState<boolean>(false);
   const [isAnalysisOptionsOpen, setIsAnalysisOptionsOpen] = useState<boolean>(false);
+
+  // Get dynamic limits from environment settings
+  const maxGeometryLimit = getMaxGeometryLimit();
+  const maxRequestSizeMB = getMaxRequestSizeMB();
 
   useEffect(() => {
     const getApiKey = async () => {
@@ -252,10 +257,6 @@ const DocumentationPage = () => {
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle className="h-3 w-3 text-green-500" />
-                          <strong>Limit:</strong> Maximum 500 geometries per request
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-3 w-3 text-green-500" />
                           <strong>GeoJSON Format:</strong> Valid FeatureCollection with Feature array
                         </li>
                         <li className="flex items-center gap-2">
@@ -266,6 +267,16 @@ const DocumentationPage = () => {
                           <CheckCircle className="h-3 w-3 text-green-500" />
                           <strong>CRS Validation:</strong> No projected coordinate systems (values in meters)
                         </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <strong>Geometry Limit:</strong> Maximum {maxGeometryLimit} geometries per request
+                        </li>
+                        {maxRequestSizeMB && (
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                            <strong>Request Size Limit:</strong> Maximum {maxRequestSizeMB} MB per request
+                          </li>
+                        )}
                       </ul>
                     </CardContent>
                   </Card>

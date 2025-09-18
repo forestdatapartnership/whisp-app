@@ -18,6 +18,15 @@ export function getMaxFileSize() {
   return process.env.NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_KB? Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_KB)*1024 : undefined
 }
 
+export function getMaxGeometryLimit() {
+  return parseInt(process.env.NEXT_PUBLIC_GEOMETRY_LIMIT || process.env.GEOMETRY_LIMIT || '500', 10);
+}
+
+export function getMaxRequestSizeMB() {
+  const maxFileSizeBytes = getMaxFileSize();
+  return maxFileSizeBytes ? Math.round(maxFileSizeBytes / (1024 * 1024) * 100) / 100 : undefined;
+}
+
 export function getLogLevel() {
   return process.env.NEXT_PUBLIC_LOG_LEVEL || 'info'
 }

@@ -9,3 +9,8 @@ export async function useJsonOrNull(req: NextRequest, log: LogFunction): Promise
     return null;
   }
 }
+
+export function getRequestBodySize(req: NextRequest): number {
+  const contentLength = req.headers.get('content-length');
+  return contentLength ? parseInt(contentLength, 10) : 0;
+}

@@ -7,8 +7,7 @@ import { LogFunction } from "@/lib/logger";
 import { useResponse } from "@/lib/hooks/responses";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
-
-const GEOMETRY_LIMIT = parseInt(process.env.GEOMETRY_LIMIT || '500', 10);
+import { getMaxGeometryLimit } from "@/lib/utils";
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
@@ -17,11 +16,12 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
     const logSource = "analyzePlots.ts";
 
     const geometryCount = featureCollection.features.length;
+    const maxGeometryLimit = getMaxGeometryLimit();
 
-    if (geometryCount > GEOMETRY_LIMIT) {
+    if (geometryCount > maxGeometryLimit) {
         return useResponse(
             SystemCode.VALIDATION_TOO_MANY_GEOMETRIES,
-            [GEOMETRY_LIMIT]
+            [maxGeometryLimit]
         );
     }
 

@@ -41,6 +41,7 @@ export enum SystemCode {
   VALIDATION_INVALID_CRS = 'validation_invalid_crs',
   VALIDATION_COORDINATES_IN_METERS = 'validation_coordinates_in_meters',
   VALIDATION_TOO_MANY_GEOMETRIES = 'validation_too_many_geometries',
+  VALIDATION_REQUEST_BODY_TOO_LARGE = 'validation_request_body_too_large',
 
   // Service/External Errors
   SERVICE_ASSET_REGISTRY_UNAVAILABLE = 'service_asset_registry_unavailable',
@@ -255,6 +256,12 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.VALIDATION_TOO_MANY_GEOMETRIES,
     message: 'Too many geometries provided. Maximum allowed is {0}.',
     httpStatus: 400
+  },
+
+  [SystemCode.VALIDATION_REQUEST_BODY_TOO_LARGE]: {
+    code: SystemCode.VALIDATION_REQUEST_BODY_TOO_LARGE,
+    message: 'Request body is too large: {0} KB. Maximum allowed size is {1} KB.',
+    httpStatus: 413
   },
 
   // Service/External Errors
