@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from 'fs/promises';
 import path from "path";
 import { ApiResponse } from "@/types/api";
 import { SystemCode } from "@/types/systemCodes";
@@ -8,6 +7,7 @@ import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 import { LogFunction } from "@/lib/logger";
+import { fileExists, readFile } from "@/lib/utils/fileUtils";
 
 export const GET = compose(
   withLogging,
@@ -17,16 +17,16 @@ export const GET = compose(
     const filePath = path.join(process.cwd(), 'temp');
     
     // Check if result exists (analysis completed)
-    if (await fileExists(`${filePath}/${token}-result.json`)) {
-        const resultData = await fs.readFile(`${filePath}/${token}-result.json`, 'utf8');
+    if (await fileExists(`${filePath}/${token}-result.json`, log)) {
+        const resultData = await readFile(`${filePath}/${token}-result.json`, log);
         const jsonData = JSON.parse(resultData);
         
         return useResponse(SystemCode.ANALYSIS_COMPLETED, jsonData);
     }
     
     // Check if error exists (analysis failed)
-    if (await fileExists(`${filePath}/${token}-error.json`)) {
-        const errorData = await fs.readFile(`${filePath}/${token}-error.json`, 'utf8');
+    if (await fileExists(`${filePath}/${token}-error.json`, log)) {
+        const errorData = await readFile(`${filePath}/${token}-error.json`, log);
         const errorInfo = JSON.parse(errorData);
         
         // Use the specific error code from the Python processor, or default to ANALYSIS_ERROR
@@ -41,19 +41,10 @@ export const GET = compose(
     }
     
     // Check if input exists (analysis was submitted and is processing)
-    if (await fileExists(`${filePath}/${token}.json`)) {
+    if (await fileExists(`${filePath}/${token}.json`, log)) {
         return useResponse(SystemCode.ANALYSIS_PROCESSING);
     }
     
     return useResponse(SystemCode.ANALYSIS_JOB_NOT_FOUND);
 
 });
-
-const fileExists = async (filePath: string): Promise<boolean> => {
-    try {
-        await fs.access(filePath);
-        return true;
-    } catch {
-        return false;
-    }
-};
