@@ -20,6 +20,25 @@ class AnalysisOptions:
         nc = d.get('nationalCodes')
         self.national_codes = [str(c).lower() for c in nc] if isinstance(nc, list) and nc else None
 
+def atomic_write(filename, write_handler):
+    temp_filename = filename + '.tmp'
+    
+    try:
+        write_handler(temp_filename)
+        os.rename(temp_filename, filename)
+        print(f"File successfully written to {filename}")
+        
+    except Exception as e:
+        try:
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
+                print(f"Cleaned up temporary file: {temp_filename}")
+        except:
+            pass
+        
+        print(f"Error during atomic write to {filename}: {e}")
+        raise
+
 def main(file_path, legacy_mode=False):
     opts = AnalysisOptions(None)
     try:
@@ -50,12 +69,11 @@ def main(file_path, legacy_mode=False):
         elif whisp_df_risk[col].dtype == 'object':
             whisp_df_risk[col] = whisp_df_risk[col].fillna('')
 
-    whisp_df_risk.to_csv(csv_file_path, index=False, encoding='utf-8-sig')
+    atomic_write(csv_file_path, lambda temp_path: whisp_df_risk.to_csv(temp_path, index=False, encoding='utf-8-sig'))
 
     if not legacy_mode:
-        whisp.convert_df_to_geojson(whisp_df_risk, json_file_path)
+        atomic_write(json_file_path, lambda temp_path: whisp.convert_df_to_geojson(whisp_df_risk, temp_path))
     if legacy_mode:
-        # Legacy mode - original format output
         df_dict = whisp_df_risk.to_dict(orient='records')
         
         for record in df_dict:
@@ -84,16 +102,19 @@ def main(file_path, legacy_mode=False):
 
         clean_dict = clean_nan_values(df_dict)
 
-        try:
-            with open(json_file_path, 'w') as outfile:
-                json.dump(clean_dict, outfile, indent=4, cls=CustomJSONEncoder)
-            print(f"JSON data exported to {json_file_path}")
-        except TypeError as e:
-            print(f"Error in JSON conversion: {e}")
-            json_data = whisp_df_risk.to_json(orient='records', date_format='iso', force_ascii=False)
-            with open(json_file_path, 'w') as outfile:
-                outfile.write(json_data)
-            print(f"Fallback JSON data exported to {json_file_path}")
+        def write_legacy_json(temp_path):
+            try:
+                with open(temp_path, 'w') as outfile:
+                    json.dump(clean_dict, outfile, indent=4, cls=CustomJSONEncoder)
+                print(f"JSON data exported to {temp_path}")
+            except TypeError as e:
+                print(f"Error in JSON conversion: {e}")
+                json_data = whisp_df_risk.to_json(orient='records', date_format='iso', force_ascii=False)
+                with open(temp_path, 'w') as outfile:
+                    outfile.write(json_data)
+                print(f"Fallback JSON data exported to {temp_path}")
+
+        atomic_write(json_file_path, write_legacy_json)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

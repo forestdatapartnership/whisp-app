@@ -8,6 +8,7 @@ import { useResponse } from "@/lib/hooks/responses";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 import { getMaxGeometryLimit } from "@/lib/utils/configUtils";
+import { atomicWriteFile } from "@/lib/utils/fileUtils";
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
@@ -32,8 +33,8 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
 
     let fileHandle;
     try {
-        // Write the payload to a file
-        await fs.writeFile(`${filePath}/${token}.json`, JSON.stringify(featureCollection), 'utf8');
+        // Write the payload to a file atomically
+        await atomicWriteFile(`${filePath}/${token}.json`, JSON.stringify(featureCollection), log);
 
         if (isAsync) {
             // Start background processing (don't await)
@@ -57,10 +58,10 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
                         };
                     }
                     
-                    await fs.writeFile(
+                    await atomicWriteFile(
                         `${filePath}/${token}-error.json`,
                         JSON.stringify(errorInfo),
-                        'utf8'
+                        log
                     );
                 } catch (writeError: any) {
                     log("error", `Failed to write error file for token ${token}: ${writeError.message}`, logSource);

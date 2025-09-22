@@ -45,3 +45,32 @@ export const readFile = async (filePath: string, log?: LogFunction): Promise<str
   
   throw new Error('Should not reach here');
 };
+
+export const atomicWriteFile = async (
+    finalPath: string,
+    content: string,
+    log?: LogFunction
+  ): Promise<void> => {
+    const tempPath = finalPath + '.tmp';
+    
+    try {
+      await fs.writeFile(tempPath, content, 'utf8');
+
+      await fs.rename(tempPath, finalPath);
+      
+      if (log) {
+        log('debug', `Atomically wrote file: ${finalPath}`, 'fileUtils.ts');
+      }
+    } catch (error: any) {
+      try {
+        await fs.unlink(tempPath);
+      } catch {
+      }
+      
+      if (log) {
+        log('error', `Atomic write failed for ${finalPath}: ${error.message}`, 'fileUtils.ts');
+      }
+      
+      throw error;
+    }
+  };
