@@ -1,24 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import { LogFunction } from "@/lib/logger";
 import { SystemCode } from "@/types/systemCodes";
-import { getPythonTimeoutMs } from "@/lib/utils/configUtils";
-
-// Define a UUID type as a branded string
-type UUID = string & { readonly __brand: unique symbol };
-
-/**
- * Options for running a Python script
- */
-export interface PythonScriptOptions {
-  /** Path to the Python executable */
-  pythonPath?: string;
-  /** Timeout in milliseconds (defaults to PYTHON_TIMEOUT_MS env var or 90000ms) */
-  timeout?: number;
-  /** Whether to stream stdout in real-time */
-  streamOutput?: boolean;
-  /** Callback for real-time stdout streaming */
-  onOutput?: (data: string) => void;
-}
+import { SystemError } from '@/types/systemError';
 
 /**
  * Runs any Python script with the given arguments
@@ -26,21 +9,16 @@ export interface PythonScriptOptions {
  * @param scriptPath - Path to the Python script to run
  * @param args - Array of arguments to pass to the script
  * @param log - Logging function
- * @param options - Additional options for running the script
+ * @param timeout - Timeout in milliseconds
  * @returns Promise that resolves to the stdout of the script or rejects with an error
  */
 export const runPythonScript = async (
   scriptPath: string,
   args: string[],
   log: LogFunction,
-  options?: PythonScriptOptions
+  timeout: number
 ): Promise<string> => {
-  const {
-    pythonPath = process.env.PYTHON_PATH || 'python',
-    timeout = getPythonTimeoutMs(),
-    streamOutput = false,
-    onOutput
-  } = options || {};
+  const pythonPath = process.env.PYTHON_PATH || 'python';
 
   return new Promise((resolve, reject) => {
     const childProcess = spawn(pythonPath, [scriptPath, ...args]);
@@ -49,12 +27,7 @@ export const runPythonScript = async (
     let stderr = '';
 
     childProcess.stdout.on('data', (data) => {
-      const dataStr = data.toString();
-      stdout += dataStr;
-      
-      if (streamOutput && onOutput) {
-        onOutput(dataStr);
-      }
+      stdout += data.toString();
     });
 
     childProcess.stderr.on('data', (data) => {
@@ -66,7 +39,7 @@ export const runPythonScript = async (
       
       if (code !== 0) {
         log("error", `Python Stderr: ${stderr}`);
-        reject({ code: SystemCode.ANALYSIS_ERROR, message: `Python script exited with code ${code}: ${stderr}` });
+        reject(new SystemError(SystemCode.ANALYSIS_ERROR, [], `Python script exited with code ${code}: ${stderr}`));
         return;
       }
       
@@ -75,7 +48,7 @@ export const runPythonScript = async (
 
     childProcess.on('error', (error) => {
       log("error", `Failed to start Python process: ${error.message}`);
-      reject({ code: SystemCode.ANALYSIS_ERROR, message: `Failed to start Python process: ${error.message}` });
+      reject(new SystemError(SystemCode.ANALYSIS_ERROR, [], `Failed to start Python process: ${error.message}`));
     });
 
     // Set a timeout
@@ -83,11 +56,7 @@ export const runPythonScript = async (
       if (!childProcess.killed) {
         log("error", `Analysis timed out after ${timeout/1000} seconds.`);
         killProcess(childProcess);
-        reject({ 
-          code: SystemCode.ANALYSIS_TIMEOUT, 
-          message: `Analysis timed out after ${timeout/1000} seconds.`,
-          formatArgs: [timeout/1000]
-        });
+        reject(new SystemError(SystemCode.ANALYSIS_TIMEOUT, [timeout/1000], `Analysis timed out after ${timeout/1000} seconds.`));
       }
     }, timeout);
 
@@ -143,7 +112,7 @@ const killProcess = (childProcess: ChildProcess) => {
  * 
  * @param {string} token - A unique identifier for the data file to be analyzed.
  * @param {LogFunction} log - Function for logging messages
- * @param {PythonScriptOptions} options - Additional options for running the script
+ * @param {number} timeout - Timeout in milliseconds
  * @param {boolean} useLegacyFormat - Whether to use the legacy format output
  * @return {Promise<boolean>} - A promise that resolves to `true` if the analysis is successful,
  *                              and rejects with an error message if it fails.
@@ -151,7 +120,7 @@ const killProcess = (childProcess: ChildProcess) => {
 export const analyzeGeoJson = async (
   token: string, 
   log: LogFunction,
-  options?: PythonScriptOptions,
+  timeout: number,
   useLegacyFormat: boolean = false
 ): Promise<boolean> => {
   const scriptPath = 'src/python/analysis.py';
@@ -163,7 +132,7 @@ export const analyzeGeoJson = async (
   const startTime = Date.now();
   log("debug", `Starting Python script execution for token ${token}`, "runPython.ts");
   
-  await runPythonScript(scriptPath, args, log, options);
+  await runPythonScript(scriptPath, args, log, timeout);
   
   const endTime = Date.now();
   const pythonDuration = endTime - startTime;

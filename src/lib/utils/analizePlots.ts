@@ -7,7 +7,7 @@ import { LogFunction } from "@/lib/logger";
 import { useResponse } from "@/lib/hooks/responses";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
-import { getMaxGeometryLimit } from "@/lib/utils/configUtils";
+import { getMaxGeometryLimit, getMaxGeometryLimitSync, getPythonTimeoutMs, getPythonTimeoutSyncMs } from "@/lib/utils/configUtils";
 import { atomicWriteFile } from "@/lib/utils/fileUtils";
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
@@ -17,14 +17,13 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
     const logSource = "analyzePlots.ts";
 
     const geometryCount = featureCollection.features.length;
-    const maxGeometryLimit = getMaxGeometryLimit();
+    const maxGeometryLimit = isAsync ? getMaxGeometryLimit() : getMaxGeometryLimitSync();
 
     if (geometryCount > maxGeometryLimit) {
-        return useResponse(
-            SystemCode.VALIDATION_TOO_MANY_GEOMETRIES,
-            [maxGeometryLimit]
-        );
+        throw new SystemError(SystemCode.VALIDATION_TOO_MANY_GEOMETRIES, [maxGeometryLimit]);
     }
+
+    const timeout = isAsync? getPythonTimeoutMs() : getPythonTimeoutSyncMs();
 
     log("info", `Starting analysis: ${token}. Received GeoJSON with ${geometryCount} features`, logSource);
 
@@ -33,23 +32,20 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
 
     let fileHandle;
     try {
-        // Write the payload to a file atomically
         await atomicWriteFile(`${filePath}/${token}.json`, JSON.stringify(featureCollection), log);
 
         if (isAsync) {
             // Start background processing (don't await)
-            analyzeGeoJson(token, log, undefined, useLegacyFormat).catch(async (error) => {
+            analyzeGeoJson(token, log, timeout, useLegacyFormat).catch(async (error) => {
                 log("error", `Async analysis failed for token ${token}: ${error}`, logSource);
                
                 try {
-                    // Handle structured error objects with specific codes
                     let errorInfo;
-                    if (typeof error === 'object' && error.code) {
-                        const errorObj = error as any;
+                    if (error instanceof SystemError) {
                         errorInfo = { 
-                            error: errorObj.message,
-                            code: errorObj.code,
-                            ...(errorObj.formatArgs && { formatArgs: errorObj.formatArgs })
+                            error: error.message,
+                            code: error.systemCode,
+                            ...(error.formatArgs && { formatArgs: error.formatArgs })
                         };
                     } else {
                         errorInfo = { 
@@ -78,7 +74,7 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
         }
 
         // Pass the legacy format flag to analyzeGeoJson
-        const analyzed = await analyzeGeoJson(token, log, undefined, useLegacyFormat);
+        const analyzed = await analyzeGeoJson(token, log, timeout, useLegacyFormat);
 
         if (analyzed) {
             // Read and parse the analysis results

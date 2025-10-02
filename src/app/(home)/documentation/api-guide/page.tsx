@@ -5,7 +5,7 @@ import SwaggerUI from "swagger-ui-react";
 import 'swagger-ui-react/swagger-ui.css';
 import './styles.css';
 import { fetchTempApiKey } from '@/lib/secureApiUtils';
-import { getMaxGeometryLimit, getMaxRequestSizeMB, getProcessingTimeoutSeconds } from '@/lib/utils/configUtils';
+import { getMaxGeometryLimit, getMaxGeometryLimitSync, getMaxRequestSizeMB, getProcessingTimeoutSeconds, getProcessingTimeoutSyncSeconds } from '@/lib/utils/configUtils';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible';
 import { Button } from '@/components/ui/Button';
@@ -26,8 +26,10 @@ const DocumentationPage = () => {
   // Get dynamic limits from environment settings
   const { config } = useConfig();
   const maxGeometryLimit = getMaxGeometryLimit(config);
+  const maxGeometryLimitSync = getMaxGeometryLimitSync(config);
   const maxRequestSizeMB = getMaxRequestSizeMB(config);
   const processingTimeoutSeconds = getProcessingTimeoutSeconds(config);
+  const processingTimeoutSyncSeconds = getProcessingTimeoutSyncSeconds(config);
 
   useEffect(() => {
     const getApiKey = async () => {
@@ -272,7 +274,19 @@ const DocumentationPage = () => {
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle className="h-3 w-3 text-green-500" />
-                          <strong>Geometry Limit:</strong> Maximum {maxGeometryLimit} geometries per request
+                          <strong>Geometry Limit Async (async=true):</strong> Maximum {maxGeometryLimit} geometries per request
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <strong>Geometry Limit Sync (async=false):</strong> Maximum {maxGeometryLimitSync} geometries per request
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <strong>Processing Timeout Async (async=true):</strong> Maximum {processingTimeoutSeconds} seconds per analysis
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <strong>Processing Timeout Sync (async=false):</strong> Maximum {processingTimeoutSyncSeconds} seconds per analysis
                         </li>
                         {maxRequestSizeMB && (
                           <li className="flex items-center gap-2">
@@ -280,10 +294,6 @@ const DocumentationPage = () => {
                             <strong>Request Size Limit:</strong> Maximum {maxRequestSizeMB} MB per request
                           </li>
                         )}
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-3 w-3 text-green-500" />
-                          <strong>Processing Timeout:</strong> Maximum {processingTimeoutSeconds} seconds per analysis
-                        </li>
                       </ul>
                     </CardContent>
                   </Card>

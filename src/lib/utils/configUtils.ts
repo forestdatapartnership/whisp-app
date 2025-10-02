@@ -27,7 +27,12 @@ export function getMaxFileSize(config?: PublicConfig): number | undefined {
 }
 
 export function getMaxGeometryLimit(config?: PublicConfig): number {
-  const value = getConfig(config, 'NEXT_PUBLIC_GEOMETRY_LIMIT', '500');
+  const value = getConfig(config, 'NEXT_PUBLIC_GEOMETRY_LIMIT', '1000');
+  return parseInt(value, 10);
+}
+
+export function getMaxGeometryLimitSync(config?: PublicConfig): number {
+  const value = getConfig(config, 'NEXT_PUBLIC_GEOMETRY_LIMIT_SYNC', '300');
   return parseInt(value, 10);
 }
 
@@ -41,8 +46,18 @@ export function getPythonTimeoutMs(config?: PublicConfig): number {
   return parseInt(value, 10);
 }
 
+export function getPythonTimeoutSyncMs(config?: PublicConfig): number {
+  const value = getConfig(config, 'NEXT_PUBLIC_PYTHON_TIMEOUT_SYNC_MS', '30000');
+  return parseInt(value, 10);
+}
+
 export function getProcessingTimeoutSeconds(config?: PublicConfig): number {
   const value = getPythonTimeoutMs(config);
+  return Math.round(value / 1000);
+}
+
+export function getProcessingTimeoutSyncSeconds(config?: PublicConfig): number {
+  const value = getPythonTimeoutSyncMs(config);
   return Math.round(value / 1000);
 }
 
