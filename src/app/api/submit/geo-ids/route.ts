@@ -31,20 +31,23 @@ export const POST = compose(
         const geoJsonGeoId = { ...geoJsonFeature, properties: { geoid } };
         return geoJsonGeoId;
       } else {
-        return "";
+        return null;
       }
     } catch {
       throw new SystemError(SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE);
     }
   }));
 
-  if (!geoJsonArray || geoJsonArray.length === 0) {
+  const validFeatures = geoJsonArray.filter(feature => feature !== null);
+
+  // TODO: misleading error message, this is returned only when all the GeoIDs are invalid, should investigate if we should allow partial processing
+  if (!validFeatures || validFeatures.length === 0) {
     throw new SystemError(SystemCode.VALIDATION_INVALID_GEOJSON, ["One or more of the GeoIDs submitted is not valid."]);
   }
 
   const featureCollection = {
     type: 'FeatureCollection',
-    features: geoJsonArray,
+    features: validFeatures,
     generateGeoids: true,
     ...(analysisOptions ? { analysisOptions } : {})
   };

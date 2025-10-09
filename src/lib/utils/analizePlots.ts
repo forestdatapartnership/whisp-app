@@ -9,6 +9,7 @@ import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 import { getMaxGeometryLimit, getMaxGeometryLimitSync, getPythonTimeoutMs, getPythonTimeoutSyncMs } from "@/lib/utils/configUtils";
 import { atomicWriteFile } from "@/lib/utils/fileUtils";
+import { getCommonPropertyNames, validateExternalIdColumn } from "./geojsonUtils";
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
@@ -21,6 +22,10 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
 
     if (geometryCount > maxGeometryLimit) {
         throw new SystemError(SystemCode.VALIDATION_TOO_MANY_GEOMETRIES, [maxGeometryLimit]);
+    }
+
+    if (featureCollection.analysisOptions?.externalIdColumn && !validateExternalIdColumn(featureCollection, featureCollection.analysisOptions?.externalIdColumn)) {
+        throw new SystemError(SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN, [featureCollection.analysisOptions?.externalIdColumn, getCommonPropertyNames(featureCollection)]);
     }
 
     const timeout = isAsync? getPythonTimeoutMs() : getPythonTimeoutSyncMs();

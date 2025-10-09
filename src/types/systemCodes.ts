@@ -42,6 +42,7 @@ export enum SystemCode {
   VALIDATION_COORDINATES_IN_METERS = 'validation_coordinates_in_meters',
   VALIDATION_TOO_MANY_GEOMETRIES = 'validation_too_many_geometries',
   VALIDATION_REQUEST_BODY_TOO_LARGE = 'validation_request_body_too_large',
+  VALIDATION_INVALID_EXTERNAL_ID_COLUMN = 'validation_invalid_external_id_column',
 
   // Service/External Errors
   SERVICE_ASSET_REGISTRY_UNAVAILABLE = 'service_asset_registry_unavailable',
@@ -262,6 +263,11 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.VALIDATION_REQUEST_BODY_TOO_LARGE,
     message: 'Request body is too large: {0} KB. Maximum allowed size is {1} KB.',
     httpStatus: 413
+  },
+  [SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN]: {
+    code: SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN,
+    message: 'The external ID column "{0}" does not exist in your GeoJSON features. Available columns: {1}',
+    httpStatus: 400
   },
 
   // Service/External Errors

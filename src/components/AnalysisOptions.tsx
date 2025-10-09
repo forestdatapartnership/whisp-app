@@ -2,6 +2,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/Button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible'
+import { Input } from '@/components/ui/Input'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -75,10 +76,10 @@ export default function AnalysisOptions({ value, onChange, disabled = false }: A
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="p-3 space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Additional Country Data</label>
+              <label className="text-sm font-medium text-gray-300 text-left block pl-2">Additional Country Data</label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" disabled={disabled} className="w-full justify-between">
@@ -107,7 +108,7 @@ export default function AnalysisOptions({ value, onChange, disabled = false }: A
               </DropdownMenu>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Units</label>
+              <label className="text-sm font-medium text-gray-300 text-left block pl-2">Units</label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" disabled={disabled} className="w-full justify-between">
@@ -127,6 +128,17 @@ export default function AnalysisOptions({ value, onChange, disabled = false }: A
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300 text-left block pl-2">External ID Column</label>
+              <Input
+                type="text"
+                placeholder="Enter column name"
+                value={value.externalIdColumn || ''}
+                onChange={(e) => onChange({ ...value, externalIdColumn: e.target.value })}
+                disabled={disabled}
+                className="w-full"
+              />
             </div>
           </div>
 

@@ -49,11 +49,11 @@ export async function addGeoId(geojson: any): Promise<any> {
 }
 
 
-function extractFeatures(geometry: GeometryObject | any, features: any[]): void {
+function extractFeatures(geometry: GeometryObject | any, features: any[], properties: any = {}): void {
     if (geometry.type === 'Polygon') {
         features.push({
             type: 'Feature',
-            properties: {},
+            properties: { ...properties },
             geometry: {
                 type: 'Polygon',
                 coordinates: geometry.coordinates.map((ring: number[][]) =>
@@ -64,7 +64,7 @@ function extractFeatures(geometry: GeometryObject | any, features: any[]): void 
     } else if (geometry.type === 'Point') {
         features.push({
             type: 'Feature',
-            properties: {},
+            properties: { ...properties },
             geometry: {
                 type: 'Point',
                 coordinates: geometry.coordinates.slice(0, 2)
@@ -74,7 +74,7 @@ function extractFeatures(geometry: GeometryObject | any, features: any[]): void 
         geometry.coordinates.forEach((point: number[]) => {
             features.push({
                 type: 'Feature',
-                properties: {},
+                properties: { ...properties },
                 geometry: {
                     type: 'Point',
                     coordinates: point.slice(0, 2)
@@ -86,7 +86,7 @@ function extractFeatures(geometry: GeometryObject | any, features: any[]): void 
         geometry.coordinates.forEach((polygon: number[][][]) => {
             features.push({
                 type: 'Feature',
-                properties: {},
+                properties: { ...properties },
                 geometry: {
                     type: 'Polygon',
                     coordinates: polygon.map((ring: number[][]) =>
@@ -97,10 +97,10 @@ function extractFeatures(geometry: GeometryObject | any, features: any[]): void 
         });
     } else if (geometry.type === 'GeometryCollection') {
         geometry.geometries.forEach((geom: any) => {
-            extractFeatures(geom, features);
+            extractFeatures(geom, features, properties);
         });
     } else if (geometry.type === 'Feature') {
-        extractFeatures(geometry.geometry, features);
+        extractFeatures(geometry.geometry, features, geometry.properties || {});
     } else if (geometry.type === 'FeatureCollection') {
         geometry.features.forEach((feature: any) => {
             extractFeatures(feature, features);
@@ -307,4 +307,55 @@ export const validateAndProcessGeoJSON = (geoJSON: any): { data: RecordData[], e
     };
   }
 };
+
+export function getCommonPropertyNames(
+  featureCollection: FeatureCollection | any
+): string[] {
+  if (!featureCollection?.features || !Array.isArray(featureCollection.features)) {
+    return [];
+  }
+
+  let commonProps: Set<string> | null = null;
+
+  for (const feature of featureCollection.features) {
+    if (!feature || typeof feature !== 'object') continue;
+
+    const props = feature.properties ? Object.keys(feature.properties) : [];
+
+    if (commonProps === null) {
+      commonProps = new Set(props);
+    } else {
+      commonProps.forEach(prop => {
+        if (!props.includes(prop)) {
+          commonProps!.delete(prop);
+        }
+      });
+
+      if (commonProps.size === 0) break;
+    }
+  }
+
+  return commonProps ? Array.from(commonProps) : [];
+}
+
+export function validateExternalIdColumn(
+  featureCollection: FeatureCollection | any,
+  externalIdColumn: string
+): boolean {
+  if (!featureCollection?.features || !Array.isArray(featureCollection.features)) {
+    return false;
+  }
+
+  const validFeatures = featureCollection.features.filter((feature: any) => 
+    feature && typeof feature === 'object'
+  );
+
+  if (validFeatures.length === 0) {
+    return false;
+  }
+
+  return validFeatures.every((feature: Feature) => 
+    feature.properties && externalIdColumn in feature.properties
+  );
+}
 

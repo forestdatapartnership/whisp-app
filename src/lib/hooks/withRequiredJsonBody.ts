@@ -12,10 +12,8 @@ export function withRequiredJsonBody(handler: (req: NextRequest, jsonBody: any, 
     
     // Check request body size before parsing
     const maxFileSize = getMaxFileSize();
-    log("info", `Max file size: ${maxFileSize}`, "withRequiredJsonBody.ts");
     if (maxFileSize) {
       const bodySize = getRequestBodySize(req);
-      log("info", `Body size: ${bodySize}, max file size: ${maxFileSize}`, "withRequiredJsonBody.ts");
       if (bodySize > maxFileSize) {
         const bodySizeKB = (bodySize / 1024).toFixed(2);
         const maxSizeKB = (maxFileSize / 1024).toFixed(2);

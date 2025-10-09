@@ -121,9 +121,10 @@ export default function ResultsPage() {
   if (hasAnyError) {
     const getErrorTitle = () => {
       switch (responseCode) {
-        case SystemCode.ANALYSIS_JOB_NOT_FOUND: return '404 - Analysis Not Found';
+        case SystemCode.ANALYSIS_JOB_NOT_FOUND: return 'Analysis Not Found';
         case SystemCode.ANALYSIS_ERROR: return 'Analysis Failed';
         case SystemCode.ANALYSIS_TIMEOUT: return 'Analysis Timeout';
+        case SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN: return 'Invalid Input';
         default: return 'Error';
       }
     };

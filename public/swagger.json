@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Whisp App API",
-    "version": "0.2.0",
+    "version": "1.0.1",
     "description": "API for Whisp - An analytical tool for the support of zero-deforestation regulation claims"
   },
   "servers": [
@@ -207,6 +207,11 @@
                 "type": "string",
                 "description": "Too many geometries provided (HTTP 400)",
                 "example": "Too many geometries provided. Maximum allowed is 500."
+              },
+              "validation_invalid_external_id_column": {
+                "type": "string",
+                "description": "External ID column not found in GeoJSON features (HTTP 400)",
+                "example": "The external ID column \"columnName\" does not exist in your GeoJSON features. Available columns: property1, property2"
               }
             }
           },
