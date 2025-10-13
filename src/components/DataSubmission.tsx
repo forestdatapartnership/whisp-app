@@ -55,7 +55,7 @@ const DataSubmission: React.FC<DataSubmissionProps> = ({ useTempKey = true }) =>
     };
 
     return (
-        <div className="md:max-w-2xl p-5 border border-gray-300 bg-gray-800 rounded shadow-md mx-auto my-4 relative">
+        <div className="p-5 border border-gray-300 bg-gray-800 rounded shadow-md my-4 relative">
             <h1 className="text-2xl font-semibold text-center mb-4">
                 {activeMode === 'geometry' ? 'Submit Geometry' : 'Submit Geo IDs'}
             </h1>

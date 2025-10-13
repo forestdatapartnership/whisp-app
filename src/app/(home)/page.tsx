@@ -31,7 +31,7 @@ export default function Home() {
 
   // Only show the welcome page if user is not authenticated
   return (
-    <main className="text-center mx-auto px-2 max-w-3xl">
+    <main className="text-center mx-auto px-2 max-w-5xl">
       <h1 className="text-3xl font-semibold mt-8">Welcome to Whisp</h1>
       <section className="mt-8">
         <p className="text-lg text-gray-400">
