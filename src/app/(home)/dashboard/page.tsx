@@ -407,14 +407,25 @@ curl -X POST "https://whisp.openforis.org/api/submit/geo-ids" \\
           <p className="text-gray-400 mb-4">
             Submit your geojson or wkt and receive the Whisp analysis
           </p>
-          <button
-            onClick={createApiKey}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-          >
-            <Link href="/submit-geometry" >
+          {apiKeyMetadata ? (
+            <Link
+              href="/submit-geometry"
+              className="inline-block px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
               Submit
             </Link>
-          </button>
+          ) : (
+            <button
+              onClick={async () => {
+                await createApiKey();
+                router.push('/submit-geometry');
+              }}
+              disabled={keyBeingCreated}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {keyBeingCreated ? 'Creating Key...' : 'Submit'}
+            </button>
+          )}
         </div>
       </div>
     </div>
