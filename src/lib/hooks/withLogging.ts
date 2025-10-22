@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LogFunction, useLogger } from '../logger';
+import { getAuthUser } from '../auth';
 
 export function withLogging(handler: (req: NextRequest, log: LogFunction, ...args: any[]) => Promise<NextResponse>) {
     return async function(req: NextRequest, ...args: any[]): Promise<NextResponse> {
         const logger = useLogger();
+        
+        const userId = req.headers.get('x-user-id') || (await getAuthUser(req))?.id || null;
+        const apiKey = req.headers.get('x-api-key') || null;
+        
         logger.defaultMeta = {
             context: {
+                userId: userId || null,
+                apiKey: apiKey || null,
                 ip: req.ip || req.headers.get('X-Forwarded-For'),
-                geo: req.geo,
                 method: req.method,
                 path: req.nextUrl?.pathname,
                 userAgent: req.headers?.get?.('user-agent'),
