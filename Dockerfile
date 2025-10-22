@@ -1,6 +1,6 @@
 FROM node:20-slim AS base
-RUN apt-get update && apt-get install -y python3 python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
-RUN python3 -m venv /venv
+RUN apt-get update && apt-get install -y python3.13 python3.13-venv python3-pip && rm -rf /var/lib/apt/lists/*
+RUN python3.13 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -22,9 +22,9 @@ RUN npm run build
 # Production image
 FROM node:20-slim AS runner
 WORKDIR /app
-# Install Python and create venv
-RUN apt-get update && apt-get install -y python3 python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
-RUN python3 -m venv /venv
+# Install Python 3.13 (required by openforis-whisp >=3.10) and create venv
+RUN apt-get update && apt-get install -y python3.13 python3.13-venv python3-pip && rm -rf /var/lib/apt/lists/*
+RUN python3.13 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
