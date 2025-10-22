@@ -5,6 +5,14 @@ import ast
 import openforis_whisp as whisp
 import pandas as pd
 import numpy as np
+import ee
+from importlib_metadata import version
+
+whisp_version = version('openforis-whisp')
+ee_version = version('earthengine-api')
+
+print(f"Earth Engine API version: {ee_version}")
+print(f"openforis-whisp version: {whisp_version}")
 
 CREDENTIAL_PATH = "/var/secrets/credentials.json"
 if not os.path.exists(CREDENTIAL_PATH):
