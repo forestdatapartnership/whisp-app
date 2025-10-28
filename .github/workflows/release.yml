@@ -12,6 +12,10 @@ on:
           - major
           - minor
           - patch
+      whats-new:
+        description: 'What''s New section content (bullet points, one per line)'
+        required: false
+        type: string
   push:
     branches:
       - 'release/**'
@@ -54,6 +58,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          WHATS_NEW="${{ github.event.inputs.whats-new }}"
+          
+          {
+            echo "## 🚀 What's New"
+            echo
+            if [ -n "$WHATS_NEW" ]; then
+              echo "$WHATS_NEW"
+            fi
+            echo
+          } > RELEASE_NOTES.md
+          
           if [ -n "$MID" ]; then
             BODY=$(gh issue list --state closed --milestone "$TAG" \
                     --repo "$GITHUB_REPOSITORY" \
@@ -63,14 +78,16 @@ jobs:
               BODY="No closed issues in this milestone."
             fi
             {
-              echo "## What's Changed"
+              echo "---"
+              echo 
+              echo "## 🔧 Issues Resolved in This Release"
               echo
               echo "$BODY"
-            } > RELEASE_NOTES.md
+            } >> RELEASE_NOTES.md
           else
             {
               echo "No changes since last release."
-            } > RELEASE_NOTES.md
+            } >> RELEASE_NOTES.md
           fi
           echo "NOTES_PATH=RELEASE_NOTES.md" >> $GITHUB_ENV
 
