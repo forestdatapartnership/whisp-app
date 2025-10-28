@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getAppVersion } from '@/lib/utils/configUtils'
+import { useConfig } from '@/lib/contexts/ConfigContext'
 
 export default function VersionLink() {
   const version = getAppVersion()
+  const { config } = useConfig()
+  const pythonVersion = config.WHISP_PYTHON_VERSION || '...'
   const milestonesUrl = 'https://github.com/forestdatapartnership/whisp-app/milestones'
   const releasesUrl = 'https://github.com/forestdatapartnership/whisp-app/releases'
   const specificReleaseUrl = `https://github.com/forestdatapartnership/whisp-app/releases/tag/v${version}`
@@ -23,7 +26,6 @@ export default function VersionLink() {
       }
     } catch {}
 
-    // call api to check if release notes are available to avoid cors issues
     const apiUrl = `https://api.github.com/repos/forestdatapartnership/whisp-app/releases/tags/v${version}`
     let cancelled = false
     fetch(apiUrl)
@@ -47,12 +49,16 @@ export default function VersionLink() {
 
   return (
     <>
+      <span className="text-gray-400">App version</span>
+      {' '}
       <Link href={versionHref} target="_blank" className="text-blue-500">
         v{version}
       </Link>
       {' · '}
-      <Link href={releasesUrl} target="_blank" className="text-blue-500">
-        Release History
+      <span className="text-gray-400">Powered by Analysis Engine</span>
+      {' '}
+      <Link href={`https://pypi.org/project/openforis-whisp/${pythonVersion}`} target="_blank" className="text-blue-500">
+        v{pythonVersion}
       </Link>
     </>
   )
