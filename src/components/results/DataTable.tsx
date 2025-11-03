@@ -26,6 +26,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[] | import('geojson').FeatureCollection
   onRowClick?: (rowIndex: number) => void
   selectedRowIndex?: number
+  showExternalIdByDefault?: boolean
 }
 
 type TableData = RecordData;
@@ -34,7 +35,8 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   onRowClick,
-  selectedRowIndex
+  selectedRowIndex,
+  showExternalIdByDefault = false
 }: DataTableProps<TData, TValue>) {
   // Process FeatureCollection to array if needed
   const processedData = React.useMemo(() => {
@@ -60,7 +62,7 @@ export function DataTable<TData, TValue>({
       columnVisibility: {
         geojson: false,
         geometry: false,
-        external_id: false,
+        external_id: showExternalIdByDefault,
         geoid: false
       }
     }

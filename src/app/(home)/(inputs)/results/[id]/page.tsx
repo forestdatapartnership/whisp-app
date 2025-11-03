@@ -31,6 +31,7 @@ export default function ResultsPage() {
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | undefined>(undefined);
   const [dataError, setDataError] = useState<string | null>(null);
+  const [hasExternalIds, setHasExternalIds] = useState<boolean>(false);
   const { token } = useStore();
 
   const createColumnDefs = (data: RecordData[]): ColumnDef<RecordData, any>[] => {
@@ -74,6 +75,11 @@ export default function ResultsPage() {
         setTableData(processedData);
         const columnDefs = createColumnDefs(processedData);
         setColumns(columnDefs);
+        
+        const hasExternalIdData = processedData.some(row => 
+          row.external_id && row.external_id !== 'na'
+        );
+        setHasExternalIds(hasExternalIdData);
       }
     } catch (error) {
       setDataError('Failed to process analysis results');
@@ -225,6 +231,7 @@ export default function ResultsPage() {
               data={tableData}
               onRowClick={(rowIndex) => setSelectedRowIndex(rowIndex)}
               selectedRowIndex={selectedRowIndex}
+              showExternalIdByDefault={hasExternalIds}
             />
           </div>
 
