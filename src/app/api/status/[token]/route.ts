@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { ApiResponse } from "@/types/api";
 import { SystemCode } from "@/types/systemCodes";
-import { useResponse } from "@/lib/hooks/responses";
+import { useResponse, useResponseWithFormat } from "@/lib/hooks/responses";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
@@ -19,8 +19,9 @@ export const GET = compose(
     // Check if result exists (analysis completed)
     if (await fileExists(`${filePath}/${token}-result.json`, log)) {
         const resultData = await readFile(`${filePath}/${token}-result.json`, log);
+        console.log('[Status] Result Data:', resultData);
         const jsonData = JSON.parse(resultData);
-        
+        console.log('[Status] JSON Data:', jsonData);
         return useResponse(SystemCode.ANALYSIS_COMPLETED, jsonData);
     }
     
@@ -34,7 +35,7 @@ export const GET = compose(
         
         // If the error has format arguments, use them
         if (errorInfo.formatArgs && Array.isArray(errorInfo.formatArgs)) {
-            return useResponse(errorCode, errorInfo.formatArgs);
+            return useResponseWithFormat(errorCode, errorInfo.formatArgs);
         } else {
             return useResponse(errorCode);
         }

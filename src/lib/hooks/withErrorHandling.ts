@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { useResponse } from './responses';
+import { useResponse, useResponseWithFormat } from './responses';
 import { LogFunction } from "@/lib/logger";
 import { SystemCode } from '@/types/systemCodes';
 import { SystemError } from '@/types/systemError';
@@ -22,7 +22,7 @@ export function withErrorHandling(
         
         // Return response with system code and optional format args
         if (error.formatArgs && error.formatArgs.length > 0) {
-          return useResponse(error.systemCode, error.formatArgs);
+          return useResponseWithFormat(error.systemCode, error.formatArgs);
         } else {
           return useResponse(error.systemCode);
         }
