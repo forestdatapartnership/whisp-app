@@ -50,6 +50,17 @@ jobs:
             exit 1
           }
 
+      - name: Get service URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ vars.SERVICE }} --region ${{ vars.REGION }} --format="value(status.url)" 2>/dev/null || echo "")
+          if [ -z "$SERVICE_URL" ]; then
+            echo "Service does not exist yet, will be created"
+            echo "service_url=https://${{ vars.SERVICE }}-${{ vars.REGION }}.run.app" >> $GITHUB_OUTPUT
+          else
+            echo "service_url=${SERVICE_URL}" >> $GITHUB_OUTPUT
+          fi
+        id: service_url
+
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ vars.SERVICE }} \
@@ -63,23 +74,37 @@ jobs:
             --min-instances 1 \
             --max-instances 10 \
             --timeout 300 \
-            --no-traffic \
             --add-cloudsql-instances ${{ vars.CLOUDSQL_INSTANCE }} \
-            --clear-secrets
-            
-      - name: Get service URL and update with environment variables
-        run: |
-          SERVICE_URL=$(gcloud run services describe ${{ vars.SERVICE }} --region ${{ vars.REGION }} --format="value(status.url)")
-          gcloud run services update ${{ vars.SERVICE }} \
-            --region ${{ vars.REGION }} \
             --tag "${{ steps.package_version.outputs.tag_version }}" \
-            --set-env-vars "HOST_URL=${SERVICE_URL},NEXT_PUBLIC_WHISP_URL=${SERVICE_URL}" \
+            --set-env-vars "HOST_URL=${{ steps.service_url.outputs.service_url }},NEXT_PUBLIC_WHISP_URL=${{ steps.service_url.outputs.service_url }}" \
             --update-secrets "/app/secrets/environment/.env.local=${{ vars.ENV_SECRET_NAME }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest" \
-            --min-instances=1 \
-            --no-cpu-throttling
+            --no-cpu-throttling \
+            --update-labels environment=${{ github.event.inputs.environment }}
 
-      - name: Route traffic to new revision
+      - name: Clean up old revisions
         run: |
-          gcloud run services update-traffic ${{ vars.SERVICE }} \
-            --region ${{ vars.REGION }} \
-            --to-tags "${{ steps.package_version.outputs.tag_version }}=100"
+          echo "Managing old revisions..."
+          CURRENT_TAG="${{ steps.package_version.outputs.tag_version }}"
+          REVISIONS=$(gcloud run revisions list \
+            --service=${{ vars.SERVICE }} \
+            --region=${{ vars.REGION }} \
+            --format="value(name)")
+          
+          for REVISION in $REVISIONS; do
+            REVISION_TAG=$(gcloud run services describe ${{ vars.SERVICE }} \
+              --region=${{ vars.REGION }} \
+              --format="json" | jq -r --arg rev "$REVISION" '.status.traffic[] | select(.revisionName == $rev) | .tag' 2>/dev/null || echo "")
+            
+            if [ -z "$REVISION_TAG" ]; then
+              echo "Deleting untagged revision: $REVISION"
+              gcloud run revisions delete $REVISION --region=${{ vars.REGION }} --quiet
+            elif [ "$REVISION_TAG" != "$CURRENT_TAG" ]; then
+              echo "Setting min-instances to 0 for old tagged revision: $REVISION (tag: $REVISION_TAG)"
+              gcloud run services update ${{ vars.SERVICE }} \
+                --region=${{ vars.REGION }} \
+                --tag "$REVISION_TAG" \
+                --min-instances 0
+            else
+              echo "Keeping current revision: $REVISION (tag: $REVISION_TAG)"
+            fi
+          done
