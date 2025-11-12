@@ -87,29 +87,29 @@ jobs:
 
       - name: Clean up old revisions
         run: |
-          echo "Managing old revisions..."
           CURRENT_TAG="${{ steps.package_version.outputs.tag_version }}"
-          REVISIONS=$(gcloud run revisions list \
-            --service=${{ vars.SERVICE }} \
-            --region=${{ vars.REGION }} \
-            --format="value(name)")
           
-          for REVISION in $REVISIONS; do
-            REVISION_TAG=$(gcloud run services describe ${{ vars.SERVICE }} \
-              --region=${{ vars.REGION }} \
-              --format="json" | jq -r --arg rev "$REVISION" '.status.traffic[] | select(.revisionName == $rev) | .tag' 2>/dev/null || echo "")
+          SERVICE_JSON=$(gcloud run services describe ${{ vars.SERVICE }} --region=${{ vars.REGION }} --format=json)
+          REVISIONS_JSON=$(gcloud run revisions list --service=${{ vars.SERVICE }} --region=${{ vars.REGION }} --format=json)
+          
+          for REVISION in $(echo "$REVISIONS_JSON" | jq -r '.[].metadata.name'); do
+            REVISION_TAG=$(echo "$SERVICE_JSON" | jq -r --arg rev "$REVISION" '.status.traffic[] | select(.revisionName == $rev) | .tag // ""')
             
             if [ -z "$REVISION_TAG" ]; then
               echo "Deleting untagged revision: $REVISION"
               gcloud run revisions delete $REVISION --region=${{ vars.REGION }} --quiet
             elif [ "$REVISION_TAG" != "$CURRENT_TAG" ]; then
-              echo "Setting min-instances to 0 for old tagged revision: $REVISION (tag: $REVISION_TAG)"
-              gcloud run services update ${{ vars.SERVICE }} \
-                --region=${{ vars.REGION }} \
-                --tag "$REVISION_TAG" \
-                --min-instances 0 \
-                --cpu-throttling
-
+              MIN_INSTANCES=$(echo "$REVISIONS_JSON" | jq -r --arg rev "$REVISION" '.[] | select(.metadata.name == $rev) | .metadata.annotations."autoscaling.knative.dev/minScale" // "0"')
+              CPU_THROTTLING=$(echo "$REVISIONS_JSON" | jq -r --arg rev "$REVISION" '.[] | select(.metadata.name == $rev) | .metadata.annotations."run.googleapis.com/cpu-throttling" // "true"')
+              
+              if [ "$MIN_INSTANCES" != "0" ] || [ "$CPU_THROTTLING" != "true" ]; then
+                echo "Setting min-instances to 0 and cpu-throttling for old tagged revision: $REVISION (tag: $REVISION_TAG)"
+                gcloud run services update ${{ vars.SERVICE }} \
+                  --region=${{ vars.REGION }} \
+                  --tag "$REVISION_TAG" \
+                  --min-instances 0 \
+                  --cpu-throttling
+              fi
             else
               echo "Keeping current revision: $REVISION (tag: $REVISION_TAG)"
             fi
