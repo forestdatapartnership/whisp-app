@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Whisp App API",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "description": "API for Whisp - An analytical tool for the support of zero-deforestation regulation claims"
   },
   "servers": [
@@ -558,17 +558,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "description": "Analysis results"
-                    },
-                    "token": {
-                      "type": "string",
-                      "description": "Unique token for the analysis"
-                    }
-                  }
+                  "$ref": "#/components/schemas/AnalysisResponse"
                 }
               }
             }
