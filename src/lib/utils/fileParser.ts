@@ -1,5 +1,5 @@
-import { isValidWkt } from './validateWkt';
 import { getMaxFileSize } from './configUtils';
+import * as wellknown from 'wellknown';
 
 const checkFileSize = (file: File) : string | undefined => {
     const maxFileSizeBytes = getMaxFileSize();
@@ -42,7 +42,7 @@ export const parseGeoIdFile = (file: File): Promise<string[] | { error: string }
     });
 };
 
-export const parseWKTAndJSONFile = (file: File): Promise<{ wkt: string } | { json: string } | { error: string }> => {
+export const parseWKTAndJSONFile = (file: File): Promise<{ wkt: string; featureCount: number } | { json: string; featureCount: number } | { error: string }> => {
     return new Promise((resolve, reject) => {
         const sizeCheckResult = checkFileSize(file);
         if (sizeCheckResult) {
@@ -55,17 +55,35 @@ export const parseWKTAndJSONFile = (file: File): Promise<{ wkt: string } | { jso
             const text = e.target?.result;
             if (typeof text === 'string') {
                 if (file.name.endsWith('.txt')) {
-                    const isValidWKT = isValidWkt(text);
-                    if (!isValidWKT) {
+                    let featureCount = 1;
+                    try {
+                        const parsed = wellknown.parse(text);
+                        if (!parsed) {
+                            resolve({ error: 'Invalid WKT format.' });
+                            return;
+                        }
+                        
+                        if (parsed.type === 'GeometryCollection') {
+                            featureCount = parsed.geometries?.length || 1;
+                        } else if (parsed.type.startsWith('Multi')) {
+                            featureCount = parsed.coordinates?.length || 1;
+                        }
+                    } catch (e) {
                         resolve({ error: 'Invalid WKT format.' });
                         return;
                     }
-                    resolve({wkt: text});
+                    
+                    resolve({wkt: text, featureCount});
                 } else if (file.name.endsWith('.json') || file.name.endsWith('.geojson')) {
                     try {
                         const jsonData = JSON.parse(text);
-                        //const wkt = jsonData.type === 'FeatureCollection' ? jsonData.features.map((feature: any) => geojsonToWKT(feature.geometry)) : geojsonToWKT(jsonData.geometry);
-                        resolve({json: jsonData});
+                        let featureCount = 1;
+                        
+                        if (jsonData.type === 'FeatureCollection') {
+                            featureCount = jsonData.features?.length || 0;
+                        }
+                        
+                        resolve({json: jsonData, featureCount});
                     } catch (error) {
                         resolve({ error: 'Invalid GeoJSON format.' });
                         return;

@@ -12,7 +12,7 @@ const fetcher = async (url: string): Promise<ApiResponse> => {
 }
 
 export function useStatusPolling(options: {
-  id: string
+  id: string | null
   onCompleted?: (resultData?: any) => void
 }) {
   const { id, onCompleted } = options
@@ -77,7 +77,7 @@ export function useStatusPolling(options: {
   
   return {
     response,
-    isLoading: isLoading || (!response && !error),
+    isLoading: id ? (isLoading || (!response && !error)) : false,
     error
   } as const
 }

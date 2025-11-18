@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useStore } from '@/store';
 import Alert from '@/components/Alert';
 import { Tabs } from '@/components/Tabs';
@@ -9,6 +9,8 @@ import { useSafeRouterPush } from '@/lib/utils/safePush';
 import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
+import { getAsyncThreshold } from '@/lib/utils/configUtils';
+import { useConfig } from '@/lib/contexts/ConfigContext';
 
 interface SubmitGeoIdsProps {
     useTempKey?: boolean;
@@ -22,7 +24,8 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
 
     const { error, geoIds } = useStore();
     const safePush = useSafeRouterPush();
-
+    const { config } = useConfig();
+    const asyncThreshold = useMemo(() => getAsyncThreshold(config), [config]);
     const clearError = () => useStore.setState({ error: "" });
 
     useEffect(() => {
@@ -56,12 +59,20 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                 setIsLoading(false);
             } else {
                 const cleanGeoIds = geoIds.filter(geoId => geoId.trim() !== '');
+                
+                const shouldUseAsync = cleanGeoIds.length > asyncThreshold;
+
+                const updatedAnalysisOptions = {
+                    ...analysisOptions,
+                    async: shouldUseAsync
+                };
+
                 try {
                     const headers = createApiHeaders(apiKey);
                     const response = await fetch('/api/submit/geo-ids', {
                         method: 'POST',
                         headers,
-                        body: JSON.stringify({ geoIds: cleanGeoIds, analysisOptions }),
+                        body: JSON.stringify({ geoIds: cleanGeoIds, analysisOptions: updatedAnalysisOptions }),
                     });
 
                     const fetchedData = await response.json();
@@ -79,16 +90,16 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                     }
 
                     if (fetchedData) {
-                        // Always handle as async response - redirect to results page for polling
                         if (fetchedData.code === SystemCode.ANALYSIS_PROCESSING) {
                             const { token } = fetchedData.data;
                             useStore.setState({ token });
                             safePush(`/results/${token}`);
-                        } else {
-                            // Fallback for synchronous response (for backwards compatibility)
-                            const { token, data } = fetchedData;
-                            useStore.setState({ token, data });
-                            safePush(`/results/${token}`);
+                        } else if (fetchedData.code === SystemCode.ANALYSIS_COMPLETED) {
+                            const token = fetchedData.context?.token;
+                            if (token) {
+                                useStore.setState({ token, response: fetchedData });
+                                safePush(`/results/${token}`);
+                            }
                         }
                     }
                 } catch (error: any) {

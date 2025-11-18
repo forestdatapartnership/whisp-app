@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Alert from '@/components/Alert';
 import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
@@ -10,6 +10,8 @@ import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
 import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
+import { getAsyncThreshold } from '@/lib/utils/configUtils';
+import { useConfig } from '@/lib/contexts/ConfigContext';
 
 interface SubmitGeometryProps {
     useTempKey?: boolean;
@@ -23,6 +25,9 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
     const { error } = useStore();
     const [type, setType] = useState<string>('');
     const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
+    const [featureCount, setFeatureCount] = useState<number>(0);
+    const { config } = useConfig();
+    const asyncThreshold = useMemo(() => getAsyncThreshold(config), [config]);
 
     const safePush = useSafeRouterPush();
     const resetStore = useStore((state) => state.reset);
@@ -37,16 +42,19 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
             if (result && 'error' in result) {
                 useStore.setState({ error: result.error, selectedFile: "" });
                 setIsDisabled(true);
+                setFeatureCount(0);
             } else {
                 setIsDisabled(false);
                 useStore.setState({ selectedFile: file.name });
                 if (result && 'wkt' in result) {
                     setType('wkt');
                     setWkt(result.wkt);
+                    setFeatureCount(result.featureCount);
                 }
                 else if (result && 'json' in result) {
                     setType('json');
                     setGeojson(result.json);
+                    setFeatureCount(result.featureCount);
                 }
             }
         }
@@ -56,12 +64,19 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
         setIsDisabled(true);
         clearError();
         useStore.setState({ selectedFile: "" });
+        setFeatureCount(0);
     };
 
     const analyze = async () => {
         setIsLoading(true);
 
         try {
+            const shouldUseAsync = featureCount > asyncThreshold;
+            const updatedAnalysisOptions = {
+                ...analysisOptions,
+                async: shouldUseAsync
+            };
+
             // Get the appropriate API key based on useTempKey flag
             let apiKey = null;
             if (useTempKey) {
@@ -93,12 +108,12 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
 
             if (type === 'wkt') {
                 endpoint = `${apiBasePath}/wkt`;
-                body = { wkt, analysisOptions };
+                body = { wkt, analysisOptions: updatedAnalysisOptions };
             } else if (type === 'json') {
                 endpoint = `${apiBasePath}/geojson`;
                 const geojsonWithOptions = {
                     ...geojson,
-                    analysisOptions
+                    analysisOptions: updatedAnalysisOptions
                 };
                 body = geojsonWithOptions;
             }
@@ -127,16 +142,16 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
             if (fetchedData) {
                 resetStore();
 
-                // Always handle as async response - redirect to results page for polling
                 if (fetchedData.code === SystemCode.ANALYSIS_PROCESSING) {
                     const { token } = fetchedData.data;
                     useStore.setState({ token });
                     safePush(`/results/${token}`);
-                } else {
-                    // Fallback for synchronous response (for backwards compatibility)
-                    const { token, data } = fetchedData;
-                    useStore.setState({ token, data });
-                    safePush(`/results/${token}`);
+                } else if (fetchedData.code === SystemCode.ANALYSIS_COMPLETED) {
+                    const token = fetchedData.context?.token;
+                    if (token) {
+                        useStore.setState({ token, response: fetchedData });
+                        safePush(`/results/${token}`);
+                    }
                 }
             }
         } catch (error: any) {

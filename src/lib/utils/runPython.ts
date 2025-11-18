@@ -122,18 +122,18 @@ export const analyzeGeoJson = async (
 ): Promise<boolean> => {
   const scriptPath = 'src/python/analysis.py';
   const dataPath = `temp/${token}.json`;
+  const logSource = "runPython.ts";
   
-  // Add the "legacy" argument when useLegacyFormat is true
   const args = useLegacyFormat ? [dataPath, "legacy"] : [dataPath];
   
   const startTime = Date.now();
-  log("debug", `Starting Python script execution for token ${token}`, "runPython.ts");
+  log("debug", `Starting Python script execution for token ${token}`, logSource);
   
   await runPythonScript(scriptPath, args, log, timeout);
   
   const endTime = Date.now();
   const pythonDuration = endTime - startTime;
-  log("debug", `Python script completed for token ${token}. Duration: ${pythonDuration}ms`, "runPython.ts");
+  log("info", `Python script completed for token ${token}. Duration: ${pythonDuration}ms`, logSource);
   
   return true;
 };

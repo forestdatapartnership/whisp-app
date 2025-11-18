@@ -30,7 +30,7 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
 
     const timeout = isAsync? getPythonTimeoutMs() : getPythonTimeoutSyncMs();
 
-    log("info", `Starting analysis: ${token}. Received GeoJSON with ${geometryCount} features`, logSource);
+    log("info", `Starting analysis for ${token}, async mode: ${isAsync}, geometry count: ${geometryCount}`, logSource);
 
     // Check for legacy format header
     const useLegacyFormat = req?.headers.get('x-legacy-format') === 'true';
@@ -40,7 +40,6 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
         await atomicWriteFile(`${filePath}/${token}.json`, JSON.stringify(featureCollection), log);
 
         if (isAsync) {
-            // Start background processing (don't await)
             analyzeGeoJson(token, log, timeout, useLegacyFormat).catch(async (error) => {
                 log("error", `Async analysis failed for token ${token}: ${error}`, logSource);
                
@@ -78,18 +77,14 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
             );
         }
 
-        // Pass the legacy format flag to analyzeGeoJson
         const analyzed = await analyzeGeoJson(token, log, timeout, useLegacyFormat);
 
         if (analyzed) {
-            // Read and parse the analysis results
-            fileHandle = await fs.open(`${filePath}/${token}-result.json`, 'r'); // Explicitly open the file
+            fileHandle = await fs.open(`${filePath}/${token}-result.json`, 'r');
             const fileContents = await fileHandle.readFile('utf8');
             const jsonData = JSON.parse(fileContents);
-            if (Array.isArray(jsonData)) {
-                log("info", `${jsonData.length} plots successfully analysed for token ${token}`, logSource, { token: token, plots: jsonData.length });
-            }
-            return  useResponse(SystemCode.ANALYSIS_COMPLETED, jsonData);
+            
+            return  useResponse(SystemCode.ANALYSIS_COMPLETED, jsonData, { token });
         } else {
             throw new SystemError(SystemCode.ANALYSIS_ERROR);
         }

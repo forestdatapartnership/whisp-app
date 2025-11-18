@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import StatusCard from '@/components/StatusCard'
@@ -32,7 +32,7 @@ export default function ResultsPage() {
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | undefined>(undefined);
   const [dataError, setDataError] = useState<string | null>(null);
   const [hasExternalIds, setHasExternalIds] = useState<boolean>(false);
-  const { token } = useStore();
+  const [syncResponse] = useState<any>(() => useStore.getState().response);
 
   const createColumnDefs = (data: RecordData[]): ColumnDef<RecordData, any>[] => {
       if (!data || !Array.isArray(data) || data.length === 0) {
@@ -92,10 +92,19 @@ export default function ResultsPage() {
     }
   }, [processResultData]);
 
-  const { response, error: pollingError, isLoading } = useStatusPolling({
-    id,
+  useEffect(() => {
+    if (syncResponse?.data) {
+      processResultData(syncResponse.data);
+      useStore.setState({ response: null });
+    }
+  }, [syncResponse, processResultData]);
+
+  const { response: polledResponse, error: pollingError, isLoading } = useStatusPolling({
+    id: syncResponse ? null : id,
     onCompleted: handleCompleted
   });
+
+  const response = syncResponse || polledResponse;
 
   const generateEarthMap = () => {
     if (tableData.length > 0) {
@@ -218,7 +227,6 @@ export default function ResultsPage() {
           </div>
           <div className="w-full sm:w-52">
             <DownloadDropdown
-              token={token}
               id={id}
             />
           </div>

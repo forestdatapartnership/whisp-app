@@ -11,13 +11,11 @@ import {
 import { useStore } from "@/store";
 
 interface DownloadDropdownProps {
-  token?: string;
   id: string;
   isDisabled?: boolean;
 }
 
 export function DownloadDropdown({ 
-  token, 
   id, 
   isDisabled = false 
 }: DownloadDropdownProps) {
@@ -29,7 +27,7 @@ export function DownloadDropdown({
 
     setIsDownloading(true);
     try {
-      const csvUrl = `/api/download-csv/${token || id}`;
+      const csvUrl = `/api/download-csv/${id}`;
       const response = await fetch(csvUrl);
 
       if (!response.ok) {
@@ -38,7 +36,7 @@ export function DownloadDropdown({
 
       // Extract filename from Content-Disposition header
       const contentDisposition = response.headers.get('content-disposition');
-      let filename = `${token || id}.csv`; // fallback filename
+      let filename = `${id}.csv`; // fallback filename
       
       if (contentDisposition) {
         // First try to parse the simple filename= format
@@ -75,7 +73,7 @@ export function DownloadDropdown({
   const handleDownloadGeoJson = async () => {
     setIsDownloading(true);
     try {
-      const geoJsonUrl = `/api/generate-geojson/${token || id}`;
+      const geoJsonUrl = `/api/generate-geojson/${id}`;
       const response = await fetch(geoJsonUrl);
 
       if (!response.ok) {

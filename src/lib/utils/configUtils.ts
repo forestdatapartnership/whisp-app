@@ -36,6 +36,11 @@ export function getMaxGeometryLimitSync(config?: PublicConfig): number {
   return parseInt(value, 10);
 }
 
+export function getAsyncThreshold(config?: PublicConfig): number {
+  const value = getConfig(config, 'NEXT_PUBLIC_ASYNC_THRESHOLD', '50');
+  return parseInt(value, 10);
+}
+
 export function getMaxRequestSizeMB(config?: PublicConfig): number | undefined {
   const maxFileSizeBytes = getMaxFileSize(config);
   return maxFileSizeBytes ? Math.round(maxFileSizeBytes / (1024 * 1024) * 100) / 100 : undefined;

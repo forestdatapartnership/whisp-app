@@ -3,5 +3,6 @@ import { SystemCode } from '@/types/systemCodes';
 export interface ApiResponse<T = any> {
   code?: SystemCode;     
   message?: string;     
-  data?: T;            
+  data?: T;
+  context?: Record<string, any>;
 }

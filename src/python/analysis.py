@@ -18,8 +18,6 @@ CREDENTIAL_PATH = "/var/secrets/credentials.json"
 if not os.path.exists(CREDENTIAL_PATH):
     CREDENTIAL_PATH = os.path.join(os.path.abspath(os.getcwd()), "credentials.json")
 
-whisp.initialize_ee(CREDENTIAL_PATH)
-
 class AnalysisOptions:
     def __init__(self, d: dict | None):
         d = d or {}
@@ -27,6 +25,7 @@ class AnalysisOptions:
         self.unit_type = d.get('unitType')
         nc = d.get('nationalCodes')
         self.national_codes = [str(c).lower() for c in nc] if isinstance(nc, list) and nc else None
+        self.async_mode = d.get('async', False)
 
 def atomic_write(filename, write_handler):
     temp_filename = filename + '.tmp'
@@ -55,11 +54,26 @@ def main(file_path, legacy_mode=False):
             opts = AnalysisOptions(payload.get('analysisOptions') if isinstance(payload, dict) else None)
     except Exception:
         pass
+    
+    whisp.initialize_ee(CREDENTIAL_PATH, use_high_vol_endpoint=opts.async_mode)
+    if opts.async_mode:
+        print("Initialized Earth Engine with high-volume endpoint")
+    else:
+        print("Initialized Earth Engine with standard endpoint")
+    
     df_kwargs = {}
     if opts.national_codes: df_kwargs['national_codes'] = opts.national_codes
     #else: df_kwargs['national_codes'] = ['co','ci','br']
     if opts.external_id_column: df_kwargs['external_id_column'] = opts.external_id_column
     if opts.unit_type: df_kwargs['unit_type'] = opts.unit_type
+    
+    if opts.async_mode:
+        df_kwargs['mode'] = 'concurrent'
+        print("Using concurrent processing mode")
+    else:
+        df_kwargs['mode'] = 'sequential'
+        print("Using sequential processing mode")
+    
     whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path, **df_kwargs)
 
     csv_file_path = os.path.splitext(file_path)[0] + '-result.csv'

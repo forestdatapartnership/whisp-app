@@ -1,27 +1,5 @@
 import { create } from "zustand";
 
-type RecordData = {
-    Geo_id: string;
-    Area_ha: number;
-    Country: string;
-    EUFO_2020: number;
-    GLAD_Primary: number;
-    TMF_undist: number;
-    JAXA_FNF_2020: number;
-    GFC_TC_2020: number;
-    GLAD_LULC__2020: number;
-    ESRI_TC_2020: number;
-    TMF_disturbed: number;
-    RADD_alerts: string;
-    TMF_plant: number;
-    Oil_palm_Descals: number;
-    Oil_palm_FDaP_: number;
-    Cocoa_ETH: number;
-    WDPA: string;
-    OECM: string;
-    KBA: string;
-};
-
 type UserProfile = {
     id: number;
     name: string;
@@ -33,7 +11,7 @@ type UserProfile = {
 
 type StoreState = {
     token: string,
-    data: {} | null,
+    response: any | null,
     error: string,
     geoIds: string[],
     selectedFile: string,
@@ -47,7 +25,7 @@ type StoreState = {
 
 const initialState: Omit<StoreState, 'reset' | 'setUser' | 'setIsAuthenticated'> = {
     token: "",
-    data: null,
+    response: null,
     error: "",
     geoIds: [""],
     selectedFile: "",
