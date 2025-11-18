@@ -34,6 +34,8 @@ export default function ResultsPage() {
   const [hasExternalIds, setHasExternalIds] = useState<boolean>(false);
   const [syncResponse] = useState<any>(() => useStore.getState().response);
 
+  const IGNORED_COLUMNS: string[] = ['whisp_processing_metadata', 'geometry', 'geojson'];
+
   const createColumnDefs = (data: RecordData[]): ColumnDef<RecordData, any>[] => {
       if (!data || !Array.isArray(data) || data.length === 0) {
           setDataError('No valid data available for display');
@@ -50,11 +52,13 @@ export default function ResultsPage() {
 
           const sample = data[sampleIndex];
 
-          return Object.keys(sample).map((key) => ({
-              accessorKey: key,
-              header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
-              enableHiding: true,
-          })) as ColumnDef<Record<string, any>, any>[];
+          return Object.keys(sample)
+              .filter(key => !IGNORED_COLUMNS.includes(key))
+              .map((key) => ({
+                  accessorKey: key,
+                  header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+                  enableHiding: true,
+              })) as ColumnDef<Record<string, any>, any>[];
       } catch (error) {
           setDataError('Failed to process data for display');
           return [];

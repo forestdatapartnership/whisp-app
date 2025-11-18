@@ -60,8 +60,6 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       columnVisibility: {
-        geojson: false,
-        geometry: false,
         external_id: showExternalIdByDefault,
         geoid: false
       }
