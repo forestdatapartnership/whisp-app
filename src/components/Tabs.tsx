@@ -3,7 +3,19 @@ import { ManualInput } from "./ManualInput";
 import { useStore } from "@/store";
 import { parseGeoIdFile } from "@/lib/utils/fileParser";
 
-export const Tabs: React.FC<{ activeTab: number; setActiveTab: (index: number) => void }> = ({ activeTab, setActiveTab }) => {
+interface TabsProps {
+    activeTab: number;
+    setActiveTab: (index: number) => void;
+    asyncThreshold: number;
+    maxGeometryLimit: number;
+}
+
+export const Tabs: React.FC<TabsProps> = ({ 
+    activeTab, 
+    setActiveTab,
+    asyncThreshold,
+    maxGeometryLimit
+}) => {
 
     const handleFileChange = async (file: File) => {
         useStore.setState({ error: "" })
@@ -13,7 +25,16 @@ export const Tabs: React.FC<{ activeTab: number; setActiveTab: (index: number) =
             if (result && 'error' in result) {
                 useStore.setState({ error: result.error, selectedFile: "" });
             } else {
-                useStore.setState({ geometry: result, geoIds: result, selectedFile: file.name });
+                const count = result.length;
+                
+                if (count > maxGeometryLimit) {
+                    useStore.setState({ 
+                        error: `Too many Geo IDs. Maximum allowed is ${maxGeometryLimit} features.`, 
+                        selectedFile: "" 
+                    });
+                } else {
+                    useStore.setState({ geometry: result, geoIds: result, selectedFile: file.name });
+                }
             }
         }
     };

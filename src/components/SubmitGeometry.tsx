@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import Alert from '@/components/Alert';
 import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
@@ -10,14 +10,18 @@ import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
 import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
-import { getAsyncThreshold } from '@/lib/utils/configUtils';
-import { useConfig } from '@/lib/contexts/ConfigContext';
 
 interface SubmitGeometryProps {
     useTempKey?: boolean;
+    asyncThreshold: number;
+    maxGeometryLimit: number;
 }
 
-const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) => {
+const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ 
+    useTempKey = true,
+    asyncThreshold,
+    maxGeometryLimit
+}) => {
     const [wkt, setWkt] = useState<string>('');
     const [geojson, setGeojson] = useState<any>(undefined);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
@@ -25,8 +29,6 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
     const [type, setType] = useState<string>('');
     const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
     const [featureCount, setFeatureCount] = useState<number>(0);
-    const { config } = useConfig();
-    const asyncThreshold = useMemo(() => getAsyncThreshold(config), [config]);
 
     const safePush = useSafeRouterPush();
     const resetStore = useStore((state) => state.reset);
@@ -43,17 +45,28 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
                 setIsDisabled(true);
                 setFeatureCount(0);
             } else {
-                setIsDisabled(false);
-                useStore.setState({ selectedFile: file.name });
-                if (result && 'wkt' in result) {
-                    setType('wkt');
-                    setWkt(result.wkt);
-                    setFeatureCount(result.featureCount);
-                }
-                else if (result && 'json' in result) {
-                    setType('json');
-                    setGeojson(result.json);
-                    setFeatureCount(result.featureCount);
+                const count = result.featureCount;
+                
+                if (count > maxGeometryLimit) {
+                    useStore.setState({ 
+                        error: `Too many geometries. Maximum allowed is ${maxGeometryLimit} features.`, 
+                        selectedFile: "" 
+                    });
+                    setIsDisabled(true);
+                    setFeatureCount(0);
+                } else {
+                    setIsDisabled(false);
+                    useStore.setState({ selectedFile: file.name });
+                    if (result && 'wkt' in result) {
+                        setType('wkt');
+                        setWkt(result.wkt);
+                        setFeatureCount(result.featureCount);
+                    }
+                    else if (result && 'json' in result) {
+                        setType('json');
+                        setGeojson(result.json);
+                        setFeatureCount(result.featureCount);
+                    }
                 }
             }
         }

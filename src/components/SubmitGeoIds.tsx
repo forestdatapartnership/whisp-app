@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStore } from '@/store';
 import Alert from '@/components/Alert';
 import { Tabs } from '@/components/Tabs';
@@ -9,22 +9,24 @@ import { useSafeRouterPush } from '@/lib/utils/safePush';
 import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
-import { getAsyncThreshold } from '@/lib/utils/configUtils';
-import { useConfig } from '@/lib/contexts/ConfigContext';
 
 interface SubmitGeoIdsProps {
     useTempKey?: boolean;
+    asyncThreshold: number;
+    maxGeometryLimit: number;
 }
 
-const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
+const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ 
+    useTempKey = true,
+    asyncThreshold,
+    maxGeometryLimit
+}) => {
     const [activeTab, setActiveTab] = useState<number>(0);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
     const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
 
     const { error, geoIds } = useStore();
     const safePush = useSafeRouterPush();
-    const { config } = useConfig();
-    const asyncThreshold = useMemo(() => getAsyncThreshold(config), [config]);
     const clearError = () => useStore.setState({ error: "" });
 
     useEffect(() => {
@@ -55,10 +57,18 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                 useStore.setState({ error: 'Please enter at least one Geo ID or upload a file.', isLoading: false });
             } else {
                 const cleanGeoIds = geoIds.filter(geoId => geoId.trim() !== '');
+                const count = cleanGeoIds.length;
                 
-                useStore.setState({ featureCount: cleanGeoIds.length });
+                if (count > maxGeometryLimit) {
+                    useStore.setState({ 
+                        error: `Too many Geo IDs. Maximum allowed is ${maxGeometryLimit} features.`, 
+                        isLoading: false 
+                    });
+                    return;
+                }
                 
-                const shouldUseAsync = cleanGeoIds.length > asyncThreshold;
+                const shouldUseAsync = count > asyncThreshold;
+                useStore.setState({ featureCount: count });
 
                 const updatedAnalysisOptions = {
                     ...analysisOptions,
@@ -147,6 +157,8 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
             <Tabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
+                asyncThreshold={asyncThreshold}
+                maxGeometryLimit={maxGeometryLimit}
             />
 
             <div className="mx-2 mt-4">

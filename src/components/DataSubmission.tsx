@@ -1,10 +1,12 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import SubmitGeometry from '@/components/SubmitGeometry';
 import SubmitGeoIds from '@/components/SubmitGeoIds';
 import Link from 'next/link';
 import { useStore } from '@/store';
 import StatusCard from '@/components/StatusCard';
+import { useConfig } from '@/lib/contexts/ConfigContext';
+import { getAsyncThreshold, getMaxGeometryLimit } from '@/lib/utils/configUtils';
 
 interface DataSubmissionProps {
     useTempKey?: boolean;
@@ -17,6 +19,10 @@ const DataSubmission: React.FC<DataSubmissionProps> = ({ useTempKey = true }) =>
     const resetStore = useStore((state) => state.reset);
     const isLoading = useStore((state) => state.isLoading);
     const featureCount = useStore((state) => state.featureCount);
+    
+    const { config } = useConfig();
+    const asyncThreshold = useMemo(() => getAsyncThreshold(config), [config]);
+    const maxGeometryLimit = useMemo(() => getMaxGeometryLimit(config), [config]);
 
     const handleModeChange = (mode: SubmissionMode) => {
         setActiveMode(mode);
@@ -51,9 +57,17 @@ const DataSubmission: React.FC<DataSubmissionProps> = ({ useTempKey = true }) =>
 
     const renderContent = () => {
         if (activeMode === 'geometry') {
-            return <SubmitGeometry useTempKey={useTempKey} />;
+            return <SubmitGeometry 
+                useTempKey={useTempKey} 
+                asyncThreshold={asyncThreshold}
+                maxGeometryLimit={maxGeometryLimit}
+            />;
         } else {
-            return <SubmitGeoIds useTempKey={useTempKey} />;
+            return <SubmitGeoIds 
+                useTempKey={useTempKey}
+                asyncThreshold={asyncThreshold}
+                maxGeometryLimit={maxGeometryLimit}
+            />;
         }
     };
 

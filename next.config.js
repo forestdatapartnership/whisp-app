@@ -23,6 +23,16 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: require('./package.json').version,
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+      };
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
