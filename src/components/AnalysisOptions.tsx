@@ -28,7 +28,7 @@ export interface AnalysisOptionsValue {
 
 export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptionsValue = {
   externalIdColumn: '',
-  nationalCodes: ['co', 'ci', 'br'],
+  nationalCodes: ['cm', 'co', 'ci', 'br'],
   unitType: 'ha',
   async: true,
 }
@@ -40,13 +40,14 @@ interface AnalysisOptionsProps {
 }
 
 const COUNTRIES = [
+  { code: 'cm', label: 'Cameroon' },
   { code: 'co', label: 'Colombia' },
   { code: 'ci', label: "Côte d’Ivoire" },
   { code: 'br', label: 'Brazil' }
 ]
 
 export default function AnalysisOptions({ value, onChange, disabled = false }: AnalysisOptionsProps) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(true)
   const toggleCountry = (code: string) => {
     const has = value.nationalCodes.includes(code)
     const next = has ? value.nationalCodes.filter(c => c !== code) : [...value.nationalCodes, code]

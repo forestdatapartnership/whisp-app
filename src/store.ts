@@ -18,6 +18,8 @@ type StoreState = {
     geometry: string[],
     user: UserProfile | null,
     isAuthenticated: boolean,
+    isLoading: boolean,
+    featureCount: number,
     setUser: (user: UserProfile | null) => void,
     setIsAuthenticated: (isAuthenticated: boolean) => void,
     reset: () => void;
@@ -31,7 +33,9 @@ const initialState: Omit<StoreState, 'reset' | 'setUser' | 'setIsAuthenticated'>
     selectedFile: "",
     geometry: [],
     user: null,
-    isAuthenticated: false
+    isAuthenticated: false,
+    isLoading: false,
+    featureCount: 0
 };
 
 export const useStore = create<StoreState>((set) => ({

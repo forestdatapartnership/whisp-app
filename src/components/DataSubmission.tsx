@@ -4,6 +4,7 @@ import SubmitGeometry from '@/components/SubmitGeometry';
 import SubmitGeoIds from '@/components/SubmitGeoIds';
 import Link from 'next/link';
 import { useStore } from '@/store';
+import StatusCard from '@/components/StatusCard';
 
 interface DataSubmissionProps {
     useTempKey?: boolean;
@@ -14,6 +15,8 @@ type SubmissionMode = 'geometry' | 'geoids';
 const DataSubmission: React.FC<DataSubmissionProps> = ({ useTempKey = true }) => {
     const [activeMode, setActiveMode] = useState<SubmissionMode>('geometry');
     const resetStore = useStore((state) => state.reset);
+    const isLoading = useStore((state) => state.isLoading);
+    const featureCount = useStore((state) => state.featureCount);
 
     const handleModeChange = (mode: SubmissionMode) => {
         setActiveMode(mode);
@@ -56,22 +59,36 @@ const DataSubmission: React.FC<DataSubmissionProps> = ({ useTempKey = true }) =>
 
     return (
         <div className="p-5 border border-gray-300 bg-gray-800 rounded shadow-md my-4 relative">
-            <h1 className="text-2xl font-semibold text-center mb-4">
-                {activeMode === 'geometry' ? 'Submit Geometry' : 'Submit Geo IDs'}
-            </h1>
+            {isLoading && (
+                <div className="absolute inset-0 z-10 rounded bg-gray-800 bg-opacity-75">
+                    <StatusCard
+                        title="Analysis in Progress"
+                        message={featureCount > 0 ? `Processing ${featureCount} feature${featureCount !== 1 ? 's' : ''}...` : "Processing your analysis..."}
+                        showSpinner
+                        hideBorder
+                    >
+                    </StatusCard>
+                </div>
+            )}
             
-            {renderModeSelector()}
-            
-            {renderContent()}
-            
-            <div className="flex items-center justify-center mt-4">
-                <Link 
-                    href="https://openforis.org/whisp-terms-of-service/" 
-                    target="_blank" 
-                    className="text-blue-500 hover:underline"
-                >
-                    Terms of Service
-                </Link>
+            <div className={isLoading ? "opacity-50 pointer-events-none" : ""}>
+                <h1 className="text-2xl font-semibold text-center mb-4">
+                    {activeMode === 'geometry' ? 'Submit Geometry' : 'Submit Geo IDs'}
+                </h1>
+                
+                {renderModeSelector()}
+                
+                {renderContent()}
+                
+                <div className="flex items-center justify-center mt-4">
+                    <Link 
+                        href="https://openforis.org/whisp-terms-of-service/" 
+                        target="_blank" 
+                        className="text-blue-500 hover:underline"
+                    >
+                        Terms of Service
+                    </Link>
+                </div>
             </div>
         </div>
     );

@@ -20,7 +20,6 @@ interface SubmitGeometryProps {
 const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) => {
     const [wkt, setWkt] = useState<string>('');
     const [geojson, setGeojson] = useState<any>(undefined);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
     const { error } = useStore();
     const [type, setType] = useState<string>('');
@@ -68,7 +67,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
     };
 
     const analyze = async () => {
-        setIsLoading(true);
+        useStore.setState({ isLoading: true, featureCount });
 
         try {
             const shouldUseAsync = featureCount > asyncThreshold;
@@ -157,7 +156,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
         } catch (error: any) {
             useStore.setState({ error: error.message });
         } finally {
-            setIsLoading(false);
+            useStore.setState({ isLoading: false });
         }
     };
 
@@ -195,12 +194,6 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
 
     return (
         <div className="relative">
-            {isLoading && (
-                <div className="absolute top-0 left-0 right-0 bottom-0 bg-gray-200 bg-opacity-75 flex items-center justify-center z-10 rounded">
-                    <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-8 h-8 animate-spin"></div>
-                </div>
-            )}
-            
             <div className="mx-2 mb-4">
                 {error && <Alert type="error" message={error} onClose={clearError} />}
             </div>
@@ -214,7 +207,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ useTempKey = true }) =>
             </div>
             
             <div className="mx-2 mt-4">
-                <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} disabled={isLoading} />
+                <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} />
             </div>
 
             <div className="flex items-center mx-2 justify-between mt-4">

@@ -2,6 +2,7 @@ import { spawn, ChildProcess } from 'child_process';
 import { LogFunction } from "@/lib/logger";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from '@/types/systemError';
+import { jobCache } from './jobCache';
 
 /**
  * Runs any Python script with the given arguments
@@ -126,14 +127,28 @@ export const analyzeGeoJson = async (
   
   const args = useLegacyFormat ? [dataPath, "legacy"] : [dataPath];
   
-  const startTime = Date.now();
+  const pythonStartTime = Date.now();
   log("debug", `Starting Python script execution for token ${token}`, logSource);
+  
+  const metadata = jobCache.get(token);
+  if (metadata) {
+    jobCache.set(token, { ...metadata, pythonStartTime });
+  }
   
   await runPythonScript(scriptPath, args, log, timeout);
   
-  const endTime = Date.now();
-  const pythonDuration = endTime - startTime;
-  log("info", `Python script completed for token ${token}. Duration: ${pythonDuration}ms`, logSource);
+  const finishTime = Date.now();
+  const pythonDuration = finishTime - pythonStartTime;
+  
+  const updatedMetadata = jobCache.get(token);
+  if (updatedMetadata) {
+    jobCache.set(token, { ...updatedMetadata, finishTime });
+  }
+  
+  const featureCount = updatedMetadata?.featureCount ?? 'na';
+  const totalDuration = updatedMetadata?.startTime ? finishTime - updatedMetadata.startTime : 'na';
+  
+  log("info", `Analysis completed - Token: ${token}, Features: ${featureCount}, Total duration: ${totalDuration === 'na' ? 'na' : totalDuration + 'ms'}, Python duration: ${pythonDuration}ms`, logSource);
   
   return true;
 };

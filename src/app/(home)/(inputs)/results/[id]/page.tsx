@@ -109,7 +109,6 @@ export default function ResultsPage() {
   });
 
   const response = syncResponse || polledResponse;
-
   const generateEarthMap = () => {
     if (tableData.length > 0) {
         const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`;
@@ -125,11 +124,18 @@ export default function ResultsPage() {
 
   // Show loading state while processing
   if (isPollingLoading) {
+    const featureCount = response?.data?.featureCount;
+    const percent = response?.data?.percent;
+    const processingMessage = featureCount 
+      ? `Processing ${featureCount} feature${featureCount !== 1 ? 's' : ''}...`
+      : 'Processing your analysis...';
+    
     return (
       <StatusCard
         title="Analysis in Progress"
-        message="Processing your analysis..."
+        message={processingMessage}
         showSpinner
+        progress={percent !== undefined ? { percent } : null}
       >
         <p className="text-gray-400 text-sm">This page will automatically update when the analysis is complete.</p>
       </StatusCard>

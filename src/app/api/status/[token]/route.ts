@@ -8,6 +8,7 @@ import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 import { LogFunction } from "@/lib/logger";
 import { fileExists, readFile } from "@/lib/utils/fileUtils";
+import { jobCache } from "@/lib/utils/jobCache";
 
 export const GET = compose(
   withLogging,
@@ -15,14 +16,16 @@ export const GET = compose(
 )(async (request: NextRequest, log: LogFunction, { params }: any): Promise<NextResponse<ApiResponse>> => {
     const { token } = params;
     const filePath = path.join(process.cwd(), 'temp');
+    const metadata = jobCache.get(token);
     
     // Check if result exists (analysis completed)
     if (await fileExists(`${filePath}/${token}-result.json`, log)) {
         const resultData = await readFile(`${filePath}/${token}-result.json`, log);
-        console.log('[Status] Result Data:', resultData);
         const jsonData = JSON.parse(resultData);
-        console.log('[Status] JSON Data:', jsonData);
-        return useResponse(SystemCode.ANALYSIS_COMPLETED, jsonData);
+        
+        return useResponse(SystemCode.ANALYSIS_COMPLETED, jsonData, {
+            token
+        });
     }
     
     // Check if error exists (analysis failed)
@@ -43,7 +46,18 @@ export const GET = compose(
     
     // Check if input exists (analysis was submitted and is processing)
     if (await fileExists(`${filePath}/${token}.json`, log)) {
-        return useResponse(SystemCode.ANALYSIS_PROCESSING);
+        let statusInfo = null;
+        
+        if (await fileExists(`${filePath}/${token}-status.json`, log)) {
+            const statusData = await readFile(`${filePath}/${token}-status.json`, log);
+            statusInfo = JSON.parse(statusData);
+        }
+
+        return useResponse(SystemCode.ANALYSIS_PROCESSING, {
+            token,
+            ...(metadata?.featureCount !== undefined && { featureCount: metadata.featureCount }),
+            ...(statusInfo?.percent !== undefined && { percent: statusInfo.percent })
+        });
     }
     
     return useResponse(SystemCode.ANALYSIS_JOB_NOT_FOUND);

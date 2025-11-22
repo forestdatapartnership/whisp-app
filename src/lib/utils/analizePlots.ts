@@ -10,14 +10,22 @@ import { SystemError } from "@/types/systemError";
 import { getMaxGeometryLimit, getMaxGeometryLimitSync, getPythonTimeoutMs, getPythonTimeoutSyncMs } from "@/lib/utils/configUtils";
 import { atomicWriteFile } from "@/lib/utils/fileUtils";
 import { getCommonPropertyNames, validateExternalIdColumn } from "./geojsonUtils";
+import { jobCache } from "./jobCache";
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
     const token = uuidv4();
     const filePath = path.join(process.cwd(), 'temp');
     const logSource = "analyzePlots.ts";
+    const startTime = Date.now();
 
     const geometryCount = featureCollection.features.length;
+    
+    jobCache.set(token, { 
+        featureCount: geometryCount,
+        startTime: startTime
+    });
+    
     const maxGeometryLimit = isAsync ? getMaxGeometryLimit() : getMaxGeometryLimitSync();
 
     if (geometryCount > maxGeometryLimit) {
@@ -37,7 +45,7 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
 
     let fileHandle;
     try {
-        await atomicWriteFile(`${filePath}/${token}.json`, JSON.stringify(featureCollection), log);
+        await atomicWriteFile(`${filePath}/${token}.json`, JSON.stringify(featureCollection), log);       
 
         if (isAsync) {
             analyzeGeoJson(token, log, timeout, useLegacyFormat).catch(async (error) => {
@@ -73,6 +81,7 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
                 {
                     token,
                     statusUrl: `/api/status/${token}`,
+                    ...(geometryCount !== undefined && { featureCount: geometryCount })
                 }
             );
         }

@@ -17,7 +17,6 @@ interface SubmitGeoIdsProps {
 }
 
 const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [activeTab, setActiveTab] = useState<number>(0);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
     const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
@@ -34,8 +33,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
     }, [geoIds]);
 
     const analyze = async () => {
-        setIsLoading(true);
-        useStore.setState({ error: '' });
+        useStore.setState({ isLoading: true, error: '' });
         
         let apiKey = null;
         try {
@@ -48,17 +46,17 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
             }
         } catch (err) {
             console.error('Error fetching API key:', err);
-            useStore.setState({ error: "Failed to get API key for authentication" });
-            setIsLoading(false);
+            useStore.setState({ error: "Failed to get API key for authentication", isLoading: false });
             return;
         }
 
         if (geoIds) {
             if (!geoIds.some(geoId => geoId.trim() !== '')) {
-                useStore.setState({ error: 'Please enter at least one Geo ID or upload a file.' });
-                setIsLoading(false);
+                useStore.setState({ error: 'Please enter at least one Geo ID or upload a file.', isLoading: false });
             } else {
                 const cleanGeoIds = geoIds.filter(geoId => geoId.trim() !== '');
+                
+                useStore.setState({ featureCount: cleanGeoIds.length });
                 
                 const shouldUseAsync = cleanGeoIds.length > asyncThreshold;
 
@@ -103,8 +101,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
                         }
                     }
                 } catch (error: any) {
-                    useStore.setState({ error: error.message });
-                    setIsLoading(false);
+                    useStore.setState({ error: error.message, isLoading: false });
                 }
             }
         }
@@ -143,12 +140,6 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
 
     return (
         <div className="relative">
-            {isLoading && (
-                <div className="absolute top-0 left-0 right-0 bottom-0 bg-gray-200 bg-opacity-75 flex items-center justify-center z-10 rounded">
-                    <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-8 h-8 animate-spin"></div>
-                </div>
-            )}
-            
             <div className="mx-2 mb-4">
                 {error && <Alert type="error" message={error} onClose={clearError} />}
             </div>
@@ -159,7 +150,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ useTempKey = true }) => {
             />
 
             <div className="mx-2 mt-4">
-                <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} disabled={isLoading} />
+                <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} />
             </div>
             
             <div className="flex items-center mx-2 justify-between mt-4">
