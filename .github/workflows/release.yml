@@ -46,14 +46,6 @@ jobs:
             git push origin "$TAG"
           fi
 
-      - id: milestone
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          MID=$(gh api "repos/${GITHUB_REPOSITORY}/milestones" \
-                --jq ".[] | select(.title==\"$TAG\") | .number") || true
-          echo "MID=$MID" >> $GITHUB_ENV
-
       - id: notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,26 +61,20 @@ jobs:
             echo
           } > RELEASE_NOTES.md
           
-          if [ -n "$MID" ]; then
-            BODY=$(gh issue list --state closed --milestone "$TAG" \
-                    --repo "$GITHUB_REPOSITORY" \
-                    --json title,number \
-                    --jq '.[] | "- " + .title + " (#" + (.number|tostring) + ")"' || true)
-            if [ -z "$BODY" ]; then
-              BODY="No closed issues in this milestone."
-            fi
-            {
-              echo "---"
-              echo 
-              echo "## 🔧 Issues Resolved in This Release"
-              echo
-              echo "$BODY"
-            } >> RELEASE_NOTES.md
-          else
-            {
-              echo "No changes since last release."
-            } >> RELEASE_NOTES.md
+          BODY=$(gh issue list --state closed --milestone "$TAG" \
+                  --repo "$GITHUB_REPOSITORY" \
+                  --json title,number \
+                  --jq '.[] | "- " + .title + " (#" + (.number|tostring) + ")"' || true)
+          if [ -z "$BODY" ]; then
+            BODY="No closed issues in this milestone."
           fi
+          {
+            echo "---"
+            echo 
+            echo "## 🔧 Issues Resolved in This Release"
+            echo
+            echo "$BODY"
+          } >> RELEASE_NOTES.md
           echo "NOTES_PATH=RELEASE_NOTES.md" >> $GITHUB_ENV
 
       - name: Publish GitHub release
