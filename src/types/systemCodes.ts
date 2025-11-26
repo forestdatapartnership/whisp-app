@@ -33,6 +33,11 @@ export enum SystemCode {
   USER_API_KEY_CREATED_SUCCESS = 'user_api_key_created_success',
   USER_API_KEY_DELETED_SUCCESS = 'user_api_key_deleted_success',
 
+  // Notifications
+  NOTIFICATION_SUBSCRIBED_SUCCESS = 'notification_subscribed_success',
+  NOTIFICATION_UNSUBSCRIBED_SUCCESS = 'notification_unsubscribed_success',
+  NOTIFICATION_INVALID_EMAIL = 'notification_invalid_email',
+
   // Data Validation Errors
   VALIDATION_MISSING_REQUIRED_FIELDS = 'validation_missing_required_fields',
   VALIDATION_INVALID_GEOJSON = 'validation_invalid_geojson',
@@ -220,6 +225,23 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.USER_API_KEY_DELETED_SUCCESS,
     message: 'API key deleted successfully',
     httpStatus: 200
+  },
+
+  // Notifications
+  [SystemCode.NOTIFICATION_SUBSCRIBED_SUCCESS]: {
+    code: SystemCode.NOTIFICATION_SUBSCRIBED_SUCCESS,
+    message: 'Successfully subscribed to email notifications',
+    httpStatus: 200
+  },
+  [SystemCode.NOTIFICATION_UNSUBSCRIBED_SUCCESS]: {
+    code: SystemCode.NOTIFICATION_UNSUBSCRIBED_SUCCESS,
+    message: 'Successfully unsubscribed from email notifications',
+    httpStatus: 200
+  },
+  [SystemCode.NOTIFICATION_INVALID_EMAIL]: {
+    code: SystemCode.NOTIFICATION_INVALID_EMAIL,
+    message: 'Invalid email format',
+    httpStatus: 400
   },
 
   // Data Validation Errors

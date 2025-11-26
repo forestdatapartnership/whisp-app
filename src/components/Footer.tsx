@@ -15,6 +15,7 @@ const Footer: React.FC = () => {
                     © {new Date().getFullYear()}
                     <Link href="https://openforis.org" target="_blank" className="text-blue-500"> Open Foris </Link>
                     | <Link href="https://github.com/forestdatapartnership/whisp-app/blob/HEAD/LICENSE" target="_blank" className="text-blue-500"> MIT License </Link>
+                    | <Link href="/notifications" className="text-blue-500"> Notifications </Link>
                     | <VersionLink />
                 </div>
             </div>

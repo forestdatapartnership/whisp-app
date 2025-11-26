@@ -29,6 +29,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cookie": "^1.0.2",
+    "disposable-email-domains": "^1.0.62",
     "jose": "^6.0.10",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.427.0",

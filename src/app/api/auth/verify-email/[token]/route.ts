@@ -29,12 +29,12 @@ export const GET = compose(
 
     const message = result.rows[0].message;
 
-      if (message === 'Email verified successfully') {
-        return useResponse(SystemCode.AUTH_EMAIL_VERIFIED_SUCCESS);
-      } else {
-        throw new SystemError(SystemCode.AUTH_INVALID_TOKEN);
-      }
-    } finally {
-      client.release();
+    if (message === 'Email verified successfully') {
+      return useResponse(SystemCode.AUTH_EMAIL_VERIFIED_SUCCESS);
+    } else {
+      throw new SystemError(SystemCode.AUTH_INVALID_TOKEN);
     }
+  } finally {
+    client.release();
+  }
 });
