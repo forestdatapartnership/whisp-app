@@ -1,4 +1,6 @@
-CREATE OR REPLACE FUNCTION verify_email_by_token(u_token TEXT)
+DROP FUNCTION IF EXISTS verify_email_by_token(TEXT);
+
+CREATE FUNCTION verify_email_by_token(u_token TEXT)
 RETURNS TEXT AS $$
 DECLARE
   target_user_id INT;
