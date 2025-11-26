@@ -5,6 +5,8 @@ import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table"
 
@@ -20,6 +22,7 @@ import { DataTablePagination } from "./DataTablePagination"
 import { DataTableViewOptions } from "./DataTableViewOptions"
 import React from "react"
 import { processGeoJSONData, RecordData } from "@/lib/utils/geojsonUtils"
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
  
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -27,16 +30,16 @@ interface DataTableProps<TData, TValue> {
   onRowClick?: (rowIndex: number) => void
   selectedRowIndex?: number
   showExternalIdByDefault?: boolean
+  defaultSortColumnId?: string
 }
-
-type TableData = RecordData;
  
 export function DataTable<TData, TValue>({
   columns,
   data,
   onRowClick,
   selectedRowIndex,
-  showExternalIdByDefault = false
+  showExternalIdByDefault = false,
+  defaultSortColumnId
 }: DataTableProps<TData, TValue>) {
   // Process FeatureCollection to array if needed
   const processedData = React.useMemo(() => {
@@ -53,11 +56,23 @@ export function DataTable<TData, TValue>({
     return data as TData[];
   }, [data]);
   
+  const [sorting, setSorting] = React.useState<SortingState>(
+    defaultSortColumnId ? [{
+      id: defaultSortColumnId,
+      desc: false
+    }] : []
+  );
+  
   const table = useReactTable({
     data: processedData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+    state: {
+      sorting
+    },
     initialState: {
       columnVisibility: {
         external_id: showExternalIdByDefault,
@@ -116,6 +131,11 @@ export function DataTable<TData, TValue>({
     if (typeof value === 'boolean') {
         return value ? 'true' : 'false';
     } else if (typeof value === 'number') {
+        const columnLower = column.toLowerCase();
+        const isCoordinate = columnLower.includes('lat') || columnLower.includes('lon') || columnLower.includes('centroid');
+        if (isCoordinate) {
+            return value;
+        }
         return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
     } else if (column === 'geoid' || column === 'WDPA') {
         return typeof value === 'string' && value.trim().length > 0 ? truncateString(value) : 'na';
@@ -133,18 +153,24 @@ export function DataTable<TData, TValue>({
             <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                    return (
-                    <TableHead key={header.id} className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                        {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                            )}
+                {headerGroup.headers.map((header) => (
+                    <TableHead 
+                      key={header.id} 
+                      onClick={header.column.getToggleSortingHandler()}
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer select-none hover:text-gray-300"
+                    >
+                      <div className="flex items-center gap-2">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getIsSorted() === 'asc' ? (
+                          <ArrowUp className="h-4 w-4" />
+                        ) : header.column.getIsSorted() === 'desc' ? (
+                          <ArrowDown className="h-4 w-4" />
+                        ) : (
+                          <ArrowUpDown className="h-4 w-4 opacity-50" />
+                        )}
+                      </div>
                     </TableHead>
-                    )
-                })}
+                ))}
                 </TableRow>
             ))}
             </TableHeader>

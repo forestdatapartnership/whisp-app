@@ -32,6 +32,7 @@ export default function ResultsPage() {
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | undefined>(undefined);
   const [dataError, setDataError] = useState<string | null>(null);
   const [hasExternalIds, setHasExternalIds] = useState<boolean>(false);
+  const [defaultSortColumnId, setDefaultSortColumnId] = useState<string | undefined>(undefined);
   const [syncResponse] = useState<any>(() => useStore.getState().response);
 
   const IGNORED_COLUMNS: string[] = ['whisp_processing_metadata', 'geometry', 'geojson'];
@@ -54,11 +55,26 @@ export default function ResultsPage() {
 
           return Object.keys(sample)
               .filter(key => !IGNORED_COLUMNS.includes(key))
-              .map((key) => ({
-                  accessorKey: key,
-                  header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
-                  enableHiding: true,
-              })) as ColumnDef<Record<string, any>, any>[];
+              .map((key) => {
+                  const baseColumn = {
+                      accessorKey: key,
+                      header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+                      enableHiding: true,
+                  };
+
+                  if (key.toLowerCase() === 'plotid') {
+                      return {
+                          ...baseColumn,
+                          sortingFn: (rowA: any, rowB: any) => {
+                              const a = parseInt(rowA.getValue(key), 10);
+                              const b = parseInt(rowB.getValue(key), 10);
+                              return a - b;
+                          }
+                      };
+                  }
+
+                  return baseColumn;
+              }) as ColumnDef<Record<string, any>, any>[];
       } catch (error) {
           setDataError('Failed to process data for display');
           return [];
@@ -84,6 +100,7 @@ export default function ResultsPage() {
           row.external_id && row.external_id !== 'na'
         );
         setHasExternalIds(hasExternalIdData);
+        setDefaultSortColumnId(hasExternalIdData ? 'external_id' : 'plotId');
       }
     } catch (error) {
       setDataError('Failed to process analysis results');
@@ -250,6 +267,7 @@ export default function ResultsPage() {
               onRowClick={(rowIndex) => setSelectedRowIndex(rowIndex)}
               selectedRowIndex={selectedRowIndex}
               showExternalIdByDefault={hasExternalIds}
+              defaultSortColumnId={defaultSortColumnId}
             />
           </div>
 
