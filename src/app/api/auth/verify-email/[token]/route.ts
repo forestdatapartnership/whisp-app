@@ -22,6 +22,18 @@ export const GET = compose(
   const client = await pool.connect();
 
   try {
+    const checkResult = await client.query(
+      `SELECT u.email_verified 
+       FROM email_verification_tokens evt
+       JOIN users u ON u.id = evt.user_id
+       WHERE evt.token = $1`,
+      [token]
+    );
+
+    if (checkResult.rows.length > 0 && checkResult.rows[0].email_verified) {
+      return useResponse(SystemCode.AUTH_EMAIL_VERIFIED_SUCCESS);
+    }
+
     const result = await client.query(
       "SELECT verify_email_by_token($1) AS message",
       [token]
