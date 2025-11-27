@@ -49,7 +49,8 @@ export const GET = compose(
         return useResponse(SystemCode.ANALYSIS_PROCESSING, {
             token,
             ...(metadata?.featureCount !== undefined && { featureCount: metadata.featureCount }),
-            ...(metadata?.percent !== undefined && { percent: metadata.percent })
+            ...(metadata?.percent !== undefined && { percent: metadata.percent }),
+            ...(metadata?.processStatusMessages !== undefined && { processStatusMessages: metadata.processStatusMessages })
         });
     }
     

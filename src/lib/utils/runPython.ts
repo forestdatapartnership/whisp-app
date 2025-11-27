@@ -21,9 +21,23 @@ export const runPythonScript = async (
   timeout: number
 ): Promise<string> => {
   const pythonPath = process.env.PYTHON_PATH || 'python';
+  const updateProgress = (token: string, message: string, percent: number | null = null) => {
+    const metadata = jobCache.get(token);
+    if (metadata) {
+      const processStatusMessages = metadata.processStatusMessages || [];
+      processStatusMessages.push(message);
+      jobCache.set(token, { 
+        ...metadata, 
+        processStatusMessages,
+        ...(percent !== null && { percent })
+      });
+    }
+  };
+  
 
   return new Promise((resolve, reject) => {
     const childProcess = spawn(pythonPath, [scriptPath, ...args]);
+    updateProgress(token, "Starting analysis", 0);
     
     let stdout = '';
     let stderr = '';
@@ -31,16 +45,29 @@ export const runPythonScript = async (
     childProcess.stdout.on('data', (data) => {
       const dataStr = data.toString();
       stdout += dataStr;
-      const progressMatch = dataStr.match(/INFO: Progress: \d+\/\d+ batches \((\d+)%\)/);
-      if (progressMatch) {
-        const percent = parseInt(progressMatch[1], 10);
+      
+      const infoMatch = dataStr.match(/INFO: (.+)/);
+      if (infoMatch) {
+        const message = infoMatch[1].trim();
         
-        if (!isNaN(percent)) {
-          const metadata = jobCache.get(token);
-          if (metadata) {
-            jobCache.set(token, { ...metadata, percent });
+        const shouldSkip = 
+          message.startsWith('Mode:') ||
+          message.includes('Concurrent processing + formatting + validation complete');
+        
+        if (shouldSkip) {
+          return;
+        }
+        
+        let percent = null;
+        const progressMatch = message.match(/Progress: \d+\/\d+ batches \((\d+)%\)/);
+        if (progressMatch) {
+          const parsedPercent = parseInt(progressMatch[1], 10);
+          if (!isNaN(parsedPercent)) {
+            percent = parsedPercent;
           }
         }
+        
+        updateProgress(token, message, percent);
       }
     });
 

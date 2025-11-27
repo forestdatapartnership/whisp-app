@@ -6,6 +6,7 @@ interface JobMetadata {
   pythonStartTime?: number;
   finishTime?: number;
   percent?: number;
+  processStatusMessages?: string[];
 }
 
 class JobCache {

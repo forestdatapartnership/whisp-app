@@ -143,6 +143,7 @@ export default function ResultsPage() {
   if (isPollingLoading) {
     const featureCount = response?.data?.featureCount;
     const percent = response?.data?.percent;
+    const processStatusMessages = response?.data?.processStatusMessages;
     const processingMessage = featureCount 
       ? `Processing ${featureCount} feature${featureCount !== 1 ? 's' : ''}...`
       : 'Processing your analysis...';
@@ -152,7 +153,7 @@ export default function ResultsPage() {
         title="Analysis in Progress"
         message={processingMessage}
         showSpinner
-        progress={percent !== undefined ? { percent } : null}
+        progress={percent !== undefined || processStatusMessages !== undefined ? { percent, processStatusMessages } : null}
       >
         <p className="text-gray-400 text-sm">This page will automatically update when the analysis is complete.</p>
       </StatusCard>

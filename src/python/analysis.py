@@ -49,7 +49,7 @@ def atomic_write(filename, write_handler):
 def main(file_path, legacy_mode=False):
     opts = AnalysisOptions(None)
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             payload = json.load(f)
             opts = AnalysisOptions(payload.get('analysisOptions') if isinstance(payload, dict) else None)
     except Exception:
@@ -72,6 +72,9 @@ def main(file_path, legacy_mode=False):
     else:
         df_kwargs['mode'] = 'sequential'
         print("Using sequential processing mode")
+    
+    status_file_path = os.path.splitext(file_path)[0] + '-status.json'
+    #df_kwargs['status_file'] = status_file_path
 
     whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path, **df_kwargs)
 

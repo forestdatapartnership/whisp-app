@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 
 interface ProgressData {
   percent?: number
+  processStatusMessages?: string[]
 }
 
 interface StatusCardProps {
@@ -23,6 +24,7 @@ export default function StatusCard({
 }: StatusCardProps) {
   const progressPercentage = progress?.percent !== undefined ? progress.percent : null;
   const displayMessage = progressPercentage === 100 ? "Loading your results" : message;
+  const processStatusMessages = progress?.processStatusMessages || [];
 
   return (
     <div className={`p-4 bg-gray-800 rounded shadow-md my-4 ${hideBorder ? '' : 'border border-gray-300'}`}>
@@ -43,6 +45,17 @@ export default function StatusCard({
                   ></div>
                 </div>
                 <p className="text-sm text-gray-400 mb-1">{progressPercentage}% complete</p>
+              </div>
+            )}
+            {processStatusMessages.length > 0 && (
+              <div className="w-full max-w-2xl mt-4 bg-gray-900 rounded-lg p-3 max-h-48 overflow-y-auto">
+                <div className="text-left space-y-1">
+                  {processStatusMessages.map((msg, index) => (
+                    <p key={index} className="text-xs text-gray-300 font-mono">
+                      {msg}
+                    </p>
+                  ))}
+                </div>
               </div>
             )}
           </div>
