@@ -3,7 +3,7 @@ import useSWR from 'swr'
 import { ApiResponse } from '@/types/api'
 import { SystemCode } from '@/types/systemCodes'
 
-const POLLING_INTERVAL = 2000 // 2 seconds
+const POLLING_INTERVAL = 3000 
 const POLLING_TIMEOUT = 5 * 60 * 1000 // 5 minutes
 
 const fetcher = async (url: string): Promise<ApiResponse> => {
