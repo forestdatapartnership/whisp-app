@@ -46,17 +46,10 @@ export const GET = compose(
     
     // Check if input exists (analysis was submitted and is processing)
     if (await fileExists(`${filePath}/${token}.json`, log)) {
-        let statusInfo = null;
-        
-        if (await fileExists(`${filePath}/${token}-status.json`, log)) {
-            const statusData = await readFile(`${filePath}/${token}-status.json`, log);
-            statusInfo = JSON.parse(statusData);
-        }
-
         return useResponse(SystemCode.ANALYSIS_PROCESSING, {
             token,
             ...(metadata?.featureCount !== undefined && { featureCount: metadata.featureCount }),
-            ...(statusInfo?.percent !== undefined && { percent: statusInfo.percent })
+            ...(metadata?.percent !== undefined && { percent: metadata.percent })
         });
     }
     

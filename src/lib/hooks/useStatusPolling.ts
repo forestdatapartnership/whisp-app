@@ -3,7 +3,7 @@ import useSWR from 'swr'
 import { ApiResponse } from '@/types/api'
 import { SystemCode } from '@/types/systemCodes'
 
-const POLLING_INTERVAL = 3000 
+const POLLING_INTERVAL = 2000 
 const POLLING_TIMEOUT = 5 * 60 * 1000 // 5 minutes
 
 const fetcher = async (url: string): Promise<ApiResponse> => {
@@ -31,8 +31,10 @@ export function useStatusPolling(options: {
       refreshWhenHidden: false,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      errorRetryCount: 0, // Let the results page handle errors
-      dedupingInterval: 1000, // Prevent duplicate requests within 1 second
+      errorRetryCount: 5,
+      shouldRetryOnError: true,
+      errorRetryInterval: POLLING_INTERVAL,
+      dedupingInterval: 1000,
     }
   )
   

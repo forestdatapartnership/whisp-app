@@ -72,9 +72,6 @@ def main(file_path, legacy_mode=False):
     else:
         df_kwargs['mode'] = 'sequential'
         print("Using sequential processing mode")
-    
-    status_file_path = os.path.splitext(file_path)[0] + '-status.json'
-    df_kwargs['status_file'] = status_file_path
 
     whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path, **df_kwargs)
 

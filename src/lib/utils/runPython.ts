@@ -14,6 +14,7 @@ import { jobCache } from './jobCache';
  * @returns Promise that resolves to the stdout of the script or rejects with an error
  */
 export const runPythonScript = async (
+  token: string,
   scriptPath: string,
   args: string[],
   log: LogFunction,
@@ -28,7 +29,19 @@ export const runPythonScript = async (
     let stderr = '';
 
     childProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
+      const dataStr = data.toString();
+      stdout += dataStr;
+      const progressMatch = dataStr.match(/INFO: Progress: \d+\/\d+ batches \((\d+)%\)/);
+      if (progressMatch) {
+        const percent = parseInt(progressMatch[1], 10);
+        
+        if (!isNaN(percent)) {
+          const metadata = jobCache.get(token);
+          if (metadata) {
+            jobCache.set(token, { ...metadata, percent });
+          }
+        }
+      }
     });
 
     childProcess.stderr.on('data', (data) => {
@@ -135,7 +148,7 @@ export const analyzeGeoJson = async (
     jobCache.set(token, { ...metadata, pythonStartTime });
   }
   
-  await runPythonScript(scriptPath, args, log, timeout);
+  await runPythonScript(token, scriptPath, args, log, timeout);
   
   const finishTime = Date.now();
   const pythonDuration = finishTime - pythonStartTime;

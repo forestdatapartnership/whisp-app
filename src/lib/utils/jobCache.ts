@@ -5,6 +5,7 @@ interface JobMetadata {
   startTime?: number;
   pythonStartTime?: number;
   finishTime?: number;
+  percent?: number;
 }
 
 class JobCache {
