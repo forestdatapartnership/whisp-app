@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Whisp App API",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "API for Whisp - An analytical tool for the support of zero-deforestation regulation claims"
   },
   "servers": [
