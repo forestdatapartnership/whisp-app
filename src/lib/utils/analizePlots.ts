@@ -11,6 +11,7 @@ import { getMaxGeometryLimit, getMaxGeometryLimitSync, getPythonTimeoutMs, getPy
 import { atomicWriteFile } from "@/lib/utils/fileUtils";
 import { getCommonPropertyNames, validateExternalIdColumn } from "./geojsonUtils";
 import { jobCache } from "./jobCache";
+import { sseEmitter } from "./sseEmitter";
 
 export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
@@ -48,7 +49,18 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
         await atomicWriteFile(`${filePath}/${token}.json`, JSON.stringify(featureCollection), log);       
 
         if (isAsync) {
-            analyzeGeoJson(token, log, timeout, useLegacyFormat).catch(async (error) => {
+            analyzeGeoJson(token, log, timeout, useLegacyFormat).then(async () => {
+                let fh: fs.FileHandle | undefined;
+                try {
+                    fh = await fs.open(`${filePath}/${token}-result.json`, 'r');
+                    const data = JSON.parse(await fh.readFile('utf8'));
+                    sseEmitter.emit(token, { code: SystemCode.ANALYSIS_COMPLETED, data, final: true });
+                } catch (e: any) {
+                    log("error", `Failed to read result for ${token}: ${e.message}`, logSource);
+                } finally {
+                    fh?.close();
+                }
+            }).catch(async (error) => {
                 log("error", `Async analysis failed for token ${token}: ${error}`, logSource);
                
                 try {
@@ -71,6 +83,7 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
                         JSON.stringify(errorInfo),
                         log
                     );
+                    sseEmitter.emit(token, { ...errorInfo, final: true });
                 } catch (writeError: any) {
                     log("error", `Failed to write error file for token ${token}: ${writeError.message}`, logSource);
                 }

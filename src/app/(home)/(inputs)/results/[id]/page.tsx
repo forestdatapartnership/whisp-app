@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import StatusCard from '@/components/StatusCard'
+import { useStatusSSE } from '@/lib/hooks/useStatusSSE'
 import { useStatusPolling } from '@/lib/hooks/useStatusPolling'
 import { DownloadDropdown } from "@/components/results/DownloadDropdown";
 import { DataTable } from "@/components/results/DataTable"
@@ -120,12 +121,19 @@ export default function ResultsPage() {
     }
   }, [syncResponse, processResultData]);
 
-  const { response: polledResponse, error: pollingError, isLoading } = useStatusPolling({
+  const { response: sseResponse, error: sseError, isLoading: isSSELoading } = useStatusSSE({
     id: syncResponse ? null : id,
     onCompleted: handleCompleted
   });
 
-  const response = syncResponse || polledResponse;
+  const shouldPoll = !!sseError && !syncResponse;
+
+  const { response: polledResponse, error: pollingError, isLoading: isPollingLoading } = useStatusPolling({
+    id: shouldPoll ? id : null,
+    onCompleted: handleCompleted
+  });
+
+  const response = syncResponse || (shouldPoll ? polledResponse || sseResponse : sseResponse || polledResponse);
   const generateEarthMap = () => {
     if (tableData.length > 0) {
         const downloadUrl = `https://whisp.openforis.org/api/generate-geojson/${id}`;
@@ -135,12 +143,13 @@ export default function ResultsPage() {
   }
 
   const responseCode = response?.code;
-  const isPollingLoading = isLoading || responseCode === SystemCode.ANALYSIS_PROCESSING;
-  const hasPollingError = pollingError || (responseCode && responseCode !== SystemCode.ANALYSIS_PROCESSING && responseCode !== SystemCode.ANALYSIS_COMPLETED);
-  const hasAnyError = hasPollingError || dataError;
+  const isLoading = (syncResponse ? false : (shouldPoll ? isPollingLoading : isSSELoading)) || responseCode === SystemCode.ANALYSIS_PROCESSING;
+  const hasTransportError = shouldPoll ? pollingError : sseError;
+  const hasErrorCode = responseCode && responseCode !== SystemCode.ANALYSIS_PROCESSING && responseCode !== SystemCode.ANALYSIS_COMPLETED;
+  const hasAnyError = !!(hasTransportError || hasErrorCode || dataError);
 
   // Show loading state while processing
-  if (isPollingLoading) {
+  if (isLoading) {
     const featureCount = response?.data?.featureCount;
     const percent = response?.data?.percent;
     const processStatusMessages = response?.data?.processStatusMessages;
@@ -179,8 +188,8 @@ export default function ResultsPage() {
       }
       
       // Handle polling errors
-      if (pollingError) {
-        return `Network error: ${pollingError.message}`;
+      if (hasTransportError) {
+        return `Network error: ${hasTransportError.message}`;
       }
       
       // Handle system code-based errors

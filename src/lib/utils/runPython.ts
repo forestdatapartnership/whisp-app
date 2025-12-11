@@ -3,6 +3,7 @@ import { LogFunction } from "@/lib/logger";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from '@/types/systemError';
 import { jobCache } from './jobCache';
+import { sseEmitter } from './sseEmitter';
 
 /**
  * Runs any Python script with the given arguments
@@ -26,11 +27,13 @@ export const runPythonScript = async (
     if (metadata) {
       const processStatusMessages = metadata.processStatusMessages || [];
       processStatusMessages.push(message);
-      jobCache.set(token, { 
+      const updated = { 
         ...metadata, 
         processStatusMessages,
         ...(percent !== null && { percent })
-      });
+      };
+      jobCache.set(token, updated);
+      sseEmitter.emit(token, { code: SystemCode.ANALYSIS_PROCESSING, data: updated });
     }
   };
   
