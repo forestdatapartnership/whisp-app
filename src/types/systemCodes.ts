@@ -14,6 +14,7 @@ export enum SystemCode {
   AUTH_LOGOUT_SUCCESS = 'auth_logout_success',
   AUTH_PASSWORD_RESET_REQUESTED = 'auth_password_reset_requested',
   AUTH_PASSWORD_RESET_SUCCESS = 'auth_password_reset_success',
+  AUTH_RATE_LIMIT_EXCEEDED = 'auth_rate_limit_exceeded',
   AUTH_PASSWORD_CHANGED_SUCCESS = 'auth_password_changed_success',
   AUTH_STATUS_AUTHENTICATED = 'auth_status_authenticated',
   AUTH_STATUS_UNAUTHENTICATED = 'auth_status_unauthenticated',
@@ -58,6 +59,7 @@ export enum SystemCode {
   ANALYSIS_ERROR = 'analysis_error',
   ANALYSIS_TIMEOUT = 'analysis_timeout',
   ANALYSIS_JOB_NOT_FOUND = 'analysis_job_not_found',
+  ANALYSIS_TOO_MANY_CONCURRENT = 'analysis_too_many_concurrent',
 }
 
 export interface SystemCodeInfo {
@@ -143,6 +145,11 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.AUTH_PASSWORD_RESET_SUCCESS,
     message: 'Your password has been reset successfully',
     httpStatus: 200
+  },
+  [SystemCode.AUTH_RATE_LIMIT_EXCEEDED]: {
+    code: SystemCode.AUTH_RATE_LIMIT_EXCEEDED,
+    message: 'Rate limit exceeded. Try again in {0} seconds.',
+    httpStatus: 429
   },
   [SystemCode.AUTH_PASSWORD_CHANGED_SUCCESS]: {
     code: SystemCode.AUTH_PASSWORD_CHANGED_SUCCESS,
@@ -324,6 +331,11 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.ANALYSIS_JOB_NOT_FOUND,
     message: 'Analysis job not found.',
     httpStatus: 404
+  },
+  [SystemCode.ANALYSIS_TOO_MANY_CONCURRENT]: {
+    code: SystemCode.ANALYSIS_TOO_MANY_CONCURRENT,
+    message: 'Too many concurrent analyses. Please wait for existing analyses to finish.',
+    httpStatus: 429
   }
 };
 

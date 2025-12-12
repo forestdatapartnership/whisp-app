@@ -24,7 +24,7 @@ export const POST = compose(
     withRequiredJsonBody
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
 
-    await validateApiKey(req);
+    const apiKey = await validateApiKey(req);
     
     const generateGeoids = body.generateGeoids || false;
     const analysisOptions = body.analysisOptions;
@@ -64,6 +64,6 @@ export const POST = compose(
         featureCollection = { ...featureCollection, analysisOptions };
     }
 
-    return await analyzePlots(featureCollection, log, req);
+    return await analyzePlots(featureCollection, log, req, apiKey);
 });
 

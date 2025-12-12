@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 import { MiddlewareFactory } from "./types";
 import { getPool } from "@/lib/db";
+import { checkRateLimit, getDefaultRateLimitConfig } from "@/lib/utils/rateLimiter";
 
 export const withApiKey: MiddlewareFactory = (next) => {
 	return async (request: NextRequest, _next: NextFetchEvent) => {
@@ -30,7 +31,7 @@ export const withApiKey: MiddlewareFactory = (next) => {
 		const client = await pool.connect();
 		try {
 			const result = await client.query(
-				"SELECT user_id FROM find_api_key($1)",
+				"SELECT id, user_id, rate_limit_window_ms, rate_limit_max_requests FROM find_api_key($1)",
 				[apiKey]
 			);
 
@@ -38,7 +39,18 @@ export const withApiKey: MiddlewareFactory = (next) => {
 				return NextResponse.json({ error: "Invalid or expired API key" }, { status: 401 });
 			}
 
-			const userId = result.rows[0].user_id;
+			const row = result.rows[0];
+			const defaults = getDefaultRateLimitConfig();
+			const cfg = {
+				windowMs: row.rate_limit_window_ms ?? defaults.windowMs,
+				limit: row.rate_limit_max_requests ?? defaults.limit
+			};
+			const rate = checkRateLimit(`${row.id}:${pathname}`, cfg);
+			if (!rate.allowed) {
+				return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429, headers: { 'Retry-After': rate.retryAfter.toString() } });
+			}
+
+			const userId = row.user_id;
 			const requestHeaders = new Headers(request.headers);
 			requestHeaders.set("x-user-id", userId.toString());
 

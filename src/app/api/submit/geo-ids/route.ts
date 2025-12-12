@@ -17,7 +17,7 @@ export const POST = compose(
   withRequiredJsonBody
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
 
-  await validateApiKey(req);
+  const apiKey = await validateApiKey(req);
   validateRequiredFields(body, ['geoIds']);
   
   const geoIds = body['geoIds'];
@@ -52,6 +52,6 @@ export const POST = compose(
     ...(analysisOptions ? { analysisOptions } : {})
   };
 
-  return await analyzePlots(featureCollection, log, req);
+  return await analyzePlots(featureCollection, log, req, apiKey);
 });
 

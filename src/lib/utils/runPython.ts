@@ -4,6 +4,7 @@ import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from '@/types/systemError';
 import { jobCache } from './jobCache';
 import { sseEmitter } from './sseEmitter';
+import { updateAnalysisJob } from './analysisJobStore';
 
 /**
  * Runs any Python script with the given arguments
@@ -178,6 +179,8 @@ export const analyzeGeoJson = async (
     jobCache.set(token, { ...metadata, pythonStartTime });
   }
   
+  await updateAnalysisJob(token, { status: SystemCode.ANALYSIS_PROCESSING, startedAt: new Date(pythonStartTime) });
+  
   await runPythonScript(token, scriptPath, args, log, timeout);
   
   const finishTime = Date.now();
@@ -189,9 +192,14 @@ export const analyzeGeoJson = async (
   }
   
   const featureCount = updatedMetadata?.featureCount ?? 'na';
-  const totalDuration = updatedMetadata?.startTime ? finishTime - updatedMetadata.startTime : 'na';
+  const totalDuration = updatedMetadata?.startTime ? finishTime - updatedMetadata.startTime : null;
   
-  log("info", `Analysis completed - Token: ${token}, Features: ${featureCount}, Total duration: ${totalDuration === 'na' ? 'na' : totalDuration + 'ms'}, Python duration: ${pythonDuration}ms`, logSource);
+  await updateAnalysisJob(token, {
+    status: SystemCode.ANALYSIS_COMPLETED,
+    completedAt: new Date(finishTime)
+  });
+  
+  log("info", `Analysis completed - Token: ${token}, Features: ${featureCount}, Total duration: ${totalDuration === null ? 'na' : totalDuration + 'ms'}, Python duration: ${pythonDuration}ms`, logSource);
   
   return true;
 };

@@ -176,27 +176,17 @@ export default function ResultsPage() {
         case SystemCode.ANALYSIS_JOB_NOT_FOUND: return 'Analysis Not Found';
         case SystemCode.ANALYSIS_ERROR: return 'Analysis Failed';
         case SystemCode.ANALYSIS_TIMEOUT: return 'Analysis Timeout';
+        case SystemCode.ANALYSIS_TOO_MANY_CONCURRENT: return 'Too Many Concurrent Analyses';
+        case SystemCode.AUTH_RATE_LIMIT_EXCEEDED: return 'Rate Limit Exceeded';
         case SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN: return 'Invalid Input';
         default: return 'Error';
       }
     };
 
     const getErrorMessage = () => {
-      // Prioritize data processing errors
-      if (dataError) {
-        return dataError;
-      }
-      
-      // Handle polling errors
-      if (hasTransportError) {
-        return `Network error: ${hasTransportError.message}`;
-      }
-      
-      // Handle system code-based errors
-      if (response?.message) {
-        return response.message;
-      }
-      
+      if (dataError) return dataError;
+      if (hasTransportError) return `Network error: ${hasTransportError.message}`;
+      if (response?.message) return response.message;
       return 'An unexpected error occurred.';
     };
 

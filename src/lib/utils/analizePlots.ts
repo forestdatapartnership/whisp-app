@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import path from "path";
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
+import { getPool } from "@/lib/db";
 import { analyzeGeoJson } from "@/lib/utils/runPython";
 import { LogFunction } from "@/lib/logger";
 import { useResponse } from "@/lib/hooks/responses";
@@ -12,13 +13,21 @@ import { atomicWriteFile } from "@/lib/utils/fileUtils";
 import { getCommonPropertyNames, validateExternalIdColumn } from "./geojsonUtils";
 import { jobCache } from "./jobCache";
 import { sseEmitter } from "./sseEmitter";
+import { createAnalysisJob, updateAnalysisJob } from "./analysisJobStore";
 
-export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest) => {
+type ApiKeyContext = {
+    apiKeyId: number;
+    userId?: number | null;
+    maxConcurrentAnalyses?: number | null;
+};
+
+export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest, apiKey?: ApiKeyContext) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
     const token = uuidv4();
     const filePath = path.join(process.cwd(), 'temp');
     const logSource = "analyzePlots.ts";
     const startTime = Date.now();
+    const timeout = isAsync ? getPythonTimeoutMs() : getPythonTimeoutSyncMs();
 
     const geometryCount = featureCollection.features.length;
     
@@ -26,6 +35,37 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
         featureCount: geometryCount,
         startTime: startTime
     });
+    
+    if (apiKey) {
+        if (apiKey.maxConcurrentAnalyses && apiKey.userId) {
+            const pool = getPool();
+            const { rows } = await pool.query(
+                `SELECT COUNT(*)::int AS running
+                 FROM analysis_jobs
+                 WHERE user_id = $1
+                   AND status = $2
+                   AND (
+                        started_at IS NULL
+                        OR timeout_ms IS NULL
+                        OR started_at + (timeout_ms || ' milliseconds')::interval > now()
+                   )`,
+                [apiKey.userId, SystemCode.ANALYSIS_PROCESSING]
+            );
+            const running = rows[0]?.running ?? 0;
+            if (running >= apiKey.maxConcurrentAnalyses) {
+                throw new SystemError(SystemCode.ANALYSIS_TOO_MANY_CONCURRENT);
+            }
+        }
+        await createAnalysisJob({
+            token,
+            apiKeyId: apiKey.apiKeyId,
+            userId: apiKey.userId ?? null,
+            featureCount: geometryCount,
+            analysisOptions: featureCollection.analysisOptions ?? null,
+            status: SystemCode.ANALYSIS_PROCESSING,
+            timeoutMs: timeout
+        });
+    }
     
     const maxGeometryLimit = isAsync ? getMaxGeometryLimit() : getMaxGeometryLimitSync();
 
@@ -36,8 +76,6 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
     if (featureCollection.analysisOptions?.externalIdColumn && !validateExternalIdColumn(featureCollection, featureCollection.analysisOptions?.externalIdColumn)) {
         throw new SystemError(SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN, [featureCollection.analysisOptions?.externalIdColumn, getCommonPropertyNames(featureCollection).join(', ')]);
     }
-
-    const timeout = isAsync? getPythonTimeoutMs() : getPythonTimeoutSyncMs();
 
     log("info", `Starting analysis for ${token}, async mode: ${isAsync}, geometry count: ${geometryCount}`, logSource);
 
@@ -78,6 +116,12 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
                         };
                     }
                     
+                    await updateAnalysisJob(token, {
+                        status: errorInfo.code,
+                        completedAt: new Date(),
+                        errorMessage: errorInfo.error
+                    });
+                    
                     await atomicWriteFile(
                         `${filePath}/${token}-error.json`,
                         JSON.stringify(errorInfo),
@@ -110,8 +154,16 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
         } else {
             throw new SystemError(SystemCode.ANALYSIS_ERROR);
         }
+    } catch (error: any) {
+        const status = error instanceof SystemError ? error.systemCode : SystemCode.ANALYSIS_ERROR;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        await updateAnalysisJob(token, {
+            status,
+            completedAt: new Date(),
+            errorMessage
+        });
+        throw error;
     } finally {
-        // Explicitly close the file handle if it was opened
         if (fileHandle) {
             fileHandle.close();
         }
