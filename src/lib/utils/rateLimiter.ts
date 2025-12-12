@@ -1,11 +1,7 @@
 import NodeCache from 'node-cache';
+import { toIntOrDefault } from './valueUtils';
 
 const store = new NodeCache({ stdTTL: 0, checkperiod: 0, useClones: false });
-
-const toInt = (value: string | undefined | null, fallback: number) => {
-  const parsed = parseInt(value ?? '', 10);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
 
 export type RateLimitConfig = {
   windowMs: number;
@@ -22,8 +18,8 @@ export type RateLimitResult = {
 
 export function getDefaultRateLimitConfig(): RateLimitConfig {
   return {
-    windowMs: toInt(process.env.RATE_LIMIT_WINDOW_MS, 60000),
-    limit: toInt(process.env.RATE_LIMIT_MAX_REQUESTS, 30)
+    windowMs: toIntOrDefault(process.env.RATE_LIMIT_WINDOW_MS, 60000),
+    limit: toIntOrDefault(process.env.RATE_LIMIT_MAX_REQUESTS, 30)
   };
 }
 

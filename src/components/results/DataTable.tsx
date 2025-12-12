@@ -23,6 +23,7 @@ import { DataTableViewOptions } from "./DataTableViewOptions"
 import React from "react"
 import { processGeoJSONData, RecordData } from "@/lib/utils/geojsonUtils"
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { formatDateTime, formatAnalysisCellValue, truncateString } from "@/lib/utils/formatters"
  
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -81,70 +82,6 @@ export function DataTable<TData, TValue>({
     }
   });
 
-  const truncateString = (str: string) => {
-    const limit = 20;
-    if (str.length > limit) {
-      return str.slice(0, limit) + '…';
-    } else {
-      return str;
-    }
-  };
-
-  const formatValue = (column: string, value: any) => {
-    // Handle null/undefined values
-    if (value === null || value === undefined) {
-        return 'na';
-    }
-    
-    // Handle objects (any type)
-    if (typeof value === 'object') {
-        try {
-            // Handle geometry data (either from geojson or geometry field)
-            if (column === 'geojson' || column === 'geometry' || 
-                (value.type && (value.coordinates || value.geometries))) {
-                return `[${value.type} Geometry]`;
-            }
-            
-            // Handle Date objects
-            if (value instanceof Date) {
-                return value.toISOString();
-            }
-            
-            // Handle Arrays
-            if (Array.isArray(value)) {
-                if (value.length === 0) return '[]';
-                if (value.length > 3) {
-                    return `[${value.slice(0, 3).join(', ')}... +${value.length - 3} more]`;
-                }
-                return `[${value.join(', ')}]`;
-            }
-            
-            // For any other object, stringify
-            return JSON.stringify(value);
-        } catch (error) {
-            // Fallback for objects that can't be stringified
-            return '[Complex Object]';
-        }
-    }
-    
-    // Handle primitive types
-    if (typeof value === 'boolean') {
-        return value ? 'true' : 'false';
-    } else if (typeof value === 'number') {
-        const columnLower = column.toLowerCase();
-        const isCoordinate = columnLower.includes('lat') || columnLower.includes('lon') || columnLower.includes('centroid');
-        if (isCoordinate) {
-            return value;
-        }
-        return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
-    } else if (column === 'geoid' || column === 'WDPA') {
-        return typeof value === 'string' && value.trim().length > 0 ? truncateString(value) : 'na';
-    }
-    
-    // Default: return as is (for strings and other primitives)
-    return value;
-  };
-
   return (
     <div>
         <DataTableViewOptions table={table} />
@@ -182,7 +119,7 @@ export function DataTable<TData, TValue>({
                     className={`cursor-pointer hover:bg-gray-700 ${selectedRowIndex === row.index ? 'bg-blue-900 bg-opacity-50' : ''}`}>
                     {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                        {formatValue(cell.column.id, cell.getValue())}
+                        {formatAnalysisCellValue(cell.column.id, cell.getValue())}
                     </TableCell>
                     ))}
                 </TableRow>

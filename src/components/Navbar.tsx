@@ -94,6 +94,13 @@ const Navbar: React.FC = () => {
                                     >
                                         Dashboard
                                     </Link>
+                                    <Link 
+                                        href="/dashboard/jobs" 
+                                        className="block px-4 py-2 hover:bg-gray-600"
+                                        onClick={() => setIsProfileDropdownOpen(false)}
+                                    >
+                                        Job stats
+                                    </Link>
                                     <button 
                                         onClick={handleLogout}
                                         className="block w-full text-left px-4 py-2 hover:bg-gray-600 rounded-b-lg"
