@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useUserProfile } from "@/lib/hooks/useUserProfile";
 import { Button } from "@/components/ui/Button";
@@ -102,11 +102,23 @@ const StatusIcon = ({ name, className, style }: { name: "doc" | "spinner" | "ale
   );
 };
 
-const StatCard = ({ label, value, helper }: { label: string; value: string | number; helper?: string }) => (
-  <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-    <p className="text-gray-400 text-sm">{label}</p>
-    <p className="text-2xl font-semibold text-white mt-1">{value}</p>
-    {helper ? <p className="text-xs text-gray-500 mt-1">{helper}</p> : null}
+const SectionCard = ({ title, subtitle, children }: { title?: string; subtitle?: string; children: ReactNode }) => (
+  <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    {(title || subtitle) && (
+      <div className="flex items-center justify-between mb-4">
+        {title ? <h2 className="text-xl font-semibold text-white">{title}</h2> : <div />}
+        {subtitle ? <span className="text-sm text-gray-400">{subtitle}</span> : null}
+      </div>
+    )}
+    {children}
+  </div>
+);
+
+const StatTile = ({ label, value, helper }: { label: string; value: string | number; helper?: string }) => (
+  <div className="bg-gray-900 rounded p-3 border border-gray-700 flex flex-col gap-1">
+    <p className="text-xs sm:text-sm text-gray-400">{label}</p>
+    <p className="text-xl sm:text-2xl font-semibold text-white">{value}</p>
+    {helper ? <p className="text-[11px] text-gray-500">{helper}</p> : null}
   </div>
 );
 
@@ -178,44 +190,32 @@ export default function JobStatsPage() {
 
       {stats ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard label="Total jobs" value={stats.summary.total} />
-            <StatCard label="Last 7 days" value={stats.summary.last7d} />
-            <StatCard label="Last 24 hours" value={stats.summary.last24h} />
-            <StatCard
-              label="Active"
-              value={stats.statusCounts.processing}
-              helper={`${stats.statusCounts.completed} completed`}
-            />
+          <div className="grid grid-cols-1 gap-4 mb-6">
+            <SectionCard title="Summary">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                <StatTile label="Total jobs" value={stats.summary.total} />
+                <StatTile label="Last 7 days" value={stats.summary.last7d} />
+                <StatTile label="Last 24 hours" value={stats.summary.last24h} />
+                <StatTile label="Active" value={stats.statusCounts.processing} helper={`${stats.statusCounts.completed} completed`} />
+              </div>
+            </SectionCard>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-white">Status breakdown</h2>
-                <span className="text-sm text-gray-400">Latest totals</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
+            <SectionCard title="Status breakdown" subtitle="Latest totals">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                 {Object.entries(stats.statusCounts).map(([key, value]) => (
-                  <div key={key} className="bg-gray-900 rounded p-3 border border-gray-700">
-                    <p className="text-sm text-gray-400">{statusLabels[key] ?? key}</p>
-                    <p className="text-2xl font-semibold text-white mt-1">{value}</p>
-                  </div>
+                  <StatTile key={key} label={statusLabels[key] ?? key} value={value} />
                 ))}
               </div>
-            </div>
-
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-white">Latency</h2>
-                <span className="text-sm text-gray-400">Calculated from started/completed jobs</span>
+            </SectionCard>
+            <SectionCard title="Latency" subtitle="Calculated from started/completed jobs">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                <StatTile label="Avg queue" value={formatDuration(stats.timings.avgQueueMs)} />
+                <StatTile label="Avg runtime" value={formatDuration(stats.timings.avgRunMs)} />
+                <StatTile label="Median runtime" value={formatDuration(stats.timings.p50RunMs)} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <StatCard label="Avg queue" value={formatDuration(stats.timings.avgQueueMs)} />
-                <StatCard label="Avg runtime" value={formatDuration(stats.timings.avgRunMs)} />
-                <StatCard label="Median runtime" value={formatDuration(stats.timings.p50RunMs)} />
-              </div>
-            </div>
+            </SectionCard>
           </div>
 
           <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
