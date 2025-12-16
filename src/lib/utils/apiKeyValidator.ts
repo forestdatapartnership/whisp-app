@@ -19,7 +19,7 @@ export async function validateApiKey(request: NextRequest) {
   const client = await pool.connect();
   try {
     const result = await client.query(
-      "SELECT id, user_id, rate_limit_window_ms, rate_limit_max_requests, max_concurrent_analyses FROM find_api_key($1)",
+      "SELECT id, user_id, user_email, rate_limit_window_ms, rate_limit_max_requests, max_concurrent_analyses FROM find_api_key($1)",
       [apiKey]
     );
     if (result.rowCount === 0) {
@@ -38,7 +38,7 @@ export async function validateApiKey(request: NextRequest) {
     return { 
       apiKeyId: row.id as number, 
       userId: row.user_id as number, 
-      rateLimit: { ...rate, windowMs: cfg.windowMs, limit: cfg.limit },
+      userEmail: row.user_email as string,
       maxConcurrentAnalyses: row.max_concurrent_analyses as number | null
     };
   } finally {

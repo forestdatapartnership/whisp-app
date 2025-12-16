@@ -8,23 +8,24 @@ import {
     coordinatesLikelyInMeters,
     validateCrs 
 } from "@/lib/utils/geojsonUtils";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withAnalysisErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
-import { useResponse } from "@/lib/hooks/responses";
+import { withAnalysisJobContext } from "@/lib/hooks/withRequestContext";
+import { AnalysisJob } from "@/types/analysisJob";
+import { withApiKey } from "@/lib/hooks/withApiKey";
 import { SystemCode } from "@/types/systemCodes";
-import { withLogging } from "@/lib/hooks/withLogging";
+import { withAnalysisLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
-import { validateApiKey } from "@/lib/utils/apiKeyValidator";
 import { SystemError } from "@/types/systemError";
 import { LogFunction } from "@/lib/logger";
 
 export const POST = compose(
-    withLogging,
-    withErrorHandling,
+    withAnalysisJobContext,
+    withApiKey,
+    withAnalysisLogging,
+    withAnalysisErrorHandling,
     withRequiredJsonBody
-)(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
-
-    const apiKey = await validateApiKey(req);
+)(async (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any): Promise<NextResponse> => {
     
     const generateGeoids = body.generateGeoids || false;
     const analysisOptions = body.analysisOptions;
@@ -64,6 +65,9 @@ export const POST = compose(
         featureCollection = { ...featureCollection, analysisOptions };
     }
 
-    return await analyzePlots(featureCollection, log, req, apiKey);
+    context.featureCount = featureCollection.features.length;
+    context.analysisOptions = analysisOptions;
+
+    return await analyzePlots(context, featureCollection, log, req);
 });
 

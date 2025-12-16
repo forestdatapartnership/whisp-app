@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJsonfromGeoId } from "@/lib/utils/assetRegistry";
 import { analyzePlots } from "@/lib/utils/analizePlots";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withAnalysisErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { SystemCode } from "@/types/systemCodes";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
-import { withLogging } from "@/lib/hooks/withLogging";
+import { withAnalysisJobContext } from "@/lib/hooks/withRequestContext";
+import { AnalysisJob } from "@/types/analysisJob";
+import { withApiKey } from "@/lib/hooks/withApiKey";
+import { withAnalysisLogging } from "@/lib/hooks/withLogging";
 import { LogFunction } from "@/lib/logger";
 import { compose } from "@/lib/utils/compose";
-import { validateApiKey } from "@/lib/utils/apiKeyValidator";
 import { SystemError } from "@/types/systemError";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 
 export const POST = compose(
-  withLogging,
-  withErrorHandling,
+  withAnalysisJobContext,
+  withApiKey,
+  withAnalysisLogging,
+  withAnalysisErrorHandling,
   withRequiredJsonBody
-)(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
-
-  const apiKey = await validateApiKey(req);
+)(async (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any): Promise<NextResponse> => {
   validateRequiredFields(body, ['geoIds']);
   
   const geoIds = body['geoIds'];
@@ -52,6 +54,9 @@ export const POST = compose(
     ...(analysisOptions ? { analysisOptions } : {})
   };
 
-  return await analyzePlots(featureCollection, log, req, apiKey);
+  context.featureCount = validFeatures.length;
+  context.analysisOptions = analysisOptions;
+
+  return await analyzePlots(context, featureCollection, log, req);
 });
 

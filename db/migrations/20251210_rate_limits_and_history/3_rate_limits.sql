@@ -33,6 +33,7 @@ CREATE OR REPLACE FUNCTION find_api_key(p_api_key TEXT)
 RETURNS TABLE (
   id INT,
   user_id INT,
+  user_email TEXT,
   rate_limit_window_ms INT,
   rate_limit_max_requests INT,
   max_concurrent_analyses INT
@@ -40,10 +41,12 @@ RETURNS TABLE (
 SELECT 
   ak.id,
   ak.user_id,
+  u.email AS user_email,
   COALESCE(ur.rate_limit_window_ms, rg.rate_limit_window_ms) AS rate_limit_window_ms,
   COALESCE(ur.rate_limit_max_requests, rg.rate_limit_max_requests) AS rate_limit_max_requests,
   COALESCE(ur.max_concurrent_analyses, rg.max_concurrent_analyses) AS max_concurrent_analyses
 FROM api_keys ak
+INNER JOIN users u ON u.id = ak.user_id
 LEFT JOIN user_rate_limits ur ON ur.user_id = ak.user_id
 LEFT JOIN rate_limits_global rg ON rg.id = 1
 WHERE ak.api_key = p_api_key

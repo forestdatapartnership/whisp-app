@@ -1,31 +1,32 @@
 
 import { NextResponse, NextRequest } from 'next/server';
-import { useJsonOrNull, getRequestBodySize } from './requests';
+import { getRequestBodySize, useJsonOrNull } from './requests';
 import { LogFunction } from '../logger';
 import { SystemCode } from '@/types/systemCodes';
-import { getMaxFileSize } from '@/lib/utils/configUtils';
 import { SystemError } from '@/types/systemError';
+import { AnalysisJob } from '@/types/analysisJob';
+import { getMaxFileSize } from '../utils/configUtils';
 
-export function withRequiredJsonBody(handler: (req: NextRequest, jsonBody: any, log: LogFunction, ...args: any[]) => Promise<NextResponse>) {
+export function withRequiredJsonBody(handler: (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any, ...args: any[]) => Promise<NextResponse>) {
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
-    const [log, ...rest] = args;
+    const [context, log, ...rest] = args;
     
-    // Check request body size before parsing
-    const maxFileSize = getMaxFileSize();
-    if (maxFileSize) {
-      const bodySize = getRequestBodySize(req);
-      if (bodySize > maxFileSize) {
-        const bodySizeKB = (bodySize / 1024).toFixed(2);
-        const maxSizeKB = (maxFileSize / 1024).toFixed(2);
-        throw new SystemError(SystemCode.VALIDATION_REQUEST_BODY_TOO_LARGE, [bodySizeKB, maxSizeKB]);
-      }
-    }
-    
-    const body = await useJsonOrNull(req, log);
-    if (body === null) {
+    const bodySize = getRequestBodySize(req);
+
+    if (!bodySize || bodySize === 0) {
       throw new SystemError(SystemCode.SYSTEM_MISSING_REQUEST_BODY);
     }
-    return handler(req, log, body, ...rest);
+
+    const maxFileSize = getMaxFileSize();
+    
+    if (maxFileSize && bodySize > maxFileSize) {
+      const bodySizeKB = (bodySize / 1024).toFixed(2);
+      const maxSizeKB = (maxFileSize / 1024).toFixed(2);
+      throw new SystemError(SystemCode.VALIDATION_REQUEST_BODY_TOO_LARGE, [bodySizeKB, maxSizeKB]);
+    }
+    const body = await useJsonOrNull(req, log);
+    
+    return handler(req, context, log, body, ...rest);
   };
 }
 

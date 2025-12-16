@@ -1,38 +1,9 @@
 import { getPool } from "@/lib/db";
 import { SystemCode } from "@/types/systemCodes";
+import { AnalysisJob } from "@/types/analysisJob";
 import { toIntOrDefault, toNumberOrNull } from "./valueUtils";
 import path from "path";
 import { fileExists } from "./fileUtils";
-
-type CreateParams = {
-  token: string;
-  apiKeyId: number;
-  userId?: number | null;
-  featureCount: number;
-  analysisOptions?: any;
-  status?: SystemCode;
-  timeoutMs?: number | null;
-};
-
-type UpdateParams = {
-  status?: SystemCode;
-  startedAt?: Date;
-  completedAt?: Date;
-  timeoutMs?: number | null;
-  errorMessage?: string | null;
-  featureCount?: number | null;
-};
-
-export type AnalysisJobDto = {
-  token: string;
-  status: string;
-  featureCount: number | null;
-  createdAt: string;
-  startedAt: string | null;
-  completedAt: string | null;
-  errorMessage: string | null;
-  resultsAvailable: boolean;
-};
 
 export type AnalysisJobStats = {
   summary: {
@@ -51,10 +22,10 @@ export type AnalysisJobStats = {
     p50RunMs: number | null;
     avgQueueMs: number | null;
   };
-  recentJobs: AnalysisJobDto[];
+  recentJobs: AnalysisJob[];
 };
 
-const columnMap: Record<keyof UpdateParams, string> = {
+const updateColumnMap: Record<string, string> = {
   status: 'status',
   startedAt: 'started_at',
   completedAt: 'completed_at',
@@ -70,36 +41,43 @@ const statusOrder = [
   SystemCode.ANALYSIS_TIMEOUT
 ];
 
-export const mapAnalysisJobRow = (row: any): AnalysisJobDto => ({
+export const mapAnalysisJobRow = (row: any): AnalysisJob => ({
   token: row.token as string,
-  status: row.status as string,
-  featureCount: row.feature_count as number | null,
-  createdAt: row.created_at as string,
-  startedAt: row.started_at as string | null,
-  completedAt: row.completed_at as string | null,
-  errorMessage: row.error_message as string | null,
+  status: row.status as SystemCode,
+  featureCount: row.feature_count ?? undefined,
+  createdAt: new Date(row.created_at),
+  startedAt: row.started_at ? new Date(row.started_at) : undefined,
+  completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+  errorMessage: row.error_message ?? undefined,
   resultsAvailable: false
 });
 
-export async function createAnalysisJob(params: CreateParams) {
+export async function createAnalysisJob(job: AnalysisJob) {
   const pool = getPool();
-  const { token, apiKeyId, userId, featureCount, analysisOptions, status, timeoutMs } = params;
   await pool.query(
     `INSERT INTO analysis_jobs (token, api_key_id, user_id, status, feature_count, analysis_options, timeout_ms)
      VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (token) DO NOTHING`,
-    [token, apiKeyId, userId ?? null, status ?? SystemCode.ANALYSIS_PROCESSING, featureCount, analysisOptions ?? null, timeoutMs ?? null]
+    [
+      job.token, 
+      job.apiKeyId, 
+      job.userId ?? null, 
+      job.status ?? SystemCode.ANALYSIS_PROCESSING, 
+      job.featureCount, 
+      job.analysisOptions ?? null, 
+      job.timeoutMs ?? null
+    ]
   );
 }
 
-export async function updateAnalysisJob(token: string, fields: UpdateParams) {
-  const entries = Object.entries(fields).filter(([, v]) => v !== undefined);
+export async function updateAnalysisJob(token: string, updates: Partial<AnalysisJob>) {
+  const entries = Object.entries(updates).filter(([k, v]) => k !== 'token' && k !== 'createdAt' && v !== undefined);
   if (!entries.length) return;
   const sets: string[] = [];
   const values: any[] = [token];
   let paramIndex = 2;
   for (const [key, value] of entries) {
-    const column = columnMap[key as keyof UpdateParams];
+    const column = updateColumnMap[key];
     if (!column) continue;
     sets.push(`${column} = $${paramIndex}`);
     values.push(value);

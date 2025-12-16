@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzePlots } from "@/lib/utils/analizePlots";
 import { isValidWgs84Coordinates, coordinatesLikelyInMeters } from "@/lib/utils/geojsonUtils";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withAnalysisErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { withAnalysisJobContext } from "@/lib/hooks/withRequestContext";
+import { AnalysisJob } from "@/types/analysisJob";
+import { withApiKey } from "@/lib/hooks/withApiKey";
 import { SystemCode } from "@/types/systemCodes";
 import { LogFunction } from "@/lib/logger";
-import { withLogging } from "@/lib/hooks/withLogging";
+import { withAnalysisLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 import { wktToFeatureCollection } from "@/lib/utils/wktUtils";
 import * as wellknown from 'wellknown';
-import { validateApiKey } from "@/lib/utils/apiKeyValidator";
 import { SystemError } from "@/types/systemError";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 
 export const POST = compose(
-  withLogging,
-  withErrorHandling,
+  withAnalysisJobContext,
+  withApiKey,
+  withAnalysisLogging,
+  withAnalysisErrorHandling,
   withRequiredJsonBody
-)(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
-
-  const apiKey = await validateApiKey(req);
+)(async (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any): Promise<NextResponse> => {
   validateRequiredFields(body, ['wkt']);
   
   const generateGeoids = body.generateGeoids || false;
@@ -49,5 +51,9 @@ export const POST = compose(
   if (analysisOptions) {
     featureCollection = { ...featureCollection, analysisOptions };
   }
-  return await analyzePlots(featureCollection, log, req, apiKey);
+  
+  context.featureCount = featureCollection.features.length;
+  context.analysisOptions = analysisOptions;
+  
+  return await analyzePlots(context, featureCollection, log, req);
 });

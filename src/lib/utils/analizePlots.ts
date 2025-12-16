@@ -1,25 +1,19 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import path from "path";
 import fs from 'fs/promises';
-import { v4 as uuidv4 } from 'uuid';
 import { getPool } from "@/lib/db";
 import { analyzeGeoJson } from "@/lib/utils/runPython";
 import { LogFunction } from "@/lib/logger";
 import { useResponse } from "@/lib/hooks/responses";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
+import { AnalysisJob } from "@/types/analysisJob";
 import { getMaxGeometryLimit, getMaxGeometryLimitSync, getPythonTimeoutMs, getPythonTimeoutSyncMs } from "@/lib/utils/configUtils";
 import { atomicWriteFile } from "@/lib/utils/fileUtils";
 import { getCommonPropertyNames, validateExternalIdColumn } from "./geojsonUtils";
 import { jobCache } from "./jobCache";
 import { sseEmitter } from "./sseEmitter";
 import { createAnalysisJob, updateAnalysisJob } from "./analysisJobStore";
-
-type ApiKeyContext = {
-    apiKeyId: number;
-    userId?: number | null;
-    maxConcurrentAnalyses?: number | null;
-};
 
 const LOG_SOURCE = "analyzePlots.ts";
 
@@ -49,7 +43,7 @@ const handleAnalysisError = async (token: string, error: any, log: LogFunction, 
     await atomicWriteFile(`${filePath}/${token}-error.json`, JSON.stringify(errorInfo), log);
     sseEmitter.emit(token, { ...errorInfo, final: true });
     if (shouldLog) {
-        log("error", `Analysis failed for ${token}: ${errorInfo.error}`, LOG_SOURCE);
+        log("error", `Analysis failed: ${errorInfo.error}`, LOG_SOURCE);
     }
     return errorInfo;
 };
@@ -63,29 +57,29 @@ const handleAnalysisSuccess = async (token: string, filePath: string, log: LogFu
         return data;
     } catch (e: any) {
         const message = e instanceof Error ? e.message : String(e);
-        log("error", `Failed to read result for ${token}: ${message}`, LOG_SOURCE);
+        log("error", `Failed to read result: ${message}`, LOG_SOURCE);
         throw e;
     } finally {
         await fh?.close();
     }
 };
 
-export const analyzePlots = async (featureCollection: any, log: LogFunction, req?: NextRequest, apiKey?: ApiKeyContext) => {
+export const analyzePlots = async (context: AnalysisJob, featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
-    const token = uuidv4();
+    const token = context.token;
     const filePath = path.join(process.cwd(), 'temp');
     const startTime = Date.now();
     const timeout = isAsync ? getPythonTimeoutMs() : getPythonTimeoutSyncMs();
 
-    const geometryCount = featureCollection.features.length;
+    const geometryCount = context.featureCount ?? featureCollection.features.length;
     
     jobCache.set(token, { 
         featureCount: geometryCount,
         startTime: startTime
     });
     
-    if (apiKey) {
-        if (apiKey.maxConcurrentAnalyses && apiKey.userId) {
+    if (context.apiKeyId) {
+        if (context.maxConcurrentAnalyses && context.userId) {
             const pool = getPool();
             const { rows } = await pool.query(
                 `SELECT COUNT(*)::int AS running
@@ -97,19 +91,17 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
                         OR timeout_ms IS NULL
                         OR started_at + (timeout_ms || ' milliseconds')::interval > now()
                    )`,
-                [apiKey.userId, SystemCode.ANALYSIS_PROCESSING]
+                [context.userId, SystemCode.ANALYSIS_PROCESSING]
             );
             const running = rows[0]?.running ?? 0;
-            if (running >= apiKey.maxConcurrentAnalyses) {
+            if (running >= context.maxConcurrentAnalyses) {
                 throw new SystemError(SystemCode.ANALYSIS_TOO_MANY_CONCURRENT);
             }
         }
         await createAnalysisJob({
-            token,
-            apiKeyId: apiKey.apiKeyId,
-            userId: apiKey.userId ?? null,
+            ...context,
             featureCount: geometryCount,
-            analysisOptions: featureCollection.analysisOptions ?? null,
+            analysisOptions: context.analysisOptions ?? featureCollection.analysisOptions ?? undefined,
             status: SystemCode.ANALYSIS_PROCESSING,
             timeoutMs: timeout
         });
@@ -125,7 +117,7 @@ export const analyzePlots = async (featureCollection: any, log: LogFunction, req
         throw new SystemError(SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN, [featureCollection.analysisOptions?.externalIdColumn, getCommonPropertyNames(featureCollection).join(', ')]);
     }
 
-    log("info", `Starting analysis for ${token}, async mode: ${isAsync}, geometry count: ${geometryCount}`, LOG_SOURCE);
+    log("info", `Starting analysis - async mode: ${isAsync}, geometry count: ${geometryCount}`, LOG_SOURCE);
 
     // Check for legacy format header
     const useLegacyFormat = req?.headers.get('x-legacy-format') === 'true';

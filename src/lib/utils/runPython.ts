@@ -172,7 +172,7 @@ export const analyzeGeoJson = async (
   const args = useLegacyFormat ? [dataPath, "legacy"] : [dataPath];
   
   const pythonStartTime = Date.now();
-  log("debug", `Starting Python script execution for token ${token}`, logSource);
+  log("debug", `Starting Python script execution`, logSource);
   
   const metadata = jobCache.get(token);
   if (metadata) {
@@ -199,7 +199,7 @@ export const analyzeGeoJson = async (
     completedAt: new Date(finishTime)
   });
   
-  log("info", `Analysis completed - Token: ${token}, Features: ${featureCount}, Total duration: ${totalDuration === null ? 'na' : totalDuration + 'ms'}, Python duration: ${pythonDuration}ms`, logSource);
+  log("info", `Analysis completed - Features: ${featureCount}, Total duration: ${totalDuration === null ? 'na' : totalDuration + 'ms'}, Python duration: ${pythonDuration}ms`, logSource);
   
   return true;
 };
