@@ -78,8 +78,8 @@ export const analyzePlots = async (context: AnalysisJob, featureCollection: any,
         startTime: startTime
     });
     
-    if (context.apiKeyId) {
-        if (context.maxConcurrentAnalyses && context.userId) {
+    if (context.apiKey?.keyId) {
+        if (context.apiKey?.maxConcurrentAnalyses && context.apiKey?.userId) {
             const pool = getPool();
             const { rows } = await pool.query(
                 `SELECT COUNT(*)::int AS running
@@ -91,10 +91,10 @@ export const analyzePlots = async (context: AnalysisJob, featureCollection: any,
                         OR timeout_ms IS NULL
                         OR started_at + (timeout_ms || ' milliseconds')::interval > now()
                    )`,
-                [context.userId, SystemCode.ANALYSIS_PROCESSING]
+                [context.apiKey.userId, SystemCode.ANALYSIS_PROCESSING]
             );
             const running = rows[0]?.running ?? 0;
-            if (running >= context.maxConcurrentAnalyses) {
+            if (running >= context.apiKey.maxConcurrentAnalyses) {
                 throw new SystemError(SystemCode.ANALYSIS_TOO_MANY_CONCURRENT);
             }
         }

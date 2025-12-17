@@ -4,7 +4,7 @@ import { compose } from "@/lib/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { randomBytes } from "crypto";
 import { sendVerificationEmail } from "@/lib/mailer";
-import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { withJsonBody } from "@/lib/hooks/withJsonBody";
 import { useResponse } from "@/lib/hooks/responses";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
@@ -35,7 +35,7 @@ const validatePassword = (password: string): boolean => {
 export const POST = compose(
 	withLogging,
 	withErrorHandling,
-	withRequiredJsonBody
+	withJsonBody
 )(async (_req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
 	const logSource = "register/route.ts";
 	const { name, lastName, organization, email, password } = body;

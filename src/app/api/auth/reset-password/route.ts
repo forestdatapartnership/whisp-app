@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
 import { withLogging } from '@/lib/hooks/withLogging';
-import { withRequiredJsonBody } from '@/lib/hooks/withRequiredJsonBody';
+import { withJsonBody } from '@/lib/hooks/withJsonBody';
 import { compose } from '@/lib/utils/compose';
 import { SystemCode } from '@/types/systemCodes';
 import { useResponse } from '@/lib/hooks/responses';
@@ -13,7 +13,7 @@ import { LogFunction } from '@/lib/logger';
 export const POST = compose(
   withLogging,
   withErrorHandling,
-  withRequiredJsonBody
+  withJsonBody
 )(async (request: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
   const logSource = "reset-password/route.ts";
   

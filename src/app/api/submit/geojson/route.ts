@@ -8,23 +8,23 @@ import {
     coordinatesLikelyInMeters,
     validateCrs 
 } from "@/lib/utils/geojsonUtils";
-import { withAnalysisErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withAnalysisJobJsonBody } from "@/lib/hooks/withJsonBody";
 import { withAnalysisJobContext } from "@/lib/hooks/withRequestContext";
 import { AnalysisJob } from "@/types/analysisJob";
 import { withApiKey } from "@/lib/hooks/withApiKey";
 import { SystemCode } from "@/types/systemCodes";
-import { withAnalysisLogging } from "@/lib/hooks/withLogging";
+import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 import { SystemError } from "@/types/systemError";
 import { LogFunction } from "@/lib/logger";
 
 export const POST = compose(
-    withAnalysisJobContext,
+    withLogging,
+    withErrorHandling,
     withApiKey,
-    withAnalysisLogging,
-    withAnalysisErrorHandling,
-    withRequiredJsonBody
+    withAnalysisJobContext,
+    withAnalysisJobJsonBody
 )(async (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any): Promise<NextResponse> => {
     
     const generateGeoids = body.generateGeoids || false;

@@ -1,15 +1,25 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { promises as fs } from "fs";
 import { sseEmitter } from "@/lib/utils/sseEmitter";
 import { jobCache } from "@/lib/utils/jobCache";
 import { SystemCode } from "@/types/systemCodes";
+import { compose } from "@/lib/utils/compose";
+import { withLogging } from "@/lib/hooks/withLogging";
+import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withApiKey } from "@/lib/hooks/withApiKey";
+import { ApiKey } from "@/types/api";
+import { LogFunction } from "@/lib/logger";
 
 async function fileExists(p: string): Promise<boolean> {
   try { await fs.access(p); return true; } catch { return false; }
 }
 
-export async function GET(request: NextRequest, { params }: { params: { token: string } }) {
+export const GET = compose(
+  withLogging,
+  withErrorHandling,
+  withApiKey
+)(async (request: NextRequest, apiKey: ApiKey, log: LogFunction, { params }: { params: { token: string } }) => {
   const { token } = params;
   const filePath = path.join(process.cwd(), 'temp');
   const encoder = new TextEncoder();
@@ -21,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
   if (await fileExists(resultPath)) {
     const data = JSON.parse(await fs.readFile(resultPath, 'utf8'));
     const body = `data: ${JSON.stringify({ code: SystemCode.ANALYSIS_COMPLETED, data, final: true })}\n\n`;
-    return new Response(body, {
+    return new NextResponse(body, {
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
     });
   }
@@ -29,14 +39,14 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
   if (await fileExists(errorPath)) {
     const errorInfo = JSON.parse(await fs.readFile(errorPath, 'utf8'));
     const body = `data: ${JSON.stringify({ code: errorInfo.code || SystemCode.ANALYSIS_ERROR, ...errorInfo, final: true })}\n\n`;
-    return new Response(body, {
+    return new NextResponse(body, {
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
     });
   }
 
   if (!(await fileExists(inputPath))) {
     const body = `data: ${JSON.stringify({ code: SystemCode.ANALYSIS_JOB_NOT_FOUND, final: true })}\n\n`;
-    return new Response(body, {
+    return new NextResponse(body, {
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
     });
   }
@@ -67,12 +77,12 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
     }
   });
 
-  return new Response(stream, {
+  return new NextResponse(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
     },
   });
-}
+});
 

@@ -409,7 +409,7 @@ curl -X POST "https://whisp.openforis.org/api/submit/geo-ids" \\
           </p>
           {apiKeyMetadata ? (
             <Link
-              href="/submit-geometry"
+              href="/"
               className="inline-block px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
               Submit
@@ -418,7 +418,7 @@ curl -X POST "https://whisp.openforis.org/api/submit/geo-ids" \\
             <button
               onClick={async () => {
                 await createApiKey();
-                router.push('/submit-geometry');
+                router.push('/');
               }}
               disabled={keyBeingCreated}
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

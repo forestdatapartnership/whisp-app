@@ -3,19 +3,22 @@ import useSWR from 'swr'
 import { ApiResponse } from '@/types/api'
 import { SystemCode } from '@/types/systemCodes'
 
-const POLLING_INTERVAL = 2000 
+const POLLING_INTERVAL = 5000 
 const POLLING_TIMEOUT = 5 * 60 * 1000 // 5 minutes
 
-const fetcher = async (url: string): Promise<ApiResponse> => {
-  const response = await fetch(url)
+const fetcher = async (url: string, apiKey?: string): Promise<ApiResponse> => {
+  const response = await fetch(url, {
+    headers: apiKey ? { 'x-api-key': apiKey } : undefined
+  })
   return response.json()
 }
 
 export function useStatusPolling(options: {
   id: string | null
+  apiKey?: string | null
   onCompleted?: (resultData?: any) => void
 }) {
-  const { id, onCompleted } = options
+  const { id, apiKey, onCompleted } = options
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // Only poll if we get ANALYSIS_PROCESSING system code
@@ -24,8 +27,8 @@ export function useStatusPolling(options: {
   }
   
   const { data: response, error, isLoading } = useSWR(
-    id ? `/api/status/${id}` : null,
-    fetcher,
+    id ? [`/api/status/${id}`, apiKey || undefined] : null,
+    ([url, key]) => fetcher(url, key),
     {
       refreshInterval: (data) => shouldPoll(data) ? POLLING_INTERVAL : 0,
       refreshWhenHidden: false,

@@ -3,7 +3,7 @@ import { getPool } from '@/lib/db';
 import { compose } from '@/lib/utils/compose';
 import { withLogging } from '@/lib/hooks/withLogging';
 import { withErrorHandling } from '@/lib/hooks/withErrorHandling';
-import { withRequiredJsonBody } from '@/lib/hooks/withRequiredJsonBody';
+import { withJsonBody } from '@/lib/hooks/withJsonBody';
 import { useResponse } from '@/lib/hooks/responses';
 import { validateRequiredFields } from '@/lib/utils/fieldValidation';
 import { SystemCode } from '@/types/systemCodes';
@@ -37,7 +37,7 @@ const validateEmailDomain = async (email: string): Promise<boolean> => {
 export const POST = compose(
   withLogging,
   withErrorHandling,
-  withRequiredJsonBody
+  withJsonBody
 )(async (_req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
   validateRequiredFields(body, ['email']);
 
@@ -73,7 +73,7 @@ export const POST = compose(
 export const DELETE = compose(
   withLogging,
   withErrorHandling,
-  withRequiredJsonBody
+  withJsonBody
 )(async (_req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
   validateRequiredFields(body, ['email']);
 

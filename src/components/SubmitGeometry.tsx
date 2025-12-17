@@ -7,18 +7,16 @@ import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/utils/safePush';
 import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
-import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
+import { fetchApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
 
 interface SubmitGeometryProps {
-    useTempKey?: boolean;
     asyncThreshold: number;
     maxGeometryLimit: number;
 }
 
 const SubmitGeometry: React.FC<SubmitGeometryProps> = ({ 
-    useTempKey = true,
     asyncThreshold,
     maxGeometryLimit
 }) => {
@@ -89,23 +87,9 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
                 async: shouldUseAsync
             };
 
-            // Get the appropriate API key based on useTempKey flag
-            let apiKey = null;
-            if (useTempKey) {
-                try {
-                    apiKey = await fetchTempApiKey('submit-geometry');
-                } catch (err) {
-                    console.error('Error fetching temp API key:', err);
-                    throw new Error("Failed to get API key for authentication");
-                }
-            } else {
-                // For authenticated users, fetch their own API key
-                try {
-                    apiKey = await fetchUserApiKey();
-                } catch (err) {
-                    console.error('Error fetching user API key:', err);
-                    throw new Error("Failed to get API key for authenticated user");
-                }
+            const apiKey = await fetchApiKey();
+            if (!apiKey) {
+                throw new Error("Failed to get API key for authentication");
             }
 
             let fetchedData, response;

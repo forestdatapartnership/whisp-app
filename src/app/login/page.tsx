@@ -30,7 +30,7 @@ const LoginPage: React.FC = () => {
         throw new Error(data.message || "Invalid email or password");
       }
 
-      router.push("/submit-geometry");
+      router.push("/");
     } catch (err: any) {
       setError(err.message);
     }

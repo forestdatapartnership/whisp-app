@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJsonfromGeoId } from "@/lib/utils/assetRegistry";
 import { analyzePlots } from "@/lib/utils/analizePlots";
-import { withAnalysisErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { SystemCode } from "@/types/systemCodes";
-import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { withAnalysisJobJsonBody } from "@/lib/hooks/withJsonBody";
 import { withAnalysisJobContext } from "@/lib/hooks/withRequestContext";
 import { AnalysisJob } from "@/types/analysisJob";
 import { withApiKey } from "@/lib/hooks/withApiKey";
-import { withAnalysisLogging } from "@/lib/hooks/withLogging";
+import { withLogging } from "@/lib/hooks/withLogging";
 import { LogFunction } from "@/lib/logger";
 import { compose } from "@/lib/utils/compose";
 import { SystemError } from "@/types/systemError";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 
 export const POST = compose(
-  withAnalysisJobContext,
+  withLogging,
+  withErrorHandling,
   withApiKey,
-  withAnalysisLogging,
-  withAnalysisErrorHandling,
-  withRequiredJsonBody
+  withAnalysisJobContext,
+  withAnalysisJobJsonBody
 )(async (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any): Promise<NextResponse> => {
   validateRequiredFields(body, ['geoIds']);
   

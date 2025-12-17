@@ -7,7 +7,7 @@ import { SystemError } from '@/types/systemError';
 import { AnalysisJob } from '@/types/analysisJob';
 import { getMaxFileSize } from '../utils/configUtils';
 
-export function withRequiredJsonBody(handler: (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any, ...args: any[]) => Promise<NextResponse>) {
+export function withAnalysisJobJsonBody(handler: (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any, ...args: any[]) => Promise<NextResponse>) {
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     const [context, log, ...rest] = args;
     
@@ -27,6 +27,22 @@ export function withRequiredJsonBody(handler: (req: NextRequest, context: Analys
     const body = await useJsonOrNull(req, log);
     
     return handler(req, context, log, body, ...rest);
+  };
+}
+
+export function withJsonBody(handler: (req: NextRequest, log: LogFunction, body: any, ...args: any[]) => Promise<NextResponse>) {
+  return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
+    const [log, ...rest] = args;
+
+    const bodySize = getRequestBodySize(req);
+
+    if (!bodySize || bodySize === 0) {
+      throw new SystemError(SystemCode.SYSTEM_MISSING_REQUEST_BODY);
+    }
+
+    const body = await useJsonOrNull(req, log);
+
+    return handler(req, log, body, ...rest);
   };
 }
 

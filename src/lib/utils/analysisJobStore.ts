@@ -60,8 +60,8 @@ export async function createAnalysisJob(job: AnalysisJob) {
      ON CONFLICT (token) DO NOTHING`,
     [
       job.token, 
-      job.apiKeyId, 
-      job.userId ?? null, 
+      job.apiKey?.keyId, 
+      job.apiKey?.userId ?? null, 
       job.status ?? SystemCode.ANALYSIS_PROCESSING, 
       job.featureCount, 
       job.analysisOptions ?? null, 

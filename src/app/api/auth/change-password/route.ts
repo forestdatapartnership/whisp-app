@@ -4,8 +4,9 @@ import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 import { useResponse } from "@/lib/hooks/responses";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { withJsonBody } from "@/lib/hooks/withJsonBody";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withAuthUser, AuthenticatedUser } from "@/lib/hooks/withAuthUser";
 import { compose } from "@/lib/utils/compose";
 import { LogFunction } from "@/lib/logger";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
@@ -13,14 +14,26 @@ import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 export const POST = compose(
 	withLogging,
 	withErrorHandling,
-	withRequiredJsonBody
-)(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
-	const { email, currentPassword, newPassword } = body;
-	validateRequiredFields(body, ['email', 'currentPassword', 'newPassword']);
-	
+	withAuthUser,
+withJsonBody
+)(async (req: NextRequest, log: LogFunction, body: any, user: AuthenticatedUser): Promise<NextResponse> => {
+	const { currentPassword, newPassword } = body;
+	validateRequiredFields(body, ['currentPassword', 'newPassword']);
+
 	const pool = getPool();
 	const client = await pool.connect();
 	try {
+		const emailResult = await client.query(
+			`SELECT email FROM users WHERE id = $1`,
+			[user.userId]
+		);
+
+		if (!emailResult.rowCount) {
+			throw new SystemError(SystemCode.USER_NOT_FOUND);
+		}
+
+		const email = emailResult.rows[0].email;
+
 		const result = await client.query(
 			`SELECT change_password($1, $2, $3) AS message`,
 			[email, currentPassword, newPassword]

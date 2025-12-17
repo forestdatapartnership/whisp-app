@@ -1,12 +1,11 @@
 import { SystemCode } from './systemCodes';
+import { ApiKey } from './api';
+
 
 export interface AnalysisJob {
   token: string;
   createdAt: Date;
-  apiKeyId?: number;
-  userId?: number;
-  userEmail?: string;
-  maxConcurrentAnalyses?: number;
+  apiKey?: ApiKey;
   featureCount?: number;
   analysisOptions?: any;
   status?: SystemCode;

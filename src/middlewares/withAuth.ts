@@ -9,41 +9,11 @@ import { assertEnvVar } from "@/lib/utils";
 
 export const withAuth: MiddlewareFactory = (next) => {
     return async (request: NextRequest, _next: NextFetchEvent) => {
-        // Assert JWT secret is present at startup
         const SECRET_KEY = assertEnvVar('JWT_SECRET');
+        const secretBytes = new TextEncoder().encode(SECRET_KEY);
         const { pathname } = request.nextUrl;
-        // Get token from cookies
         const token = request.cookies.get("token")?.value;
         const refreshToken = request.cookies.get("refreshToken")?.value;
-
-        // Helper to verify either token or refreshToken
-        const verifyAnyToken = async () => {
-            try {
-            if (token) {
-                await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
-                return true;
-            }
-            if (refreshToken) {
-                await jwtVerify(refreshToken, new TextEncoder().encode(SECRET_KEY));
-                return true;
-            }
-            } catch (error) {
-            return false;
-            }
-            return false;
-        };
-
-        // Check if user is on home, login, or register page and has a valid token or refresh token - redirect to submit-geometry
-        if (
-            pathname === "/" ||
-            pathname === "/index" ||
-            pathname === "/login" ||
-            pathname === "/register"
-        ) {
-            if (await verifyAnyToken()) {
-            return NextResponse.redirect(new URL("/submit-geometry", request.url));
-            }
-        }
 
         const privatePaths = [
             "/api/user",
@@ -52,74 +22,69 @@ export const withAuth: MiddlewareFactory = (next) => {
             "/settings",
             "/api/protected-data",
             "/dashboard",
-            "/submit-geometry",
         ];
 
-        if (!privatePaths.some(path => pathname.startsWith(path))) {
-            return NextResponse.next();
-        }
+        const isPrivate = privatePaths.some(path => pathname.startsWith(path));
+        let refreshedResponse: NextResponse | null = null;
+        let hasValidAccess = false;
 
         if (token) {
             try {
-                const { payload } = await jwtVerify(
-                    token,
-                    new TextEncoder().encode(SECRET_KEY)
-                );
-
-                if (!payload.sub) throw new Error("Invalid token payload: Missing 'sub'");
-                
-                // Simply allow the request to proceed - getAuthUser will extract the data from the token
-                return NextResponse.next();
+                const { payload } = await jwtVerify(token, secretBytes);
+                if (payload.sub) {
+                    hasValidAccess = true;
+                }
             } catch (error) {
                 console.error("Access token verification failed:", error);
             }
         }
 
-        if (refreshToken) {
+        if (!hasValidAccess && refreshToken) {
             try {
-                const { payload } = await jwtVerify(
-                    refreshToken,
-                    new TextEncoder().encode(SECRET_KEY)
-                );
-                if (!payload.sub) throw new Error("Invalid refresh token payload: Missing 'sub'");
+                const { payload } = await jwtVerify(refreshToken, secretBytes);
+                if (payload.sub) {
+                    const newAccessToken = await new SignJWT({ sub: payload.sub })
+                        .setProtectedHeader({ alg: "HS256" })
+                        .setIssuedAt()
+                        .setExpirationTime("15m")
+                        .sign(secretBytes);
 
-                // Generate new access token
-                const newAccessToken = await new SignJWT({ sub: payload.sub })
-                    .setProtectedHeader({ alg: "HS256" })
-                    .setIssuedAt()
-                    .setExpirationTime("15m")
-                    .sign(new TextEncoder().encode(SECRET_KEY));
+                    const newRefreshToken = await new SignJWT({ sub: payload.sub })
+                        .setProtectedHeader({ alg: "HS256" })
+                        .setIssuedAt()
+                        .setExpirationTime("7d")
+                        .sign(secretBytes);
 
-                // Generate new refresh token
-                const newRefreshToken = await new SignJWT({ sub: payload.sub })
-                    .setProtectedHeader({ alg: "HS256" })
-                    .setIssuedAt()
-                    .setExpirationTime("7d")
-                    .sign(new TextEncoder().encode(SECRET_KEY));
+                    const response = NextResponse.next();
+                    response.cookies.set('token', newAccessToken, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'strict',
+                        path: '/',
+                        maxAge: 900
+                    });
+                    response.cookies.set('refreshToken', newRefreshToken, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'strict',
+                        path: '/',
+                        maxAge: 604800
+                    });
 
-                const response = NextResponse.next();
-
-                // Set new tokens as cookies
-                response.cookies.set('token', newAccessToken, {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'strict',
-                    path: '/',
-                    maxAge: 900 // 15 minutes
-                });
-
-                response.cookies.set('refreshToken', newRefreshToken, {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'strict',
-                    path: '/',
-                    maxAge: 604800 // 7 days
-                });
-
-                return response;
+                    hasValidAccess = true;
+                    refreshedResponse = response;
+                }
             } catch (refreshError) {
                 console.error("Refresh token is invalid or expired:", refreshError);
             }
+        }
+
+        if (!isPrivate) {
+            return refreshedResponse ?? NextResponse.next();
+        }
+
+        if (hasValidAccess) {
+            return refreshedResponse ?? NextResponse.next();
         }
 
         if (pathname.startsWith("/api")) {

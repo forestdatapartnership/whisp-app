@@ -32,11 +32,11 @@ export async function fetchTempApiKey(source: string = 'client'): Promise<string
     if (data.success && data.apiKey) {
       return data.apiKey;
     } else {
-      throw new Error(data.error || 'Failed to retrieve API key');
+      return '';
     }
   } catch (err) {
     console.error('Error fetching temp API key:', err);
-    throw err;
+    return '';
   }
 }
 
@@ -53,8 +53,7 @@ export async function fetchUserApiKey(): Promise<string> {
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to retrieve user API key');
+      return '';
     }
     
     const data = await response.json();
@@ -62,11 +61,11 @@ export async function fetchUserApiKey(): Promise<string> {
     if (data.data.apiKey) {
       return data.data.apiKey;
     } else {
-      throw new Error('No API key found for user');
+      return '';
     }
   } catch (err) {
     console.error('Error fetching user API key:', err);
-    throw err;
+    return '';
   }
 }
 
@@ -83,4 +82,22 @@ export function createApiHeaders(apiKey?: string | null): Record<string, string>
   }
   
   return headers;
+}
+
+export async function fetchApiKey(): Promise<string | null> {
+  const statusRes = await fetch('/api/auth/status', {
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store'
+  });
+  const statusData = await statusRes.json();
+  const isAuthenticated = statusRes.ok && statusData?.code === 'auth_status_authenticated';
+  if (isAuthenticated) {
+    const userKey = await fetchUserApiKey();
+    if (userKey) {
+      return userKey;
+    }
+  }
+
+  return await fetchTempApiKey().catch(() => null);
 }

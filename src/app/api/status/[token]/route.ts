@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { ApiResponse } from "@/types/api";
+import { ApiKey, ApiResponse } from "@/types/api";
 import { SystemCode } from "@/types/systemCodes";
 import { useResponse, useResponseWithFormat } from "@/lib/hooks/responses";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
@@ -9,11 +9,13 @@ import { compose } from "@/lib/utils/compose";
 import { LogFunction } from "@/lib/logger";
 import { fileExists, readFile } from "@/lib/utils/fileUtils";
 import { jobCache } from "@/lib/utils/jobCache";
+import { withApiKey } from "@/lib/hooks/withApiKey";
 
 export const GET = compose(
   withLogging,
-  withErrorHandling
-)(async (request: NextRequest, log: LogFunction, { params }: any): Promise<NextResponse<ApiResponse>> => {
+  withErrorHandling,
+  withApiKey
+)(async (request: NextRequest, apiKey: ApiKey, log: LogFunction, { params }: any): Promise<NextResponse<ApiResponse>> => {
     const { token } = params;
     const filePath = path.join(process.cwd(), 'temp');
     const metadata = jobCache.get(token);

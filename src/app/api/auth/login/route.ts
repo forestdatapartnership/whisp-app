@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { getPool } from "@/lib/db";
-import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { withJsonBody } from "@/lib/hooks/withJsonBody";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 import { assertEnvVar } from "@/lib/utils";
@@ -14,7 +14,7 @@ import { LogFunction } from "@/lib/logger";
 export const POST = compose(
     withLogging,
     withErrorHandling,
-    withRequiredJsonBody
+    withJsonBody
 )(async (req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
     const SECRET_KEY = assertEnvVar('JWT_SECRET');
 

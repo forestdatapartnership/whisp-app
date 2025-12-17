@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzePlots } from "@/lib/utils/analizePlots";
 import { isValidWgs84Coordinates, coordinatesLikelyInMeters } from "@/lib/utils/geojsonUtils";
-import { withAnalysisErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { withRequiredJsonBody } from "@/lib/hooks/withRequiredJsonBody";
+import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withAnalysisJobJsonBody } from "@/lib/hooks/withJsonBody";
 import { withAnalysisJobContext } from "@/lib/hooks/withRequestContext";
 import { AnalysisJob } from "@/types/analysisJob";
 import { withApiKey } from "@/lib/hooks/withApiKey";
 import { SystemCode } from "@/types/systemCodes";
 import { LogFunction } from "@/lib/logger";
-import { withAnalysisLogging } from "@/lib/hooks/withLogging";
+import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 import { wktToFeatureCollection } from "@/lib/utils/wktUtils";
 import * as wellknown from 'wellknown';
@@ -16,11 +16,11 @@ import { SystemError } from "@/types/systemError";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 
 export const POST = compose(
-  withAnalysisJobContext,
+  withLogging,
+  withErrorHandling,
   withApiKey,
-  withAnalysisLogging,
-  withAnalysisErrorHandling,
-  withRequiredJsonBody
+  withAnalysisJobContext,
+  withAnalysisJobJsonBody
 )(async (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any): Promise<NextResponse> => {
   validateRequiredFields(body, ['wkt']);
   

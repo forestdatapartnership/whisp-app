@@ -3,7 +3,7 @@ import { getPool } from '@/lib/db';
 import { randomBytes } from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/mailer';
 import { withLogging } from '@/lib/hooks/withLogging';
-import { withRequiredJsonBody } from '@/lib/hooks/withRequiredJsonBody';
+import { withJsonBody } from '@/lib/hooks/withJsonBody';
 import { compose } from '@/lib/utils/compose';
 import { SystemCode } from '@/types/systemCodes';
 import { useResponse } from '@/lib/hooks/responses';
@@ -13,7 +13,7 @@ import { withErrorHandling } from '@/lib/hooks/withErrorHandling';
 export const POST = compose(
   withLogging,
   withErrorHandling,
-  withRequiredJsonBody
+  withJsonBody
 )(async (request: NextRequest, ...args): Promise<NextResponse> => {
   const [log, body] = args;
 

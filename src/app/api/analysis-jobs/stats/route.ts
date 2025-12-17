@@ -2,22 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { compose } from "@/lib/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { getAuthUser } from "@/lib/auth";
-import { SystemCode } from "@/types/systemCodes";
-import { SystemError } from "@/types/systemError";
 import type { LogFunction } from "@/lib/logger";
 import { getAnalysisJobStats } from "@/lib/utils/analysisJobStore";
+import { withAuthUser, AuthenticatedUser } from "@/lib/hooks/withAuthUser";
 
 export const GET = compose(
   withLogging,
-  withErrorHandling
-)(async (req: NextRequest, _log: LogFunction): Promise<NextResponse> => {
-  const user = await getAuthUser(req);
-  if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
-  const userId = parseInt(String(user.id), 10);
-  if (Number.isNaN(userId)) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
+  withErrorHandling,
+  withAuthUser
+)(async (_req: NextRequest, _log: LogFunction, user: AuthenticatedUser): Promise<NextResponse> => {
 
-  const stats = await getAnalysisJobStats(userId);
+  const stats = await getAnalysisJobStats(user.userId);
   return NextResponse.json(stats);
 });
 

@@ -8,13 +8,9 @@ import StatusCard from '@/components/StatusCard';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { getAsyncThreshold, getMaxGeometryLimit } from '@/lib/utils/configUtils';
 
-interface DataSubmissionProps {
-    useTempKey?: boolean;
-}
-
 type SubmissionMode = 'geometry' | 'geoids';
 
-const DataSubmission: React.FC<DataSubmissionProps> = ({ useTempKey = true }) => {
+const DataSubmission: React.FC = () => {
     const [activeMode, setActiveMode] = useState<SubmissionMode>('geometry');
     const resetStore = useStore((state) => state.reset);
     const isLoading = useStore((state) => state.isLoading);
@@ -58,13 +54,11 @@ const DataSubmission: React.FC<DataSubmissionProps> = ({ useTempKey = true }) =>
     const renderContent = () => {
         if (activeMode === 'geometry') {
             return <SubmitGeometry 
-                useTempKey={useTempKey} 
                 asyncThreshold={asyncThreshold}
                 maxGeometryLimit={maxGeometryLimit}
             />;
         } else {
             return <SubmitGeoIds 
-                useTempKey={useTempKey}
                 asyncThreshold={asyncThreshold}
                 maxGeometryLimit={maxGeometryLimit}
             />;

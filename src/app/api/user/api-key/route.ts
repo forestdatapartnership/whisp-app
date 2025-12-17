@@ -2,23 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { compose } from "@/lib/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { getAuthUser } from "@/lib/auth";
+import { withAuthUser, AuthenticatedUser } from "@/lib/hooks/withAuthUser";
 import { getPool } from "@/lib/db";
 import { randomUUID } from "crypto";
 import { QueryResult } from "pg";
 import { SystemCode } from "@/types/systemCodes";
 import { useResponse } from "@/lib/hooks/responses";
-import { SystemError } from "@/types/systemError";
 import { LogFunction } from "@/lib/logger";
 
 export const GET = compose(
   withLogging,
-  withErrorHandling
-)(async (req: NextRequest, log: LogFunction): Promise<NextResponse> => {
+  withErrorHandling,
+  withAuthUser
+)(async (_req: NextRequest, log: LogFunction, user: AuthenticatedUser): Promise<NextResponse> => {
   const logSource = "apikey/route.ts";
-
-  const user = await getAuthUser(req);
-  if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
 
   const pool = getPool();
   const client = await pool.connect();
@@ -26,7 +23,7 @@ export const GET = compose(
     // Check if the user has an existing valid API key
     const existingKey: QueryResult = await client.query(
       "SELECT api_key FROM api_keys WHERE user_id = $1 AND revoked = false AND expires_at > NOW()",
-      [user.id]
+      [user.userId]
     );
 
     // If user has an existing valid API key, return it
@@ -35,7 +32,7 @@ export const GET = compose(
     }
 
     // No valid API key found
-    log("info", `No valid API key found for user ${user.id}`, logSource);
+    log("info", `No valid API key found for user ${user.userId}`, logSource);
     return useResponse(SystemCode.AUTH_STATUS_AUTHENTICATED, { apiKey: null });
   } finally {
     client.release();
@@ -43,11 +40,10 @@ export const GET = compose(
 });
 
 export const POST = compose(
+  withLogging,
   withErrorHandling,
-  withLogging
-)(async (req: NextRequest, ...args): Promise<NextResponse> => {
-  const user = await getAuthUser(req);
-  if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
+  withAuthUser
+)(async (_req: NextRequest, _log: LogFunction, user: AuthenticatedUser): Promise<NextResponse> => {
 
   const pool = getPool();
   const client = await pool.connect();
@@ -58,7 +54,7 @@ export const POST = compose(
 
     await client.query(
       "SELECT * FROM create_or_replace_api_key($1, $2, $3)",
-      [user.id, key, expires_at]
+      [user.userId, key, expires_at]
     );
 
     return useResponse(SystemCode.USER_API_KEY_CREATED_SUCCESS, { apiKey: key });
@@ -68,18 +64,16 @@ export const POST = compose(
 });
 
 export const DELETE = compose(
+  withLogging,
   withErrorHandling,
-  withLogging
-)(async (req: NextRequest, ...args): Promise<NextResponse> => {
-
-  const user = await getAuthUser(req);
-  if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
+  withAuthUser
+)(async (_req: NextRequest, _log: LogFunction, user: AuthenticatedUser): Promise<NextResponse> => {
 
   const pool = getPool();
   const client = await pool.connect();
 
   try {
-    await client.query("SELECT delete_api_key_by_user($1)", [user.id]);
+    await client.query("SELECT delete_api_key_by_user($1)", [user.userId]);
     return useResponse(SystemCode.USER_API_KEY_DELETED_SUCCESS);
   } finally {
     client.release();

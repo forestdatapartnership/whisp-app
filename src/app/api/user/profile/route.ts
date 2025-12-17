@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUser } from "@/lib/auth";
 import { getPool } from "@/lib/db";
 import { withLogging } from "@/lib/hooks/withLogging";
+import { withAuthUser, AuthenticatedUser } from "@/lib/hooks/withAuthUser";
+import { withJsonBody } from "@/lib/hooks/withJsonBody";
 import { compose } from "@/lib/utils/compose";
 import { SystemCode } from "@/types/systemCodes";
 import { useResponse } from "@/lib/hooks/responses";
@@ -12,27 +13,15 @@ import { LogFunction } from "@/lib/logger";
 
 export const GET = compose(
   withLogging,
-  withErrorHandling
-)(async (req: NextRequest, log: LogFunction): Promise<NextResponse> => {
-  
-  // Get the authenticated user from request headers
-  const user = await getAuthUser(req);
-  
-  if (!user) {
-    throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
-  }
-
-  // Convert string user ID to integer with validation
-  const userId = parseInt(user.id, 10);
-  if (isNaN(userId)) {
-    throw new SystemError(SystemCode.USER_INVALID_USER_ID);
-  }
+  withErrorHandling,
+  withAuthUser
+)(async (_req: NextRequest, log: LogFunction, user: AuthenticatedUser): Promise<NextResponse> => {
 
   const pool = getPool();
   const client = await pool.connect();
   try {
     // Use the get_user_profile database function with integer userId
-    const result = await client.query("SELECT * FROM get_user_profile($1)", [userId]);
+    const result = await client.query("SELECT * FROM get_user_profile($1)", [user.userId]);
 
     if (result.rowCount === 0) {
       return useResponse(SystemCode.USER_NOT_FOUND);
@@ -47,24 +36,13 @@ export const GET = compose(
 
 export const PUT = compose(
   withLogging,
-  withErrorHandling
-)(async (req: NextRequest,  log: LogFunction): Promise<NextResponse> => {
-  
-  // Get the authenticated user
-  const user = await getAuthUser(req);
-  if (!user) {
-    throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
-  }
+  withErrorHandling,
+  withAuthUser,
+  withJsonBody
+)(async (_req: NextRequest,  log: LogFunction, body: any, user: AuthenticatedUser): Promise<NextResponse> => {
 
-  // Get data from request body
-  const body = await req.json();
   const { name, lastName, organization } = body;
   validateRequiredFields(body, ['name', 'lastName']);
-
-  const userId = parseInt(user.id, 10);
-  if (isNaN(userId)) {
-    return useResponse(SystemCode.USER_INVALID_USER_ID);
-  }
 
   const pool = getPool();
   const client = await pool.connect();
@@ -72,7 +50,7 @@ export const PUT = compose(
     // Update user profile
     const result = await client.query(
       "UPDATE users SET name = $1, last_name = $2, organization = $3 WHERE id = $4 RETURNING id, name, last_name, organization, email, email_verified",
-      [name, lastName, organization, userId]
+      [name, lastName, organization, user.userId]
     );
 
     if (result.rowCount === 0) {
@@ -97,22 +75,12 @@ export const PUT = compose(
 
 export const DELETE = compose(
   withLogging,
-  withErrorHandling
-)(async (req: NextRequest, log: LogFunction): Promise<NextResponse> => {
-  
-  // Get the authenticated user
-  const user = await getAuthUser(req);
-  if (!user) {
-    throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
-  }
+  withErrorHandling,
+  withAuthUser,
+  withJsonBody
+)(async (_req: NextRequest, log: LogFunction, body: any, user: AuthenticatedUser): Promise<NextResponse> => {
 
-  const userId = parseInt(user.id, 10);
-  if (isNaN(userId)) {
-    throw new SystemError(SystemCode.USER_INVALID_USER_ID);
-  }
-
-  // Optional: Require password confirmation for account deletion
-  const { password } = await req.json();
+  const { password } = body;
   if (!password) {
     throw new SystemError(SystemCode.USER_PASSWORD_CONFIRMATION_REQUIRED);
   }
@@ -123,7 +91,7 @@ export const DELETE = compose(
     // First verify the password
     const verifyResult = await client.query(
       "SELECT verify_password($1, $2) AS is_valid",
-      [userId, password]
+      [user.userId, password]
     );
 
     if (!verifyResult.rows[0]?.is_valid) {
@@ -131,7 +99,7 @@ export const DELETE = compose(
     }
 
     // Delete the user account (this will cascade to delete all related data)
-    await client.query("DELETE FROM users WHERE id = $1", [userId]);
+    await client.query("DELETE FROM users WHERE id = $1", [user.userId]);
 
     // Return success message
     return useResponse(SystemCode.USER_ACCOUNT_DELETION_SUCCESS);

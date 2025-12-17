@@ -15,6 +15,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import dynamic from 'next/dynamic';
 import { FeatureCollection } from 'geojson';
 import { validateAndProcessGeoJSON, RecordData } from '@/lib/utils/geojsonUtils';
+import { fetchApiKey } from '@/lib/secureApiUtils';
 
 // Dynamically import MapView with no SSR to avoid window undefined error
 const MapView = dynamic(() => import("@/components/results/MapView"), {
@@ -35,6 +36,7 @@ export default function ResultsPage() {
   const [hasExternalIds, setHasExternalIds] = useState<boolean>(false);
   const [defaultSortColumnId, setDefaultSortColumnId] = useState<string | undefined>(undefined);
   const [syncResponse] = useState<any>(() => useStore.getState().response);
+  const [apiKey, setApiKey] = useState<string | null>(null);
 
   const IGNORED_COLUMNS: string[] = ['whisp_processing_metadata', 'geometry', 'geojson'];
 
@@ -121,8 +123,21 @@ export default function ResultsPage() {
     }
   }, [syncResponse, processResultData]);
 
+  useEffect(() => {
+    const loadKey = async () => {
+      try {
+        const key = await fetchApiKey();
+        setApiKey(key);
+      } catch {
+        setApiKey(null);
+      }
+    };
+    loadKey();
+  }, []);
+
   const { response: sseResponse, error: sseError, isLoading: isSSELoading } = useStatusSSE({
     id: syncResponse ? null : id,
+    apiKey,
     onCompleted: handleCompleted
   });
 
@@ -130,6 +145,7 @@ export default function ResultsPage() {
 
   const { response: polledResponse, error: pollingError, isLoading: isPollingLoading } = useStatusPolling({
     id: shouldPoll ? id : null,
+    apiKey,
     onCompleted: handleCompleted
   });
 

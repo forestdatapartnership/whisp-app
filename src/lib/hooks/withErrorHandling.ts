@@ -3,7 +3,6 @@ import { useResponse, useResponseWithFormat } from './responses';
 import { LogFunction } from "@/lib/logger";
 import { SystemCode, getSystemCodeInfo } from '@/types/systemCodes';
 import { SystemError } from '@/types/systemError';
-import { AnalysisJob } from '@/types/analysisJob';
 
 function getLogLevelFromHttpStatus(httpStatus?: number): 'debug' | 'info' | 'warn' | 'error' {
   if (!httpStatus) return 'error';
@@ -47,19 +46,6 @@ export function withErrorHandling(
     const [log, ...rest] = args;
     try {
       return await handler(req, log, ...rest);
-    } catch (error: any) {
-      return handleError(error, log);
-    }
-  };
-}
-
-export function withAnalysisErrorHandling(
-  handler: (req: NextRequest, context: AnalysisJob, log: LogFunction, ...args: any[]) => Promise<NextResponse>
-) {
-  return async function(req: NextRequest, ...args: any[]): Promise<NextResponse> {
-    const [context, log, ...rest] = args;
-    try {
-      return await handler(req, context, log, ...rest);
     } catch (error: any) {
       return handleError(error, log);
     }

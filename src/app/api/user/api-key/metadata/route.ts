@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { compose } from "@/lib/utils/compose";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { getAuthUser } from "@/lib/auth";
+import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withAuthUser, AuthenticatedUser } from "@/lib/hooks/withAuthUser";
 import { getPool } from "@/lib/db";
+import { SystemError } from "@/types/systemError";
+import { SystemCode } from "@/types/systemCodes";
+import { LogFunction } from "@/lib/logger";
 
 export const GET = compose(
-  withLogging
-)(async (req: NextRequest, ...args): Promise<NextResponse> => {
+  withLogging,
+  withErrorHandling,
+  withAuthUser
+)(async (_req: NextRequest, ...args): Promise<NextResponse> => {
   const logSource = "api-key/metadata/route.ts";
-  const [log] = args;
-
-  const user = await getAuthUser(req);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const [log, user] = args as [LogFunction, AuthenticatedUser];
 
   const pool = await getPool();
   const client = await pool.connect();
@@ -19,7 +22,7 @@ export const GET = compose(
     // Query API key metadata without exposing the actual key
     const result = await client.query(
       "SELECT * FROM get_api_key_metadata($1)",
-      [user.id]
+      [user.userId]
     );
     
     const keyMetadata = result.rows[0];
@@ -41,9 +44,9 @@ export const GET = compose(
         revoked: keyMetadata.revoked
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     log("error", error, logSource);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    throw new SystemError(SystemCode.SYSTEM_INTERNAL_SERVER_ERROR);
   } finally {
     client.release();
   }

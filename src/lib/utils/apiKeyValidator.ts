@@ -3,14 +3,9 @@ import { NextRequest } from "next/server";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 import { checkRateLimit, getDefaultRateLimitConfig } from "./rateLimiter";
+import { ApiKey } from "@/types/api";
 
-/**
- * Validates the API key in the request headers
- * @param request NextRequest object
- * @param log LogFunction for logging validation activities
- * @returns NextResponse error if validation fails or null if successful along with userId
- */
-export async function validateApiKey(request: NextRequest) {
+export async function validateApiKey(request: NextRequest): Promise<ApiKey> {
   const apiKey = request.headers.get("x-api-key");
   if (!apiKey) {
     throw new SystemError(SystemCode.AUTH_MISSING_API_KEY);
@@ -36,10 +31,11 @@ export async function validateApiKey(request: NextRequest) {
       throw new SystemError(SystemCode.AUTH_RATE_LIMIT_EXCEEDED, [rate.retryAfter]);
     }
     return { 
-      apiKeyId: row.id as number, 
+      keyId: row.id as number, 
       userId: row.user_id as number, 
       userEmail: row.user_email as string,
-      maxConcurrentAnalyses: row.max_concurrent_analyses as number | null
+      maxConcurrentAnalyses: row.max_concurrent_analyses as number | undefined,
+      key: apiKey
     };
   } finally {
     client.release();

@@ -6,3 +6,11 @@ export interface ApiResponse<T = any> {
   data?: T;
   context?: Record<string, any>;
 }
+
+export interface ApiKey {
+  key?: string;
+  keyId?: number;
+  userId?: number;
+  userEmail?: string;
+  maxConcurrentAnalyses?: number;
+}

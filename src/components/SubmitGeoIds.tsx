@@ -6,18 +6,16 @@ import { Tabs } from '@/components/Tabs';
 import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/utils/safePush';
-import { fetchTempApiKey, fetchUserApiKey, createApiHeaders } from '@/lib/secureApiUtils';
+import { fetchApiKey, createApiHeaders } from '@/lib/secureApiUtils';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
 
 interface SubmitGeoIdsProps {
-    useTempKey?: boolean;
     asyncThreshold: number;
     maxGeometryLimit: number;
 }
 
 const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({ 
-    useTempKey = true,
     asyncThreshold,
     maxGeometryLimit
 }) => {
@@ -37,17 +35,8 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
     const analyze = async () => {
         useStore.setState({ isLoading: true, error: '' });
         
-        let apiKey = null;
-        try {
-            // Get the appropriate API key based on useTempKey flag
-            if (useTempKey) {
-                apiKey = await fetchTempApiKey('submit-geo-ids');
-            } else {
-                // For authenticated users, fetch their own API key
-                apiKey = await fetchUserApiKey();
-            }
-        } catch (err) {
-            console.error('Error fetching API key:', err);
+        const apiKey = await fetchApiKey();
+        if (!apiKey) {
             useStore.setState({ error: "Failed to get API key for authentication", isLoading: false });
             return;
         }
