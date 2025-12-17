@@ -36,12 +36,8 @@ export const GET = compose(
   const client = await pool.connect();
   
   try {
-    await client.query('SELECT generate_temp_api_key()');
-    
     const result = await client.query('SELECT get_temp_api_key() AS api_key');
     const apiKey = result.rows[0].api_key;
-    
-    log("debug", "Temporary API key generated successfully", logSource);
     
     // todo: use useResponse and system code
     return NextResponse.json(
