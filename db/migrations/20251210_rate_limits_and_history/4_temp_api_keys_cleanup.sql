@@ -24,7 +24,7 @@ BEGIN
   BEGIN
     INSERT INTO api_keys (user_id, api_key, expires_at, revoked)
     VALUES (-1000, new_uuid::text, NOW() + INTERVAL '10 minutes', FALSE)
-    ON CONFLICT ON CONSTRAINT api_keys_one_active_per_user
+    ON CONFLICT (user_id) WHERE revoked = FALSE
     DO UPDATE SET
       api_key = EXCLUDED.api_key,
       expires_at = EXCLUDED.expires_at,
