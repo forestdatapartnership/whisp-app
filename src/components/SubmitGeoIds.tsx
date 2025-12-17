@@ -6,7 +6,8 @@ import { Tabs } from '@/components/Tabs';
 import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/utils/safePush';
-import { fetchApiKey, createApiHeaders } from '@/lib/secureApiUtils';
+import { createApiHeaders } from '@/lib/secureApiUtils';
+import { useApiKey } from '@/lib/contexts/ApiKeyContext';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
 
@@ -24,6 +25,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
     const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
 
     const { error, geoIds } = useStore();
+    const { apiKey } = useApiKey();
     const safePush = useSafeRouterPush();
     const clearError = () => useStore.setState({ error: "" });
 
@@ -35,7 +37,6 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
     const analyze = async () => {
         useStore.setState({ isLoading: true, error: '' });
         
-        const apiKey = await fetchApiKey();
         if (!apiKey) {
             useStore.setState({ error: "Failed to get API key for authentication", isLoading: false });
             return;

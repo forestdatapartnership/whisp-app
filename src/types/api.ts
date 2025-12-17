@@ -14,3 +14,11 @@ export interface ApiKey {
   userEmail?: string;
   maxConcurrentAnalyses?: number;
 }
+
+export interface ApiKeyMetadata {
+  id: number;
+  userId: number;
+  createdAt: string;
+  expiresAt: string | null;
+  revoked: boolean;
+}

@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import DataSubmission from '@/components/DataSubmission';
-import { useUserProfile } from '@/lib/hooks/useUserProfile';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function Home() {
-  const { isAuthenticated, loading } = useUserProfile(false);
-  const showWelcome = !loading && !isAuthenticated;
+  const { isAuthenticated, isLoading } = useAuth();
+  const showWelcome = !isLoading && !isAuthenticated;
   return (
     <main className="text-center mx-auto px-2 max-w-5xl">
       {showWelcome && (

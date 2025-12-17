@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import SwaggerUI from "swagger-ui-react";
 import 'swagger-ui-react/swagger-ui.css';
 import './styles.css';
-import { fetchTempApiKey } from '@/lib/secureApiUtils';
+import { useApiKey } from '@/lib/contexts/ApiKeyContext';
 import { getMaxGeometryLimit, getMaxGeometryLimitSync, getMaxRequestSizeMB, getProcessingTimeoutSeconds, getProcessingTimeoutSyncSeconds } from '@/lib/utils/configUtils';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible';
@@ -15,8 +15,7 @@ import { Separator } from '@/components/ui/Separator';
 import { ChevronDown, ChevronRight, Code, FileText, Settings, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 const DocumentationPage = () => {
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { apiKey, isLoading: loading, error: apiKeyError } = useApiKey();
   const [error, setError] = useState<string | null>(null);
   const [swaggerInstance, setSwaggerInstance] = useState<any>(null);
   const [isGeoJSONOpen, setIsGeoJSONOpen] = useState<boolean>(false);
@@ -32,21 +31,10 @@ const DocumentationPage = () => {
   const processingTimeoutSyncSeconds = getProcessingTimeoutSyncSeconds(config);
 
   useEffect(() => {
-    const getApiKey = async () => {
-      try {
-        setLoading(true);
-        const key = await fetchTempApiKey('documentation');
-        setApiKey(key);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
-        console.error('Error fetching temp API key:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getApiKey();
-  }, []);
+    if (apiKeyError) {
+      setError(apiKeyError);
+    }
+  }, [apiKeyError]);
 
   // Request interceptor to add API key to all requests
   const requestInterceptor = (req: any) => {

@@ -3,7 +3,8 @@
 import { Fragment, useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
-import { useUserProfile } from "@/lib/hooks/useUserProfile";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { deriveDurationMs, formatDateTime, formatDuration, formatRelative } from "@/lib/utils/formatters";
@@ -122,8 +123,8 @@ const StatTile = ({ label, value, helper }: { label: string; value: string | num
   </div>
 );
 
-export default function JobStatsPage() {
-  const { isAuthenticated, loading: authLoading } = useUserProfile(true);
+function JobStatsContent() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -387,6 +388,14 @@ export default function JobStatsPage() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+export default function JobStatsPage() {
+  return (
+    <ProtectedRoute>
+      <JobStatsContent />
+    </ProtectedRoute>
   );
 }
 

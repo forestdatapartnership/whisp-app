@@ -7,7 +7,8 @@ import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/utils/safePush';
 import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
-import { fetchApiKey, createApiHeaders } from '@/lib/secureApiUtils';
+import { createApiHeaders } from '@/lib/secureApiUtils';
+import { useApiKey } from '@/lib/contexts/ApiKeyContext';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
 
@@ -28,6 +29,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
     const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
     const [featureCount, setFeatureCount] = useState<number>(0);
 
+    const { apiKey } = useApiKey();
     const safePush = useSafeRouterPush();
     const resetStore = useStore((state) => state.reset);
 
@@ -87,7 +89,6 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
                 async: shouldUseAsync
             };
 
-            const apiKey = await fetchApiKey();
             if (!apiKey) {
                 throw new Error("Failed to get API key for authentication");
             }

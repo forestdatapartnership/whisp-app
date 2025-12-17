@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUserProfile } from '@/lib/hooks/useUserProfile';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Link from 'next/link';
 
-export default function Settings() {
+function SettingsContent() {
   const router = useRouter();
-  const { user, isAuthenticated, loading: authLoading, fetchUserProfile, logout } = useUserProfile(true);
+  const { user, isAuthenticated, isLoading: authLoading, refreshUser, logout } = useAuth();
   
   // Form state
   const [formData, setFormData] = useState({
@@ -73,7 +74,7 @@ export default function Settings() {
       if (response.ok) {
         const data = await response.json();
         setSuccessMessage(data.message || 'Profile updated successfully');
-        await fetchUserProfile();
+        await refreshUser();
       } else {
         const data = await response.json();
         throw new Error(data.message || 'Failed to update profile');
@@ -372,5 +373,13 @@ export default function Settings() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function Settings() {
+  return (
+    <ProtectedRoute>
+      <SettingsContent />
+    </ProtectedRoute>
   );
 }

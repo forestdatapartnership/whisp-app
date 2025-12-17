@@ -3,20 +3,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
-import { useUserProfile } from '@/lib/hooks/useUserProfile';
-import { useRouter } from 'next/navigation';
-import { hasCookie } from '@/lib/utils';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 const Navbar: React.FC = () => {
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const router = useRouter();
-    const { user, isAuthenticated, loading, logout } = useUserProfile();
-
-    // Debug logging to verify our cookie detection is working correctly
-    useEffect(() => {
-        const hasAuthCookie = hasCookie('token') || hasCookie('refreshToken');
-    }, [isAuthenticated, loading]);
+    const { user, isAuthenticated, logout } = useAuth();
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -38,7 +30,6 @@ const Navbar: React.FC = () => {
     const handleLogout = async () => {
         await logout();
         setIsProfileDropdownOpen(false);
-        // Remove duplicate router.push('/login') since logout() now handles the redirect
     };
 
     return (

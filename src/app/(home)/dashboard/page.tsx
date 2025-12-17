@@ -3,25 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useUserProfile } from '@/lib/hooks/useUserProfile';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { useApiKey } from '@/lib/contexts/ApiKeyContext';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Alert from '@/components/Alert';
 
-// Define needed types
-type ApiKeyMetadata = {
-  id: number;
-  userId: number;
-  createdAt: string;
-  expiresAt: string | null;
-  revoked: boolean;
-};
-
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter();
-  const { user, isAuthenticated, loading: authLoading, logout } = useUserProfile(true);
+  const { isLoading: authLoading } = useAuth();
+  const {
+    apiKeyMetadata,
+    hasApiKey,
+    isLoading: apiKeyLoading,
+    error: apiKeyError,
+    createApiKey: createApiKeyFromContext,
+    deleteApiKey: deleteApiKeyFromContext,
+    clearError: clearApiKeyError,
+  } = useApiKey();
 
-  // State variables
-  const [apiKeyMetadata, setApiKeyMetadata] = useState<ApiKeyMetadata | null>(null);
-  const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [keyBeingCreated, setKeyBeingCreated] = useState(false);
@@ -30,16 +29,13 @@ export default function Dashboard() {
   const [showDeleteKeyConfirm, setShowDeleteKeyConfirm] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
-  // Fetch API key metadata once authentication is confirmed
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchApiKeyMetadata();
-    }
+  const loading = authLoading || apiKeyLoading;
 
-    if (!authLoading) {
-      setLoading(false);
+  useEffect(() => {
+    if (apiKeyError) {
+      setErrorMessage(apiKeyError);
     }
-  }, [isAuthenticated, user, authLoading]);
+  }, [apiKeyError]);
 
   // Reset copied state after 2 seconds
   useEffect(() => {
@@ -58,78 +54,40 @@ export default function Dashboard() {
     }
   }, [newlyCreatedKey]);
 
-  const fetchApiKeyMetadata = async () => {
-    try {
-      const response = await fetch('/api/user/api-key/metadata');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.hasKey) {
-          setApiKeyMetadata(data.metadata);
-        } else {
-          setApiKeyMetadata(null);
-        }
-      } else {
-        // Error fetching metadata
-        setApiKeyMetadata(null);
-        console.error('Error fetching API key metadata:', await response.text());
-      }
-    } catch (error) {
-      console.error('Error fetching API key metadata:', error);
-      setErrorMessage('Failed to load your API key information. Please try again.');
-    }
-  };
-
   const createApiKey = async () => {
     setKeyBeingCreated(true);
     setErrorMessage('');
+    clearApiKeyError();
 
-    try {
-      const response = await fetch('/api/user/api-key', {
-        method: 'POST',
-      });
+    const result = await createApiKeyFromContext();
 
-      if (response.ok) {
-        const data = await response.json();
-        setNewlyCreatedKey({ key: data.data.apiKey });
-        await fetchApiKeyMetadata();
-        setSuccessMessage('API key created successfully. Make sure to copy your key now - you won\'t be able to see it again!');
-        setShowCreateKeyForm(false);
-      } else {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to create API key');
-      }
-    } catch (error: any) {
-      console.error('Error creating API key:', error);
-      setErrorMessage(error.message || 'An error occurred while creating your API key');
-    } finally {
-      setKeyBeingCreated(false);
+    if (result.success && result.apiKey) {
+      setNewlyCreatedKey({ key: result.apiKey });
+      setSuccessMessage('API key created successfully. Make sure to copy your key now - you won\'t be able to see it again!');
+      setShowCreateKeyForm(false);
+    } else if (result.error) {
+      setErrorMessage(result.error);
     }
+
+    setKeyBeingCreated(false);
   };
 
   const deleteApiKey = async () => {
     setErrorMessage('');
     setSuccessMessage('');
+    clearApiKeyError();
 
-    try {
-      const response = await fetch('/api/user/api-key', {
-        method: 'DELETE',
-      });
+    const success = await deleteApiKeyFromContext();
 
-      if (response.ok) {
-        await fetchApiKeyMetadata();
-        setSuccessMessage('API key deleted successfully');
-        setShowDeleteKeyConfirm(false);
-      } else {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to delete API key');
-      }
-    } catch (error: any) {
-      console.error('Error deleting API key:', error);
-      setErrorMessage(error.message || 'An error occurred while deleting the API key');
+    if (success) {
+      setSuccessMessage('API key deleted successfully');
+      setShowDeleteKeyConfirm(false);
+    } else if (apiKeyError) {
+      setErrorMessage(apiKeyError);
     }
   };
 
-  if (loading || authLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen p-8 flex flex-col items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -180,7 +138,7 @@ export default function Dashboard() {
         {/* API Key Status */}
         {!keyBeingCreated && !newlyCreatedKey && (
           <div className="mb-8">
-            {apiKeyMetadata ? (
+            {hasApiKey && apiKeyMetadata ? (
               <div className="p-4 border border-gray-700 rounded-lg">
                 {!showCreateKeyForm && !showDeleteKeyConfirm ? (
                   // Default view - show existing key info
@@ -429,5 +387,13 @@ curl -X POST "https://whisp.openforis.org/api/submit/geo-ids" \\
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
   );
 }

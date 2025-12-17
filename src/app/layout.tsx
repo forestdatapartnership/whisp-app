@@ -4,6 +4,9 @@ import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { ConfigProvider } from '@/lib/contexts/ConfigContext'
+import { AuthProvider } from '@/lib/contexts/AuthContext'
+import { ApiKeyProvider } from '@/lib/contexts/ApiKeyContext'
+import { ContextsInitializer } from '@/lib/contexts/ContextsInitializer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,7 +24,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} h-screen`}>
         <ConfigProvider>
-          {children}
+          <AuthProvider>
+            <ApiKeyProvider>
+              <ContextsInitializer>
+                {children}
+              </ContextsInitializer>
+            </ApiKeyProvider>
+          </AuthProvider>
         </ConfigProvider>
       </body>
     </html>

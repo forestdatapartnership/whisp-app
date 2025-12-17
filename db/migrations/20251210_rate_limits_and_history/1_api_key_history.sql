@@ -30,3 +30,10 @@ WHERE user_id = _user_id
   AND revoked = FALSE;
 $$ LANGUAGE sql;
 
+ALTER TABLE api_keys
+  DROP CONSTRAINT IF EXISTS api_keys_user_id_key;
+
+CREATE UNIQUE INDEX IF NOT EXISTS api_keys_one_active_per_user
+  ON api_keys(user_id)
+  WHERE revoked = FALSE;
+
