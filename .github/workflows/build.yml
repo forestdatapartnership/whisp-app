@@ -4,8 +4,21 @@ on:
   push:
     branches: 
       - main
+      - release/**
     paths-ignore:
       - '.github/**'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: true
+        default: 'main'
+        type: string
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -15,9 +28,14 @@ jobs:
       id-token: write
       contents: read
       
+    env:
+      REF_TO_BUILD: ${{ github.event_name == 'push' && github.ref_name || inputs.branch }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF_TO_BUILD }}
 
       - name: Extract version from package.json
         id: package_version
