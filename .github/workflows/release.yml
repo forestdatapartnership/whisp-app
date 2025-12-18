@@ -3,9 +3,14 @@ name: Create Release
 on:
   workflow_dispatch:
     inputs:
+      branch:
+        description: 'Branch to release from (main=create, release/*=update)'
+        required: false
+        default: 'main'
+        type: string
       bump-type:
         description: 'Which version segment to bump: major, minor, or patch'
-        required: true
+        required: false
         default: 'patch'
         type: choice
         options:
@@ -16,15 +21,13 @@ on:
         description: 'What''s New section content (bullet points, one per line)'
         required: false
         type: string
-  push:
-    branches:
-      - 'release/**'
 
 jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
       release_branch: ${{ steps.vars.outputs.release_branch }}
+      mode: ${{ steps.vars.outputs.mode }}
     permissions:
       contents: write     
       issues: read        
@@ -35,14 +38,39 @@ jobs:
 
       - id: vars
         run: |
-          VER=$(node -p "require('./package.json').version")
-          echo "VER=$VER"           >> $GITHUB_ENV
-          echo "TAG=v$VER"          >> $GITHUB_ENV
-          RELEASE_BRANCH="release/v$VER"
+          BRANCH="${{ github.event.inputs.branch || 'main' }}"
+
+          if [ "$BRANCH" = "main" ]; then
+            MODE="create"
+            VER=$(node -p "require('./package.json').version")
+            TAG="v$VER"
+            RELEASE_BRANCH="release/$TAG"
+          elif echo "$BRANCH" | grep -q "^release/"; then
+            MODE="update"
+            TAG="${BRANCH#release/}"
+            VER="${TAG#v}"
+            RELEASE_BRANCH="$BRANCH"
+          else
+            echo "Unsupported branch $BRANCH" >&2
+            exit 1
+          fi
+
+          echo "MODE=$MODE" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "VER=$VER" >> $GITHUB_ENV
           echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
           echo "release_branch=$RELEASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "mode=$MODE" >> $GITHUB_OUTPUT
+
+      - name: Ensure release exists (update mode)
+        if: ${{ steps.vars.outputs.mode == 'update' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$TAG" >/dev/null
 
       - name: Ensure release branch
+        if: ${{ steps.vars.outputs.mode == 'create' }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -52,6 +80,18 @@ jobs:
             git branch "$RELEASE_BRANCH" "$GITHUB_SHA"
             git push origin "$RELEASE_BRANCH:$RELEASE_BRANCH"
           fi
+
+      - name: Retag release branch head (update mode)
+        if: ${{ steps.vars.outputs.mode == 'update' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin "$RELEASE_BRANCH" || { echo "Release branch $RELEASE_BRANCH not found" >&2; exit 1; }
+          git tag -d "$TAG" 2>/dev/null || true
+          git push origin ":refs/tags/$TAG" || true
+          git checkout "$RELEASE_BRANCH"
+          git tag -a "$TAG" -m "Update release $TAG"
+          git push origin "$TAG"
 
       - id: notes
         env:
@@ -87,13 +127,24 @@ jobs:
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ steps.vars.outputs.mode == 'create' }}
         run: |
           gh release create "$TAG" \
             --title "Release $TAG" \
             --notes-file "$NOTES_PATH" \
             --target "$RELEASE_BRANCH"
 
+      - name: Update GitHub release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ steps.vars.outputs.mode == 'update' }}
+        run: |
+          gh release edit "$TAG" \
+            --tag "$TAG" \
+            --notes-file "$NOTES_PATH"
+
       - name: Bump package.json version (major/minor/patch)
+        if: ${{ steps.vars.outputs.mode == 'create' }}
         run: |
           BUMP_TYPE="${{ github.event.inputs.bump-type || 'patch' }}"
           git config user.name "github-actions[bot]"
