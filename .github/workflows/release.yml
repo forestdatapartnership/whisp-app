@@ -3,11 +3,6 @@ name: Create Release
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch to release from (main=create, release/*=update)'
-        required: false
-        default: 'main'
-        type: string
       bump-type:
         description: 'Which version segment to bump: major, minor, or patch'
         required: false
@@ -35,10 +30,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }}
 
       - id: vars
         run: |
-          BRANCH="${{ github.event.inputs.branch || 'main' }}"
+          BRANCH="${{ github.ref_name || 'main' }}"
 
           if [ "$BRANCH" = "main" ]; then
             MODE="create"

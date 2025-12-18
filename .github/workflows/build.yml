@@ -8,12 +8,6 @@ on:
     paths-ignore:
       - '.github/**'
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to build'
-        required: true
-        default: 'main'
-        type: string
   workflow_call:
     inputs:
       branch:
@@ -29,7 +23,7 @@ jobs:
       contents: read
       
     env:
-      REF_TO_BUILD: ${{ github.event_name == 'push' && github.ref_name || inputs.branch }}
+      REF_TO_BUILD: ${{ github.event_name == 'workflow_call' && inputs.branch || github.ref_name }}
 
     steps:
       - name: Checkout code

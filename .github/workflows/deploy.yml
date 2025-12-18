@@ -3,10 +3,6 @@ name: Deploy to Cloud Run
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch to deploy (leave empty to use current branch)'
-        required: false
-        default: ''
       environment:
         description: 'Environment to deploy to'
         required: false
@@ -27,6 +23,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
 
       - name: Extract version from package.json
         id: package_version
