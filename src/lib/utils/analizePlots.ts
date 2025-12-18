@@ -85,12 +85,7 @@ export const analyzePlots = async (context: AnalysisJob, featureCollection: any,
                 `SELECT COUNT(*)::int AS running
                  FROM analysis_jobs
                  WHERE user_id = $1
-                   AND status = $2
-                   AND (
-                        started_at IS NULL
-                        OR timeout_ms IS NULL
-                        OR started_at + (timeout_ms || ' milliseconds')::interval > now()
-                   )`,
+                   AND status = $2`,
                 [context.apiKey.userId, SystemCode.ANALYSIS_PROCESSING]
             );
             const running = rows[0]?.running ?? 0;
@@ -98,14 +93,13 @@ export const analyzePlots = async (context: AnalysisJob, featureCollection: any,
                 throw new SystemError(SystemCode.ANALYSIS_TOO_MANY_CONCURRENT);
             }
         }
-        await createAnalysisJob({
-            ...context,
-            featureCount: geometryCount,
-            analysisOptions: context.analysisOptions ?? featureCollection.analysisOptions ?? undefined,
-            status: SystemCode.ANALYSIS_PROCESSING,
-            timeoutMs: timeout
-        });
     }
+    await createAnalysisJob({
+        ...context,
+        featureCount: geometryCount,
+        analysisOptions: context.analysisOptions ?? featureCollection.analysisOptions ?? undefined,
+        status: SystemCode.ANALYSIS_PROCESSING,
+    });
     
     const maxGeometryLimit = isAsync ? getMaxGeometryLimit() : getMaxGeometryLimitSync();
 

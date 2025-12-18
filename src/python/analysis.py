@@ -55,6 +55,16 @@ def main(file_path, legacy_mode=False):
     except Exception:
         pass
     
+    metadata = {
+        "openforisWhispVersion": whisp_version,
+        "earthengineApiVersion": ee_version
+    }
+    metadata_file_path = os.path.splitext(file_path)[0] + '-meta.json'
+    def write_metadata(temp_path):
+        with open(temp_path, 'w', encoding='utf-8') as f:
+            json.dump(metadata, f)
+    atomic_write(metadata_file_path, write_metadata)
+    
     whisp.initialize_ee(CREDENTIAL_PATH, use_high_vol_endpoint=opts.async_mode)
     if opts.async_mode:
         print("Initialized Earth Engine with high-volume endpoint")

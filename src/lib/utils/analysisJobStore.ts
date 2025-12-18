@@ -29,9 +29,10 @@ const updateColumnMap: Record<string, string> = {
   status: 'status',
   startedAt: 'started_at',
   completedAt: 'completed_at',
-  timeoutMs: 'timeout_ms',
   errorMessage: 'error_message',
-  featureCount: 'feature_count'
+  featureCount: 'feature_count',
+  openforisWhispVersion: 'openforis_whisp_version',
+  earthengineApiVersion: 'earthengine_api_version'
 };
 
 const statusOrder = [
@@ -55,8 +56,8 @@ export const mapAnalysisJobRow = (row: any): AnalysisJob => ({
 export async function createAnalysisJob(job: AnalysisJob) {
   const pool = getPool();
   await pool.query(
-    `INSERT INTO analysis_jobs (token, api_key_id, user_id, status, feature_count, analysis_options, timeout_ms)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO analysis_jobs (token, api_key_id, user_id, status, feature_count, analysis_options, agent, ip_address, api_version, endpoint, openforis_whisp_version, earthengine_api_version)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      ON CONFLICT (token) DO NOTHING`,
     [
       job.token, 
@@ -64,8 +65,13 @@ export async function createAnalysisJob(job: AnalysisJob) {
       job.apiKey?.userId ?? null, 
       job.status ?? SystemCode.ANALYSIS_PROCESSING, 
       job.featureCount, 
-      job.analysisOptions ?? null, 
-      job.timeoutMs ?? null
+      job.analysisOptions ?? null,
+      job.agent ?? null,
+      job.ipAddress ?? null,
+      job.apiVersion ?? null,
+      job.endpoint ?? null,
+      job.openforisWhispVersion ?? null,
+      job.earthengineApiVersion ?? null,
     ]
   );
 }

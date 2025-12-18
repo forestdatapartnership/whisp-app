@@ -74,7 +74,8 @@ export async function fetchUserApiKey(): Promise<string> {
  */
 export function createApiHeaders(apiKey?: string | null): Record<string, string> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'X-Whisp-Agent': 'ui'
   };
   
   if (apiKey) {

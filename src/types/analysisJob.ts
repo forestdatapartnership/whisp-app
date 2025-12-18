@@ -14,5 +14,11 @@ export interface AnalysisJob {
   timeoutMs?: number;
   errorMessage?: string;
   resultsAvailable?: boolean;
+  agent?: 'ui' | 'api';
+  ipAddress?: string;
+  apiVersion?: string;
+  endpoint?: string;
+  openforisWhispVersion?: string;
+  earthengineApiVersion?: string;
 }
 

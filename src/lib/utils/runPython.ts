@@ -1,4 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
+import fs from 'fs/promises';
+import path from 'path';
 import { LogFunction } from "@/lib/logger";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from '@/types/systemError';
@@ -146,6 +148,24 @@ const killProcess = (childProcess: ChildProcess) => {
   }
 };
 
+const getPythonMetadata = async (token: string) => {
+  try {
+    const metaPath = path.join(process.cwd(), "temp", `${token}-meta.json`);
+    const data = await fs.readFile(metaPath, "utf8");
+    const meta = JSON.parse(data);
+    const update: Record<string, string> = {};
+    if (meta?.openforisWhispVersion) {
+      update.openforisWhispVersion = meta.openforisWhispVersion;
+    }
+    if (meta?.earthengineApiVersion) {
+      update.earthengineApiVersion = meta.earthengineApiVersion;
+    }
+    return update;
+  } catch {
+    return {};
+  }
+};
+
 /**
  * Asynchronously analyzes data by executing a Python script using a provided token.
  * The function expects a unique token to identify the data file, which should be located in the `temp` directory.
@@ -181,7 +201,18 @@ export const analyzeGeoJson = async (
   
   await updateAnalysisJob(token, { status: SystemCode.ANALYSIS_PROCESSING, startedAt: new Date(pythonStartTime) });
   
-  await runPythonScript(token, scriptPath, args, log, timeout);
+  let versionUpdate: Record<string, string> = {};
+
+  try {
+    await runPythonScript(token, scriptPath, args, log, timeout);
+    versionUpdate = await getPythonMetadata(token);
+  } catch (error) {
+    versionUpdate = await getPythonMetadata(token);
+    if (Object.keys(versionUpdate).length) {
+      await updateAnalysisJob(token, versionUpdate);
+    }
+    throw error;
+  }
   
   const finishTime = Date.now();
   const pythonDuration = finishTime - pythonStartTime;
@@ -196,7 +227,8 @@ export const analyzeGeoJson = async (
   
   await updateAnalysisJob(token, {
     status: SystemCode.ANALYSIS_COMPLETED,
-    completedAt: new Date(finishTime)
+    completedAt: new Date(finishTime),
+    ...versionUpdate
   });
   
   log("info", `Analysis completed - Features: ${featureCount}, Total duration: ${totalDuration === null ? 'na' : totalDuration + 'ms'}, Python duration: ${pythonDuration}ms`, logSource);
