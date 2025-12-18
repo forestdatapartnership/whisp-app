@@ -149,10 +149,3 @@ jobs:
           git push origin HEAD:main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build_from_release:
-    needs: release
-    uses: ./.github/workflows/build.yml
-    with:
-      branch: ${{ needs.release.outputs.release_branch }}
-    secrets: inherit
