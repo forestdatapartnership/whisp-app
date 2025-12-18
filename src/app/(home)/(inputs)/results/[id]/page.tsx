@@ -183,6 +183,7 @@ export default function ResultsPage() {
 
   // Handle error states
   if (hasAnyError) {
+    const apiMessage = response?.message ?? (response as any)?.error;
     const cause = (response as any)?.cause as string | undefined;
     const getErrorTitle = () => {
       switch (responseCode) {
@@ -199,8 +200,7 @@ export default function ResultsPage() {
     const getErrorMessage = () => {
       if (dataError) return dataError;
       if (hasTransportError) return `Network error: ${hasTransportError.message}`;
-      if (response?.message) return response.message;
-      if ((response as any)?.error) return (response as any).error;
+      if (apiMessage) return apiMessage;
       return 'An unexpected error occurred.';
     };
 
