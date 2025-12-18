@@ -85,7 +85,9 @@ export const runPythonScript = async (
       log("debug", `Python Stdout: ${stdout}`);
       
       if (code !== 0) {
-        reject(new SystemError(SystemCode.ANALYSIS_ERROR, [], `Python script exited with code ${code}: ${stderr}`));
+        const stderrMessage = stderr.trim();
+        const detail = stderrMessage ? `Python script exited with code ${code} - ${stderrMessage}` : `Python script exited with code ${code}`;
+        reject(new SystemError(SystemCode.ANALYSIS_ERROR, undefined, detail));
         return;
       }
       
@@ -93,14 +95,14 @@ export const runPythonScript = async (
     });
 
     childProcess.on('error', (error) => {
-      reject(new SystemError(SystemCode.ANALYSIS_ERROR, [], `Failed to start Python process: ${error.message}`));
+      reject(new SystemError(SystemCode.ANALYSIS_ERROR, undefined, `Failed to start Python process: ${error.message}`));
     });
 
     // Set a timeout
     const timeoutId = setTimeout(() => {
       if (!childProcess.killed) {
         killProcess(childProcess);
-        reject(new SystemError(SystemCode.ANALYSIS_TIMEOUT, [timeout/1000], `Analysis timed out after ${timeout/1000} seconds.`));
+        reject(new SystemError(SystemCode.ANALYSIS_TIMEOUT, [timeout/1000]));
       }
     }, timeout);
 

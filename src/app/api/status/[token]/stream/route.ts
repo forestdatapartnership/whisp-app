@@ -38,7 +38,7 @@ export const GET = compose(
 
   if (await fileExists(errorPath)) {
     const errorInfo = JSON.parse(await fs.readFile(errorPath, 'utf8'));
-    const body = `data: ${JSON.stringify({ code: errorInfo.code || SystemCode.ANALYSIS_ERROR, ...errorInfo, final: true })}\n\n`;
+    const body = `data: ${JSON.stringify({ ...errorInfo, final: true })}\n\n`;
     return new NextResponse(body, {
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
     });

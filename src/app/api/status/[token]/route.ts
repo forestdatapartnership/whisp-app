@@ -35,14 +35,14 @@ export const GET = compose(
         const errorData = await readFile(`${filePath}/${token}-error.json`, log);
         const errorInfo = JSON.parse(errorData);
         
-        // Use the specific error code from the Python processor, or default to ANALYSIS_ERROR
-        const errorCode = errorInfo.code || SystemCode.ANALYSIS_ERROR;
         
         // If the error has format arguments, use them
-        if (errorInfo.formatArgs && Array.isArray(errorInfo.formatArgs)) {
-            return useResponseWithFormat(errorCode, errorInfo.formatArgs);
+        if (errorInfo.cause) {
+            return useResponse(errorInfo.code, undefined, undefined, errorInfo.cause);
+        } else if (errorInfo.formatArgs && Array.isArray(errorInfo.formatArgs)) {
+            return useResponseWithFormat(errorInfo.code, errorInfo.formatArgs);
         } else {
-            return useResponse(errorCode);
+            return useResponse(errorInfo.code);
         }
     }
     

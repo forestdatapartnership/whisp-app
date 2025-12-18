@@ -18,21 +18,20 @@ function handleError(error: any, log: LogFunction): NextResponse {
     const httpStatus = codeInfo.httpStatus || 
       (codeInfo.publicCode ? getSystemCodeInfo(codeInfo.publicCode).httpStatus : undefined);
     const logLevel = getLogLevelFromHttpStatus(httpStatus);
-    
-    let logMessage = error.message;
-    if (error.innerError !== undefined) {
-      logMessage += ` - InnerError: ${error.innerError}`;
-    }
-    log(logLevel, logMessage, undefined, { 
+    const cause = typeof error.cause === 'string'
+      ? error.cause
+      : error.cause !== undefined
+        ? String(error.cause)
+        : undefined;
+    log(logLevel, error.message, undefined, { 
       systemCode: error.systemCode,
-      httpStatus
+      httpStatus,
+      ...(cause ? { cause } : {})
     });
-    
     if (error.formatArgs && error.formatArgs.length > 0) {
-      return useResponseWithFormat(error.systemCode, error.formatArgs);
-    } else {
-      return useResponse(error.systemCode);
+      return useResponseWithFormat(error.systemCode, error.formatArgs, undefined, cause);
     }
+    return useResponse(error.systemCode, undefined, undefined, cause);
   } else {
     log('error', 'Unexpected error occurred: ' + error);
     return useResponse(SystemCode.SYSTEM_INTERNAL_SERVER_ERROR);
