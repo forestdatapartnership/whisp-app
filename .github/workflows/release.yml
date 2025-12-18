@@ -137,7 +137,9 @@ jobs:
         run: |
           gh release edit "$TAG" \
             --tag "$TAG" \
-            --notes-file "$NOTES_PATH"
+            --notes-file "$NOTES_PATH" \
+            --draft=false \
+            --latest
 
       - name: Bump package.json version (major/minor/patch)
         if: ${{ steps.vars.outputs.mode == 'create' }}

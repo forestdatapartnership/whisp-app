@@ -5,7 +5,7 @@ import { getPool } from "@/lib/db";
 import { analyzeGeoJson } from "@/lib/utils/runPython";
 import { LogFunction } from "@/lib/logger";
 import { useResponse } from "@/lib/hooks/responses";
-import { SystemCode } from "@/types/systemCodes";
+import { SystemCode, getSystemCodeInfo } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 import { AnalysisJob } from "@/types/analysisJob";
 import { getMaxGeometryLimit, getMaxGeometryLimitSync, getPythonTimeoutMs, getPythonTimeoutSyncMs } from "@/lib/utils/configUtils";
@@ -18,32 +18,36 @@ import { createAnalysisJob, updateAnalysisJob } from "./analysisJobStore";
 const LOG_SOURCE = "analyzePlots.ts";
 
 const buildErrorInfo = (error: unknown) => {
+    const baseMessage = getSystemCodeInfo(SystemCode.ANALYSIS_ERROR).message;
     if (error instanceof SystemError) {
-        const { message, systemCode, formatArgs } = error;
+        const { message, systemCode, formatArgs, cause } = error;
         return {
             error: message,
             code: systemCode,
-            ...(formatArgs ? { formatArgs } : {})
+            ...(formatArgs && formatArgs.length ? { formatArgs } : {}),
+            ...(cause ? { cause: String(cause) } : {})
         };
     }
     if (error instanceof Error) {
-        return { error: error.message, code: SystemCode.ANALYSIS_ERROR };
+        return { error: baseMessage, code: SystemCode.ANALYSIS_ERROR, cause: error.message };
     }
-    return { error: String(error), code: SystemCode.ANALYSIS_ERROR };
+    const detail = String(error);
+    return { error: baseMessage, code: SystemCode.ANALYSIS_ERROR, cause: detail };
 };
 
 const handleAnalysisError = async (token: string, error: any, log: LogFunction, filePath: string, shouldLog: boolean = true
 ) => {
     const errorInfo = buildErrorInfo(error);
+    const errorMessage = errorInfo.cause ?? errorInfo.error;
     await updateAnalysisJob(token, {
         status: errorInfo.code,
         completedAt: new Date(),
-        errorMessage: errorInfo.error
+        errorMessage: errorMessage
     });
     await atomicWriteFile(`${filePath}/${token}-error.json`, JSON.stringify(errorInfo), log);
     sseEmitter.emit(token, { ...errorInfo, final: true });
     if (shouldLog) {
-        log("error", `Analysis failed: ${errorInfo.error}`, LOG_SOURCE);
+        log("error", `Analysis failed: ${errorMessage}`, LOG_SOURCE);
     }
     return errorInfo;
 };

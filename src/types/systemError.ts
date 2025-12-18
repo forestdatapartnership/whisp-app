@@ -3,26 +3,25 @@ import { SystemCode, getSystemCodeInfo, formatString } from './systemCodes';
 export class SystemError extends Error {
   public readonly systemCode: SystemCode;
   public readonly formatArgs?: (string | number)[];
-  public readonly innerError?: Error;
+  public readonly cause?: string;
 
   constructor(
     systemCode: SystemCode, 
-    formatArgs?: (string | number)[], 
-    message?: string,
-    innerError?: Error
+    formatArgs?: (string | number)[],
+    cause?: string
   ) {
     const codeInfo = getSystemCodeInfo(systemCode);
-    const finalMessage = message || (formatArgs ? formatString(codeInfo.message, ...formatArgs) : codeInfo.message);
+    const finalMessage = formatArgs && formatArgs.length > 0
+      ? formatString(codeInfo.message, ...formatArgs)
+      : codeInfo.message;
     
-    // Use modern 'cause' property if supported (ES2022)
-    super(finalMessage, innerError ? { cause: innerError } : undefined);
+    super(finalMessage);
     
     this.name = 'SystemError';
     this.systemCode = systemCode;
     this.formatArgs = formatArgs;
-    this.innerError = innerError;
+    this.cause = cause;
     
-    // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, SystemError);
     }
