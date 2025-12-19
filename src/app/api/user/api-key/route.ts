@@ -22,13 +22,18 @@ export const GET = compose(
   try {
     // Check if the user has an existing valid API key
     const existingKey: QueryResult = await client.query(
-      "SELECT api_key FROM api_keys WHERE user_id = $1 AND revoked = false AND expires_at > NOW()",
+      "SELECT api_key, created_at, expires_at FROM api_keys WHERE user_id = $1 AND revoked = false AND expires_at > NOW()",
       [user.userId]
     );
 
     // If user has an existing valid API key, return it
     if (existingKey.rowCount && existingKey.rowCount > 0) {
-      return useResponse(SystemCode.AUTH_STATUS_AUTHENTICATED, { apiKey: existingKey.rows[0].api_key });
+      const row = existingKey.rows[0];
+      return useResponse(SystemCode.AUTH_STATUS_AUTHENTICATED, {
+        apiKey: row.api_key,
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+      });
     }
 
     // No valid API key found
@@ -48,16 +53,20 @@ export const POST = compose(
   const pool = getPool();
   const client = await pool.connect();
   try {
-    // Create a new API key (this will replace any existing one)
     const key = randomUUID();
     const expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365); // 1 year (365 days)
 
-    await client.query(
-      "SELECT * FROM create_or_replace_api_key($1, $2, $3)",
+    const inserted = await client.query(
+      "SELECT api_key, created_at, expires_at FROM create_or_replace_api_key($1, $2, $3)",
       [user.userId, key, expires_at]
     );
 
-    return useResponse(SystemCode.USER_API_KEY_CREATED_SUCCESS, { apiKey: key });
+    const row = inserted.rows[0];
+    return useResponse(SystemCode.USER_API_KEY_CREATED_SUCCESS, {
+      apiKey: row.api_key,
+      createdAt: row.created_at,
+      expiresAt: row.expires_at,
+    });
   } finally {
     client.release();
   }

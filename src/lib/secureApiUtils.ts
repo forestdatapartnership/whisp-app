@@ -12,7 +12,12 @@ const UI_CLIENT_SECRET = getUIClientSecret();
  * @param source - Identifier for the source of the request (for logging)
  * @returns The API key or throws an error
  */
-export async function fetchTempApiKey(source: string = 'client'): Promise<string> {
+type TempApiKeyResponse = {
+  apiKey: string;
+  expiresAt?: string | null;
+};
+
+export async function fetchTempApiKey(source: string = 'client'): Promise<TempApiKeyResponse> {
   try {
     // Generate a timestamp-based token to help prevent replay attacks
     const timestamp = new Date().getTime();
@@ -30,13 +35,15 @@ export async function fetchTempApiKey(source: string = 'client'): Promise<string
     const data = await response.json();
     
     if (data.success && data.apiKey) {
-      return data.apiKey;
-    } else {
-      return '';
+      return {
+        apiKey: data.apiKey,
+        expiresAt: data.expiresAt ?? null,
+      };
     }
+    return { apiKey: '' };
   } catch (err) {
     console.error('Error fetching temp API key:', err);
-    return '';
+    return { apiKey: '' };
   }
 }
 
@@ -44,7 +51,13 @@ export async function fetchTempApiKey(source: string = 'client'): Promise<string
  * Fetches the authenticated user's API key
  * @returns The user's API key or throws an error
  */
-export async function fetchUserApiKey(): Promise<string> {
+type ApiKeyWithMeta = {
+  apiKey: string;
+  createdAt: string | null;
+  expiresAt: string | null;
+};
+
+export async function fetchUserApiKey(): Promise<ApiKeyWithMeta> {
   try {
     const response = await fetch('/api/user/api-key', {
       method: 'GET',
@@ -53,19 +66,22 @@ export async function fetchUserApiKey(): Promise<string> {
     });
     
     if (!response.ok) {
-      return '';
+      return { apiKey: '', createdAt: null, expiresAt: null };
     }
     
     const data = await response.json();
     
     if (data.data.apiKey) {
-      return data.data.apiKey;
-    } else {
-      return '';
+      return {
+        apiKey: data.data.apiKey,
+        createdAt: data.data.createdAt ?? null,
+        expiresAt: data.data.expiresAt ?? null,
+      };
     }
+    return { apiKey: '', createdAt: null, expiresAt: null };
   } catch (err) {
     console.error('Error fetching user API key:', err);
-    return '';
+    return { apiKey: '', createdAt: null, expiresAt: null };
   }
 }
 
@@ -95,10 +111,11 @@ export async function fetchApiKey(): Promise<string | null> {
   const isAuthenticated = statusRes.ok && statusData?.code === 'auth_status_authenticated';
   if (isAuthenticated) {
     const userKey = await fetchUserApiKey();
-    if (userKey) {
-      return userKey;
+    if (userKey.apiKey) {
+      return userKey.apiKey;
     }
   }
 
-  return await fetchTempApiKey().catch(() => null);
+  const tempKey = await fetchTempApiKey().catch(() => ({ apiKey: '' }));
+  return tempKey.apiKey || null;
 }

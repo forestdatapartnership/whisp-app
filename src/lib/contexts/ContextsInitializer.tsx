@@ -33,6 +33,7 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
   const { isLoading: configLoading } = useConfig();
   
   const [timedOut, setTimedOut] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const isLoading = authLoading || apiKeyLoading || configLoading;
   
@@ -59,13 +60,21 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
     return () => clearTimeout(timeout);
   }, [isLoading]);
 
+  useEffect(() => {
+    if (!isLoading && !hasError) {
+      setHasInitialized(true);
+    }
+  }, [isLoading, hasError]);
+
   const appReadyValue: AppReadyContextType = {
     isReady: !isLoading && !hasError,
     hasError,
     errors,
   };
 
-  if (isLoading && !timedOut) {
+  const shouldBlockInitialLoad = !hasInitialized && isLoading && !timedOut;
+
+  if (shouldBlockInitialLoad) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b3d0b]">
         <div className="text-center">
@@ -76,7 +85,7 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
     );
   }
 
-  if (hasError) {
+  if (!hasInitialized && hasError) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b3d0b] p-4">
         <div className="p-4 bg-gray-800 rounded shadow-md border border-gray-300 max-w-md w-full">

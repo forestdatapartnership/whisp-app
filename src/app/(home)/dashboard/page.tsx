@@ -147,7 +147,7 @@ function DashboardContent() {
                       <div>
                         <h3 className="text-lg font-medium text-white">Your API Key</h3>
                         <p className="text-gray-400 mt-1">
-                          Created: <span className="text-white">{new Date(apiKeyMetadata.createdAt).toLocaleDateString()}</span>
+                          Created: <span className="text-white">{apiKeyMetadata.createdAt ? new Date(apiKeyMetadata.createdAt).toLocaleDateString() : 'N/A'}</span>
                         </p>
                         {apiKeyMetadata.expiresAt && (
                           <p className="text-gray-400 mt-1">

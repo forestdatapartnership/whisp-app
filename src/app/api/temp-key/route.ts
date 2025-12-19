@@ -36,14 +36,21 @@ export const GET = compose(
   const client = await pool.connect();
   
   try {
-    const result = await client.query('SELECT get_temp_api_key() AS api_key');
-    const apiKey = result.rows[0].api_key;
-    
     // todo: use useResponse and system code
+    const result = await client.query('SELECT * FROM get_temp_api_key()');
+    const row = result.rows[0];
+
+    if (!row) {
+      throw new SystemError(SystemCode.SYSTEM_INTERNAL_SERVER_ERROR);
+    }
+
+    const apiKey = row.api_key;
+
     return NextResponse.json(
       {
         success: true,
-        apiKey: apiKey
+        apiKey: apiKey,
+        expiresAt: row.expires_at,
       },
       {
         headers: {
