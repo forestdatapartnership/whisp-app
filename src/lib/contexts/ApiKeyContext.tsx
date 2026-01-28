@@ -1,15 +1,12 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { fetchTempApiKey, fetchUserApiKey } from '@/lib/secureApiUtils';
 
 type ApiKeyMetadata = {
-  id: number;
-  userId: number;
-  createdAt: string;
+  createdAt: string | null;
   expiresAt: string | null;
-  revoked: boolean;
 };
 
 type ApiKeyContextType = {
@@ -34,8 +31,13 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const [isUserKey, setIsUserKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const tempKeyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadApiKey = useCallback(async () => {
+    if (tempKeyTimerRef.current) {
+      clearTimeout(tempKeyTimerRef.current);
+      tempKeyTimerRef.current = null;
+    }
     setIsLoading(true);
     setError(null);
 
@@ -43,20 +45,13 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
       if (isAuthenticated) {
         const userKey = await fetchUserApiKey();
         
-        if (userKey) {
-          setApiKey(userKey);
+        if (userKey.apiKey) {
+          setApiKey(userKey.apiKey);
           setIsUserKey(true);
-          
-          const response = await fetch('/api/user/api-key/metadata', {
-            credentials: 'include',
+          setApiKeyMetadata({
+            createdAt: userKey.createdAt,
+            expiresAt: userKey.expiresAt,
           });
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.hasKey) {
-              setApiKeyMetadata(data.metadata);
-            }
-          }
         } else {
           setApiKey(null);
           setIsUserKey(false);
@@ -64,9 +59,28 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
         }
       } else {
         const tempKey = await fetchTempApiKey('ApiKeyContext');
-        setApiKey(tempKey);
+        setApiKey(tempKey.apiKey);
         setIsUserKey(false);
-        setApiKeyMetadata(null);
+        setApiKeyMetadata(
+          tempKey.expiresAt
+            ? {
+                createdAt: null,
+                expiresAt: tempKey.expiresAt,
+              }
+            : null
+        );
+
+        if (tempKey.expiresAt) {
+          const expiresTime = new Date(tempKey.expiresAt).getTime();
+          if (!Number.isNaN(expiresTime)) {
+            const delay = expiresTime - Date.now();
+            if (delay > 0) {
+              tempKeyTimerRef.current = setTimeout(() => {
+                loadApiKey();
+              }, delay);
+            }
+          }
+        }
       }
     } catch (err) {
       console.error('Error loading API key:', err);
@@ -154,6 +168,14 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    return () => {
+      if (tempKeyTimerRef.current) {
+        clearTimeout(tempKeyTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!authLoading) {
       loadApiKey();
     }
@@ -164,7 +186,7 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
       value={{
         apiKey,
         apiKeyMetadata,
-        hasApiKey: !!apiKeyMetadata,
+        hasApiKey: isUserKey && !!apiKeyMetadata,
         isUserKey,
         isLoading,
         error,
