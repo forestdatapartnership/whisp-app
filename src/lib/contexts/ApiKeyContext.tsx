@@ -31,9 +31,13 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const [isUserKey, setIsUserKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const expirationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tempKeyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadApiKey = useCallback(async () => {
+    if (tempKeyTimerRef.current) {
+      clearTimeout(tempKeyTimerRef.current);
+      tempKeyTimerRef.current = null;
+    }
     setIsLoading(true);
     setError(null);
 
@@ -65,6 +69,18 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
               }
             : null
         );
+
+        if (tempKey.expiresAt) {
+          const expiresTime = new Date(tempKey.expiresAt).getTime();
+          if (!Number.isNaN(expiresTime)) {
+            const delay = expiresTime - Date.now();
+            if (delay > 0) {
+              tempKeyTimerRef.current = setTimeout(() => {
+                loadApiKey();
+              }, delay);
+            }
+          }
+        }
       }
     } catch (err) {
       console.error('Error loading API key:', err);
@@ -147,42 +163,16 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     await loadApiKey();
   }, [loadApiKey]);
 
-  useEffect(() => {
-    if (expirationTimeoutRef.current) {
-      clearTimeout(expirationTimeoutRef.current);
-      expirationTimeoutRef.current = null;
-    }
-
-    const expiresAt = apiKeyMetadata?.expiresAt
-      ? new Date(apiKeyMetadata.expiresAt).getTime()
-      : null;
-    if (!expiresAt) {
-      return;
-    }
-
-    if (Number.isNaN(expiresAt)) {
-      return;
-    }
-
-    const delay = expiresAt - Date.now();
-    if (delay <= 0) {
-      return;
-    }
-
-    expirationTimeoutRef.current = setTimeout(() => {
-      refreshApiKey();
-    }, delay);
-
-    return () => {
-      if (expirationTimeoutRef.current) {
-        clearTimeout(expirationTimeoutRef.current);
-        expirationTimeoutRef.current = null;
-      }
-    };
-  }, [apiKeyMetadata, refreshApiKey]);
-
   const clearError = useCallback(() => {
     setError(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (tempKeyTimerRef.current) {
+        clearTimeout(tempKeyTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
