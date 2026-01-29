@@ -4,12 +4,16 @@ import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 import { checkRateLimit, getDefaultRateLimitConfig } from "./rateLimiter";
 import { ApiKey } from "@/types/api";
+import { LogFunction } from "../logger";
 
-export async function validateApiKey(request: NextRequest): Promise<ApiKey> {
+export async function validateApiKey(request: NextRequest, log: LogFunction): Promise<ApiKey> {
   const apiKey = request.headers.get("x-api-key");
   if (!apiKey) {
     throw new SystemError(SystemCode.AUTH_MISSING_API_KEY);
   }
+  
+  log.enrich({ apiKey });
+  
   const pool = getPool();
   const client = await pool.connect();
   try {
@@ -21,6 +25,11 @@ export async function validateApiKey(request: NextRequest): Promise<ApiKey> {
       throw new SystemError(SystemCode.AUTH_INVALID_API_KEY);
     }
     const row = result.rows[0];
+    
+    log.enrich({
+      userEmail: row.user_email as string
+    });
+    
     const defaults = getDefaultRateLimitConfig();
     const cfg = {
       windowMs: row.rate_limit_window_ms ?? defaults.windowMs,

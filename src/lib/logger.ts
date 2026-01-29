@@ -1,7 +1,10 @@
 import winston from "winston";
 import { getLogLevel } from "./utils/configUtils";
 
-export type LogFunction = (level: 'debug' | 'info' | 'warn' | 'error', message: string, source?: string, meta?: Record<string, any>) => void;
+export type LogFunction = {
+  (level: 'debug' | 'info' | 'warn' | 'error', message: string, source?: string, meta?: Record<string, any>): void;
+  enrich(enrichments: Record<string, any>): void;
+};
 
 const gcpSeverityFormat = winston.format((info) => {
   const levelToSeverity: Record<string, string> = {

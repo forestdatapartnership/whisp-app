@@ -9,16 +9,9 @@ export function withApiKey(
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     const [log, ...rest] = args as [LogFunction, ...any[]];
 
-    const apiKey = await validateApiKey(req);
+    const apiKey = await validateApiKey(req, log);
 
-    const enrichedLog: LogFunction = (level, message, source, meta) =>
-      log(level, message, source, {
-        ...meta,
-        userEmail: apiKey.userEmail,
-        apiKey: apiKey.key,
-      });
-
-    return handler(req, apiKey, enrichedLog, ...rest);
+    return handler(req, apiKey, log, ...rest);
   };
 }
 

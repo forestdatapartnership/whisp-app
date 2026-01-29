@@ -12,10 +12,13 @@ function getBaseContext(req: NextRequest) {
 }
 
 function createLogFunction(logger: ReturnType<typeof useLogger>): LogFunction {
-    return (level: 'debug' | 'info' | 'warn' | 'error', message: string, source?: string, meta?: Record<string, any>) => {
+    const context: Record<string, any> = {};
+    
+    const logFn = (level: 'debug' | 'info' | 'warn' | 'error', message: string, source?: string, meta?: Record<string, any>) => {
         const metadata = {
-            ...meta,
             ...(source ? { source } : {}),
+            ...meta,
+            ...(Object.keys(context).length > 0 ? { context } : {}),
         };
         logger.log({
             level,
@@ -23,16 +26,21 @@ function createLogFunction(logger: ReturnType<typeof useLogger>): LogFunction {
             ...metadata,
         });
     };
+    
+    logFn.enrich = (newContext: Record<string, any>) => {
+        Object.assign(context, newContext);
+    };
+    
+    return logFn as LogFunction;
 }
 
 function createBaseLogger(req: NextRequest): { log: LogFunction; logger: ReturnType<typeof useLogger> } {
     const logger = useLogger();
+    const log = createLogFunction(logger);
     
-    logger.defaultMeta = {
-        context: getBaseContext(req)
-    };
+    log.enrich(getBaseContext(req));
     
-    return { log: createLogFunction(logger), logger };
+    return { log, logger };
 }
 
 export function withLogging(handler: (req: NextRequest, log: LogFunction, ...args: any[]) => Promise<NextResponse>) {

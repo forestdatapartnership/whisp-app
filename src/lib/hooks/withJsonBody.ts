@@ -17,6 +17,8 @@ export function withAnalysisJobJsonBody(handler: (req: NextRequest, context: Ana
       throw new SystemError(SystemCode.SYSTEM_MISSING_REQUEST_BODY);
     }
 
+    log.enrich({ bodySize });
+
     const maxFileSize = getMaxFileSize();
     
     if (maxFileSize && bodySize > maxFileSize) {
@@ -32,13 +34,15 @@ export function withAnalysisJobJsonBody(handler: (req: NextRequest, context: Ana
 
 export function withJsonBody(handler: (req: NextRequest, log: LogFunction, body: any, ...args: any[]) => Promise<NextResponse>) {
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
-    const [log, ...rest] = args;
+    const [log, ...rest] = args as [LogFunction, ...any[]];
 
     const bodySize = getRequestBodySize(req);
 
     if (!bodySize || bodySize === 0) {
       throw new SystemError(SystemCode.SYSTEM_MISSING_REQUEST_BODY);
     }
+
+    log.enrich({ bodySize });
 
     const body = await useJsonOrNull(req, log);
 

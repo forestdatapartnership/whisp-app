@@ -24,8 +24,9 @@ export function withAuthUser(
       throw new SystemError(SystemCode.USER_INVALID_USER_ID);
     }
 
-    // TODO: Add email to the authenticated user
-    // TODO: Add log enrichment for the authenticated user
+    log.enrich({
+      userId
+    });
     
     const user: AuthenticatedUser = { userId };
 

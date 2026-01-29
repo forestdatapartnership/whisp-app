@@ -28,15 +28,9 @@ export function withAnalysisJobContext(
       endpoint,
     };
     
-    const enrichedLog: LogFunction = (level, message, source, meta) =>
-      log(level, message, source, {
-        ...meta,
-        token: context.token,
-        userEmail: apiKey?.userEmail,
-        apiKey: apiKey?.key,
-      });
+    log.enrich({ token: context.token });
 
-    return handler(req, context, enrichedLog, ...rest);
+    return handler(req, context, log, ...rest);
   };
 }
 
