@@ -24,7 +24,6 @@ export const POST = compose(
     const pool = getPool();
     const client = await pool.connect();
     try {
-        // Updated query to also return email_verified status
         const result = await client.query("SELECT id, email, email_verified FROM login_user($1, $2)", [email, password]);
         if (result.rowCount === 0) {
             return useResponse(SystemCode.AUTH_INVALID_CREDENTIALS);
@@ -32,20 +31,20 @@ export const POST = compose(
 
         const user = result.rows[0];
         
-        // Check if email is verified
         if (!user.email_verified) {
             return useResponse(SystemCode.AUTH_EMAIL_NOT_VERIFIED);
         }
 
-        // Generate Access Token
-        const accessToken = await new SignJWT({ sub: user.id })
+        const adminResult = await client.query("SELECT is_admin FROM users WHERE id = $1", [user.id]);
+        const isAdmin = adminResult.rows[0]?.is_admin || false;
+
+        const accessToken = await new SignJWT({ sub: user.id, email: user.email, isAdmin })
             .setProtectedHeader({ alg: "HS256" })
             .setIssuedAt()
             .setExpirationTime("30m")
             .sign(new TextEncoder().encode(SECRET_KEY));
 
-        // Generate Refresh Token
-        const refreshToken = await new SignJWT({ sub: user.id })
+        const refreshToken = await new SignJWT({ sub: user.id, email: user.email, isAdmin })
             .setProtectedHeader({ alg: "HS256" })
             .setIssuedAt()
             .setExpirationTime("7d")
@@ -56,7 +55,6 @@ export const POST = compose(
             { user: { id: user.id, email: user.email } }
         );
 
-        // Set tokens as cookies
         response.cookies.set('token', accessToken, { 
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",

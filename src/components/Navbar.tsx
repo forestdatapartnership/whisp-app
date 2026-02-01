@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 const Navbar: React.FC = () => {
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const { user, isAuthenticated, logout } = useAuth();
+    const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -80,7 +80,7 @@ const Navbar: React.FC = () => {
                                     </Link>
                                     <Link 
                                         href="/dashboard" 
-                                        className="block px-4 py-2 hover:bg-gray-600 rounded-t-lg"
+                                        className="block px-4 py-2 hover:bg-gray-600"
                                         onClick={() => setIsProfileDropdownOpen(false)}
                                     >
                                         Dashboard
@@ -92,6 +92,15 @@ const Navbar: React.FC = () => {
                                     >
                                         Job stats
                                     </Link>
+                                    {isAdmin && (
+                                        <Link 
+                                            href="/settings/result-columns" 
+                                            className="block px-4 py-2 hover:bg-gray-600 border-t border-gray-600"
+                                            onClick={() => setIsProfileDropdownOpen(false)}
+                                        >
+                                            Result Columns
+                                        </Link>
+                                    )}
                                     <button 
                                         onClick={handleLogout}
                                         className="block w-full text-left px-4 py-2 hover:bg-gray-600 rounded-b-lg"

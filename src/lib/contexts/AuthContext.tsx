@@ -11,11 +11,13 @@ type UserProfile = {
   organization: string | null;
   email: string;
   email_verified: boolean;
+  is_admin: boolean;
 };
 
 type AuthContextType = {
   user: UserProfile | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -134,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
+        isAdmin: user?.is_admin || false,
         isLoading,
         error,
         login,

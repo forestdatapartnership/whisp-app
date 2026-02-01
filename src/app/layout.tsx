@@ -6,6 +6,7 @@ import Footer from '@/components/Footer'
 import { ConfigProvider } from '@/lib/contexts/ConfigContext'
 import { AuthProvider } from '@/lib/contexts/AuthContext'
 import { ApiKeyProvider } from '@/lib/contexts/ApiKeyContext'
+import { ResultColumnsProvider } from '@/lib/contexts/ResultColumnsContext'
 import { ContextsInitializer } from '@/lib/contexts/ContextsInitializer'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -26,9 +27,11 @@ export default function RootLayout({
         <ConfigProvider>
           <AuthProvider>
             <ApiKeyProvider>
-              <ContextsInitializer>
-                {children}
-              </ContextsInitializer>
+              <ResultColumnsProvider>
+                <ContextsInitializer>
+                  {children}
+                </ContextsInitializer>
+              </ResultColumnsProvider>
             </ApiKeyProvider>
           </AuthProvider>
         </ConfigProvider>

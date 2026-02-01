@@ -1,0 +1,1 @@
+update users set is_admin = true where email in ('radu.urdea@hotmail.com', 'admin@whisp.com');

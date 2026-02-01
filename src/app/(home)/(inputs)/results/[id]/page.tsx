@@ -23,6 +23,7 @@ import { AlertTriangle } from "@/components/ui/Icons";
 import { FeatureCollection } from 'geojson';
 import { validateAndProcessGeoJSON, RecordData } from '@/lib/utils/geojsonUtils';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
+import { useResultColumns } from '@/lib/contexts/ResultColumnsContext';
 
 // Dynamically import MapView with no SSR to avoid window undefined error
 const MapView = dynamic(() => import("@/components/results/MapView"), {
@@ -45,10 +46,11 @@ export default function ResultsPage() {
   const [syncResponse] = useState<any>(() => useStore.getState().response);
   const { apiKey } = useApiKey();
   const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
+  const { columns: resultColumns } = useResultColumns();
 
   const IGNORED_COLUMNS: string[] = ['whisp_processing_metadata', 'geometry', 'geojson'];
 
-  const createColumnDefs = (data: RecordData[]): ColumnDef<RecordData, any>[] => {
+  const createColumnDefs = useCallback((data: RecordData[]): ColumnDef<RecordData, any>[] => {
       if (!data || !Array.isArray(data) || data.length === 0) {
           setDataError('No valid data available for display');
           return [];
@@ -67,10 +69,31 @@ export default function ResultsPage() {
           return Object.keys(sample)
               .filter(key => !IGNORED_COLUMNS.includes(key))
               .map((key) => {
+                  const column = resultColumns?.[key];
+                  
+                  let header = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                  if (column) {
+                      if (column.unit) {
+                          header = `${key} (${column.unit})`;
+                      } else {
+                          header = key;
+                      }
+                  }
+
                   const baseColumn = {
                       accessorKey: key,
-                      header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+                      header: header,
                       enableHiding: true,
+                      meta: column ? {
+                          type: column.type,
+                          unit: column.unit,
+                          description: column.description,
+                          period: column.period,
+                          source: column.source,
+                          dashboard: column.dashboard,
+                          cropMetadata: column.cropMetadata,
+                          comments: column.comments
+                      } : undefined
                   };
 
                   if (key.toLowerCase() === 'plotid') {
@@ -90,7 +113,7 @@ export default function ResultsPage() {
           setDataError('Failed to process data for display');
           return [];
       }
-  };
+  }, [resultColumns]);
 
   const processResultData = useCallback((resultData: any) => {
     try {

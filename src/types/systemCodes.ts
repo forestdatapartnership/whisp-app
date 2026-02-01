@@ -19,6 +19,7 @@ export enum SystemCode {
   AUTH_STATUS_AUTHENTICATED = 'auth_status_authenticated',
   AUTH_STATUS_UNAUTHENTICATED = 'auth_status_unauthenticated',
   AUTH_EMAIL_VERIFIED_SUCCESS = 'auth_email_verified_success',
+  AUTH_ADMIN_REQUIRED = 'auth_admin_required',
 
   // User Management
   USER_WEAK_PASSWORD = 'user_weak_password',
@@ -60,6 +61,13 @@ export enum SystemCode {
   ANALYSIS_TIMEOUT = 'analysis_timeout',
   ANALYSIS_JOB_NOT_FOUND = 'analysis_job_not_found',
   ANALYSIS_TOO_MANY_CONCURRENT = 'analysis_too_many_concurrent',
+
+  RESULT_COLUMNS_NOT_FOUND = 'result_columns_not_found',
+  RESULT_COLUMNS_DUPLICATE_NAME = 'result_columns_duplicate_name',
+  RESULT_COLUMNS_FETCH_SUCCESS = 'result_columns_fetch_success',
+  RESULT_COLUMNS_CREATED_SUCCESS = 'result_columns_created_success',
+  RESULT_COLUMNS_UPDATED_SUCCESS = 'result_columns_updated_success',
+  RESULT_COLUMNS_DELETED_SUCCESS = 'result_columns_deleted_success',
 }
 
 export interface SystemCodeInfo {
@@ -170,6 +178,11 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.AUTH_EMAIL_VERIFIED_SUCCESS,
     message: 'Email verified successfully',
     httpStatus: 200
+  },
+  [SystemCode.AUTH_ADMIN_REQUIRED]: {
+    code: SystemCode.AUTH_ADMIN_REQUIRED,
+    message: 'Administrator access required',
+    httpStatus: 403
   },
 
   // User Management
@@ -336,6 +349,37 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.ANALYSIS_TOO_MANY_CONCURRENT,
     message: 'Too many concurrent analyses. Please wait for existing analyses to finish.',
     httpStatus: 429
+  },
+
+  [SystemCode.RESULT_COLUMNS_NOT_FOUND]: {
+    code: SystemCode.RESULT_COLUMNS_NOT_FOUND,
+    message: 'Result column definition not found',
+    httpStatus: 404
+  },
+  [SystemCode.RESULT_COLUMNS_DUPLICATE_NAME]: {
+    code: SystemCode.RESULT_COLUMNS_DUPLICATE_NAME,
+    message: 'A column with this name already exists',
+    httpStatus: 409
+  },
+  [SystemCode.RESULT_COLUMNS_FETCH_SUCCESS]: {
+    code: SystemCode.RESULT_COLUMNS_FETCH_SUCCESS,
+    message: 'Result columns fetched successfully',
+    httpStatus: 200
+  },
+  [SystemCode.RESULT_COLUMNS_CREATED_SUCCESS]: {
+    code: SystemCode.RESULT_COLUMNS_CREATED_SUCCESS,
+    message: 'Result column created successfully',
+    httpStatus: 201
+  },
+  [SystemCode.RESULT_COLUMNS_UPDATED_SUCCESS]: {
+    code: SystemCode.RESULT_COLUMNS_UPDATED_SUCCESS,
+    message: 'Result column updated successfully',
+    httpStatus: 200
+  },
+  [SystemCode.RESULT_COLUMNS_DELETED_SUCCESS]: {
+    code: SystemCode.RESULT_COLUMNS_DELETED_SUCCESS,
+    message: 'Result column deleted successfully',
+    httpStatus: 200
   }
 };
 

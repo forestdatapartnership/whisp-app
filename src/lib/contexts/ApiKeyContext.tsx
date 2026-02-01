@@ -29,7 +29,7 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [apiKeyMetadata, setApiKeyMetadata] = useState<ApiKeyMetadata | null>(null);
   const [isUserKey, setIsUserKey] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const tempKeyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

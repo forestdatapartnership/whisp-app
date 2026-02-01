@@ -90,11 +90,22 @@ export function DataTable<TData, TValue>({
             <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map((header) => {
+                  const meta = header.column.columnDef.meta as any;
+                  const tooltipText = meta 
+                    ? [
+                        meta.description,
+                        meta.period && `Period: ${meta.period}`,
+                        meta.source && `Source: ${meta.source}`
+                      ].filter(Boolean).join('\n')
+                    : undefined;
+                  
+                  return (
                     <TableHead 
                       key={header.id} 
                       onClick={header.column.getToggleSortingHandler()}
                       className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer select-none hover:text-gray-300"
+                      title={tooltipText}
                     >
                       <div className="flex items-center gap-2">
                         {flexRender(header.column.columnDef.header, header.getContext())}
@@ -107,7 +118,8 @@ export function DataTable<TData, TValue>({
                         )}
                       </div>
                     </TableHead>
-                ))}
+                  );
+                })}
                 </TableRow>
             ))}
             </TableHeader>
