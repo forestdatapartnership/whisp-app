@@ -15,7 +15,6 @@ interface ResultFieldsTableProps {
   onOpen: (code: string, asReadonly: boolean) => void;
   onDelete: (code: string) => void;
   onExportCSV: () => void;
-  onExportWhispLookups?: () => void;
   onCreate: () => void;
 }
 
@@ -29,7 +28,6 @@ export function ResultFieldsTable({
   onOpen,
   onDelete,
   onExportCSV,
-  onExportWhispLookups,
   onCreate,
 }: ResultFieldsTableProps) {
   const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
@@ -52,10 +50,10 @@ export function ResultFieldsTable({
   );
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+      <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-white">Result Fields</h2>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Input
             placeholder="Search by code, category, description, or type"
             value={searchTerm}
@@ -65,11 +63,6 @@ export function ResultFieldsTable({
           <Button variant="secondary" size="sm" onClick={onExportCSV}>
             Export CSV
           </Button>
-          {onExportWhispLookups && (
-            <Button variant="secondary" size="sm" onClick={onExportWhispLookups}>
-              Whisp Lookups
-            </Button>
-          )}
           {isAdmin && (
             <Button onClick={onCreate} size="sm" className="bg-indigo-600 hover:bg-indigo-700">
               Add Result Field

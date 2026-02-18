@@ -35,18 +35,19 @@ export function CommoditiesTable({
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
       <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
-        <Input
-          placeholder="Search by code or description"
+        <h2 className="text-xl font-semibold text-white">Commodities</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            placeholder="Search by code or description"
           value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="max-w-xs bg-gray-700 border-gray-600"
-        />
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={onExportCSV}>
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="max-w-xs bg-gray-700 border-gray-600"
+          />
+          <Button variant="secondary" size="sm" onClick={onExportCSV}>
             Export CSV
           </Button>
           {isAdmin && (
-            <Button onClick={onCreate} className="bg-indigo-600 hover:bg-indigo-700">
+            <Button onClick={onCreate} size="sm" className="bg-indigo-600 hover:bg-indigo-700">
               Add Commodity
             </Button>
           )}

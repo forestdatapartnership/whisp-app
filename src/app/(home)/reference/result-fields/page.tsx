@@ -139,23 +139,6 @@ function ResultFieldsContent() {
     }
   }, [refresh, router]);
 
-  const handleExportWhispLookups = useCallback(async () => {
-    const files = [
-      { url: '/api/result-fields/lookup-context-and-metadata', name: 'lookup_context_and_metadata.csv' },
-      { url: '/api/result-fields/lookup-gee-datasets', name: 'lookup_gee_datasets.csv' },
-    ];
-    for (const { url, name } of files) {
-      const res = await fetch(url);
-      if (!res.ok) return;
-      const blob = await res.blob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = name;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
-  }, []);
-
   const handleExportCSV = useCallback(() => {
     const baseHeaders = ['code', 'type', 'unit', 'description', 'category', 'order', 'iso2Code', 'period', 'source', 'comments', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy'];
     const powerBiHeaders = ['powerBiMetadata.dashboard'];
@@ -241,7 +224,6 @@ function ResultFieldsContent() {
           onOpen={openField}
           onDelete={setDeleteConfirm}
           onExportCSV={handleExportCSV}
-          onExportWhispLookups={handleExportWhispLookups}
           onCreate={startCreate}
         />
       )}

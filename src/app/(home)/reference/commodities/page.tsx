@@ -133,7 +133,7 @@ function CommoditiesContent() {
   }, [deleteConfirm, mode, resetForm]);
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
       {message && <Alert type={message.type} message={message.text} onClose={() => setMessage(null)} />}
 
       {isAdmin && mode !== 'list' ? (
