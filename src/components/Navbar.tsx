@@ -7,25 +7,30 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 
 const Navbar: React.FC = () => {
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+    const [isReferenceDropdownOpen, setIsReferenceDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const { user, isAuthenticated, isAdmin, logout } = useAuth();
+    const referenceDropdownRef = useRef<HTMLDivElement>(null);
+    const { user, isAuthenticated, logout } = useAuth();
 
-    // Close dropdown when clicking outside
+    // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsProfileDropdownOpen(false);
             }
+            if (referenceDropdownRef.current && !referenceDropdownRef.current.contains(event.target as Node)) {
+                setIsReferenceDropdownOpen(false);
+            }
         };
 
-        if (isProfileDropdownOpen) {
+        if (isProfileDropdownOpen || isReferenceDropdownOpen) {
             document.addEventListener('mousedown', handleClickOutside);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isProfileDropdownOpen]);
+    }, [isProfileDropdownOpen, isReferenceDropdownOpen]);
 
     const handleLogout = async () => {
         await logout();
@@ -57,7 +62,38 @@ const Navbar: React.FC = () => {
                         Documentation
                     </Link>
 
-                    {/* Login/Profile - Third Item */}
+                    {/* Reference Data Dropdown - Public read, admin can edit */}
+                    <div className="relative mx-4" ref={referenceDropdownRef}>
+                        <button
+                            onClick={() => setIsReferenceDropdownOpen(!isReferenceDropdownOpen)}
+                            className="flex items-center hover:text-gray-300"
+                        >
+                            <span className="mr-1">Reference</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        {isReferenceDropdownOpen && (
+                            <div className="absolute top-full right-0 mt-2 w-48 bg-gray-700 shadow-lg rounded-lg z-10">
+                                <Link
+                                    href="/reference/result-fields"
+                                    className="block px-4 py-2 hover:bg-gray-600 rounded-t-lg"
+                                    onClick={() => setIsReferenceDropdownOpen(false)}
+                                >
+                                    Result Fields
+                                </Link>
+                                <Link
+                                    href="/reference/commodities"
+                                    className="block px-4 py-2 hover:bg-gray-600 rounded-b-lg"
+                                    onClick={() => setIsReferenceDropdownOpen(false)}
+                                >
+                                    Commodities
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Login/Profile */}
                     {isAuthenticated && user ? (
                         <div className="relative mx-4" ref={dropdownRef}>
                             <button 
@@ -85,22 +121,13 @@ const Navbar: React.FC = () => {
                                     >
                                         Dashboard
                                     </Link>
-                                    <Link 
-                                        href="/dashboard/jobs" 
+                                    <Link
+                                        href="/dashboard/jobs"
                                         className="block px-4 py-2 hover:bg-gray-600"
                                         onClick={() => setIsProfileDropdownOpen(false)}
                                     >
                                         Job stats
                                     </Link>
-                                    {isAdmin && (
-                                        <Link 
-                                            href="/settings/result-columns" 
-                                            className="block px-4 py-2 hover:bg-gray-600 border-t border-gray-600"
-                                            onClick={() => setIsProfileDropdownOpen(false)}
-                                        >
-                                            Result Columns
-                                        </Link>
-                                    )}
                                     <button 
                                         onClick={handleLogout}
                                         className="block w-full text-left px-4 py-2 hover:bg-gray-600 rounded-b-lg"

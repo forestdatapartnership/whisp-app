@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useAuth } from './AuthContext';
 import { useApiKey } from './ApiKeyContext';
 import { useConfig } from './ConfigContext';
-import { useResultColumns } from './ResultColumnsContext';
+import { useResultFields } from './ResultFieldsContext';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Icons';
 
@@ -32,12 +32,12 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
   const { isLoading: authLoading, error: authError } = useAuth();
   const { isLoading: apiKeyLoading, error: apiKeyError } = useApiKey();
   const { isLoading: configLoading } = useConfig();
-  const { isLoading: resultColumnsLoading } = useResultColumns();
-  
+  const { isLoading: resultFieldsLoading } = useResultFields();
+
   const [timedOut, setTimedOut] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  const isLoading = authLoading || apiKeyLoading || configLoading || resultColumnsLoading;
+  const isLoading = authLoading || apiKeyLoading || configLoading || resultFieldsLoading;
   
   const errors: string[] = [
     authError,

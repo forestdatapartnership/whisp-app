@@ -1,39 +1,35 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { useResponse } from "@/lib/hooks/responses";
 import { SystemCode } from "@/types/systemCodes";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { withLogging } from "@/lib/hooks/withLogging";
 import { compose } from "@/lib/utils/compose";
 import { LogFunction } from "@/lib/logger";
+import { verifyToken, createTokens, setTokenCookies } from "@/lib/auth";
 
 export const GET = compose(
   withLogging,
   withErrorHandling
-)(async (req: NextRequest, log: LogFunction): Promise<NextResponse> => {
-  const access = req.cookies.get("token")?.value;
-  const refresh = req.cookies.get("refreshToken")?.value;
-  const secret = process.env.JWT_SECRET;
+)(async (req: NextRequest, _log: LogFunction): Promise<NextResponse> => {
+  const accessToken = req.cookies.get("token")?.value;
+  const refreshToken = req.cookies.get("refreshToken")?.value;
 
-  const verify = async (value?: string) => {
-    if (!value || !secret) return false;
-    try {
-      await jwtVerify(value, new TextEncoder().encode(secret));
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const authenticated = (await verify(access)) || (await verify(refresh));
-  
-  if (authenticated) {
+  const accessUser = await verifyToken(accessToken);
+  if (accessUser) {
     return useResponse(SystemCode.AUTH_STATUS_AUTHENTICATED);
-  } else {
-    return useResponse(SystemCode.AUTH_STATUS_UNAUTHENTICATED);
   }
+
+  const refreshUser = await verifyToken(refreshToken);
+  if (refreshUser) {
+    const tokens = await createTokens(refreshUser);
+    const response = useResponse(SystemCode.AUTH_STATUS_AUTHENTICATED);
+    setTokenCookies(response, tokens);
+    return response;
+  }
+
+  return useResponse(SystemCode.AUTH_STATUS_UNAUTHENTICATED);
 });
 
 

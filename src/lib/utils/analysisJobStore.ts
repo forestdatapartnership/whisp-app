@@ -94,15 +94,16 @@ export async function updateAnalysisJob(token: string, updates: Partial<Analysis
   await pool.query(`UPDATE analysis_jobs SET ${sets.join(', ')} WHERE token = $1`, values);
 }
 
-export async function getAnalysisJobStats(userId: number): Promise<AnalysisJobStats> {
+export async function getAnalysisJobStats(userId: string): Promise<AnalysisJobStats> {
   const pool = getPool();
   const client = await pool.connect();
   try {
     const summaryResult = await client.query(
       `WITH user_jobs AS (
-        SELECT *
-        FROM analysis_jobs
-        WHERE user_id = $1
+        SELECT aj.*
+        FROM analysis_jobs aj
+        JOIN users u ON aj.user_id = u.id
+        WHERE u.uuid = $1
       )
       SELECT
         COUNT(*) AS total_jobs,
@@ -120,10 +121,11 @@ export async function getAnalysisJobStats(userId: number): Promise<AnalysisJobSt
     );
 
     const recentResult = await client.query(
-      `SELECT token, status, feature_count, created_at, started_at, completed_at, error_message
-       FROM analysis_jobs
-       WHERE user_id = $1
-       ORDER BY created_at DESC
+      `SELECT aj.token, aj.status, aj.feature_count, aj.created_at, aj.started_at, aj.completed_at, aj.error_message
+       FROM analysis_jobs aj
+       JOIN users u ON aj.user_id = u.id
+       WHERE u.uuid = $1
+       ORDER BY aj.created_at DESC
        LIMIT 20`,
       [userId]
     );

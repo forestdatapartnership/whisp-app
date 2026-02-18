@@ -23,7 +23,8 @@ import { AlertTriangle } from "@/components/ui/Icons";
 import { FeatureCollection } from 'geojson';
 import { validateAndProcessGeoJSON, RecordData } from '@/lib/utils/geojsonUtils';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
-import { useResultColumns } from '@/lib/contexts/ResultColumnsContext';
+import { useResultFields } from '@/lib/contexts/ResultFieldsContext';
+import { formatColumnName } from '@/lib/utils/formatColumnName';
 
 // Dynamically import MapView with no SSR to avoid window undefined error
 const MapView = dynamic(() => import("@/components/results/MapView"), {
@@ -46,9 +47,7 @@ export default function ResultsPage() {
   const [syncResponse] = useState<any>(() => useStore.getState().response);
   const { apiKey } = useApiKey();
   const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
-  const { columns: resultColumns } = useResultColumns();
-
-  const IGNORED_COLUMNS: string[] = ['whisp_processing_metadata', 'geometry', 'geojson'];
+  const { fields: resultFields } = useResultFields();
 
   const createColumnDefs = useCallback((data: RecordData[]): ColumnDef<RecordData, any>[] => {
       if (!data || !Array.isArray(data) || data.length === 0) {
@@ -66,19 +65,23 @@ export default function ResultsPage() {
 
           const sample = data[sampleIndex];
 
-          return Object.keys(sample)
-              .filter(key => !IGNORED_COLUMNS.includes(key))
-              .map((key) => {
-                  const column = resultColumns?.[key];
-                  
-                  let header = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
-                  if (column) {
-                      if (column.unit) {
-                          header = `${key} (${column.unit})`;
-                      } else {
-                          header = key;
-                      }
-                  }
+          const allKeys = Object.keys(sample).filter(key => {
+            const field = resultFields?.[key];
+            return field?.displayMetadata?.excludeFromResults !== true && field?.analysisMetadata?.excludeFromOutput !== true;
+          });
+
+          const configuredKeys = allKeys
+              .filter(key => resultFields?.[key]?.order != null)
+              .sort((a, b) => (resultFields[a].order ?? 0) - (resultFields[b].order ?? 0));
+
+          const unconfiguredKeys = allKeys.filter(key => resultFields?.[key]?.order == null);
+
+          const sortedKeys = [...configuredKeys, ...unconfiguredKeys];
+
+          return sortedKeys.map((key) => {
+                  const column = resultFields?.[key];
+                  const displayName = formatColumnName(key, column?.displayMetadata?.displayName);
+                  const header = column?.unit ? `${displayName} (${column.unit})` : displayName;
 
                   const baseColumn = {
                       accessorKey: key,
@@ -90,8 +93,8 @@ export default function ResultsPage() {
                           description: column.description,
                           period: column.period,
                           source: column.source,
-                          dashboard: column.dashboard,
-                          cropMetadata: column.cropMetadata,
+                          metadata: column.displayMetadata,
+                          cropMetadata: column.commodityMetadata,
                           comments: column.comments
                       } : undefined
                   };
@@ -113,7 +116,7 @@ export default function ResultsPage() {
           setDataError('Failed to process data for display');
           return [];
       }
-  }, [resultColumns]);
+  }, [resultFields]);
 
   const processResultData = useCallback((resultData: any) => {
     try {

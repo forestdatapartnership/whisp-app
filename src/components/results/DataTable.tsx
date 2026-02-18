@@ -64,6 +64,22 @@ export function DataTable<TData, TValue>({
     }] : []
   );
   
+  const defaultVisibility = React.useMemo(() => {
+    const visibility: Record<string, boolean> = {
+      external_id: showExternalIdByDefault
+    };
+    columns.forEach((col) => {
+      const key = 'accessorKey' in col ? col.accessorKey as string : undefined;
+      if (key && key !== 'external_id') {
+        const meta = col.meta as any;
+        if (meta?.metadata?.visibleByDefault === false) {
+          visibility[key] = false;
+        }
+      }
+    });
+    return visibility;
+  }, [columns, showExternalIdByDefault]);
+
   const table = useReactTable({
     data: processedData,
     columns,
@@ -75,10 +91,7 @@ export function DataTable<TData, TValue>({
       sorting
     },
     initialState: {
-      columnVisibility: {
-        external_id: showExternalIdByDefault,
-        geoid: false
-      }
+      columnVisibility: defaultVisibility
     }
   });
 

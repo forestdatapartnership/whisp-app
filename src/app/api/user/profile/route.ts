@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
 import { withLogging } from "@/lib/hooks/withLogging";
-import { withAuthUser, AuthenticatedUser } from "@/lib/hooks/withAuthUser";
+import { withAuthUser, AuthUser } from "@/lib/hooks/withAuthUser";
 import { withJsonBody } from "@/lib/hooks/withJsonBody";
 import { compose } from "@/lib/utils/compose";
 import { SystemCode } from "@/types/systemCodes";
@@ -15,13 +15,13 @@ export const GET = compose(
   withLogging,
   withErrorHandling,
   withAuthUser
-)(async (_req: NextRequest, log: LogFunction, user: AuthenticatedUser): Promise<NextResponse> => {
+)(async (_req: NextRequest, log: LogFunction, user: AuthUser): Promise<NextResponse> => {
 
   const pool = getPool();
   const client = await pool.connect();
   try {
-    // Use the get_user_profile database function with integer userId
-    const result = await client.query("SELECT * FROM get_user_profile($1)", [user.userId]);
+    // TODO create user profile service to handle all database operations
+    const result = await client.query("SELECT uuid, name, last_name, organization, email, email_verified, is_admin FROM users WHERE uuid = $1", [user.id]);
 
     if (result.rowCount === 0) {
       return useResponse(SystemCode.USER_NOT_FOUND);
@@ -39,7 +39,7 @@ export const PUT = compose(
   withErrorHandling,
   withAuthUser,
   withJsonBody
-)(async (_req: NextRequest,  log: LogFunction, body: any, user: AuthenticatedUser): Promise<NextResponse> => {
+)(async (_req: NextRequest,  log: LogFunction, body: any, user: AuthUser): Promise<NextResponse> => {
 
   const { name, lastName, organization } = body;
   validateRequiredFields(body, ['name', 'lastName']);
@@ -49,8 +49,8 @@ export const PUT = compose(
   try {
     // Update user profile
     const result = await client.query(
-      "UPDATE users SET name = $1, last_name = $2, organization = $3 WHERE id = $4 RETURNING id, name, last_name, organization, email, email_verified",
-      [name, lastName, organization, user.userId]
+      "UPDATE users SET name = $1, last_name = $2, organization = $3 WHERE uuid = $4 RETURNING uuid, name, last_name, organization, email, email_verified",
+      [name, lastName, organization, user.id]
     );
 
     if (result.rowCount === 0) {
@@ -60,7 +60,7 @@ export const PUT = compose(
     // Return the updated user profile
     return useResponse(SystemCode.USER_PROFILE_UPDATE_SUCCESS, {
       user: {
-        id: result.rows[0].id,
+        id: result.rows[0].uuid,
         name: result.rows[0].name,
         last_name: result.rows[0].last_name,
         organization: result.rows[0].organization,
@@ -78,7 +78,7 @@ export const DELETE = compose(
   withErrorHandling,
   withAuthUser,
   withJsonBody
-)(async (_req: NextRequest, log: LogFunction, body: any, user: AuthenticatedUser): Promise<NextResponse> => {
+)(async (_req: NextRequest, log: LogFunction, body: any, user: AuthUser): Promise<NextResponse> => {
 
   const { password } = body;
   if (!password) {
@@ -91,7 +91,7 @@ export const DELETE = compose(
     // First verify the password
     const verifyResult = await client.query(
       "SELECT verify_password($1, $2) AS is_valid",
-      [user.userId, password]
+      [user.id, password]
     );
 
     if (!verifyResult.rows[0]?.is_valid) {
@@ -99,7 +99,7 @@ export const DELETE = compose(
     }
 
     // Delete the user account (this will cascade to delete all related data)
-    await client.query("DELETE FROM users WHERE id = $1", [user.userId]);
+    await client.query("DELETE FROM users WHERE uuid = $1", [user.id]);
 
     // Return success message
     return useResponse(SystemCode.USER_ACCOUNT_DELETION_SUCCESS);

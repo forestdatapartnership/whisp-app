@@ -4,13 +4,10 @@ import {
     NextResponse
 } from "next/server";
 import { MiddlewareFactory } from "./types";
-import { jwtVerify, SignJWT } from "jose";
-import { assertEnvVar } from "@/lib/utils";
+import { verifyToken, createTokens, setTokenCookies } from "@/lib/auth";
 
 export const withAuth: MiddlewareFactory = (next) => {
     return async (request: NextRequest, _next: NextFetchEvent) => {
-        const SECRET_KEY = assertEnvVar('JWT_SECRET');
-        const secretBytes = new TextEncoder().encode(SECRET_KEY);
         const { pathname } = request.nextUrl;
         const token = request.cookies.get("token")?.value;
         const refreshToken = request.cookies.get("refreshToken")?.value;
@@ -28,54 +25,19 @@ export const withAuth: MiddlewareFactory = (next) => {
         let refreshedResponse: NextResponse | null = null;
         let hasValidAccess = false;
 
-        if (token) {
-            try {
-                const { payload } = await jwtVerify(token, secretBytes);
-                if (payload.sub) {
-                    hasValidAccess = true;
-                }
-            } catch (error) {
-                console.error("Access token verification failed:", error);
-            }
+        const accessUser = await verifyToken(token);
+        if (accessUser) {
+            hasValidAccess = true;
         }
 
-        if (!hasValidAccess && refreshToken) {
-            try {
-                const { payload } = await jwtVerify(refreshToken, secretBytes);
-                if (payload.sub) {
-                    const newAccessToken = await new SignJWT({ sub: payload.sub })
-                        .setProtectedHeader({ alg: "HS256" })
-                        .setIssuedAt()
-                        .setExpirationTime("15m")
-                        .sign(secretBytes);
-
-                    const newRefreshToken = await new SignJWT({ sub: payload.sub })
-                        .setProtectedHeader({ alg: "HS256" })
-                        .setIssuedAt()
-                        .setExpirationTime("7d")
-                        .sign(secretBytes);
-
-                    const response = NextResponse.next();
-                    response.cookies.set('token', newAccessToken, {
-                        httpOnly: true,
-                        secure: process.env.NODE_ENV === 'production',
-                        sameSite: 'strict',
-                        path: '/',
-                        maxAge: 900
-                    });
-                    response.cookies.set('refreshToken', newRefreshToken, {
-                        httpOnly: true,
-                        secure: process.env.NODE_ENV === 'production',
-                        sameSite: 'strict',
-                        path: '/',
-                        maxAge: 604800
-                    });
-
-                    hasValidAccess = true;
-                    refreshedResponse = response;
-                }
-            } catch (refreshError) {
-                console.error("Refresh token is invalid or expired:", refreshError);
+        if (!hasValidAccess) {
+            const refreshUser = await verifyToken(refreshToken);
+            if (refreshUser) {
+                const tokens = await createTokens(refreshUser);
+                const response = NextResponse.next();
+                setTokenCookies(response, tokens);
+                hasValidAccess = true;
+                refreshedResponse = response;
             }
         }
 

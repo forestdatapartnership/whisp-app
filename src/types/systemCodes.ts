@@ -26,7 +26,6 @@ export enum SystemCode {
   USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists',
   USER_REGISTRATION_FAILED = 'user_registration_failed',
   USER_NOT_FOUND = 'user_not_found',
-  USER_INVALID_USER_ID = 'user_invalid_user_id',
   USER_PASSWORD_CONFIRMATION_REQUIRED = 'user_password_confirmation_required',
   USER_INVALID_PASSWORD = 'user_invalid_password',
   USER_REGISTRATION_SUCCESS = 'user_registration_success',
@@ -62,12 +61,11 @@ export enum SystemCode {
   ANALYSIS_JOB_NOT_FOUND = 'analysis_job_not_found',
   ANALYSIS_TOO_MANY_CONCURRENT = 'analysis_too_many_concurrent',
 
-  RESULT_COLUMNS_NOT_FOUND = 'result_columns_not_found',
-  RESULT_COLUMNS_DUPLICATE_NAME = 'result_columns_duplicate_name',
-  RESULT_COLUMNS_FETCH_SUCCESS = 'result_columns_fetch_success',
-  RESULT_COLUMNS_CREATED_SUCCESS = 'result_columns_created_success',
-  RESULT_COLUMNS_UPDATED_SUCCESS = 'result_columns_updated_success',
-  RESULT_COLUMNS_DELETED_SUCCESS = 'result_columns_deleted_success',
+  RESULT_FIELDS_DUPLICATE_CODE = 'result_fields_duplicate_code',
+  RESULT_FIELDS_FETCH_SUCCESS = 'result_fields_fetch_success',
+
+  COMMODITIES_DUPLICATE_CODE = 'commodities_duplicate_code',
+  COMMODITIES_FETCH_SUCCESS = 'commodities_fetch_success',
 }
 
 export interface SystemCodeInfo {
@@ -205,11 +203,6 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     code: SystemCode.USER_NOT_FOUND,
     message: 'User not found.',
     httpStatus: 404
-  },
-  [SystemCode.USER_INVALID_USER_ID]: {
-    code: SystemCode.USER_INVALID_USER_ID,
-    message: 'Invalid user ID provided.',
-    httpStatus: 400
   },
   [SystemCode.USER_PASSWORD_CONFIRMATION_REQUIRED]: {
     code: SystemCode.USER_PASSWORD_CONFIRMATION_REQUIRED,
@@ -351,46 +344,28 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     httpStatus: 429
   },
 
-  [SystemCode.RESULT_COLUMNS_NOT_FOUND]: {
-    code: SystemCode.RESULT_COLUMNS_NOT_FOUND,
-    message: 'Result column definition not found',
-    httpStatus: 404
-  },
-  [SystemCode.RESULT_COLUMNS_DUPLICATE_NAME]: {
-    code: SystemCode.RESULT_COLUMNS_DUPLICATE_NAME,
-    message: 'A column with this name already exists',
+  [SystemCode.RESULT_FIELDS_DUPLICATE_CODE]: {
+    code: SystemCode.RESULT_FIELDS_DUPLICATE_CODE,
+    message: 'A field with this name already exists',
     httpStatus: 409
   },
-  [SystemCode.RESULT_COLUMNS_FETCH_SUCCESS]: {
-    code: SystemCode.RESULT_COLUMNS_FETCH_SUCCESS,
-    message: 'Result columns fetched successfully',
+  [SystemCode.RESULT_FIELDS_FETCH_SUCCESS]: {
+    code: SystemCode.RESULT_FIELDS_FETCH_SUCCESS,
+    message: 'Result fields fetched successfully',
     httpStatus: 200
   },
-  [SystemCode.RESULT_COLUMNS_CREATED_SUCCESS]: {
-    code: SystemCode.RESULT_COLUMNS_CREATED_SUCCESS,
-    message: 'Result column created successfully',
-    httpStatus: 201
+  [SystemCode.COMMODITIES_DUPLICATE_CODE]: {
+    code: SystemCode.COMMODITIES_DUPLICATE_CODE,
+    message: 'A commodity with this code already exists',
+    httpStatus: 409
   },
-  [SystemCode.RESULT_COLUMNS_UPDATED_SUCCESS]: {
-    code: SystemCode.RESULT_COLUMNS_UPDATED_SUCCESS,
-    message: 'Result column updated successfully',
-    httpStatus: 200
-  },
-  [SystemCode.RESULT_COLUMNS_DELETED_SUCCESS]: {
-    code: SystemCode.RESULT_COLUMNS_DELETED_SUCCESS,
-    message: 'Result column deleted successfully',
+  [SystemCode.COMMODITIES_FETCH_SUCCESS]: {
+    code: SystemCode.COMMODITIES_FETCH_SUCCESS,
+    message: 'Commodities fetched successfully',
     httpStatus: 200
   }
 };
 
 export function getSystemCodeInfo(responseCode: SystemCode): SystemCodeInfo {
   return SYSTEM_MESSAGES[responseCode];
-}
-
-export function createFormattedSystemCodeInfo(responseCode: SystemCode, formatArgs: (string | number)[]): SystemCodeInfo {
-  const baseInfo = SYSTEM_MESSAGES[responseCode];
-  return {
-    ...baseInfo,
-    message: formatString(baseInfo.message, ...formatArgs)
-  };
 }
