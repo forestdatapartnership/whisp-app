@@ -27,7 +27,6 @@ const RETURNING_FIELDS = `
 
 class ResultFieldsService extends BaseCrudService<ResultField> {
   readonly tableName = 'result_fields';
-  readonly cacheKey = 'result_fields_all';
   readonly idColumn = 'code';
 
   getReturningFields(): string {
@@ -38,12 +37,7 @@ class ResultFieldsService extends BaseCrudService<ResultField> {
     return '"order" NULLS LAST, code';
   }
 
-  async getById(code: string): Promise<ResultField | null> {
-    const all = await this.getAll();
-    return all.find((f) => f.code === code) ?? null;
-  }
-
-  override async create(data: unknown): Promise<ResultField> {
+  async create(data: unknown): Promise<ResultField> {
     const { field, createdBy } = data as {
       field: Omit<ResultField, 'updatedAt' | 'updatedBy'>;
       createdBy: string;
@@ -81,7 +75,6 @@ class ResultFieldsService extends BaseCrudService<ResultField> {
           createdBy,
         ]
       );
-      this.invalidateCache();
       return result.rows[0];
     } catch (error: unknown) {
       if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === '23505') {
@@ -91,7 +84,7 @@ class ResultFieldsService extends BaseCrudService<ResultField> {
     }
   }
 
-  override async update(id: string, data: unknown): Promise<ResultField | null> {
+  async update(id: string, data: unknown): Promise<ResultField | null> {
     const { updates, updatedBy } = data as { updates: Partial<ResultField>; updatedBy: string };
     const pool = getPool();
     const fields: string[] = [];
@@ -125,7 +118,6 @@ class ResultFieldsService extends BaseCrudService<ResultField> {
       `UPDATE result_fields SET ${fields.join(', ')} WHERE code = $${paramCount + 1} RETURNING ${RETURNING_FIELDS}`,
       values
     );
-    this.invalidateCache();
     return result.rows[0] ?? null;
   }
 }
@@ -139,4 +131,3 @@ export const createResultField = (field: Omit<ResultField, 'updatedAt' | 'update
 export const updateResultField = (code: string, updates: Partial<ResultField>, updatedBy: string) =>
   service.update(code, { updates, updatedBy });
 export const deleteResultField = (code: string) => service.delete(code);
-export const invalidateCache = () => service.invalidateCache();

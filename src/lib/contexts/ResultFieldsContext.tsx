@@ -51,8 +51,8 @@ export function ResultFieldsProvider({ children }: ResultFieldsProviderProps) {
       setIsLoading(true);
 
       const [fieldsRes, commoditiesRes] = await Promise.all([
-        fetch('/api/result-fields'),
-        fetch('/api/commodities')
+        fetch('/api/result-fields', { cache: 'no-store', headers: { Pragma: 'no-cache' } }),
+        fetch('/api/commodities', { cache: 'no-store', headers: { Pragma: 'no-cache' } })
       ]);
 
       if (fieldsRes.ok) {

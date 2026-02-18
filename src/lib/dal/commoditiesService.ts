@@ -15,7 +15,6 @@ const RETURNING_FIELDS = `
 
 class CommoditiesService extends BaseCrudService<Commodity> {
   readonly tableName = 'commodities';
-  readonly cacheKey = 'commodities_all';
   readonly idColumn = 'code';
 
   getReturningFields(): string {
@@ -26,7 +25,7 @@ class CommoditiesService extends BaseCrudService<Commodity> {
     return 'code';
   }
 
-  override async create(data: unknown): Promise<Commodity> {
+  async create(data: unknown): Promise<Commodity> {
     const { commodity, createdBy } = data as {
       commodity: Omit<Commodity, 'updatedAt' | 'updatedBy'>;
       createdBy: string;
@@ -45,7 +44,6 @@ class CommoditiesService extends BaseCrudService<Commodity> {
          RETURNING ${RETURNING_FIELDS}`,
         [commodity.code, commodity.description ?? null, createdBy, createdBy]
       );
-      this.invalidateCache();
       return result.rows[0];
     } catch (error: unknown) {
       if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === '23505') {
@@ -55,7 +53,7 @@ class CommoditiesService extends BaseCrudService<Commodity> {
     }
   }
 
-  override async update(id: string, data: unknown): Promise<Commodity | null> {
+  async update(id: string, data: unknown): Promise<Commodity | null> {
     const { updates, updatedBy } = data as { updates: Partial<Pick<Commodity, 'description'>>; updatedBy: string };
     const pool = getPool();
     if (updates.description === undefined) return this.getById(id);
@@ -64,7 +62,6 @@ class CommoditiesService extends BaseCrudService<Commodity> {
       `UPDATE commodities SET description = $1, updated_by = $2 WHERE code = $3 RETURNING ${RETURNING_FIELDS}`,
       [updates.description, updatedBy, id]
     );
-    this.invalidateCache();
     return result.rows[0] ?? null;
   }
 }
@@ -78,4 +75,3 @@ export const createCommodity = (commodity: Omit<Commodity, 'updatedAt' | 'update
 export const updateCommodity = (code: string, updates: Partial<Pick<Commodity, 'description'>>, updatedBy: string) =>
   service.update(code, { updates, updatedBy });
 export const deleteCommodity = (code: string) => service.delete(code);
-export const invalidateCache = () => service.invalidateCache();
