@@ -41,13 +41,17 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_ID_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
-      - name: Verify image exists
+      - name: Verify image exists and get digest
+        id: image
         run: |
-          echo "Checking if image exists: ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }}"
-          gcloud artifacts docker images describe ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }} || {
+          IMAGE_REF="${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }}"
+          echo "Checking if image exists: ${IMAGE_REF}"
+          IMAGE_WITH_DIGEST=$(gcloud artifacts docker images describe "${IMAGE_REF}" --format='value(uri)' 2>/dev/null) || {
             echo "Image not found! Make sure you've built version ${{ steps.package_version.outputs.version }} from main branch first."
             exit 1
           }
+          echo "Deploying image: ${IMAGE_WITH_DIGEST}"
+          echo "image_ref=${IMAGE_WITH_DIGEST}" >> $GITHUB_OUTPUT
 
       - name: Get service URL
         run: |
@@ -63,7 +67,7 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ vars.SERVICE }} \
-            --image ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }} \
+            --image ${{ steps.image.outputs.image_ref }} \
             --region ${{ vars.REGION }} \
             --platform managed \
             --allow-unauthenticated \
