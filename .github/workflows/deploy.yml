@@ -46,10 +46,11 @@ jobs:
         run: |
           IMAGE_REF="${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }}"
           echo "Checking if image exists: ${IMAGE_REF}"
-          IMAGE_WITH_DIGEST=$(gcloud artifacts docker images describe "${IMAGE_REF}" --format='value(uri)' 2>/dev/null) || {
+          IMAGE_WITH_DIGEST=$(gcloud artifacts docker images describe "${IMAGE_REF}" --format=json | jq -r '.image_summary.fully_qualified_digest') || {
             echo "Image not found! Make sure you've built version ${{ steps.package_version.outputs.version }} from main branch first."
             exit 1
           }
+          [ -n "${IMAGE_WITH_DIGEST}" ] || { echo "Failed to extract image digest"; exit 1; }
           echo "Deploying image: ${IMAGE_WITH_DIGEST}"
           echo "image_ref=${IMAGE_WITH_DIGEST}" >> $GITHUB_OUTPUT
 
