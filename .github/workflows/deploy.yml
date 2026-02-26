@@ -73,8 +73,8 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --memory 2Gi \
-            --cpu 1 \
+            --memory ${{vars.MEMORY}} \
+            --cpu ${{vars.CPU}} \
             --min-instances 1 \
             --max-instances 10 \
             --timeout 300 \
