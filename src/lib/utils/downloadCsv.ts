@@ -1,3 +1,13 @@
+export function timestampFilename(ext: string): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `whisp_analysis_${year}_${month}_${day}_${hours}_${minutes}.${ext}`;
+}
+
 function escapeCSV(value: string | number): string {
   const s = String(value ?? '');
   if (s.includes(',') || s.includes('"') || s.includes('\n')) {

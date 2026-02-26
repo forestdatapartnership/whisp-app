@@ -23,8 +23,9 @@ import { DataTableViewOptions } from "./DataTableViewOptions"
 import React from "react"
 import { processGeoJSONData, RecordData } from "@/lib/utils/geojsonUtils"
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
-import { formatDateTime, formatAnalysisCellValue, truncateString } from "@/lib/utils/formatters"
- 
+import { formatAnalysisCellValue } from "@/lib/utils/formatters"
+import type { FeatureCollection } from "geojson"
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[] | import('geojson').FeatureCollection
@@ -32,6 +33,8 @@ interface DataTableProps<TData, TValue> {
   selectedRowIndex?: number
   showExternalIdByDefault?: boolean
   defaultSortColumnId?: string
+  geoJsonData?: FeatureCollection | null
+  rawData?: TData[]
 }
  
 export function DataTable<TData, TValue>({
@@ -40,7 +43,8 @@ export function DataTable<TData, TValue>({
   onRowClick,
   selectedRowIndex,
   showExternalIdByDefault = false,
-  defaultSortColumnId
+  defaultSortColumnId,
+  geoJsonData = null
 }: DataTableProps<TData, TValue>) {
   // Process FeatureCollection to array if needed
   const processedData = React.useMemo(() => {
@@ -97,7 +101,11 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-        <DataTableViewOptions table={table} />
+        <DataTableViewOptions
+          table={table}
+          tableData={processedData as RecordData[]}
+          geoJsonData={geoJsonData}
+        />
         <div className="overflow-x-auto">
         <Table className="min-w-full text-sm divide-y">
             <TableHeader>

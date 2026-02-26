@@ -48,6 +48,21 @@ export const truncateString = (str: string, limit = 20) => {
   return str.length > limit ? `${str.slice(0, limit)}…` : str;
 };
 
+export const formatAnalysisNumber = (
+  column: string,
+  value: number,
+  options?: { useGrouping?: boolean }
+): string => {
+  const col = column.toLowerCase();
+  const isCoordinate = col.includes("lat") || col.includes("lon") || col.includes("centroid");
+  if (isCoordinate) return String(value);
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+    useGrouping: options?.useGrouping ?? true,
+  }).format(value);
+};
+
 export const formatAnalysisCellValue = (column: string, value: any) => {
   if (value === null || value === undefined) return "na";
 
@@ -79,10 +94,7 @@ export const formatAnalysisCellValue = (column: string, value: any) => {
   }
 
   if (typeof value === "number") {
-    const col = column.toLowerCase();
-    const isCoordinate = col.includes("lat") || col.includes("lon") || col.includes("centroid");
-    if (isCoordinate) return value;
-    return new Intl.NumberFormat("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
+    return formatAnalysisNumber(column, value);
   }
 
   if (column === "geoid" || column === "WDPA") {

@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/Button'
 import StatusCard from '@/components/StatusCard'
 import { useStatusSSE } from '@/lib/hooks/useStatusSSE'
 import { useStatusPolling } from '@/lib/hooks/useStatusPolling'
-import { DownloadDropdown } from "@/components/results/DownloadDropdown";
 import { DataTable } from "@/components/results/DataTable"
 import { useStore } from "@/store";
 import { SystemCode } from '@/types/systemCodes'
@@ -95,7 +94,8 @@ export default function ResultsPage() {
                           source: column.source,
                           metadata: column.displayMetadata,
                           cropMetadata: column.commodityMetadata,
-                          comments: column.comments
+                          comments: column.comments,
+                          category: column.category
                       } : undefined
                   };
 
@@ -306,21 +306,14 @@ export default function ResultsPage() {
           </label>
         </div>
         
-        <div className="flex flex-wrap justify-center my-4 gap-2">
-          <div className="w-full sm:w-52">
-            <button
-              onClick={() => generateEarthMap()}
-              className="w-full text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700 disabled:bg-gray-500"
-              disabled={tableData.length === 0}
-            >
-              View in Whisp Map
-            </button>
-          </div>
-          <div className="w-full sm:w-52">
-            <DownloadDropdown
-              id={id}
-            />
-          </div>
+        <div className="flex justify-center my-4">
+          <button
+            onClick={() => generateEarthMap()}
+            className="text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700 disabled:bg-gray-500 disabled:opacity-50"
+            disabled={tableData.length === 0}
+          >
+            View in Whisp Map
+          </button>
         </div>
         
         <div className={`${showMap ? 'flex flex-col lg:flex-row gap-4' : ''}`}>
@@ -332,6 +325,7 @@ export default function ResultsPage() {
               selectedRowIndex={selectedRowIndex}
               showExternalIdByDefault={hasExternalIds}
               defaultSortColumnId={defaultSortColumnId}
+              geoJsonData={geoJsonData}
             />
           </div>
 
