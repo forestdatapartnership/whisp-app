@@ -75,6 +75,7 @@ jobs:
             --port 8080 \
             --memory ${{vars.MEMORY}} \
             --cpu ${{vars.CPU}} \
+            --concurrency ${{vars.CONCURRENCY}} \
             --min-instances 1 \
             --max-instances 10 \
             --timeout 300 \
