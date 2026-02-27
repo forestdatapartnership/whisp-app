@@ -5,7 +5,7 @@ import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
-import { useSafeRouterPush } from '@/lib/utils/safePush';
+import { useSafeRouterPush } from '@/lib/hooks/useSafeRouterPush';
 import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
 import { createApiHeaders } from '@/lib/secureApiUtils';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';

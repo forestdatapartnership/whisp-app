@@ -5,7 +5,7 @@ import Alert from '@/components/Alert';
 import { Tabs } from '@/components/Tabs';
 import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
-import { useSafeRouterPush } from '@/lib/utils/safePush';
+import { useSafeRouterPush } from '@/lib/hooks/useSafeRouterPush';
 import { createApiHeaders } from '@/lib/secureApiUtils';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
