@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const packageJsonPath = path.join(__dirname, '..', 'package.json');
-const swaggerTemplatePath = path.join(__dirname, '..', 'public', 'swagger.template.json');
-const swaggerOutputPath = path.join(__dirname, '..', 'public', 'swagger.json');
+const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
+const swaggerTemplatePath = path.join(__dirname, '..', '..', 'public', 'swagger.template.json');
+const swaggerOutputPath = path.join(__dirname, '..', '..', 'public', 'swagger.json');
 
 try {
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));

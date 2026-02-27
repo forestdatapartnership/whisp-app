@@ -187,7 +187,7 @@ export const analyzeGeoJson = async (
   timeout: number,
   useLegacyFormat: boolean = false
 ): Promise<boolean> => {
-  const scriptPath = 'src/python/analysis.py';
+  const scriptPath = 'scripts/analysis/analysis.py';
   const dataPath = `temp/${token}.json`;
   const logSource = "runPython.ts";
   
