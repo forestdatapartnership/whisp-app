@@ -6,31 +6,27 @@ import { withErrorHandling } from '@/lib/hooks/withErrorHandling';
 import { withJsonBody } from '@/lib/hooks/withJsonBody';
 import { useResponse } from '@/lib/hooks/responses';
 import { validateRequiredFields } from '@/lib/utils/fieldValidation';
+import { validateEmail } from '@/lib/utils/emailValidation';
 import { SystemCode } from '@/types/systemCodes';
-import { SystemError } from '@/types/systemError';
 import { LogFunction } from '@/lib/logger';
-import disposableDomains from 'disposable-email-domains';
-import dns from 'dns';
-import { promisify } from 'util';
 
-const resolveMx = promisify(dns.resolveMx);
-
-const validateEmailFormat = (email: string): boolean => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-};
-
-const isDisposableEmail = (email: string): boolean => {
-  const domain = email.split('@')[1]?.toLowerCase();
-  return disposableDomains.includes(domain);
-};
-
-const validateEmailDomain = async (email: string): Promise<boolean> => {
+const handleNotificationRequest = async (
+  email: string,
+  log: LogFunction,
+  sql: string,
+  successCode: SystemCode
+): Promise<NextResponse> => {
+  const normalizedEmail = await validateEmail(email, log);
+  if (!normalizedEmail) {
+    return useResponse(successCode);
+  }
+  const pool = getPool();
+  const client = await pool.connect();
   try {
-    const domain = email.split('@')[1];
-    const mxRecords = await resolveMx(domain);
-    return mxRecords && mxRecords.length > 0;
-  } catch (error) {
-    return false;
+    await client.query(sql, [normalizedEmail]);
+    return useResponse(successCode);
+  } finally {
+    client.release();
   }
 };
 
@@ -40,34 +36,12 @@ export const POST = compose(
   withJsonBody
 )(async (_req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
   validateRequiredFields(body, ['email']);
-
-  const { email } = body;
-  const normalizedEmail = email.toLowerCase();
-  
-  if (!validateEmailFormat(normalizedEmail)) {
-    throw new SystemError(SystemCode.NOTIFICATION_INVALID_EMAIL);
-  }
-
-  if (isDisposableEmail(normalizedEmail)) {
-    log('info', `Blocked disposable email: ${normalizedEmail}`);
-    return useResponse(SystemCode.NOTIFICATION_SUBSCRIBED_SUCCESS);
-  }
-
-  const hasMxRecords = await validateEmailDomain(normalizedEmail);
-  if (!hasMxRecords) {
-    log('info', `Blocked email with invalid domain: ${normalizedEmail}`);
-    return useResponse(SystemCode.NOTIFICATION_SUBSCRIBED_SUCCESS);
-  }
-
-  const pool = getPool();
-  const client = await pool.connect();
-
-  try {
-    await client.query('SELECT subscribe_notifications($1)', [normalizedEmail]);
-    return useResponse(SystemCode.NOTIFICATION_SUBSCRIBED_SUCCESS);
-  } finally {
-    client.release();
-  }
+  return handleNotificationRequest(
+    body.email,
+    log,
+    'SELECT subscribe_notifications($1)',
+    SystemCode.NOTIFICATION_SUBSCRIBED_SUCCESS
+  );
 });
 
 export const DELETE = compose(
@@ -76,33 +50,11 @@ export const DELETE = compose(
   withJsonBody
 )(async (_req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
   validateRequiredFields(body, ['email']);
-
-  const { email } = body;
-  const normalizedEmail = email.toLowerCase();
-  
-  if (!validateEmailFormat(normalizedEmail)) {
-    throw new SystemError(SystemCode.NOTIFICATION_INVALID_EMAIL);
-  }
-
-  if (isDisposableEmail(normalizedEmail)) {
-    log('info', `Blocked disposable email unsubscribe: ${normalizedEmail}`);
-    return useResponse(SystemCode.NOTIFICATION_UNSUBSCRIBED_SUCCESS);
-  }
-
-  const hasMxRecords = await validateEmailDomain(normalizedEmail);
-  if (!hasMxRecords) {
-    log('info', `Blocked email with invalid domain unsubscribe: ${normalizedEmail}`);
-    return useResponse(SystemCode.NOTIFICATION_UNSUBSCRIBED_SUCCESS);
-  }
-
-  const pool = getPool();
-  const client = await pool.connect();
-
-  try {
-    await client.query('SELECT unsubscribe_notifications($1)', [normalizedEmail]);
-    return useResponse(SystemCode.NOTIFICATION_UNSUBSCRIBED_SUCCESS);
-  } finally {
-    client.release();
-  }
+  return handleNotificationRequest(
+    body.email,
+    log,
+    'SELECT unsubscribe_notifications($1)',
+    SystemCode.NOTIFICATION_UNSUBSCRIBED_SUCCESS
+  );
 });
 

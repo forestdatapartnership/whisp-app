@@ -7,6 +7,7 @@ import { useResponse } from "@/lib/hooks/responses";
 import { SystemCode } from "@/types/systemCodes";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
+import { normalizeEmail } from "@/lib/utils/emailValidation";
 import { LogFunction } from "@/lib/logger";
 import { createTokens, setTokenCookies } from "@/lib/auth";
 
@@ -18,10 +19,12 @@ export const POST = compose(
     const { email, password } = body;
     validateRequiredFields(body, ['email', 'password']);
 
+    const normalizedEmail = normalizeEmail(email);
+
     const pool = getPool();
     const client = await pool.connect();
     try {
-        const result = await client.query("SELECT id, uuid, email, email_verified, is_admin FROM login_user($1, $2)", [email, password]);
+        const result = await client.query("SELECT id, uuid, email, email_verified, is_admin FROM login_user($1, $2)", [normalizedEmail, password]);
         if (result.rowCount === 0) {
             return useResponse(SystemCode.AUTH_INVALID_CREDENTIALS);
         }

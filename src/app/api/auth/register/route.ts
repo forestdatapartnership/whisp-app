@@ -8,6 +8,7 @@ import { withJsonBody } from "@/lib/hooks/withJsonBody";
 import { useResponse } from "@/lib/hooks/responses";
 import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
+import { normalizeEmail, validateEmail } from "@/lib/utils/emailValidation";
 import { SystemCode } from "@/types/systemCodes";
 import { LogFunction } from "@/lib/logger";
 import { SystemError } from "@/types/systemError";
@@ -40,23 +41,29 @@ export const POST = compose(
 	const logSource = "register/route.ts";
 	const { name, lastName, organization, email, password } = body;
 
+	validateRequiredFields(body, ['name', 'lastName', 'email', 'password']);
+
+	const normalizedEmail = normalizeEmail(email);
+
 	const now = Date.now();
-	const attemptRecord = emailAttemptCache.get(email);
+	const attemptRecord = emailAttemptCache.get(normalizedEmail);
 
 	if (attemptRecord && now - attemptRecord.firstAttempt < WINDOW_MS && attemptRecord.count >= MAX_ATTEMPTS) {
-		log("warn", `Rate limit exceeded for email ${email}`, logSource);
-		// don't reveal the rate limit exceeded error
+		log("warn", `Rate limit exceeded for email ${normalizedEmail}`, logSource);
 		return useResponse(SystemCode.USER_REGISTRATION_SUCCESS);
 	}
 
 	if (!attemptRecord || now - attemptRecord.firstAttempt >= WINDOW_MS) {
-		emailAttemptCache.set(email, { count: 1, firstAttempt: now });
+		emailAttemptCache.set(normalizedEmail, { count: 1, firstAttempt: now });
 	} else {
 		attemptRecord.count += 1;
-		emailAttemptCache.set(email, attemptRecord);
+		emailAttemptCache.set(normalizedEmail, attemptRecord);
 	}
 
-	validateRequiredFields(body, ['name', 'lastName', 'email', 'password']);
+	const validatedEmail = await validateEmail(email, log);
+	if (!validatedEmail) {
+		throw new SystemError(SystemCode.USER_INVALID_EMAIL);
+	}
 
 	if (!validatePassword(password)) {
 		throw new SystemError(SystemCode.USER_WEAK_PASSWORD);
@@ -67,7 +74,7 @@ export const POST = compose(
 	try {
 		const result = await client.query(
 			"SELECT register_user($1, $2, $3, $4, $5) AS message",
-			[name, lastName, organization, email, password]
+			[name, lastName, organization, validatedEmail, password]
 		);
 
 		const message = result.rows[0].message;
@@ -85,10 +92,10 @@ export const POST = compose(
 
 		await client.query(
 			"SELECT insert_email_verification_token($1, $2, $3)",
-			[email, token, expiresAt]
+			[validatedEmail, token, expiresAt]
 		);
 
-		await sendVerificationEmail(email, token);
+		await sendVerificationEmail(validatedEmail, token);
 
 		return useResponse(SystemCode.USER_REGISTRATION_SUCCESS);
 	} finally {

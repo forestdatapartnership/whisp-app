@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { validateEmailFormat } from "@/lib/utils/emailFormat";
 
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState("");
@@ -20,12 +21,6 @@ const RegisterPage: React.FC = () => {
   const [termsAgreed, setTermsAgreed] = useState(false);
   const router = useRouter();
 
-  // Add a new function for validating email
-  const isValidEmail = (email: string) => {
-    return email.includes('@');
-  };
-
-  // Add password validation to match backend requirements
   const isValidPassword = (password: string) => {
     // Check for minimum length
     if (password.length < 8) return false;
@@ -75,9 +70,8 @@ const RegisterPage: React.FC = () => {
     setError("");
     setIsLoading(true);
 
-    // Check if email is valid
-    if (!isValidEmail(email)) {
-      setError("Please include an '@' in the email address");
+    if (!validateEmailFormat(email)) {
+      setError("Please provide a valid email address");
       setIsLoading(false);
       return;
     }
