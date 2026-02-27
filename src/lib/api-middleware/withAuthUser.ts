@@ -36,4 +36,3 @@ export function withAuth(options: AuthOptions = {}) {
 
 export const withAuthUser = withAuth();
 export const withAdminAuth = withAuth({ requireAdmin: true });
-

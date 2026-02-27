@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
-import { useResponse } from "@/lib/hooks/responses";
-import { withLogging } from "@/lib/hooks/withLogging";
-import { withJsonBody } from "@/lib/hooks/withJsonBody";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { withAuthUser, AuthUser } from "@/lib/hooks/withAuthUser";
-import { compose } from "@/lib/utils/compose";
+import { useResponse } from "@/lib/api-middleware/responses";
+import { withLogging } from "@/lib/api-middleware/withLogging";
+import { withJsonBody } from "@/lib/api-middleware/withJsonBody";
+import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
+import { withAuthUser, AuthUser } from "@/lib/api-middleware/withAuthUser";
+import { compose } from "@/lib/api-middleware/compose";
 import { LogFunction } from "@/lib/logger";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 

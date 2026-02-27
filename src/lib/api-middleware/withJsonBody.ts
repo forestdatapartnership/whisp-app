@@ -49,4 +49,3 @@ export function withJsonBody(handler: (req: NextRequest, log: LogFunction, body:
     return handler(req, log, body, ...rest);
   };
 }
-

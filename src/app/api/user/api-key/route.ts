@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { compose } from "@/lib/utils/compose";
-import { withLogging } from "@/lib/hooks/withLogging";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { withAuthUser, AuthUser } from "@/lib/hooks/withAuthUser";
+import { compose } from "@/lib/api-middleware/compose";
+import { withLogging } from "@/lib/api-middleware/withLogging";
+import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
+import { withAuthUser, AuthUser } from "@/lib/api-middleware/withAuthUser";
 import { getPool } from "@/lib/db";
 import { randomUUID } from "crypto";
 import { QueryResult } from "pg";
 import { SystemCode } from "@/types/systemCodes";
-import { useResponse } from "@/lib/hooks/responses";
+import { useResponse } from "@/lib/api-middleware/responses";
 import { LogFunction } from "@/lib/logger";
 
 export const GET = compose(

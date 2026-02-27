@@ -14,4 +14,3 @@ export function withApiKey(
     return handler(req, apiKey, log, ...rest);
   };
 }
-

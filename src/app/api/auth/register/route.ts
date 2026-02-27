@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
-import { compose } from "@/lib/utils/compose";
-import { withLogging } from "@/lib/hooks/withLogging";
+import { compose } from "@/lib/api-middleware/compose";
+import { withLogging } from "@/lib/api-middleware/withLogging";
 import { randomBytes } from "crypto";
 import { sendVerificationEmail } from "@/lib/mailer";
-import { withJsonBody } from "@/lib/hooks/withJsonBody";
-import { useResponse } from "@/lib/hooks/responses";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { withJsonBody } from "@/lib/api-middleware/withJsonBody";
+import { useResponse } from "@/lib/api-middleware/responses";
+import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 import { normalizeEmail, validateEmail } from "@/lib/utils/emailValidation";
 import { SystemCode } from "@/types/systemCodes";

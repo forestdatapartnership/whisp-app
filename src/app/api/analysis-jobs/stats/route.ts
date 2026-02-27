@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { compose } from "@/lib/utils/compose";
-import { withLogging } from "@/lib/hooks/withLogging";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
+import { compose } from "@/lib/api-middleware/compose";
+import { withLogging } from "@/lib/api-middleware/withLogging";
+import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
 import type { LogFunction } from "@/lib/logger";
 import { getAnalysisJobStats } from "@/lib/utils/analysisJobStore";
-import { withAuthUser, AuthUser } from "@/lib/hooks/withAuthUser";
+import { withAuthUser, AuthUser } from "@/lib/api-middleware/withAuthUser";
 
 export const GET = compose(
   withLogging,

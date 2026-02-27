@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
 import { randomBytes } from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/mailer';
-import { withLogging } from '@/lib/hooks/withLogging';
-import { withJsonBody } from '@/lib/hooks/withJsonBody';
-import { compose } from '@/lib/utils/compose';
+import { withLogging } from '@/lib/api-middleware/withLogging';
+import { withJsonBody } from '@/lib/api-middleware/withJsonBody';
+import { compose } from '@/lib/api-middleware/compose';
 import { SystemCode } from '@/types/systemCodes';
-import { useResponse } from '@/lib/hooks/responses';
+import { useResponse } from '@/lib/api-middleware/responses';
 import { validateRequiredFields } from '@/lib/utils/fieldValidation';
-import { withErrorHandling } from '@/lib/hooks/withErrorHandling';
+import { withErrorHandling } from '@/lib/api-middleware/withErrorHandling';
 
 export const POST = compose(
   withLogging,

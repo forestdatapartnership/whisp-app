@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { ApiKey, ApiResponse } from "@/types/api";
 import { SystemCode } from "@/types/systemCodes";
-import { useResponse, useResponseWithFormat } from "@/lib/hooks/responses";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { withLogging } from "@/lib/hooks/withLogging";
-import { compose } from "@/lib/utils/compose";
+import { useResponse, useResponseWithFormat } from "@/lib/api-middleware/responses";
+import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
+import { withLogging } from "@/lib/api-middleware/withLogging";
+import { compose } from "@/lib/api-middleware/compose";
 import { LogFunction } from "@/lib/logger";
 import { fileExists, readFile } from "@/lib/utils/fileUtils";
 import { jobCache } from "@/lib/utils/jobCache";
-import { withApiKey } from "@/lib/hooks/withApiKey";
+import { withApiKey } from "@/lib/api-middleware/withApiKey";
 
 export const GET = compose(
   withLogging,

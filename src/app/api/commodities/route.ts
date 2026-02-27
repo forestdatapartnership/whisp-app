@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllCommodities } from '@/lib/dal/commoditiesService';
-import { withLogging } from '@/lib/hooks/withLogging';
-import { withErrorHandling } from '@/lib/hooks/withErrorHandling';
-import { compose } from '@/lib/utils/compose';
-import { useResponse } from '@/lib/hooks/responses';
+import { withLogging } from '@/lib/api-middleware/withLogging';
+import { withErrorHandling } from '@/lib/api-middleware/withErrorHandling';
+import { compose } from '@/lib/api-middleware/compose';
+import { useResponse } from '@/lib/api-middleware/responses';
 import { SystemCode } from '@/types/systemCodes';
 import { LogFunction } from '@/lib/logger';
 

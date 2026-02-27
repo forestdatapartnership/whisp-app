@@ -8,14 +8,14 @@ import {
     coordinatesLikelyInMeters,
     validateCrs 
 } from "@/lib/utils/geojsonUtils";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { withAnalysisJobJsonBody } from "@/lib/hooks/withJsonBody";
-import { withAnalysisJobContext } from "@/lib/hooks/withRequestContext";
+import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
+import { withAnalysisJobJsonBody } from "@/lib/api-middleware/withJsonBody";
+import { withAnalysisJobContext } from "@/lib/api-middleware/withRequestContext";
 import { AnalysisJob } from "@/types/analysisJob";
-import { withApiKey } from "@/lib/hooks/withApiKey";
+import { withApiKey } from "@/lib/api-middleware/withApiKey";
 import { SystemCode } from "@/types/systemCodes";
-import { withLogging } from "@/lib/hooks/withLogging";
-import { compose } from "@/lib/utils/compose";
+import { withLogging } from "@/lib/api-middleware/withLogging";
+import { compose } from "@/lib/api-middleware/compose";
 import { SystemError } from "@/types/systemError";
 import { LogFunction } from "@/lib/logger";
 

@@ -49,4 +49,3 @@ export function withLogging(handler: (req: NextRequest, log: LogFunction, ...arg
         return handler(req, log, ...args);
     };
 }
-

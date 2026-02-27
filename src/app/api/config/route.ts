@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { compose } from "@/lib/utils/compose";
-import { withLogging } from "@/lib/hooks/withLogging";
+import { compose } from "@/lib/api-middleware/compose";
+import { withLogging } from "@/lib/api-middleware/withLogging";
 import { LogFunction } from "@/lib/logger";
 import { getWhispPythonVersion } from "@/lib/utils/configUtils";
 

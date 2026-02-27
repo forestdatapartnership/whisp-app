@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { compose } from "@/lib/utils/compose";
-import { withLogging } from "@/lib/hooks/withLogging";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { useResponse } from "@/lib/hooks/responses";
+import { compose } from "@/lib/api-middleware/compose";
+import { withLogging } from "@/lib/api-middleware/withLogging";
+import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
+import { useResponse } from "@/lib/api-middleware/responses";
 import { SystemCode } from "@/types/systemCodes";
 import { LogFunction } from "@/lib/logger";
 

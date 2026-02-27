@@ -4,10 +4,10 @@ import { promises as fs } from "fs";
 import { sseEmitter } from "@/lib/utils/sseEmitter";
 import { jobCache } from "@/lib/utils/jobCache";
 import { SystemCode } from "@/types/systemCodes";
-import { compose } from "@/lib/utils/compose";
-import { withLogging } from "@/lib/hooks/withLogging";
-import { withErrorHandling } from "@/lib/hooks/withErrorHandling";
-import { withApiKey } from "@/lib/hooks/withApiKey";
+import { compose } from "@/lib/api-middleware/compose";
+import { withLogging } from "@/lib/api-middleware/withLogging";
+import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
+import { withApiKey } from "@/lib/api-middleware/withApiKey";
 import { ApiKey } from "@/types/api";
 import { LogFunction } from "@/lib/logger";
 

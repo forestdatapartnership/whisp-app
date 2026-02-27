@@ -33,4 +33,3 @@ export function withAnalysisJobContext(
     return handler(req, context, log, ...rest);
   };
 }
-
