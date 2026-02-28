@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { AnalysisJob } from '@/types/analysisJob';
+import { AnalysisJob } from '@/types/models/analysisJob';
 import { ApiKey } from '@/types/api';
 import { LogFunction } from '../logger';
 import { getAppVersion } from '../utils/configUtils';
@@ -19,7 +19,7 @@ export function withAnalysisJobContext(
     const endpoint = req.nextUrl?.pathname;
 
     const context: AnalysisJob = {
-      token,
+      id: token,
       createdAt,
       apiKey,
       agent,
@@ -28,7 +28,7 @@ export function withAnalysisJobContext(
       endpoint,
     };
     
-    log.enrich({ token: context.token });
+    log.enrich({ token: context.id });
 
     return handler(req, context, log, ...rest);
   };

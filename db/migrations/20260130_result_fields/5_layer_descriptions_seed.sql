@@ -1,7 +1,7 @@
 -- Source: docs/result-fields/raw-source/layers_description_fixed.csv
 -- Bulk update: category, comments, source, analysis_metadata.geeAssets (merge)
 
-WITH layer_data (code, category, comments, source, gee_assets) AS (
+WITH layer_data (id, category, comments, source, gee_assets) AS (
   VALUES
     ('EUFO_2020', 'Tree cover datasets', 'Binary values, where 1 is forest.', 'Bourgoin, C.; Verhegghen, A.; Carboni, S.; Ameztoy, I.; Degreve, L.; Fritz, S.; Herold, M.; Tsendbazar, N.; Lesiv, M.; Achard, F.; Colditz, R. (2025)Global map of forest cover 2020version 3. European Commission, Joint Research Centre (JRC) PID: https://data.jrc.ec.europa.eu/dataset/8c561543-31df-4e1b-9994-e529afecaf54', '["ee.Image(\"JRC/GFC2020/V3\")"]'::jsonb),
     ('GLAD_Primary', 'Tree cover datasets', 'Binary input layer representing primary forest in 2001. Loss pixels 2001-2020 removed with ancillary dataset.', 'Turubanova, S., Potapov, P. V., Tyukavina, A., & Hansen, M. C. (2018).Ongoing primary forest loss in Brazil, Democratic Republic of the Congo, and Indonesia.Environmental Research Letters, 13(7), 074028. https://doi.org/10.1088/1748-9326/aacd1c', '["ee.ImageCollection(\"UMD/GLAD/PRIMARY_HUMID_TROPICAL_FORESTS/v1\")","ee.Image(\"UMD/hansen/global_forest_change_2024_v1_12\")"]'::jsonb),
@@ -61,4 +61,4 @@ SET
   source = ld.source,
   analysis_metadata = jsonb_set(COALESCE(rf.analysis_metadata, '{}'), '{geeAssets}', ld.gee_assets)
 FROM layer_data ld
-WHERE rf.code = ld.code;
+WHERE rf.id = ld.id;

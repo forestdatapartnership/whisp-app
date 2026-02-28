@@ -58,7 +58,7 @@ export function ResultFieldsProvider({ children }: ResultFieldsProviderProps) {
       if (fieldsRes.ok) {
         const data = await fieldsRes.json();
         const items = data.data?.fields || [];
-        setFields(Object.fromEntries(items.map((f: ResultField) => [f.code, f])));
+        setFields(Object.fromEntries(items.map((f: ResultField) => [f.id, f])));
       } else {
         console.error('Failed to load result fields:', fieldsRes.status);
         setFields({});
@@ -106,7 +106,7 @@ export function ResultFieldsProvider({ children }: ResultFieldsProviderProps) {
   const addField = (field: ResultField) => {
     setFields(prev => ({
       ...prev,
-      [field.code]: field
+      [field.id]: field
     }));
   };
 
@@ -115,11 +115,11 @@ export function ResultFieldsProvider({ children }: ResultFieldsProviderProps) {
   };
 
   const updateCommodity = (code: string, commodity: Commodity) => {
-    setCommodities(prev => prev.map(c => c.code === code ? commodity : c));
+    setCommodities(prev => prev.map(c => c.id === code ? commodity : c));
   };
 
   const deleteCommodity = (code: string) => {
-    setCommodities(prev => prev.filter(c => c.code !== code));
+    setCommodities(prev => prev.filter(c => c.id !== code));
   };
 
   const getField = (fieldName: string): ResultField | undefined => {

@@ -13,5 +13,9 @@ export function getPool(): Pool {
     port: Number(process.env.DB_PORT) || 5432,
   });
 
+  pool.on('error', (err) => {
+    console.error('Unexpected idle client error in pg pool', err);
+  });
+
   return pool;
 }

@@ -66,13 +66,13 @@ function ResultFieldsContent() {
     setMessage(null);
 
     try {
-      if (mode === 'create' && !editForm.code) {
+      if (mode === 'create' && !editForm.id) {
         throw new Error('Code is required');
       }
 
       if (mode === 'create') {
         const field: Omit<ResultField, 'updatedAt' | 'updatedBy'> = {
-          code: editForm.code!,
+          id: editForm.id!,
           type: editForm.type,
           unit: editForm.unit,
           description: editForm.description,
@@ -143,8 +143,8 @@ function ResultFieldsContent() {
     const baseHeaders = ['code', 'type', 'unit', 'description', 'category', 'order', 'iso2Code', 'period', 'source', 'comments', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy'];
     const powerBiHeaders = ['powerBiMetadata.dashboard'];
     const displayHeaders = ['displayMetadata.displayName', 'displayMetadata.excludeFromResults', 'displayMetadata.visibleByDefault'];
-    const sortedCommodities = [...commodities].sort((a, b) => a.code.localeCompare(b.code));
-    const commodityHeaders = sortedCommodities.flatMap((c) => [`commodityMetadata.${c.code}.usedForRisk`, `commodityMetadata.${c.code}.dataTheme`]);
+    const sortedCommodities = [...commodities].sort((a, b) => a.id.localeCompare(b.id));
+    const commodityHeaders = sortedCommodities.flatMap((c) => [`commodityMetadata.${c.id}.usedForRisk`, `commodityMetadata.${c.id}.dataTheme`]);
     const analysisHeaders = ['analysisMetadata.type', 'analysisMetadata.excludeFromOutput', 'analysisMetadata.isNullable', 'analysisMetadata.isRequired', 'analysisMetadata.correspondingVariable', 'analysisMetadata.geeAssets'];
     const header = [...baseHeaders, ...powerBiHeaders, ...displayHeaders, ...commodityHeaders, ...analysisHeaders];
 
@@ -152,10 +152,10 @@ function ResultFieldsContent() {
     const formatDate = (d: Date | string | undefined) => (d ? new Date(d).toISOString() : '');
 
     const rows = fieldsList
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.code ?? '').localeCompare(b.code ?? ''))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.id ?? '').localeCompare(b.id ?? ''))
       .map((f) => {
         const base = [
-          f.code ?? '',
+          f.id ?? '',
           f.type ?? '',
           f.unit ?? '',
           f.description ?? '',
@@ -173,7 +173,7 @@ function ResultFieldsContent() {
         const powerBi = [toVal(f.powerBiMetadata?.dashboard)];
         const display = [f.displayMetadata?.displayName ?? '', toVal(f.displayMetadata?.excludeFromResults), toVal(f.displayMetadata?.visibleByDefault)];
         const commodityVals = sortedCommodities.flatMap((c) => {
-          const m = f.commodityMetadata?.[c.code];
+          const m = f.commodityMetadata?.[c.id];
           return [toVal(m?.usedForRisk), m?.dataTheme ?? ''];
         });
         const analysis = [

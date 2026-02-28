@@ -31,10 +31,10 @@ export function CommodityForm({
       <div className="space-y-4">
         <FormField
           label="Code"
-          value={editForm.code ?? ''}
+          value={editForm.id ?? ''}
           placeholder="e.g. pcrop"
           disabled={mode === 'edit'}
-          onChange={(v) => onFieldChange('code', String(v))}
+          onChange={(v) => onFieldChange('id', String(v))}
         />
         <FormField
           label="Description"

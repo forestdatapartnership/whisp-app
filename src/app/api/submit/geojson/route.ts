@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzePlots } from "@/lib/utils/analizePlots";
+import { analyzePlots } from "@/lib/analysis/analizePlots";
 import { 
     createFeatureCollection, 
     addGeoId, 
@@ -11,7 +11,7 @@ import {
 import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
 import { withAnalysisJobJsonBody } from "@/lib/api-middleware/withJsonBody";
 import { withAnalysisJobContext } from "@/lib/api-middleware/withRequestContext";
-import { AnalysisJob } from "@/types/analysisJob";
+import { AnalysisJob } from "@/types/models/analysisJob";
 import { withApiKey } from "@/lib/api-middleware/withApiKey";
 import { SystemCode } from "@/types/systemCodes";
 import { withLogging } from "@/lib/api-middleware/withLogging";

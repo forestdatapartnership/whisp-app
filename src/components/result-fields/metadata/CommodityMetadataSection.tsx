@@ -30,7 +30,7 @@ function updateMetadataForCommodity(
 
 export function CommodityMetadataSection({ value, readonly, onChange }: CommodityMetadataSectionProps) {
   const { commodities } = useResultFields();
-  const sortedCommodities = [...commodities].sort((a, b) => a.code.localeCompare(b.code));
+  const sortedCommodities = [...commodities].sort((a, b) => a.id.localeCompare(b.id));
   const hasContent = value && Object.keys(value).length > 0;
 
   return (
@@ -41,11 +41,11 @@ export function CommodityMetadataSection({ value, readonly, onChange }: Commodit
         ) : (
           <div className="space-y-4">
             {sortedCommodities.map((commodity) => {
-              const meta = value?.[commodity.code] ?? {};
-              const label = commodity.description ? `${commodity.code} — ${commodity.description}` : commodity.code;
+              const meta = value?.[commodity.id] ?? {};
+              const label = commodity.description ? `${commodity.id} — ${commodity.description}` : commodity.id;
               return (
                 <div
-                  key={commodity.code}
+                  key={commodity.id}
                   className="rounded-md border border-gray-600 bg-gray-800/50 p-4 space-y-3"
                 >
                   <h4 className="text-sm font-medium text-gray-300">{label}</h4>
@@ -56,7 +56,7 @@ export function CommodityMetadataSection({ value, readonly, onChange }: Commodit
                       value={meta.usedForRisk}
                       triState
                       readonly={readonly}
-                      onChange={(v) => onChange?.(updateMetadataForCommodity(value, commodity.code, { ...meta, usedForRisk: v }))}
+                      onChange={(v) => onChange?.(updateMetadataForCommodity(value, commodity.id, { ...meta, usedForRisk: v }))}
                     />
                     <FormField
                       kind="input"
@@ -64,7 +64,7 @@ export function CommodityMetadataSection({ value, readonly, onChange }: Commodit
                       value={meta.dataTheme ?? ''}
                       readonly={readonly}
                       placeholder="e.g. deforestation"
-                      onChange={(v) => onChange?.(updateMetadataForCommodity(value, commodity.code, { ...meta, dataTheme: String(v) }))}
+                      onChange={(v) => onChange?.(updateMetadataForCommodity(value, commodity.id, { ...meta, dataTheme: String(v) }))}
                     />
                   </div>
                 </div>

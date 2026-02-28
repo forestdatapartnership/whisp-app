@@ -4,9 +4,9 @@ import path from 'path';
 import { LogFunction } from "@/lib/logger";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from '@/types/systemError';
-import { jobCache } from './jobCache';
-import { sseEmitter } from './sseEmitter';
-import { updateAnalysisJob } from './analysisJobStore';
+import { jobCache } from '../utils/jobCache';
+import { sseEmitter } from '../utils/sseEmitter';
+import { updateAnalysisJob } from '../dal/analysisJobsService';
 
 /**
  * Runs any Python script with the given arguments

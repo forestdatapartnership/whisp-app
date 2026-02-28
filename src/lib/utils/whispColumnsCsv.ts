@@ -29,7 +29,7 @@ function toWhispColumnsRow(field: ResultField): string[] {
   const timberUsed = usedForRiskToStr(field.commodityMetadata?.timber?.usedForRisk);
 
   return [
-    toCsvValue(field.code),
+    toCsvValue(field.id),
     toCsvValue(field.type),
     toCsvValue(field.unit),
     toCsvValue(field.description),
@@ -53,7 +53,7 @@ export function buildWhispColumnsCsv(
 ): string {
   const filtered = fields
     .filter(filter)
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.code ?? '').localeCompare(b.code ?? ''));
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.id ?? '').localeCompare(b.id ?? ''));
   const rows = filtered.map(toWhispColumnsRow);
   const lines = rows.map((row) => row.join(','));
   const header = useNationalHeader ? NATIONAL_HEADER : WHISP_COLUMNS_HEADER;

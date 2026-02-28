@@ -1,7 +1,7 @@
 -- Part 1: lookup_context_and_metadata.csv
 -- https://github.com/forestdatapartnership/whisp/tree/main/src/openforis_whisp/parameters/lookup_context_and_metadata.csv
 
-INSERT INTO result_fields (code, category, analysis_metadata)
+INSERT INTO result_fields (id, category, analysis_metadata)
 VALUES
     ('plotId', 'Context and metadata', '{"type":"string","excludeFromOutput":false,"isNullable":true,"isRequired":false,"correspondingVariable":"plot_id_column"}'::jsonb),
     ('external_id', 'Context and metadata', '{"type":"string","excludeFromOutput":false,"isNullable":true,"isRequired":false,"correspondingVariable":"external_id_column"}'::jsonb),
@@ -15,14 +15,14 @@ VALUES
     ('Unit', 'Context and metadata', '{"type":"string","excludeFromOutput":false,"isNullable":true,"isRequired":true,"correspondingVariable":"stats_unit_type_column"}'::jsonb),
     ('In_waterbody', 'Context and metadata', '{"type":"bool","excludeFromOutput":false,"isNullable":true,"isRequired":true,"correspondingVariable":"water_flag"}'::jsonb),
     ('geo', 'Context and metadata', '{"type":"string","excludeFromOutput":false,"isNullable":true,"isRequired":true,"correspondingVariable":"geometry_column"}'::jsonb)
-ON CONFLICT (code) DO UPDATE SET
+ON CONFLICT (id) DO UPDATE SET
     category = EXCLUDED.category,
     analysis_metadata = EXCLUDED.analysis_metadata;
 
 -- Part 2: lookup_gee_datasets.csv (analysis_metadata only; category not updated)
 -- https://github.com/forestdatapartnership/whisp/tree/main/src/openforis_whisp/parameters/lookup_gee_datasets.csv
 
-INSERT INTO result_fields (code, analysis_metadata)
+INSERT INTO result_fields (id, analysis_metadata)
 VALUES
     ('EUFO_2020', '{"type":"float32","excludeFromOutput":false,"isNullable":true,"isRequired":false,"correspondingVariable":"g_jrc_gfc_2020_prep"}'::jsonb),
     ('GLAD_Primary', '{"type":"float32","excludeFromOutput":false,"isNullable":true,"isRequired":false,"correspondingVariable":"g_glad_pht_prep"}'::jsonb),
@@ -246,5 +246,5 @@ VALUES
     ('nBR_MapBiomas_col9_pasture_2020', '{"type":"float32","excludeFromOutput":false,"isNullable":true,"isRequired":false,"correspondingVariable":"nbr_mapbiomasc9_pasture_prep"}'::jsonb),
     ('nCI_Cocoa_bnetd', '{"type":"float32","excludeFromOutput":false,"isNullable":true,"isRequired":false,"correspondingVariable":"nci_ocs2020_prep"}'::jsonb),
     ('nCM_Treecover_2020', '{"type":"float32","excludeFromOutput":false,"isNullable":true,"isRequired":false,"correspondingVariable":"ncm_treecover_2020_prep"}'::jsonb)
-ON CONFLICT (code) DO UPDATE SET
+ON CONFLICT (id) DO UPDATE SET
     analysis_metadata = EXCLUDED.analysis_metadata;

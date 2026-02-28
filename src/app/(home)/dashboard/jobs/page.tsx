@@ -29,7 +29,7 @@ type Timings = {
 };
 
 type JobRow = {
-  token: string;
+  id: string;
   status: string;
   featureCount: number | null;
   createdAt: string;
@@ -253,10 +253,10 @@ function JobStatsContent() {
                 </TableHeader>
                 <TableBody>
                   {visibleJobs.map((job) => (
-                    <Fragment key={job.token}>
+                    <Fragment key={job.id}>
                       <TableRow className="hover:bg-gray-750">
-                        <TableCell className="font-mono text-xs text-gray-100 max-w-[220px] truncate" title={job.token}>
-                          {job.token}
+                        <TableCell className="font-mono text-xs text-gray-100 max-w-[220px] truncate" title={job.id}>
+                          {job.id}
                           <div className="mt-1 text-xs text-gray-400 sm:hidden">
                             <span title={formatDateTime(job.createdAt)}>{formatRelative(job.createdAt).label}</span>
                             {" • "}
@@ -308,7 +308,7 @@ function JobStatsContent() {
                         ) : job.status === "analysis_completed" ? (
                           job.resultsAvailable ? (
                             <Link
-                              href={`/results/${job.token}`}
+                              href={`/results/${job.id}`}
                               title="View results"
                               aria-label="View results"
                               className="text-blue-400 hover:text-blue-300 p-1"
@@ -326,7 +326,7 @@ function JobStatsContent() {
                           )
                         ) : (
                           <Link
-                            href={`/results/${job.token}`}
+                            href={`/results/${job.id}`}
                             title="View status"
                             aria-label="View status"
                             className="text-blue-400 hover:text-blue-300 p-1"
@@ -362,7 +362,7 @@ function JobStatsContent() {
                   {statusLabels[expandedError.status] ?? expandedError.status}
                 </span>
                 <span className="text-gray-400 text-sm">Token</span>
-                <span className="font-mono text-xs text-gray-100 break-all">{expandedError.token}</span>
+                <span className="font-mono text-xs text-gray-100 break-all">{expandedError.id}</span>
               </div>
               <Button variant="secondary" size="sm" onClick={() => setExpandedError(null)}>
                 Close

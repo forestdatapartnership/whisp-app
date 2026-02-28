@@ -3,7 +3,7 @@ import { compose } from "@/lib/api-middleware/compose";
 import { withLogging } from "@/lib/api-middleware/withLogging";
 import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
 import { withAuthUser, AuthUser } from "@/lib/api-middleware/withAuthUser";
-import { getPool } from "@/lib/db";
+import { getPool } from "@/lib/dal/db";
 import { randomUUID } from "crypto";
 import { QueryResult } from "pg";
 import { SystemCode } from "@/types/systemCodes";

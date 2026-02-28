@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPool } from "@/lib/db";
+import { getPool } from "@/lib/dal/db";
 import { withJsonBody } from "@/lib/api-middleware/withJsonBody";
 import { withLogging } from "@/lib/api-middleware/withLogging";
 import { compose } from "@/lib/api-middleware/compose";

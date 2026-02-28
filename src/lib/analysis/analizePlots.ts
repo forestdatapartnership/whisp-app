@@ -1,19 +1,19 @@
 import { NextRequest } from "next/server";
 import path from "path";
 import fs from 'fs/promises';
-import { getPool } from "@/lib/db";
-import { analyzeGeoJson } from "@/lib/utils/runPython";
+import { getPool } from "@/lib/dal/db";
+import { analyzeGeoJson } from "@/lib/analysis/runPython";
 import { LogFunction } from "@/lib/logger";
 import { useResponse } from "@/lib/api-middleware/responses";
 import { SystemCode, getSystemCodeInfo } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
-import { AnalysisJob } from "@/types/analysisJob";
+import { AnalysisJob } from "@/types/models/analysisJob";
 import { getMaxGeometryLimit, getMaxGeometryLimitSync, getPythonTimeoutMs, getPythonTimeoutSyncMs } from "@/lib/utils/configUtils";
 import { atomicWriteFile } from "@/lib/utils/fileUtils";
-import { getCommonPropertyNames, validateExternalIdColumn } from "./geojsonUtils";
-import { jobCache } from "./jobCache";
-import { sseEmitter } from "./sseEmitter";
-import { createAnalysisJob, updateAnalysisJob } from "./analysisJobStore";
+import { getCommonPropertyNames, validateExternalIdColumn } from "../utils/geojsonUtils";
+import { jobCache } from "../utils/jobCache";
+import { sseEmitter } from "../utils/sseEmitter";
+import { createAnalysisJob, updateAnalysisJob } from "../dal/analysisJobsService";
 
 const LOG_SOURCE = "analyzePlots.ts";
 
@@ -70,7 +70,7 @@ const handleAnalysisSuccess = async (token: string, filePath: string, log: LogFu
 
 export const analyzePlots = async (context: AnalysisJob, featureCollection: any, log: LogFunction, req?: NextRequest) => {
     const isAsync = featureCollection.analysisOptions?.async === true;
-    const token = context.token;
+    const token = context.id;
     const filePath = path.join(process.cwd(), 'temp');
     const startTime = Date.now();
     const timeout = isAsync ? getPythonTimeoutMs() : getPythonTimeoutSyncMs();

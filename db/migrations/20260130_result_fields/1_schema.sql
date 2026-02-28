@@ -1,5 +1,9 @@
+drop table if exists result_fields;
+drop function if exists update_result_fields_timestamp;
+drop trigger if exists trigger_update_result_fields_timestamp on result_fields;
+
 CREATE TABLE IF NOT EXISTS result_fields (
-    code TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     type TEXT,
     unit TEXT,
     description TEXT,
@@ -32,8 +36,11 @@ CREATE TRIGGER trigger_update_result_fields_timestamp
     FOR EACH ROW
     EXECUTE FUNCTION update_result_fields_timestamp();
 
+drop table if exists commodities;
+drop function if exists update_commodities_timestamp;
+drop trigger if exists trigger_update_commodities_timestamp on commodities;
 CREATE TABLE IF NOT EXISTS commodities (
-    code TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_by TEXT,

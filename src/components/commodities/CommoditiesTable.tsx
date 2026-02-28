@@ -8,7 +8,7 @@ import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils/formatters';
 import type { Commodity } from '@/types/models';
 
-type SortKey = 'code' | 'description' | 'updatedAt';
+type SortKey = 'id' | 'description' | 'updatedAt';
 type SortDir = 'asc' | 'desc';
 
 interface CommoditiesTableProps {
@@ -16,8 +16,8 @@ interface CommoditiesTableProps {
   searchTerm: string;
   isAdmin: boolean;
   onSearchChange: (value: string) => void;
-  onEdit: (code: string) => void;
-  onDelete: (code: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
   onExportCSV: () => void;
   onCreate: () => void;
 }
@@ -64,7 +64,7 @@ export function CommoditiesTable({
     () =>
       commodities.filter(
         (c) =>
-          c.code?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+          c.id?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
           c.description?.toLowerCase().includes(debouncedSearch.toLowerCase())
       ),
     [commodities, debouncedSearch]
@@ -118,7 +118,7 @@ export function CommoditiesTable({
         <Table className="text-xs">
           <TableHeader>
             <TableRow>
-              <SortHeader label="Code" column="code" className="w-[180px]" />
+              <SortHeader label="Code" column="id" className="w-[180px]" />
               <SortHeader label="Description" column="description" />
               <SortHeader label="Last modified" column="updatedAt" />
               {isAdmin && (
@@ -128,9 +128,9 @@ export function CommoditiesTable({
           </TableHeader>
           <TableBody>
             {sorted.map((c) => (
-              <TableRow key={c.code} className="hover:bg-gray-700/50">
-                <TableCell className="font-mono text-gray-100 max-w-[180px] truncate" title={c.code ?? undefined}>
-                  {c.code}
+              <TableRow key={c.id} className="hover:bg-gray-700/50">
+                <TableCell className="font-mono text-gray-100 max-w-[180px] truncate" title={c.id ?? undefined}>
+                  {c.id}
                 </TableCell>
                 <TableCell className="text-gray-200 max-w-[200px]">
                   <span className="block truncate" title={c.description ?? undefined}>
@@ -147,7 +147,7 @@ export function CommoditiesTable({
                   <TableCell className="flex items-center justify-end gap-2 text-gray-200">
                     <button
                       type="button"
-                      onClick={() => onEdit(c.code)}
+                      onClick={() => onEdit(c.id)}
                       className="text-blue-400 hover:text-blue-300 p-1"
                       title="Edit"
                       aria-label="Edit"
@@ -156,7 +156,7 @@ export function CommoditiesTable({
                     </button>
                     <button
                       type="button"
-                      onClick={() => onDelete(c.code)}
+                      onClick={() => onDelete(c.id)}
                       className="text-red-400 hover:text-red-300 p-1"
                       title="Delete"
                       aria-label="Delete"

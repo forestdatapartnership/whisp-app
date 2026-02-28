@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPool } from "@/lib/db";
+import { getPool } from "@/lib/dal/db";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 import { useResponse } from "@/lib/api-middleware/responses";

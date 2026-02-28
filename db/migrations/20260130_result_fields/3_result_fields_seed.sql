@@ -2,7 +2,7 @@
 -- Generated from 1.whisp_columns_general.csv, 2.whisp_columns_national.csv, 3.lookup_gee_datasets.csv
 -- 220 general + 29 national = 249 result field entries
 
-INSERT INTO result_fields ("order", code, type, unit, description, period, source, comments, power_bi_metadata, commodity_metadata, created_by)
+INSERT INTO result_fields ("order", id, type, unit, description, period, source, comments, power_bi_metadata, commodity_metadata, created_by)
 VALUES
     (0, 'plotId', 'numeric', NULL, 'Geometry identifier', NULL, 'Generated internally', NULL, '{"dashboard": true}'::jsonb, '{}'::jsonb, 'system'),
     (100, 'external_id', 'char', NULL, 'Geometry identifier', NULL, 'User defined', 'To maintain a consistent output format, numeric values will be converted to strings. Note: any multipolygons in the input will be split into individual parts, which may result in duplicate attribute values in the output.', '{"dashboard": true}'::jsonb, '{}'::jsonb, 'system'),
@@ -209,9 +209,9 @@ VALUES
     (20200, 'ESRI_crop_gain_2020_2023', 'numeric', 'ha / %', 'Area of Crop', '2020 and 2023', 'Karra 2021', NULL, '{"dashboard": true}'::jsonb, '{"pcrop":{"usedForRisk":false},"acrop":{"usedForRisk":false},"timber":{"usedForRisk":true,"dataTheme":"agri_after_2020"}}'::jsonb, 'system'),
     (20300, 'GFW_logging_before_2020', 'numeric', 'ha / %', 'Area of Logging concession', '2015', 'WRI 2015', 'Various national sources combined, date can vary', '{"dashboard": true}'::jsonb, '{"pcrop":{"usedForRisk":false},"acrop":{"usedForRisk":false},"timber":{"usedForRisk":true,"dataTheme":"logging_concession_before_2020"}}'::jsonb, 'system'),
     (20400, 'geo', 'char', NULL, 'Coordinates of the geometry', NULL, 'Generated internally', 'Geographic CRS: EPSG 4326', '{"dashboard": true}'::jsonb, '{}'::jsonb, 'system')
-ON CONFLICT (code) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO result_fields ("order", code, type, unit, description, period, source, comments, power_bi_metadata, commodity_metadata, iso2_code, created_by)
+INSERT INTO result_fields ("order", id, type, unit, description, period, source, comments, power_bi_metadata, commodity_metadata, iso2_code, created_by)
 VALUES
     (22000, 'nCO_ideam_forest_2020', 'numeric', 'ha / %', 'Area of Tree Cover', '2020', 'IDEAM 2020', NULL, '{}'::jsonb, '{"pcrop":{"usedForRisk":true,"dataTheme":"treecover"},"acrop":{"usedForRisk":true,"dataTheme":"treecover"},"timber":{"usedForRisk":true,"dataTheme":"commodities"}}'::jsonb, 'CO', 'system'),
     (22100, 'nCO_ideam_eufo_commission_2020', 'numeric', 'ha / %', 'Area of Tree cover outside EUFO', '2020', 'IDEAM 2020', NULL, '{}'::jsonb, '{"pcrop":{"usedForRisk":true,"dataTheme":"commodities"},"acrop":{"usedForRisk":true,"dataTheme":"commodities"},"timber":{"usedForRisk":true,"dataTheme":"commodities"}}'::jsonb, 'CO', 'system'),
@@ -242,9 +242,9 @@ VALUES
     (24600, 'nBR_MapBiomas_col9_pasture_2020', 'numeric', 'ha / %', 'Area of Pasture', '2020', 'Souza et al., 2020', NULL, '{}'::jsonb, '{"pcrop":{"usedForRisk":true,"dataTheme":"commodities"},"acrop":{"usedForRisk":true,"dataTheme":"commodities"},"timber":{"usedForRisk":true,"dataTheme":"commodities"}}'::jsonb, 'BR', 'system'),
     (24700, 'nCI_Cocoa_bnetd', 'numeric', 'ha / %', 'Area of Cocoa', '2020', 'BNETD 2020.', NULL, '{}'::jsonb, '{"pcrop":{"usedForRisk":true,"dataTheme":"commodities"},"acrop":{"usedForRisk":true,"dataTheme":"commodities"},"timber":{"usedForRisk":true,"dataTheme":"commodities"}}'::jsonb, 'CI', 'system'),
     (24800, 'nCM_Treecover_2020', 'numeric', 'ha / %', 'Area of Treecover', '2020', 'BNETD 2020.', NULL, '{}'::jsonb, '{"pcrop":{"usedForRisk":true,"dataTheme":"treecover"},"acrop":{"usedForRisk":true,"dataTheme":"treecover"},"timber":{"usedForRisk":true,"dataTheme":"treecover"}}'::jsonb, 'CM', 'system')
-ON CONFLICT (code) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO result_fields ("order", code, type, unit, description, period, source, comments, power_bi_metadata, commodity_metadata, category, created_by)
+INSERT INTO result_fields ("order", id, type, unit, description, period, source, comments, power_bi_metadata, commodity_metadata, category, created_by)
 VALUES
     (24900, 'Ind_01_treecover', 'char', 'Yes / No', 'Indicator for treecover', '2020', 'Generated internally', 'Derived from applying decision tree. See readme on github for details', '{"dashboard": true}'::jsonb, '{}'::jsonb, 'Analysis results', 'system'),
     (25000, 'Ind_02_commodities', 'char', 'Yes / No', 'Indicator for comodities', '2020', 'Generated internally', 'Derived from applying decision tree. See readme on github for details', '{"dashboard": true}'::jsonb, '{}'::jsonb, 'Analysis results', 'system'),
@@ -261,6 +261,6 @@ VALUES
     (26100, 'risk_acrop', 'char', 'Low / More Info needed / High', 'Annual crop deforestation risk', NULL, 'Generated internally', 'Risk of non compliance for a plot declared as annual crop. See readme on github for details', '{"dashboard": true}'::jsonb, '{}'::jsonb, 'Analysis results', 'system'),
     (26200, 'risk_timber', 'char', 'Low / More Info needed / High', 'Timber extraction deforestation risk', NULL, 'Generated internally', 'Risk of non compliance for a plot declared as timber. See readme on github for details', '{"dashboard": true}'::jsonb, '{}'::jsonb, 'Analysis results', 'system'),
     (26300, 'whisp_processing_metadata', 'char', NULL, 'Processing info in dictionary format: whisp_version (python package release), processing_timestamp_utc (in ISO 8601 standard and set to UTC)', NULL, 'Generated internally', NULL, '{}'::jsonb, '{}'::jsonb, 'Analysis results', 'system')
-ON CONFLICT (code) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
-UPDATE result_fields SET display_metadata = display_metadata || '{"excludeFromResults": true}'::jsonb WHERE code IN ('geo', 'Geometry', 'whisp_processing_metadata');
+UPDATE result_fields SET display_metadata = display_metadata || '{"excludeFromResults": true}'::jsonb WHERE id IN ('geo', 'Geometry', 'whisp_processing_metadata');

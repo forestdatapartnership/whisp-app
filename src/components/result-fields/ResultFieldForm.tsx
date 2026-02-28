@@ -41,7 +41,7 @@ const GRID_FIELDS: {
   kind?: 'input' | 'textarea' | 'select';
   options?: readonly string[];
 }[] = [
-  { key: 'code', label: 'Code', placeholder: 'e.g. TMF_plant', disabledInEdit: true },
+  { key: 'id', label: 'Code', placeholder: 'e.g. TMF_plant', disabledInEdit: true },
   { key: 'order', label: 'Order', type: 'number', placeholder: '0' },
   { key: 'type', label: 'Type', kind: 'select', options: RESULT_FIELD_TYPES, placeholder: 'Select type' },
   { key: 'unit', label: 'Unit', placeholder: 'e.g. ha / %' },
@@ -154,7 +154,7 @@ export function ResultFieldForm({
 
         <DisplayMetadataSection
           value={editForm.displayMetadata}
-          code={editForm.code}
+          code={editForm.id}
           readonly={readonly}
           onChange={(v) => onFieldChange?.('displayMetadata', v)}
         />

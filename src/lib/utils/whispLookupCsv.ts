@@ -78,7 +78,7 @@ export function toWhispCsvRow(field: ResultField, commodities: Commodity[]): str
   const correspondingVariable = field.analysisMetadata?.correspondingVariable ?? '';
 
   return [
-    toCsvValue(field.code),
+    toCsvValue(field.id),
     String(field.order ?? 0),
     toCsvValue(field.iso2Code),
     theme,
@@ -100,7 +100,7 @@ export function buildWhispCsv(
 ): string {
   const filtered = fields
     .filter(filter)
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.code ?? '').localeCompare(b.code ?? ''));
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.id ?? '').localeCompare(b.id ?? ''));
   const rows = filtered.map((f) => toWhispCsvRow(f, commodities));
   const lines = rows.map((row) => row.join(','));
   return [WHISP_CSV_HEADER, ...lines].join('\n');

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJsonfromGeoId } from "@/lib/utils/assetRegistry";
-import { analyzePlots } from "@/lib/utils/analizePlots";
+import { analyzePlots } from "@/lib/analysis/analizePlots";
 import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
 import { SystemCode } from "@/types/systemCodes";
 import { withAnalysisJobJsonBody } from "@/lib/api-middleware/withJsonBody";
 import { withAnalysisJobContext } from "@/lib/api-middleware/withRequestContext";
-import { AnalysisJob } from "@/types/analysisJob";
+import { AnalysisJob } from "@/types/models/analysisJob";
 import { withApiKey } from "@/lib/api-middleware/withApiKey";
 import { withLogging } from "@/lib/api-middleware/withLogging";
 import { LogFunction } from "@/lib/logger";

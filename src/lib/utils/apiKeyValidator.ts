@@ -1,4 +1,4 @@
-import { getPool } from "@/lib/db";
+import { getPool } from "@/lib/dal/db";
 import { NextRequest } from "next/server";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";

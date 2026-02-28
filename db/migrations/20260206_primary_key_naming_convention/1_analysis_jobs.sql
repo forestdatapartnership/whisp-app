@@ -1,0 +1,1 @@
+alter table analysis_jobs rename column token to id;

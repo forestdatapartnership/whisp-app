@@ -1,5 +1,5 @@
 export interface BaseModel {
-  code: string;
+  id: string;
 }
 
 export interface AuditedModel extends BaseModel {

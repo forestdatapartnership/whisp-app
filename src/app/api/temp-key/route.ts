@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withLogging } from "@/lib/api-middleware/withLogging";
 import { compose } from "@/lib/api-middleware/compose";
 import { LogFunction } from "@/lib/logger";
-import { getPool } from "@/lib/db";
+import { getPool } from "@/lib/dal/db";
 import { headers } from "next/headers";
 import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
 import { SystemCode } from "@/types/systemCodes";

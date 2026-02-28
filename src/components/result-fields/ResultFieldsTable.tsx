@@ -8,7 +8,7 @@ import { ArrowDown, ArrowUp, Eye, Pencil, Trash2 } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils/formatters';
 import type { ResultField } from '@/types/models';
 
-type SortKey = 'order' | 'code' | 'category' | 'description' | 'updatedAt';
+type SortKey = 'order' | 'id' | 'category' | 'description' | 'updatedAt';
 type SortDir = 'asc' | 'desc';
 
 interface ResultFieldsTableProps {
@@ -16,8 +16,8 @@ interface ResultFieldsTableProps {
   searchTerm: string;
   isAdmin: boolean;
   onSearchChange: (value: string) => void;
-  onOpen: (code: string, asReadonly: boolean) => void;
-  onDelete: (code: string) => void;
+  onOpen: (id: string, asReadonly: boolean) => void;
+  onDelete: (id: string) => void;
   onExportCSV: () => void;
   onCreate: () => void;
 }
@@ -64,7 +64,7 @@ export function ResultFieldsTable({
     () =>
       fields.filter(
         (f) =>
-          f.code?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+          f.id?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
           f.description?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
           f.type?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
           f.category?.toLowerCase().includes(debouncedSearch.toLowerCase())
@@ -130,7 +130,7 @@ export function ResultFieldsTable({
           <TableHeader>
             <TableRow>
               <SortHeader label="Order" column="order" />
-              <SortHeader label="Code" column="code" className="w-[180px]" />
+              <SortHeader label="Code" column="id" className="w-[180px]" />
               <SortHeader label="Category" column="category" />
               <SortHeader label="Description" column="description" />
               <SortHeader label="Last modified" column="updatedAt" />
@@ -139,10 +139,10 @@ export function ResultFieldsTable({
           </TableHeader>
           <TableBody>
             {sorted.map((f) => (
-              <TableRow key={f.code} className="hover:bg-gray-700/50">
+              <TableRow key={f.id} className="hover:bg-gray-700/50">
                 <TableCell className="text-gray-200">{f.order ?? '—'}</TableCell>
-                <TableCell className="font-mono text-gray-100 max-w-[180px] truncate" title={f.code ?? undefined}>
-                  {f.code}
+                <TableCell className="font-mono text-gray-100 max-w-[180px] truncate" title={f.id ?? undefined}>
+                  {f.id}
                 </TableCell>
                 <TableCell className="text-gray-200">{f.category ?? '—'}</TableCell>
                 <TableCell className="text-gray-200 max-w-[200px]">
@@ -159,7 +159,7 @@ export function ResultFieldsTable({
                 <TableCell className="flex items-center justify-end gap-2 text-gray-200">
                   <button
                     type="button"
-                    onClick={() => onOpen(f.code!, !isAdmin)}
+                    onClick={() => onOpen(f.id!, !isAdmin)}
                     className="text-blue-400 hover:text-blue-300 p-1"
                     title={isAdmin ? 'Edit' : 'View'}
                     aria-label={isAdmin ? 'Edit' : 'View'}
@@ -169,7 +169,7 @@ export function ResultFieldsTable({
                   {isAdmin && (
                     <button
                       type="button"
-                      onClick={() => onDelete(f.code!)}
+                      onClick={() => onDelete(f.id!)}
                       className="text-red-400 hover:text-red-300 p-1"
                       title="Delete"
                       aria-label="Delete"

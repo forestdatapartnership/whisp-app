@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPool } from "@/lib/db";
+import { getPool } from "@/lib/dal/db";
 import { compose } from "@/lib/api-middleware/compose";
 import { withLogging } from "@/lib/api-middleware/withLogging";
 import { randomBytes } from "crypto";

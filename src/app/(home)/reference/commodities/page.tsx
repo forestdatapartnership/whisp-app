@@ -37,7 +37,7 @@ function CommoditiesContent() {
   }, []);
 
   const startEdit = useCallback((code: string) => {
-    const c = commodities.find((ct) => ct.code === code);
+    const c = commodities.find((ct) => ct.id === code);
     if (c) {
       setMode('edit');
       setEditingCode(code);
@@ -61,11 +61,11 @@ function CommoditiesContent() {
     setMessage(null);
 
     try {
-      if (mode === 'create' && !editForm.code) {
+      if (mode === 'create' && !editForm.id) {
         throw new Error('Code is required');
       }
       const commodity: Omit<Commodity, 'updatedAt' | 'updatedBy'> = {
-        code: editForm.code!,
+        id: editForm.id!,
         description: editForm.description ?? undefined,
       };
 
@@ -112,9 +112,9 @@ function CommoditiesContent() {
   const handleExportCSV = useCallback(() => {
     const header = ['code', 'description', 'updatedAt'];
     const rows = commodities
-      .sort((a, b) => a.code.localeCompare(b.code))
+      .sort((a, b) => a.id.localeCompare(b.id))
       .map((c) => [
-        c.code,
+        c.id,
         c.description ?? '',
         c.updatedAt ? new Date(c.updatedAt).toISOString() : '',
       ]);
