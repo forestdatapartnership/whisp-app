@@ -39,7 +39,7 @@ export const POST = compose(
 	withJsonBody
 )(async (_req: NextRequest, log: LogFunction, body: any): Promise<NextResponse> => {
 	const logSource = "register/route.ts";
-	const { name, lastName, organization, email, password } = body;
+	const { name, lastName, organization, email, password, subscribeNotifications } = body;
 
 	validateRequiredFields(body, ['name', 'lastName', 'email', 'password']);
 
@@ -96,6 +96,10 @@ export const POST = compose(
 		);
 
 		await sendVerificationEmail(validatedEmail, token);
+
+		if (subscribeNotifications) {
+			await client.query("SELECT subscribe_notifications($1)", [validatedEmail]);
+		}
 
 		return useResponse(SystemCode.USER_REGISTRATION_SUCCESS);
 	} finally {

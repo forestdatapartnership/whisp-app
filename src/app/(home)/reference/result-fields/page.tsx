@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useResultFields } from '@/lib/contexts/ResultFieldsContext';
@@ -9,11 +9,21 @@ import {
   updateResultFieldAction,
   deleteResultFieldAction,
 } from './actions';
-import { ResultFieldForm, ResultFieldsTable } from '@/components/result-fields';
-import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
+import { ResultFieldForm } from '@/components/result-fields';
+import { CrudDataTable } from '@/components/data-table/CrudDataTable';
 import Alert from '@/components/Alert';
+import { Button } from '@/components/ui/Button';
 import { downloadCsv } from '@/lib/utils/downloadCsv';
+import { textColumn, codeColumn, truncatedTextColumn, lastModifiedColumn } from '@/components/data-table/columnHelpers';
 import type { ResultField } from '@/types/models';
+
+const resultFieldColumns = [
+  textColumn<ResultField>('order', 'Order'),
+  codeColumn<ResultField>('id', 'Code'),
+  textColumn<ResultField>('category', 'Category'),
+  truncatedTextColumn<ResultField>('description', 'Description'),
+  lastModifiedColumn<ResultField>(),
+];
 
 type Mode = 'list' | 'edit' | 'create';
 type MessageType = { type: 'success' | 'error'; text: string } | null;
@@ -27,10 +37,8 @@ function ResultFieldsContent() {
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<ResultField>>({});
   const [readonlyForm, setReadonlyForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState<MessageType>(null);
   const [loading, setLoading] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const resetForm = useCallback(() => {
     setMode('list');
@@ -56,6 +64,9 @@ function ResultFieldsContent() {
     setReadonlyForm(false);
     setMessage(null);
   }, []);
+
+  const handleEdit = useCallback((id: string) => openField(id, false), [openField]);
+  const handleView = useCallback((id: string) => openField(id, true), [openField]);
 
   const updateField = useCallback((key: keyof ResultField, value: string | number | boolean | object | undefined | null) => {
     setEditForm((prev) => ({ ...prev, [key]: value }));
@@ -121,22 +132,9 @@ function ResultFieldsContent() {
     }
   }, [mode, editForm, editingCode, refresh, resetForm, router]);
 
-  const handleDelete = useCallback(async (code: string) => {
-    setLoading(true);
-    setMessage(null);
-
-    try {
-      const result = await deleteResultFieldAction(code);
-      if (!result.ok) throw new Error(result.error);
-      await refresh();
-      setDeleteConfirm(null);
-      setMessage({ type: 'success', text: 'Result field deleted successfully' });
-      router.refresh();
-    } catch (error: unknown) {
-      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'An error occurred while deleting' });
-    } finally {
-      setLoading(false);
-    }
+  const afterMutate = useCallback(async () => {
+    await refresh();
+    router.refresh();
   }, [refresh, router]);
 
   const handleExportCSV = useCallback(() => {
@@ -191,14 +189,11 @@ function ResultFieldsContent() {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (deleteConfirm) setDeleteConfirm(null);
-        else if (mode !== 'list') resetForm();
-      }
+      if (e.key === 'Escape' && mode !== 'list') resetForm();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [deleteConfirm, mode, resetForm]);
+  }, [mode, resetForm]);
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
@@ -216,25 +211,23 @@ function ResultFieldsContent() {
           onEdit={readonlyForm && isAdmin ? () => openField(editingCode!, false) : undefined}
         />
       ) : (
-        <ResultFieldsTable
-          fields={fieldsList}
-          searchTerm={searchTerm}
-          isAdmin={isAdmin}
-          onSearchChange={setSearchTerm}
-          onOpen={openField}
-          onDelete={setDeleteConfirm}
-          onExportCSV={handleExportCSV}
-          onCreate={startCreate}
-        />
-      )}
-
-      {isAdmin && deleteConfirm && (
-        <DeleteConfirmModal
-          itemName={deleteConfirm}
+        <CrudDataTable<ResultField>
           entityLabel="result field"
-          loading={loading}
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
+          columns={resultFieldColumns}
+          data={fieldsList}
+          title="Result Fields"
+          isAdmin={isAdmin}
+          searchFields={['id', 'category', 'description', 'type']}
+          deleteAction={deleteResultFieldAction}
+          onAfterDelete={afterMutate}
+          onEdit={handleEdit}
+          onView={handleView}
+          onCreate={startCreate}
+          toolbarActions={
+            <Button variant="secondary" size="sm" onClick={handleExportCSV}>
+              Export CSV
+            </Button>
+          }
         />
       )}
     </div>

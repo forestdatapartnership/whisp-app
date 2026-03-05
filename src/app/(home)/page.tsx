@@ -23,14 +23,12 @@ export default function Home() {
               >
                 API
               </a>, calculated from carefully selected{' '}
-              <a
-                href="https://whisp.openforis.org/documentation/layers"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/reference/result-fields"
                 className="text-[#3B82F6] hover:underline"
               >
-                global and regional map datasets
-              </a>{' '}
+                result fields and indicators
+              </Link>{' '}
               processed via Google Earth Engine.
             </p>
           </section>

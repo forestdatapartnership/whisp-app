@@ -98,7 +98,12 @@ export const DELETE = compose(
       throw new SystemError(SystemCode.USER_INVALID_PASSWORD);
     }
 
-    // Delete the user account (this will cascade to delete all related data)
+    await client.query(
+      `UPDATE analysis_jobs SET user_id = NULL, ip_address = NULL, api_key_id = NULL
+       WHERE user_id = (SELECT id FROM users WHERE uuid = $1)`,
+      [user.id]
+    );
+
     await client.query("DELETE FROM users WHERE uuid = $1", [user.id]);
 
     // Return success message

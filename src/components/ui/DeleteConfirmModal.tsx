@@ -8,11 +8,12 @@ interface DeleteConfirmModalProps {
   itemName: string;
   entityLabel: string;
   loading: boolean;
+  error?: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function DeleteConfirmModal({ itemName, entityLabel, loading, onConfirm, onCancel }: DeleteConfirmModalProps) {
+export function DeleteConfirmModal({ itemName, entityLabel, loading, error, onConfirm, onCancel }: DeleteConfirmModalProps) {
   const capitalizedLabel = entityLabel.charAt(0).toUpperCase() + entityLabel.slice(1);
 
   useEffect(() => {
@@ -30,6 +31,9 @@ export function DeleteConfirmModal({ itemName, entityLabel, loading, onConfirm, 
         <p className="text-gray-300 mb-6">
           Are you sure you want to delete the {entityLabel} <span className="font-mono text-white">{itemName}</span>? This action cannot be undone.
         </p>
+        {error && (
+          <p className="text-red-400 text-sm mb-4">{error}</p>
+        )}
         <div className="flex justify-end gap-2">
           <Button className="bg-gray-600 hover:bg-gray-700" onClick={onCancel} disabled={loading}>Cancel</Button>
           <Button className="bg-red-600 hover:bg-red-700" onClick={onConfirm} disabled={loading}>

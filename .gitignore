@@ -53,3 +53,5 @@ venv/
 
 # Any log files
 /logs
+
+/docs/local

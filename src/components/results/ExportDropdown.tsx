@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { ChevronDown, Download } from 'lucide-react';
 import {
   DropdownMenu,
@@ -12,39 +12,52 @@ import {
 import { Button } from "@/components/ui/Button";
 import { downloadCsv, timestampFilename } from "@/lib/utils/downloadCsv";
 import { geojsonToServerCsvFormat } from "@/lib/utils/geojsonToCsv";
-import type { Table } from "@tanstack/react-table";
+import { useDataTable } from "@/components/data-table/DataTableContext";
 import type { FeatureCollection } from "geojson";
 import type { RecordData } from "@/lib/utils/geojsonUtils";
 
 interface ExportDropdownProps {
   isDisabled?: boolean;
-  table: Table<RecordData>;
   tableData: RecordData[];
   geoJsonData: FeatureCollection | null;
 }
 
 export function ExportDropdown({
   isDisabled = false,
-  table,
   tableData,
   geoJsonData,
 }: ExportDropdownProps) {
+  const table = useDataTable<RecordData>();
   const [open, setOpen] = useState(false);
 
-  const visibleCols = () =>
-    table
-      .getVisibleLeafColumns()
-      .filter((c) => typeof c.accessorFn !== "undefined" && c.id !== "geojson")
-      .map((c) => c.id);
+  const visibleCols = useMemo(
+    () =>
+      table
+        .getVisibleLeafColumns()
+        .filter((c) => typeof c.accessorFn !== "undefined" && c.id !== "geojson")
+        .map((c) => c.id),
+    [table]
+  );
 
   const canDownloadAll = !!geoJsonData?.features?.length;
-  const canDownloadVisible = canDownloadAll && tableData.length > 0 && visibleCols().length > 0;
+  const canDownloadVisible = canDownloadAll && tableData.length > 0 && visibleCols.length > 0;
+
+  const downloadBlob = useCallback((blob: Blob, ext: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = timestampFilename(ext);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    setOpen(false);
+  }, []);
 
   const handleDownloadCsvVisible = () => {
-    const cols = visibleCols();
-    if (cols.length === 0 || !tableData.length) return;
-    const rows = tableData.map((row) => cols.map((col) => row[col] ?? ""));
-    downloadCsv(cols, rows, timestampFilename("csv"));
+    if (visibleCols.length === 0 || !tableData.length) return;
+    const rows = tableData.map((row) => visibleCols.map((col) => row[col] ?? ""));
+    downloadCsv(visibleCols, rows, timestampFilename("csv"));
     setOpen(false);
   };
 
@@ -57,11 +70,10 @@ export function ExportDropdown({
   };
 
   const handleDownloadGeoJsonVisible = () => {
-    const cols = visibleCols();
-    if (cols.length === 0 || !geoJsonData?.features) return;
+    if (visibleCols.length === 0 || !geoJsonData?.features) return;
     const filteredFeatures = geoJsonData.features.map((f) => ({
       ...f,
-      properties: cols.reduce(
+      properties: visibleCols.reduce(
         (acc, col) => {
           if (f.properties && col in f.properties) acc[col] = f.properties[col];
           return acc;
@@ -75,30 +87,12 @@ export function ExportDropdown({
     };
     const src = geoJsonData as { name?: unknown };
     if (src.name) filtered.name = src.name;
-    const blob = new Blob([JSON.stringify(filtered, null, 2)], { type: "application/geo+json" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = timestampFilename("geojson");
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    setOpen(false);
+    downloadBlob(new Blob([JSON.stringify(filtered, null, 2)], { type: "application/geo+json" }), "geojson");
   };
 
   const handleDownloadGeoJsonAll = () => {
     if (!geoJsonData?.features) return;
-    const blob = new Blob([JSON.stringify(geoJsonData, null, 2)], { type: "application/geo+json" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = timestampFilename("geojson");
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    setOpen(false);
+    downloadBlob(new Blob([JSON.stringify(geoJsonData, null, 2)], { type: "application/geo+json" }), "geojson");
   };
 
   return (

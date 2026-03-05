@@ -9,11 +9,17 @@ import {
   updateCommodityAction,
   deleteCommodityAction,
 } from './actions';
-import { CommodityForm, CommoditiesTable } from '@/components/commodities';
-import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
+import { CommodityForm } from '@/components/commodities';
+import { CrudDataTable } from '@/components/data-table/CrudDataTable';
 import Alert from '@/components/Alert';
-import { downloadCsv } from '@/lib/utils/downloadCsv';
+import { codeColumn, truncatedTextColumn, lastModifiedColumn } from '@/components/data-table/columnHelpers';
 import type { Commodity } from '@/types/models';
+
+const commodityColumns = [
+  codeColumn<Commodity>('id', 'Code'),
+  truncatedTextColumn<Commodity>('description', 'Description'),
+  lastModifiedColumn<Commodity>(),
+];
 
 type Mode = 'list' | 'edit' | 'create';
 type MessageType = { type: 'success' | 'error'; text: string } | null;
@@ -25,10 +31,8 @@ function CommoditiesContent() {
   const [mode, setMode] = useState<Mode>('list');
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Commodity>>({});
-  const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState<MessageType>(null);
   const [loading, setLoading] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const resetForm = useCallback(() => {
     setMode('list');
@@ -91,46 +95,18 @@ function CommoditiesContent() {
     }
   }, [mode, editForm, editingCode, refresh, resetForm, router]);
 
-  const handleDelete = useCallback(async (code: string) => {
-    setLoading(true);
-    setMessage(null);
-
-    try {
-      const result = await deleteCommodityAction(code);
-      if (!result.ok) throw new Error(result.error);
-      await refresh();
-      setDeleteConfirm(null);
-      setMessage({ type: 'success', text: 'Commodity deleted successfully' });
-      router.refresh();
-    } catch (error: unknown) {
-      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'An error occurred while deleting' });
-    } finally {
-      setLoading(false);
-    }
+  const afterMutate = useCallback(async () => {
+    await refresh();
+    router.refresh();
   }, [refresh, router]);
-
-  const handleExportCSV = useCallback(() => {
-    const header = ['code', 'description', 'updatedAt'];
-    const rows = commodities
-      .sort((a, b) => a.id.localeCompare(b.id))
-      .map((c) => [
-        c.id,
-        c.description ?? '',
-        c.updatedAt ? new Date(c.updatedAt).toISOString() : '',
-      ]);
-    downloadCsv(header, rows, `commodities_${new Date().toISOString().split('T')[0]}.csv`);
-  }, [commodities]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (deleteConfirm) setDeleteConfirm(null);
-        else if (mode !== 'list') resetForm();
-      }
+      if (e.key === 'Escape' && mode !== 'list') resetForm();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [deleteConfirm, mode, resetForm]);
+  }, [mode, resetForm]);
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
@@ -147,25 +123,17 @@ function CommoditiesContent() {
           onCancel={resetForm}
         />
       ) : (
-        <CommoditiesTable
-          commodities={commodities}
-          searchTerm={searchTerm}
-          isAdmin={isAdmin}
-          onSearchChange={setSearchTerm}
-          onEdit={startEdit}
-          onDelete={setDeleteConfirm}
-          onExportCSV={handleExportCSV}
-          onCreate={startCreate}
-        />
-      )}
-
-      {isAdmin && deleteConfirm && (
-        <DeleteConfirmModal
-          itemName={deleteConfirm}
+        <CrudDataTable<Commodity>
           entityLabel="commodity"
-          loading={loading}
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
+          columns={commodityColumns}
+          data={commodities}
+          title="Commodities"
+          isAdmin={isAdmin}
+          searchFields={['id', 'description']}
+          deleteAction={deleteCommodityAction}
+          onAfterDelete={afterMutate}
+          onEdit={startEdit}
+          onCreate={startCreate}
         />
       )}
     </div>

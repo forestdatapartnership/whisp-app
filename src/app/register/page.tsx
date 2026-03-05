@@ -19,6 +19,7 @@ const RegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
+  const [subscribeNotifications, setSubscribeNotifications] = useState(false);
   const router = useRouter();
 
   const isValidPassword = (password: string) => {
@@ -104,7 +105,7 @@ const RegisterPage: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, lastName, organization, email, password }),
+        body: JSON.stringify({ name, lastName, organization, email, password, subscribeNotifications }),
       });
 
       if (!response.ok) {
@@ -121,6 +122,7 @@ const RegisterPage: React.FC = () => {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
+      setSubscribeNotifications(false);
       
     } catch (err: any) {
       setError(err.message);
@@ -355,9 +357,29 @@ const RegisterPage: React.FC = () => {
               <div className="ml-3 text-sm">
                 <label htmlFor="terms" className="text-gray-300 cursor-pointer">
                   I agree to the{' '}
-                  <a href="https://openforis.org/whisp-terms-of-service" className="text-blue-400 hover:underline">
+                  <a href="/terms-of-service" target="_blank" className="text-blue-400 hover:underline">
                     Terms of Service
                   </a>
+                  {' '}and{' '}
+                  <a href="/privacy-policy" target="_blank" className="text-blue-400 hover:underline">
+                    Privacy Policy
+                  </a>
+                </label>
+              </div>
+            </div>
+            <div className="mb-4 flex items-start">
+              <div className="flex h-5 items-center">
+                <input
+                  id="subscribeNotifications"
+                  type="checkbox"
+                  checked={subscribeNotifications}
+                  onChange={(e) => setSubscribeNotifications(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800"
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label htmlFor="subscribeNotifications" className="text-gray-300 cursor-pointer">
+                  Subscribe to service notifications (optional)
                 </label>
               </div>
             </div>

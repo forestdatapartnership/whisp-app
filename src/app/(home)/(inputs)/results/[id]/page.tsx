@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/Button'
 import StatusCard from '@/components/StatusCard'
 import { useStatusSSE } from '@/lib/hooks/useStatusSSE'
 import { useStatusPolling } from '@/lib/hooks/useStatusPolling'
-import { DataTable } from "@/components/results/DataTable"
+import { DataTable } from "@/components/data-table/DataTable"
+import { AnalysisColumnToggle } from "@/components/results/AnalysisColumnToggle"
+import { ExportDropdown } from "@/components/results/ExportDropdown"
 import { useStore } from "@/store";
 import { SystemCode } from '@/types/systemCodes'
 import './styles.css'
@@ -24,6 +26,7 @@ import { validateAndProcessGeoJSON, RecordData } from '@/lib/utils/geojsonUtils'
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
 import { useResultFields } from '@/lib/contexts/ResultFieldsContext';
 import { formatColumnName } from '@/lib/utils/formatColumnName';
+import { formatAnalysisCellValue } from '@/lib/utils/formatters';
 
 // Dynamically import MapView with no SSR to avoid window undefined error
 const MapView = dynamic(() => import("@/components/results/MapView"), {
@@ -142,7 +145,7 @@ export default function ResultsPage() {
     } catch (error) {
       setDataError('Failed to process analysis results');
     }
-  }, []);
+  }, [createColumnDefs]);
 
   const handleCompleted = useCallback((resultData: any) => {
     if (resultData) {
@@ -323,9 +326,19 @@ export default function ResultsPage() {
               data={tableData}
               onRowClick={(rowIndex) => setSelectedRowIndex(rowIndex)}
               selectedRowIndex={selectedRowIndex}
-              showExternalIdByDefault={hasExternalIds}
+              initialColumnVisibility={{ external_id: hasExternalIds }}
               defaultSortColumnId={defaultSortColumnId}
-              geoJsonData={geoJsonData}
+              formatCellValue={formatAnalysisCellValue}
+              searchFields={hasExternalIds ? ['plotId', 'external_id'] : ['plotId']}
+              toolbarActions={
+                <>
+                  <AnalysisColumnToggle />
+                  <ExportDropdown
+                    tableData={tableData}
+                    geoJsonData={geoJsonData}
+                  />
+                </>
+              }
             />
           </div>
 
