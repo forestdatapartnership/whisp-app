@@ -116,16 +116,6 @@ const DataSubmission: React.FC = () => {
                 {renderModeSelector()}
                 
                 {renderContent()}
-                
-                <div className="flex items-center justify-center mt-4">
-                    <Link 
-                        href="https://openforis.org/whisp-terms-of-service/" 
-                        target="_blank" 
-                        className="text-blue-500 hover:underline"
-                    >
-                        Terms of Service
-                    </Link>
-                </div>
             </div>
         </div>
     );
