@@ -1,10 +1,10 @@
 # WHISP Privacy Policy
 
-**Last updated:** March 2025
+**Last updated:** March 2026
 
-## 1. Data Controller
+## 1. About This Policy
 
-WHISP ("What is in that plot?") is developed and maintained by the **Forest Data Partnership** under the **Food and Agriculture Organization of the United Nations (FAO)** through the **OpenForis** initiative.
+WHISP ("What is in that plot?") is developed and maintained by the **Forest Data Partnership** under the **Food and Agriculture Organization of the United Nations (FAO)** through the **OpenForis** initiative. As a UN programme, WHISP operates under FAO's internal data protection principles rather than any single national or regional legal framework. This policy explains clearly and honestly what data we collect, how we use it, and the controls we give you over your information.
 
 - **Website:** [https://whisp.openforis.org](https://whisp.openforis.org)
 - **Contact:** [Open-Foris@fao.org](mailto:Open-Foris@fao.org)
@@ -16,41 +16,41 @@ WHISP ("What is in that plot?") is developed and maintained by the **Forest Data
 
 When you register for a WHISP account, we collect:
 
-| Data | Purpose | Lawful Basis |
-|---|---|---|
-| **First name, last name** | Account identification | Contractual necessity (Art. 6(1)(b)) |
-| **Email address** | Authentication, account verification, password reset, notifications | Contractual necessity (Art. 6(1)(b)) |
-| **Password** | Authentication (stored as a bcrypt hash, never in plaintext) | Contractual necessity (Art. 6(1)(b)) |
-| **Organisation** (optional) | User profile context | Consent (Art. 6(1)(a)) |
+| Data | Purpose |
+|---|---|
+| **First name, last name** | Account identification |
+| **Email address** | Authentication, account verification, password reset, notifications |
+| **Password** | Authentication (stored as a bcrypt hash, never in plaintext) |
+| **Organisation** (optional) | User profile context |
 
 ### 2.2 Technical Data
 
 When you use the WHISP service, we automatically collect:
 
-| Data | Purpose | Lawful Basis | Retention |
-|---|---|---|---|
-| **IP address** | Security, abuse prevention, rate limiting | Legitimate interest (Art. 6(1)(f)) | Anonymised after configurable retention period (default: 90 days) |
-| **User agent** | Debugging, compatibility | Legitimate interest (Art. 6(1)(f)) | Log rotation policy |
-| **API key** | API access control and rate limiting | Contractual necessity (Art. 6(1)(b)) | Until revoked or account deleted |
+| Data | Purpose | Retention |
+|---|---|---|
+| **IP address** | Security, abuse prevention, rate limiting | Anonymised after configurable retention period (default: 90 days) |
+| **User agent** | Debugging, compatibility | Log rotation policy |
+| **API key** | API access control and rate limiting | Until revoked or account deleted |
 
 ### 2.3 Analysis Data
 
 When you submit geometries for geospatial analysis:
 
-| Data | Purpose | Lawful Basis |
-|---|---|---|
-| **Geometries** (GeoJSON, WKT, or GeoIDs) | Geospatial risk analysis via Google Earth Engine | Contractual necessity (Art. 6(1)(b)) |
-| **Analysis options** (technical parameters) | Configuring the analysis run | Contractual necessity (Art. 6(1)(b)) |
-| **Analysis job metadata** (timestamps, status, agent type, endpoint) | Service operation, auditing, debugging | Legitimate interest (Art. 6(1)(f)) |
+| Data | Purpose |
+|---|---|
+| **Geometries** (GeoJSON, WKT, or GeoIDs) | Geospatial risk analysis via Google Earth Engine |
+| **Analysis options** (technical parameters) | Configuring the analysis run |
+| **Analysis job metadata** (timestamps, status, agent type, endpoint) | Service operation, auditing, debugging |
 
-Geometries may be sensitive depending on context (e.g. a farm boundary linked to a person). However, WHISP's analysis engine processes geometries **without any user-identifying context** — see the [GEE Data Separation Annex](/gee-data-separation) for technical evidence.
+Geometries may be sensitive depending on context (e.g. a farm boundary linked to a person). WHISP's analysis engine processes geometries **without any user-identifying context** — see the [GEE Data Separation Annex](/gee-data-separation) for technical evidence.
 
 ### 2.4 Notification Data
 
-| Data | Purpose | Lawful Basis |
-|---|---|---|
-| **Email address** | Service notifications | Legitimate interest (Art. 6(1)(f)) |
-| **Subscription status** | Managing notification preferences | Legitimate interest (Art. 6(1)(f)) |
+| Data | Purpose |
+|---|---|
+| **Email address** | Service notifications |
+| **Subscription status** | Managing notification preferences |
 
 ## 3. How We Use Your Data
 
@@ -108,36 +108,36 @@ These cookies are:
 
 WHISP does not use any analytics, tracking, or advertising cookies.
 
-## 7. Your Rights Under GDPR
+## 7. Your Data, Your Control
 
-You have the following rights regarding your personal data:
+We believe you should have meaningful control over your personal data. Here is what WHISP provides:
 
-### 7.1 Right of Access (Art. 15)
+### 7.1 Access Your Data
 
 You can view your personal data at any time through the **Settings** page in your WHISP account.
 
-### 7.2 Right to Rectification (Art. 16)
+### 7.2 Correct Your Data
 
-You can update your name, last name, and organisation through the **Settings** page. To change your email address, please contact the data controller.
+You can update your first name, last name, and organisation through the **Settings** page. To change your email address, please contact us.
 
-### 7.3 Right to Erasure (Art. 17)
+### 7.3 Delete Your Account
 
-You can delete your account and all associated data through the **Settings** page. Account deletion:
+You can permanently delete your account and all associated data through the **Settings** page. Account deletion:
 - Requires password confirmation
 - Permanently deletes your user profile, API keys, verification tokens, and password reset tokens
 - Anonymises associated analysis job records
 
-### 7.4 Right to Restrict Processing (Art. 18)
+### 7.4 Limit Data Processing
 
-You can restrict processing by revoking your API key, unsubscribing from notifications, or deleting your account.
+You can reduce the data we actively process by revoking your API key, unsubscribing from notifications, or deleting your account entirely.
 
-### 7.5 Right to Object (Art. 21)
+### 7.5 Opt Out of Notifications
 
-You may object to processing based on legitimate interest by contacting the data controller. You can unsubscribe from notifications at any time.
+You can unsubscribe from service notifications at any time via the **Settings** page or by contacting us.
 
-### 7.6 Right to Lodge a Complaint
+### 7.6 Raise a Concern
 
-You have the right to lodge a complaint with a supervisory authority if you believe your data protection rights have been violated.
+If you have concerns about how your data is handled, we encourage you to contact us directly. We take all data protection concerns seriously and will respond promptly.
 
 ## 8. Data Security
 
@@ -157,6 +157,6 @@ We may update this privacy policy from time to time. Changes will be reflected i
 
 ## 10. Contact
 
-For questions about this privacy policy or to exercise your data protection rights, contact:
+For questions about this privacy policy or your personal data, contact:
 
 [Open-Foris@fao.org](mailto:Open-Foris@fao.org)
