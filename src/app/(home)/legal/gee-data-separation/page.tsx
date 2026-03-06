@@ -5,5 +5,12 @@ export const metadata = {
 };
 
 export default function GeeDataSeparationPage() {
-  return <MarkdownPage filePath="docs/gee-data-separation.md" />;
+  return (
+    <>
+      <script dangerouslySetInnerHTML={{
+        __html: 'window.scrollTo(0, 0);'
+      }} />
+      <MarkdownPage filePath="docs/gee-data-separation.md" />
+    </>
+  );
 }

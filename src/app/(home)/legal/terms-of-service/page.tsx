@@ -5,5 +5,12 @@ export const metadata = {
 };
 
 export default function TermsOfServicePage() {
-  return <MarkdownPage filePath="docs/terms-of-service.md" />;
+  return (
+    <>
+      <script dangerouslySetInnerHTML={{
+        __html: 'window.scrollTo(0, 0);'
+      }} />
+      <MarkdownPage filePath="docs/terms-of-service.md" />
+    </>
+  );
 }

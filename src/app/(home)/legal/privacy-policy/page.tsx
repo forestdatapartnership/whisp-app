@@ -5,5 +5,12 @@ export const metadata = {
 };
 
 export default function PrivacyPolicyPage() {
-  return <MarkdownPage filePath="docs/privacy-policy.md" />;
+  return (
+    <>
+      <script dangerouslySetInnerHTML={{
+        __html: 'window.scrollTo(0, 0);'
+      }} />
+      <MarkdownPage filePath="docs/privacy-policy.md" />
+    </>
+  );
 }
