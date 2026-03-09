@@ -98,12 +98,6 @@ export const analyzePlots = async (context: AnalysisJob, featureCollection: any,
             }
         }
     }
-    await createAnalysisJob({
-        ...context,
-        featureCount: geometryCount,
-        analysisOptions: context.analysisOptions ?? featureCollection.analysisOptions ?? undefined,
-        status: SystemCode.ANALYSIS_PROCESSING,
-    });
     
     const maxGeometryLimit = isAsync ? getMaxGeometryLimit() : getMaxGeometryLimitSync();
 
@@ -117,6 +111,14 @@ export const analyzePlots = async (context: AnalysisJob, featureCollection: any,
 
     log("info", `Starting analysis - async mode: ${isAsync}, geometry count: ${geometryCount}`, LOG_SOURCE);
 
+    await createAnalysisJob({
+        ...context,
+        featureCount: geometryCount,
+        analysisOptions: context.analysisOptions ?? featureCollection.analysisOptions ?? undefined,
+        status: SystemCode.ANALYSIS_PROCESSING,
+    });
+    
+    
     // Check for legacy format header
     const useLegacyFormat = req?.headers.get('x-legacy-format') === 'true';
 
