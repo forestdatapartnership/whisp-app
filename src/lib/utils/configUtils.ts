@@ -71,7 +71,11 @@ export function getLogLevel(config?: PublicConfig): string {
 }
 
 export function getAppVersion(): string {
-  return process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0'; // bundled at build time in next.config.js
+  return process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
+}
+
+export function getWhispPythonVersion(): string {
+  return process.env.NEXT_PUBLIC_WHISP_PYTHON_VERSION || 'unknown';
 }
 
 export function getGoogleMapsApiKey(config?: PublicConfig): string | undefined {
@@ -80,22 +84,4 @@ export function getGoogleMapsApiKey(config?: PublicConfig): string | undefined {
 
 export function getUIClientSecret(config?: PublicConfig): string {
   return getConfig(config, 'NEXT_PUBLIC_UI_CLIENT_SECRET', 'whisp-ui-client-access');
-}
-
-export function getWhispPythonVersion(): string {
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const requirementsPath = path.join(process.cwd(), 'requirements.txt');
-    const requirementsContent = fs.readFileSync(requirementsPath, 'utf-8');
-    const lines = requirementsContent.split('\n');
-    const whispLine = lines.find((line: string) => line.trim().startsWith('openforis-whisp=='));
-    if (whispLine) {
-      const version = whispLine.split('==')[1]?.trim();
-      return version || 'unknown';
-    }
-    return 'unknown';
-  } catch (error) {
-    return 'unknown';
-  }
 }

@@ -2,9 +2,9 @@ html {
   scroll-behavior: smooth;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@config "../../tailwind.config.js";
 
 :root {
   --foreground-rgb: 255, 255, 255; /* Dark theme text color */

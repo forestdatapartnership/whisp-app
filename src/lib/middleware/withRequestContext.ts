@@ -14,7 +14,7 @@ export function withAnalysisJobContext(
     const token = uuidv4();
     const createdAt = new Date();
     const agent = req.headers.get('x-whisp-agent') === 'ui' ? 'ui' : 'api';
-    const ipAddress = req.ip || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || undefined;
+    const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || undefined;
     const apiVersion = getAppVersion();
     const endpoint = req.nextUrl?.pathname;
 

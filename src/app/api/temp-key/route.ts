@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withLogging } from "@/lib/api-middleware/withLogging";
-import { compose } from "@/lib/api-middleware/compose";
+import { withLogging } from "@/lib/middleware/withLogging";
+import { compose } from "@/lib/middleware/compose";
 import { LogFunction } from "@/lib/logger";
 import { getPool } from "@/lib/dal/db";
 import { headers } from "next/headers";
-import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
+import { withErrorHandling } from "@/lib/middleware/withErrorHandling";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 
@@ -17,7 +17,7 @@ export const GET = compose(
   const logSource = "temp-key/route.ts";
   
   // Get request headers
-  const headersList = headers();
+  const headersList = await headers();
   const origin = headersList.get('origin');
   const clientSecret = headersList.get('x-client-secret');
 

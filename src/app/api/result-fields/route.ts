@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllResultFields } from '@/lib/dal/resultFieldsService';
-import { withLogging } from '@/lib/api-middleware/withLogging';
-import { withErrorHandling } from '@/lib/api-middleware/withErrorHandling';
-import { compose } from '@/lib/api-middleware/compose';
-import { useResponse } from '@/lib/api-middleware/responses';
+import { withLogging } from '@/lib/middleware/withLogging';
+import { withErrorHandling } from '@/lib/middleware/withErrorHandling';
+import { compose } from '@/lib/middleware/compose';
+import { useResponse } from '@/lib/middleware/responses';
 import { SystemCode } from '@/types/systemCodes';
 import { LogFunction } from '@/lib/logger';
 

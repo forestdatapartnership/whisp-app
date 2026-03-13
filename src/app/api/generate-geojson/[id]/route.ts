@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from 'fs/promises';
 import path from "path";
 
-export async function GET(request: NextRequest, { params }: any) {
-
-	if (!params || !params.id) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+	const resolved = await params;
+	if (!resolved?.id) {
 		return NextResponse.json({ error: 'ID parameter is missing.' }, { status: 400 });
 	}
-
-	const { id } = params;
+	const { id } = resolved;
 
 	try {
 		const filePath = path.join(process.cwd(), 'temp');

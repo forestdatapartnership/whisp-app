@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllResultFields } from '@/lib/dal/resultFieldsService';
 import { buildWhispColumnsCsv } from '@/lib/utils/whispColumnsCsv';
 import type { ResultField } from '@/types/models';
-import { withLogging } from '@/lib/api-middleware/withLogging';
-import { withErrorHandling } from '@/lib/api-middleware/withErrorHandling';
-import { compose } from '@/lib/api-middleware/compose';
+import { withLogging } from '@/lib/middleware/withLogging';
+import { withErrorHandling } from '@/lib/middleware/withErrorHandling';
+import { compose } from '@/lib/middleware/compose';
 import { LogFunction } from '@/lib/logger';
 
 export const GET = compose(

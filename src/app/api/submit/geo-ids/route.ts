@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJsonfromGeoId } from "@/lib/utils/assetRegistry";
 import { analyzePlots } from "@/lib/analysis/analizePlots";
-import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
+import { withErrorHandling } from "@/lib/middleware/withErrorHandling";
 import { SystemCode } from "@/types/systemCodes";
-import { withAnalysisJobJsonBody } from "@/lib/api-middleware/withJsonBody";
-import { withAnalysisJobContext } from "@/lib/api-middleware/withRequestContext";
+import { withAnalysisJobJsonBody } from "@/lib/middleware/withJsonBody";
+import { withAnalysisJobContext } from "@/lib/middleware/withRequestContext";
 import { AnalysisJob } from "@/types/models/analysisJob";
-import { withApiKey } from "@/lib/api-middleware/withApiKey";
-import { withLogging } from "@/lib/api-middleware/withLogging";
+import { withApiKey } from "@/lib/middleware/withApiKey";
+import { withLogging } from "@/lib/middleware/withLogging";
 import { LogFunction } from "@/lib/logger";
-import { compose } from "@/lib/api-middleware/compose";
+import { compose } from "@/lib/middleware/compose";
 import { SystemError } from "@/types/systemError";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
 

@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from 'fs/promises';
 import path from "path";
 
-export async function GET(request: NextRequest, { params } : any ) {
-
-    const { id } = params;
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     
     try {
 

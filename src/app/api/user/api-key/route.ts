@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { compose } from "@/lib/api-middleware/compose";
-import { withLogging } from "@/lib/api-middleware/withLogging";
-import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
-import { withAuthUser, AuthUser } from "@/lib/api-middleware/withAuthUser";
+import { compose } from "@/lib/middleware/compose";
+import { withLogging } from "@/lib/middleware/withLogging";
+import { withErrorHandling } from "@/lib/middleware/withErrorHandling";
+import { withAuthUser, AuthUser } from "@/lib/middleware/withAuthUser";
 import { getPool } from "@/lib/dal/db";
 import { randomUUID } from "crypto";
 import { QueryResult } from "pg";
 import { SystemCode } from "@/types/systemCodes";
-import { useResponse } from "@/lib/api-middleware/responses";
+import { useResponse } from "@/lib/middleware/responses";
 import { LogFunction } from "@/lib/logger";
 
 export const GET = compose(

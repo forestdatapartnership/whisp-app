@@ -2,21 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { ApiKey, ApiResponse } from "@/types/api";
 import { SystemCode } from "@/types/systemCodes";
-import { useResponse, useResponseWithFormat } from "@/lib/api-middleware/responses";
-import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
-import { withLogging } from "@/lib/api-middleware/withLogging";
-import { compose } from "@/lib/api-middleware/compose";
+import { useResponse, useResponseWithFormat } from "@/lib/middleware/responses";
+import { withErrorHandling } from "@/lib/middleware/withErrorHandling";
+import { withLogging } from "@/lib/middleware/withLogging";
+import { compose } from "@/lib/middleware/compose";
 import { LogFunction } from "@/lib/logger";
 import { fileExists, readFile } from "@/lib/utils/fileUtils";
 import { jobCache } from "@/lib/utils/jobCache";
-import { withApiKey } from "@/lib/api-middleware/withApiKey";
+import { withApiKey } from "@/lib/middleware/withApiKey";
 
 export const GET = compose(
   withLogging,
   withErrorHandling,
   withApiKey
-)(async (request: NextRequest, apiKey: ApiKey, log: LogFunction, { params }: any): Promise<NextResponse<ApiResponse>> => {
-    const { token } = params;
+)(async (request: NextRequest, apiKey: ApiKey, log: LogFunction, { params }: { params: Promise<{ token: string }> }): Promise<NextResponse<ApiResponse>> => {
+    const { token } = await params;
     const filePath = path.join(process.cwd(), 'temp');
     const metadata = jobCache.get(token);
     

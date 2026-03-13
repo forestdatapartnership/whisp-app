@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/dal/db';
-import { withLogging } from '@/lib/api-middleware/withLogging';
-import { withJsonBody } from '@/lib/api-middleware/withJsonBody';
-import { compose } from '@/lib/api-middleware/compose';
+import { withLogging } from '@/lib/middleware/withLogging';
+import { withJsonBody } from '@/lib/middleware/withJsonBody';
+import { compose } from '@/lib/middleware/compose';
 import { SystemCode } from '@/types/systemCodes';
-import { useResponse } from '@/lib/api-middleware/responses';
-import { withErrorHandling } from '@/lib/api-middleware/withErrorHandling';
+import { useResponse } from '@/lib/middleware/responses';
+import { withErrorHandling } from '@/lib/middleware/withErrorHandling';
 import { validateRequiredFields } from '@/lib/utils/fieldValidation';
 import { SystemError } from '@/types/systemError';
 import { LogFunction } from '@/lib/logger';

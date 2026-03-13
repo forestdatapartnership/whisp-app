@@ -1,11 +1,11 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from "next/server";
-import { useResponse } from "@/lib/api-middleware/responses";
+import { useResponse } from "@/lib/middleware/responses";
 import { SystemCode } from "@/types/systemCodes";
-import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
-import { withLogging } from "@/lib/api-middleware/withLogging";
-import { compose } from "@/lib/api-middleware/compose";
+import { withErrorHandling } from "@/lib/middleware/withErrorHandling";
+import { withLogging } from "@/lib/middleware/withLogging";
+import { compose } from "@/lib/middleware/compose";
 import { LogFunction } from "@/lib/logger";
 import { verifyToken, createTokens, setTokenCookies } from "@/lib/auth";
 

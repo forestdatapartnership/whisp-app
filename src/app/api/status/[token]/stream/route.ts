@@ -4,10 +4,10 @@ import { promises as fs } from "fs";
 import { sseEmitter } from "@/lib/utils/sseEmitter";
 import { jobCache } from "@/lib/utils/jobCache";
 import { SystemCode } from "@/types/systemCodes";
-import { compose } from "@/lib/api-middleware/compose";
-import { withLogging } from "@/lib/api-middleware/withLogging";
-import { withErrorHandling } from "@/lib/api-middleware/withErrorHandling";
-import { withApiKey } from "@/lib/api-middleware/withApiKey";
+import { compose } from "@/lib/middleware/compose";
+import { withLogging } from "@/lib/middleware/withLogging";
+import { withErrorHandling } from "@/lib/middleware/withErrorHandling";
+import { withApiKey } from "@/lib/middleware/withApiKey";
 import { ApiKey } from "@/types/api";
 import { LogFunction } from "@/lib/logger";
 
@@ -19,8 +19,8 @@ export const GET = compose(
   withLogging,
   withErrorHandling,
   withApiKey
-)(async (request: NextRequest, apiKey: ApiKey, log: LogFunction, { params }: { params: { token: string } }) => {
-  const { token } = params;
+)(async (request: NextRequest, apiKey: ApiKey, log: LogFunction, { params }: { params: Promise<{ token: string }> }) => {
+  const { token } = await params;
   const filePath = path.join(process.cwd(), 'temp');
   const encoder = new TextEncoder();
 

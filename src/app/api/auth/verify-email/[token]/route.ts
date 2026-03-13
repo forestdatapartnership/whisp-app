@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from "@/lib/dal/db";
-import { withLogging } from '@/lib/api-middleware/withLogging';
-import { withErrorHandling } from '@/lib/api-middleware/withErrorHandling';
-import { compose } from '@/lib/api-middleware/compose';
+import { withLogging } from '@/lib/middleware/withLogging';
+import { withErrorHandling } from '@/lib/middleware/withErrorHandling';
+import { compose } from '@/lib/middleware/compose';
 import { SystemCode } from '@/types/systemCodes';
-import { useResponse } from '@/lib/api-middleware/responses';
+import { useResponse } from '@/lib/middleware/responses';
 import { SystemError } from '@/types/systemError';
 
 export const GET = compose(

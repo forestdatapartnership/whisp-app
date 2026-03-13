@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  experimental: {
-    instrumentationHook: true,
-  },
   logging: {
     fetches: {
       fullUrl: false,
@@ -31,16 +28,17 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_APP_VERSION: require('./package.json').version,
-  },
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
-      };
-    }
-    return config;
+    NEXT_PUBLIC_WHISP_PYTHON_VERSION: (() => {
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const content = fs.readFileSync(path.join(__dirname, 'requirements.txt'), 'utf-8');
+        const line = content.split('\n').find((l) => l.trim().startsWith('openforis-whisp=='));
+        return line ? (line.split('==')[1]?.trim() || 'unknown') : 'unknown';
+      } catch {
+        return 'unknown';
+      }
+    })(),
   },
 };
 

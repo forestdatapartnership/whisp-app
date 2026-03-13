@@ -1,4 +1,4 @@
-import { useResponse } from "@/lib/api-middleware/responses";
+import { useResponse } from "@/lib/middleware/responses";
 import { geojsonToWKT } from "@terraformer/wkt";
 
 /**

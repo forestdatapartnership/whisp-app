@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import { getPool } from "@/lib/dal/db";
 import { analyzeGeoJson } from "@/lib/analysis/runPython";
 import { LogFunction } from "@/lib/logger";
-import { useResponse } from "@/lib/api-middleware/responses";
+import { useResponse } from "@/lib/middleware/responses";
 import { SystemCode, getSystemCodeInfo } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 import { AnalysisJob } from "@/types/models/analysisJob";

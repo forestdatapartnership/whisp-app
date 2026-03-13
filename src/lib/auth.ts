@@ -79,7 +79,7 @@ export function setTokenCookies(
 }
 
 export async function getAuthUser(req?: NextRequest): Promise<AuthUser | null> {
-  const token = req ? req.cookies.get('token')?.value : cookies().get('token')?.value
+  const token = req ? req.cookies.get('token')?.value : (await cookies()).get('token')?.value
   return verifyToken(token)
 }
 

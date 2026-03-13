@@ -3,7 +3,7 @@ import { LogFunction, useLogger } from '../logger';
 
 function getBaseContext(req: NextRequest) {
     return {
-        ip: req.ip || req.headers.get('X-Forwarded-For'),
+        ip: req.headers.get('X-Forwarded-For') || req.headers.get('x-real-ip'),
         method: req.method,
         path: req.nextUrl?.pathname,
         userAgent: req.headers?.get?.('user-agent'),
