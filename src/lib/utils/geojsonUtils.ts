@@ -279,7 +279,7 @@ export const processGeoJSONData = (geoJSON: any): RecordData[] => {
   return geoJSON.features.map((feature: Feature<Geometry, GeoJsonProperties>) => {
     return {
       ...feature.properties,
-      geometry: feature.geometry
+      geo: feature.geometry
     };
   });
 };

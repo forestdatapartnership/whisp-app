@@ -70,7 +70,7 @@ export const formatAnalysisCellValue = (column: string, value: any) => {
     try {
       if (
         column === "geojson" ||
-        column === "geometry" ||
+        column === "geo" ||
         (value.type && (value.coordinates || value.geometries))
       ) {
         return `[${value.type} Geometry]`;
