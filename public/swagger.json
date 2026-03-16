@@ -166,6 +166,11 @@
                 "type": "string",
                 "description": "Analysis job not found (HTTP 404)",
                 "example": "Analysis job not found."
+              },
+              "analysis_too_many_concurrent": {
+                "type": "string",
+                "description": "Too many concurrent analyses (HTTP 429)",
+                "example": "Too many concurrent analyses. Please wait for existing analyses to finish."
               }
             }
           },
@@ -208,6 +213,11 @@
                 "description": "Too many geometries provided (HTTP 400)",
                 "example": "Too many geometries provided. Maximum allowed is 500."
               },
+              "validation_request_body_too_large": {
+                "type": "string",
+                "description": "Request body too large (HTTP 413)",
+                "example": "Request body is too large. Maximum allowed size exceeded."
+              },
               "validation_invalid_external_id_column": {
                 "type": "string",
                 "description": "External ID column not found in GeoJSON features (HTTP 400)",
@@ -228,6 +238,11 @@
                 "type": "string",
                 "description": "Invalid or expired API key (HTTP 401)",
                 "example": "Invalid or expired API key."
+              },
+              "auth_rate_limit_exceeded": {
+                "type": "string",
+                "description": "Rate limit exceeded (HTTP 429)",
+                "example": "Rate limit exceeded. Try again in {0} seconds."
               }
             }
           }

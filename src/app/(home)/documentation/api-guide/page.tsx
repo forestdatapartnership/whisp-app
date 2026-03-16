@@ -71,10 +71,18 @@ const DocumentationPage = () => {
                     Supported Request Body Structure
                   </CardTitle>
                   <CardDescription className="text-gray-400">
-                    The API accepts two formats for geographic data submission, both with optional analysis configuration.
+                    The API accepts two formats for geographic data submission, both with optional analysis configuration. You can process multiple polygons in a single request.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <Card className="bg-gray-900/80 border-gray-600">
+                    <CardContent className="pt-4">
+                      <div className="font-medium text-white mb-2">Multiple Polygons in One Request</div>
+                      <p className="text-sm text-gray-400 mb-2">
+                        Both endpoints support batch processing. For GeoJSON, add multiple features to the <code className="bg-black/40 px-1 rounded">features</code> array. For WKT, use MULTIPOLYGON to include several polygons. Each polygon is analyzed independently and results are returned in the same order. The geometry limit applies to the total count of individual polygons (e.g. a FeatureCollection with 5 features counts as 5; a MULTIPOLYGON with 3 polygons counts as 3).
+                      </p>
+                    </CardContent>
+                  </Card>
                   {/* GeoJSON Format Collapsible */}
                   <Collapsible open={isGeoJSONOpen} onOpenChange={setIsGeoJSONOpen}>
                     <CollapsibleTrigger asChild>
@@ -109,6 +117,15 @@ const DocumentationPage = () => {
           [-1.6128122806549074, 6.159344862841789],
           [-1.6128337383270266, 6.15914219166122],
           [-1.612173914909363, 6.160144879904404]
+        ]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[
+          [-1.5, 6.2], [-1.5, 6.1], [-1.4, 6.1], [-1.5, 6.2]
         ]]]
       }
     }
@@ -161,7 +178,10 @@ const DocumentationPage = () => {
                             </pre>
                           </div>
                           <div className="mt-3 p-2 bg-gray-800/50 rounded text-xs text-gray-400">
-                            <strong>Other WKT Types:</strong> POINT(lng lat), MULTIPOINT((lng1 lat1), (lng2 lat2)), MULTIPOLYGON(...), etc.
+                            <strong>Multiple polygons:</strong> Use MULTIPOLYGON(((lng1 lat1,...)),((lng2 lat2,...))) to submit several polygons in one request. Each polygon is analyzed separately.
+                          </div>
+                          <div className="mt-2 p-2 bg-gray-800/50 rounded text-xs text-gray-400">
+                            <strong>Other WKT Types:</strong> POINT(lng lat), MULTIPOINT((lng1 lat1), (lng2 lat2)), etc.
                           </div>
                         </CardContent>
                       </Card>
@@ -282,6 +302,14 @@ const DocumentationPage = () => {
                             <strong>Request Size Limit:</strong> Maximum {maxRequestSizeMB} MB per request
                           </li>
                         )}
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <strong>Rate Limit:</strong> Per API key, configurable (default: 30 requests per 60 seconds)
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <strong>Max Concurrent Analyses:</strong> Per API key, configurable (default: 2 running jobs)
+                        </li>
                       </ul>
                     </CardContent>
                   </Card>
@@ -385,51 +413,107 @@ const DocumentationPage = () => {
                     <Card className="bg-gray-900 border-gray-600">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-white text-base flex items-center gap-2">
+                          🔐 Auth & System Codes
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0 space-y-2">
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">auth_missing_api_key</Badge>
+                          <span className="text-gray-400 text-sm">No API key (401)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">auth_invalid_api_key</Badge>
+                          <span className="text-gray-400 text-sm">Invalid key (401)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">auth_rate_limit_exceeded</Badge>
+                          <span className="text-gray-400 text-sm">Rate limit (429)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">system_missing_request_body</Badge>
+                          <span className="text-gray-400 text-sm">No body (400)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">system_internal_server_error</Badge>
+                          <span className="text-gray-400 text-sm">Server error (500)</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gray-900 border-gray-600">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-white text-base flex items-center gap-2">
                           🔄 Analysis Codes
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-0 space-y-2">
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline" className="text-gray-300 border-gray-500">analysis_processing</Badge>
-                          <span className="text-gray-400 text-sm">Running</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">analysis_processing</Badge>
+                          <span className="text-gray-400 text-sm">Running (200)</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline" className="text-gray-300 border-gray-500">analysis_completed</Badge>
-                          <span className="text-gray-400 text-sm">Success</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">analysis_completed</Badge>
+                          <span className="text-gray-400 text-sm">Success (200)</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline" className="text-gray-300 border-gray-500">analysis_error</Badge>
-                          <span className="text-gray-400 text-sm">Failed</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">analysis_error</Badge>
+                          <span className="text-gray-400 text-sm">Failed (500)</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline" className="text-gray-300 border-gray-500">analysis_timeout</Badge>
-                          <span className="text-gray-400 text-sm">Timed out</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">analysis_timeout</Badge>
+                          <span className="text-gray-400 text-sm">Timed out (408)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">analysis_job_not_found</Badge>
+                          <span className="text-gray-400 text-sm">Job not found (404)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">analysis_too_many_concurrent</Badge>
+                          <span className="text-gray-400 text-sm">Too many jobs (429)</span>
                         </div>
                       </CardContent>
                     </Card>
-                    
-                    <Card className="bg-gray-900 border-gray-600">
+                    <Card className="bg-gray-900 border-gray-600 md:col-span-2">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-white text-base flex items-center gap-2">
                           ❌ Validation Codes
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-0 space-y-2">
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline" className="text-gray-300 border-gray-500">validation_invalid_geojson</Badge>
-                          <span className="text-gray-400 text-sm">Bad GeoJSON</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">validation_invalid_geojson</Badge>
+                          <span className="text-gray-400 text-sm">Bad GeoJSON (400)</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline" className="text-gray-300 border-gray-500">validation_invalid_wkt</Badge>
-                          <span className="text-gray-400 text-sm">Bad WKT</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">validation_invalid_wkt</Badge>
+                          <span className="text-gray-400 text-sm">Bad WKT (400)</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline" className="text-gray-300 border-gray-500">validation_too_many_geometries</Badge>
-                          <span className="text-gray-400 text-sm">Limit exceeded</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">validation_too_many_geometries</Badge>
+                          <span className="text-gray-400 text-sm">Limit exceeded (400)</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline" className="text-gray-300 border-gray-500">auth_invalid_api_key</Badge>
-                          <span className="text-gray-400 text-sm">Auth error</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">validation_invalid_coordinates</Badge>
+                          <span className="text-gray-400 text-sm">Invalid coords (400)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">validation_invalid_crs</Badge>
+                          <span className="text-gray-400 text-sm">Invalid CRS (400)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">validation_coordinates_in_meters</Badge>
+                          <span className="text-gray-400 text-sm">Coords in meters (400)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">validation_request_body_too_large</Badge>
+                          <span className="text-gray-400 text-sm">Body too large (413)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">validation_missing_required_fields</Badge>
+                          <span className="text-gray-400 text-sm">Missing fields (400)</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <Badge variant="outline" className="text-gray-300 border-gray-500 text-xs">validation_invalid_external_id_column</Badge>
+                          <span className="text-gray-400 text-sm">Bad external ID (400)</span>
                         </div>
                       </CardContent>
                     </Card>
