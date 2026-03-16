@@ -2,7 +2,7 @@ import { getPool } from '@/lib/dal/db';
 import { useLogger } from '@/lib/logger';
 
 const DEFAULT_RETENTION_DAYS = 90;
-const CRON_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CRON_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 function getRetentionDays(): number {
   const value = process.env.PII_RETENTION_DAYS;
@@ -22,15 +22,12 @@ async function anonymizeExpiredPii(): Promise<void> {
       [retentionDays]
     );
 
-    if (result.rows.length > 0) {
-      for (const row of result.rows) {
-        logger.info(`PII anonymization: cleared ${row.rows_affected} row(s) in ${row.target} (retention: ${retentionDays} days)`);
-      }
-    } else {
-      logger.debug(`PII anonymization: nothing to anonymize (retention: ${retentionDays} days)`);
-    }
+    const total = result.rows.reduce((sum, r) => sum + Number(r.rows_affected || 0), 0);
+    const details = result.rows.map((r) => `${r.target}=${r.rows_affected}`).join(' ');
+    const msg = `cron piiAnonymization cleared=${total} retention=${retentionDays}d${details ? ` ${details}` : ''}`;
+    total > 0 ? logger.info(msg) : logger.debug(msg);
   } catch (error) {
-    logger.error(`PII anonymization failed: ${error}`);
+    logger.error(`cron piiAnonymization failed: ${error}`);
   }
 }
 
@@ -41,7 +38,7 @@ export function startPiiAnonymizationJob(): void {
 
   const logger = useLogger();
   const retentionDays = getRetentionDays();
-  logger.info(`PII anonymization job started (retention: ${retentionDays} days, interval: 24h)`);
+  logger.info(`cron piiAnonymization started interval=${CRON_INTERVAL_MS / 3600000}h retention=${retentionDays}d`);
 
   anonymizeExpiredPii();
 

@@ -66,6 +66,13 @@ export function getProcessingTimeoutSyncSeconds(config?: PublicConfig): number {
   return Math.round(value / 1000);
 }
 
+const STUCK_JOB_MARGIN_MINUTES = 5;
+
+export function getStuckJobThresholdMinutes(config?: PublicConfig): number {
+  const maxTimeoutMs = Math.max(getPythonTimeoutMs(config), getPythonTimeoutSyncMs(config));
+  return Math.ceil(maxTimeoutMs / 60000) + STUCK_JOB_MARGIN_MINUTES;
+}
+
 export function getLogLevel(config?: PublicConfig): string {
   return getConfig(config, 'NEXT_PUBLIC_LOG_LEVEL', 'info');
 }
