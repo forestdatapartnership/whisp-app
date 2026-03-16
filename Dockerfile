@@ -1,28 +1,16 @@
-FROM node:20-slim AS base
-RUN apt-get update && apt-get install -y python3.11 python3.11-venv python3-pip && rm -rf /var/lib/apt/lists/*
-RUN python3.11 -m venv /venv
-ENV PATH="/venv/bin:$PATH"
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Dependencies stage
-FROM base AS deps
+FROM node:22-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Build stage
-FROM base AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 RUN npm run build
-# RUN npm run test
 
-# Production image
-FROM node:20-slim AS runner
+FROM node:22-slim AS runner
 WORKDIR /app
-# Install Python 3.11 (required by openforis-whisp >=3.10) and create venv
 RUN apt-get update && apt-get install -y python3.11 python3.11-venv python3-pip && rm -rf /var/lib/apt/lists/*
 RUN python3.11 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
