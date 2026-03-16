@@ -10,7 +10,7 @@ import { SystemCode } from "@/types/systemCodes";
 import { LogFunction } from "@/lib/logger";
 import { withLogging } from "@/lib/middleware/withLogging";
 import { compose } from "@/lib/middleware/compose";
-import { wktToFeatureCollection } from "@/lib/utils/wktUtils";
+import { wktToFeatureCollection, normalizeWkt } from "@/lib/utils/wktUtils";
 import * as wellknown from 'wellknown';
 import { SystemError } from "@/types/systemError";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
@@ -29,8 +29,7 @@ export const POST = compose(
   const { wkt } = body;
 
 
-  // Parse WKT to GeoJSON to validate coordinates
-  const geoJson = wellknown.parse(wkt);
+  const geoJson = wellknown.parse(normalizeWkt(wkt));
 
   if (!geoJson) {
     throw new SystemError(SystemCode.VALIDATION_INVALID_WKT);
@@ -46,14 +45,17 @@ export const POST = compose(
     throw new SystemError(SystemCode.VALIDATION_INVALID_COORDINATES);
   }
 
-  let featureCollection = await wktToFeatureCollection(wkt, generateGeoids) as any;
-  featureCollection = { ...featureCollection, generateGeoids };
+  const featureCollection = await wktToFeatureCollection(wkt, generateGeoids) as any;
+  if (!featureCollection || !featureCollection.features?.length) {
+    throw new SystemError(SystemCode.VALIDATION_INVALID_WKT);
+  }
+  let payload = { ...featureCollection, generateGeoids };
   if (analysisOptions) {
-    featureCollection = { ...featureCollection, analysisOptions };
+    payload = { ...payload, analysisOptions };
   }
   
-  context.featureCount = featureCollection.features.length;
+  context.featureCount = payload.features.length;
   context.analysisOptions = analysisOptions;
   
-  return await analyzePlots(context, featureCollection, log, req);
+  return await analyzePlots(context, payload, log, req);
 });

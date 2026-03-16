@@ -1,4 +1,5 @@
 import { getMaxFileSize } from './configUtils';
+import { normalizeWkt } from './wktUtils';
 import * as wellknown from 'wellknown';
 
 const checkFileSize = (file: File) : string | undefined => {
@@ -57,7 +58,7 @@ export const parseWKTAndJSONFile = (file: File): Promise<{ wkt: string; featureC
                 if (file.name.endsWith('.txt')) {
                     let featureCount = 1;
                     try {
-                        const parsed = wellknown.parse(text);
+                        const parsed = wellknown.parse(normalizeWkt(text));
                         if (!parsed) {
                             resolve({ error: 'Invalid WKT format.' });
                             return;
