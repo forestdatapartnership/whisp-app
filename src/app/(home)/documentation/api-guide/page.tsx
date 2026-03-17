@@ -79,7 +79,7 @@ const DocumentationPage = () => {
                     <CardContent className="pt-4">
                       <div className="font-medium text-white mb-2">Multiple Polygons in One Request</div>
                       <p className="text-sm text-gray-400 mb-2">
-                        Both endpoints support batch processing. For GeoJSON, add multiple features to the <code className="bg-black/40 px-1 rounded">features</code> array. For WKT, use MULTIPOLYGON to include several polygons. Each polygon is analyzed independently and results are returned in the same order. The geometry limit applies to the total count of individual polygons (e.g. a FeatureCollection with 5 features counts as 5; a MULTIPOLYGON with 3 polygons counts as 3).
+                        Both endpoints support batch processing. For GeoJSON, add multiple features to the <code className="bg-black/40 px-1 rounded">features</code> array. For WKT, use MULTIPOLYGON or GEOMETRYCOLLECTION(POLYGON(...), POLYGON(...)) to include several polygons. Each feature is analyzed independently and results are returned in the same order. The geometry limit applies to the total feature count regardless of input method (e.g. a FeatureCollection with 5 features counts as 5; a MULTIPOLYGON with 3 polygons counts as 3).
                       </p>
                     </CardContent>
                   </Card>
@@ -178,10 +178,10 @@ const DocumentationPage = () => {
                             </pre>
                           </div>
                           <div className="mt-3 p-2 bg-gray-800/50 rounded text-xs text-gray-400">
-                            <strong>Multiple polygons:</strong> Use MULTIPOLYGON(((lng1 lat1,...)),((lng2 lat2,...))) to submit several polygons in one request. Each polygon is analyzed separately.
+                            <strong>Multiple polygons:</strong> MULTIPOLYGON(((ring1)),((ring2))) or GEOMETRYCOLLECTION(POLYGON((ring1)), POLYGON((ring2))). POLYGON is one polygon only.
                           </div>
                           <div className="mt-2 p-2 bg-gray-800/50 rounded text-xs text-gray-400">
-                            <strong>Other WKT Types:</strong> POINT(lng lat), MULTIPOINT((lng1 lat1), (lng2 lat2)), etc.
+                            <strong>Other types:</strong> POINT(lng lat), MULTIPOINT((lng1 lat1), (lng2 lat2)), etc.
                           </div>
                         </CardContent>
                       </Card>
