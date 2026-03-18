@@ -14,6 +14,13 @@ import { CrudDataTable } from '@/components/data-table/CrudDataTable';
 import Alert from '@/components/Alert';
 import { Button } from '@/components/ui/Button';
 import { downloadCsv } from '@/lib/utils/downloadCsv';
+import { ChevronDown, Download } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/DropdownMenu';
 import { textColumn, codeColumn, truncatedTextColumn, lastModifiedColumn } from '@/components/data-table/columnHelpers';
 import type { ResultField } from '@/types/models';
 
@@ -137,7 +144,7 @@ function ResultFieldsContent() {
     router.refresh();
   }, [refresh, router]);
 
-  const handleExportCSV = useCallback(() => {
+  const exportFieldsToCsv = useCallback((list: ResultField[], filenameSuffix: string) => {
     const baseHeaders = ['code', 'type', 'unit', 'description', 'category', 'order', 'iso2Code', 'period', 'source', 'comments', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy'];
     const powerBiHeaders = ['powerBiMetadata.dashboard'];
     const displayHeaders = ['displayMetadata.displayName', 'displayMetadata.excludeFromResults', 'displayMetadata.visibleByDefault'];
@@ -149,7 +156,7 @@ function ResultFieldsContent() {
     const toVal = (v: unknown): string | number => (v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v));
     const formatDate = (d: Date | string | undefined) => (d ? new Date(d).toISOString() : '');
 
-    const rows = fieldsList
+    const rows = list
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.id ?? '').localeCompare(b.id ?? ''))
       .map((f) => {
         const base = [
@@ -184,8 +191,16 @@ function ResultFieldsContent() {
         ];
         return [...base, ...powerBi, ...display, ...commodityVals, ...analysis];
       });
-    downloadCsv(header, rows, `result_fields_${new Date().toISOString().split('T')[0]}.csv`);
-  }, [fieldsList, commodities]);
+    downloadCsv(header, rows, `result_fields_${filenameSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
+  }, [commodities]);
+
+  const powerBiFieldsList = useMemo(
+    () => fieldsList.filter((f) => f.powerBiMetadata?.dashboard === true),
+    [fieldsList]
+  );
+
+  const handleExportAll = useCallback(() => exportFieldsToCsv(fieldsList, 'all'), [exportFieldsToCsv, fieldsList]);
+  const handleExportPowerBi = useCallback(() => exportFieldsToCsv(powerBiFieldsList, 'powerbi'), [exportFieldsToCsv, powerBiFieldsList]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -224,9 +239,24 @@ function ResultFieldsContent() {
           onView={handleView}
           onCreate={startCreate}
           toolbarActions={
-            <Button variant="secondary" size="sm" onClick={handleExportCSV}>
-              Export CSV
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="sm" className="h-8">
+                  Export CSV
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={handleExportAll} className="cursor-pointer">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export CSV (all fields)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPowerBi} disabled={powerBiFieldsList.length === 0} className="cursor-pointer">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export CSV (Power BI fields)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           }
         />
       )}
