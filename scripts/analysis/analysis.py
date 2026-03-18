@@ -88,7 +88,6 @@ def main(file_path, legacy_mode=False):
 
     whisp_df = whisp.whisp_formatted_stats_geojson_to_df(file_path, **df_kwargs)
 
-    csv_file_path = os.path.splitext(file_path)[0] + '-result.csv'
     json_file_path = os.path.splitext(file_path)[0] + '-result.json'
 
     whisp_df_risk = whisp.whisp_risk(
@@ -102,8 +101,6 @@ def main(file_path, legacy_mode=False):
             whisp_df_risk[col] = whisp_df_risk[col].replace([np.nan, np.inf, -np.inf], None)
         elif whisp_df_risk[col].dtype == 'object':
             whisp_df_risk[col] = whisp_df_risk[col].fillna('')
-
-    atomic_write(csv_file_path, lambda temp_path: whisp_df_risk.to_csv(temp_path, index=False, encoding='utf-8-sig'))
 
     if not legacy_mode:
         atomic_write(json_file_path, lambda temp_path: whisp.convert_df_to_geojson(whisp_df_risk, temp_path))

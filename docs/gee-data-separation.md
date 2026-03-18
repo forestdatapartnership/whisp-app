@@ -93,7 +93,7 @@ The application may still process and store contextual data at the application l
 In the current code, Earth Engine is used only from the server-side Python process:
 
 - `src/python/analysis.py` initialises GEE with service credentials and runs `openforis-whisp` analysis from the locally stored GeoJSON input.
-- The analysis produces outputs written back to local files (e.g. `temp/<token>-result.json`, `temp/<token>-result.csv`), and metadata files (e.g. `temp/<token>-meta.json` with version information).
+- The analysis produces outputs written back to local files (e.g. `temp/<token>-result.json`), and metadata files (e.g. `temp/<token>-meta.json` with version information).
 
 This repository does not include client-side code that calls GEE directly. Any interaction with GEE occurs from the server-side runtime, mediated by the `openforis-whisp` library and the Earth Engine API.
 
