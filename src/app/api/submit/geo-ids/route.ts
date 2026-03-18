@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJsonfromGeoId } from "@/lib/utils/assetRegistry";
+import { createRegistryClient } from "@/lib/assetRegistry";
 import { analyzePlots } from "@/lib/analysis/analizePlots";
 import { withErrorHandling } from "@/lib/middleware/withErrorHandling";
 import { SystemCode } from "@/types/systemCodes";
@@ -24,13 +24,19 @@ export const POST = compose(
   
   const geoIds = body['geoIds'];
   const analysisOptions = body.analysisOptions;
+  const assetRegistryOptions = body.assetRegistryOptions;
+
+  const client = createRegistryClient();
+  const resolveOpts = {
+    catalog: assetRegistryOptions?.catalog ?? process.env.ASSET_REGISTRY_DEFAULT_CATALOG ?? 'geoid',
+    collection: assetRegistryOptions?.collection ?? process.env.ASSET_REGISTRY_DEFAULT_COLLECTION ?? 'test_coll',
+  };
 
   const geoJsonArray = await Promise.all(geoIds.map(async (geoid: string) => {
-
     try {
-      const geoJsonFeature = await getJsonfromGeoId(geoid);
+      const geoJsonFeature = await client.resolveGeoId(geoid, resolveOpts);
       if (geoJsonFeature) {
-        const geoJsonGeoId = { ...geoJsonFeature, properties: { geoid } };
+        const geoJsonGeoId = { ...geoJsonFeature, properties: { ...geoJsonFeature.properties, geoid } };
         return geoJsonGeoId;
       } else {
         return null;
@@ -42,7 +48,6 @@ export const POST = compose(
 
   const validFeatures = geoJsonArray.filter(feature => feature !== null);
 
-  // TODO: misleading error message, this is returned only when all the GeoIDs are invalid, should investigate if we should allow partial processing
   if (!validFeatures || validFeatures.length === 0) {
     throw new SystemError(SystemCode.VALIDATION_INVALID_GEOJSON, ["One or more of the GeoIDs submitted is not valid."]);
   }
@@ -58,4 +63,3 @@ export const POST = compose(
 
   return await analyzePlots(context, featureCollection, log, req);
 });
-

@@ -92,3 +92,11 @@ export function getGoogleMapsApiKey(config?: PublicConfig): string | undefined {
 export function getUIClientSecret(config?: PublicConfig): string {
   return getConfig(config, 'NEXT_PUBLIC_UI_CLIENT_SECRET', 'whisp-ui-client-access');
 }
+
+export function getAssetRegistryDefaultCatalog(config?: PublicConfig): string | undefined {
+  return getConfig(config, 'ASSET_REGISTRY_DEFAULT_CATALOG');
+}
+
+export function getAssetRegistryDefaultCollection(config?: PublicConfig): string | undefined {
+  return getConfig(config, 'ASSET_REGISTRY_DEFAULT_COLLECTION');
+}

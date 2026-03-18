@@ -52,6 +52,7 @@ export enum SystemCode {
   VALIDATION_INVALID_EXTERNAL_ID_COLUMN = 'validation_invalid_external_id_column',
 
   // Service/External Errors
+  SERVICE_ASSET_REGISTRY_NOT_CONFIGURED = 'service_asset_registry_not_configured',
   SERVICE_ASSET_REGISTRY_UNAVAILABLE = 'service_asset_registry_unavailable',
 
   // Analysis Status
@@ -312,6 +313,11 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
   },
 
   // Service/External Errors
+  [SystemCode.SERVICE_ASSET_REGISTRY_NOT_CONFIGURED]: {
+    code: SystemCode.SERVICE_ASSET_REGISTRY_NOT_CONFIGURED,
+    message: 'Asset registry is not configured. Please contact the administrator.',
+    httpStatus: 503
+  },
   [SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE]: {
     code: SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE,
     message: 'Asset registry service is currently unavailable. Please try again later.',

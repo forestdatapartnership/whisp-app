@@ -12,5 +12,13 @@ export const GET = compose(
     )
   );
 
-  return NextResponse.json(publicConfig);
+  const assetRegistryDefaults: Record<string, string | undefined> = {};
+  if (process.env.ASSET_REGISTRY_DEFAULT_CATALOG) {
+    assetRegistryDefaults.ASSET_REGISTRY_DEFAULT_CATALOG = process.env.ASSET_REGISTRY_DEFAULT_CATALOG;
+  }
+  if (process.env.ASSET_REGISTRY_DEFAULT_COLLECTION) {
+    assetRegistryDefaults.ASSET_REGISTRY_DEFAULT_COLLECTION = process.env.ASSET_REGISTRY_DEFAULT_COLLECTION;
+  }
+
+  return NextResponse.json({ ...publicConfig, ...assetRegistryDefaults });
 });
