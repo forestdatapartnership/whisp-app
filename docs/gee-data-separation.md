@@ -159,12 +159,11 @@ This record is created by the backend (see `src/lib/utils/analysisJobStore.ts` a
 
 ### 6. Evidence 4: Optional Asset Registry integration for GeoIDs involves external requests
 
-When GeoIDs are submitted or generated:
+When GeoIDs are submitted:
 
 - `/api/submit/geo-ids` resolves GeoIDs to GeoJSON via an Asset Registry call (`src/lib/utils/assetRegistry.ts`)
-- `generateGeoids` can register WKT to the Asset Registry (`src/lib/utils/geojsonUtils.ts` → `getGeoid` → `registerWkt`)
 
-Implication: beyond GEE, an external service may receive geometry depending on which endpoint/options are used.
+Implication: beyond GEE, an external service may receive GeoID lookups when using the geo-ids endpoint.
 
 ### 7. Verifiable technical conclusion
 
@@ -179,7 +178,7 @@ Based on the current code:
 - Analysis orchestration: `src/lib/utils/analizePlots.ts`, `src/lib/utils/runPython.ts`
 - Python analysis: `src/python/analysis.py`
 - Job persistence: `src/lib/utils/analysisJobStore.ts`, `db/migrations/**/2_analysis_jobs.sql`
-- Asset Registry integration: `src/lib/utils/assetRegistry.ts`, `src/lib/utils/geojsonUtils.ts`
+- Asset Registry integration: `src/lib/utils/assetRegistry.ts`
 
 ---
 

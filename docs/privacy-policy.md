@@ -86,7 +86,7 @@ WHISP interacts with the following third-party services during operation:
 | Service | Data Shared | Purpose |
 |---|---|---|
 | **Google Earth Engine** | Geometries and technical analysis parameters only. **No personal data** (names, emails, IPs, user IDs) is transmitted. | Geospatial computation engine |
-| **Asset Registry (AgStack)** | Geometries in WKT/GeoJSON format (when using GeoID features) | Resolving or registering geographic identifiers |
+| **Asset Registry** | GeoIDs (when using GeoID submission) | Resolving geographic identifiers to geometry |
 | **Google Gmail SMTP** | Recipient email address, email content | Sending verification and password reset emails |
 | **Google Maps API** | Client-side map interactions (subject to Google's privacy policy) | Map visualisation in the UI |
 

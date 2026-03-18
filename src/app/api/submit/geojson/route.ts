@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzePlots } from "@/lib/analysis/analizePlots";
 import { 
     createFeatureCollection, 
-    addGeoId, 
     validateGeoJSON, 
     isValidWgs84Coordinates, 
     coordinatesLikelyInMeters,
@@ -27,7 +26,6 @@ export const POST = compose(
     withAnalysisJobJsonBody
 )(async (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any): Promise<NextResponse> => {
     
-    const generateGeoids = body.generateGeoids || false;
     const analysisOptions = body.analysisOptions;
 
     const geojsonErrors = validateGeoJSON(JSON.stringify(body));
@@ -56,11 +54,6 @@ export const POST = compose(
 
     let featureCollection = createFeatureCollection(body);
 
-    if (generateGeoids) {
-        featureCollection = await addGeoId(featureCollection);
-    }
-
-    featureCollection = { ...featureCollection, generateGeoids };
     if (analysisOptions) {
         featureCollection = { ...featureCollection, analysisOptions };
     }

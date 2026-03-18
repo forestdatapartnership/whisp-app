@@ -50,7 +50,6 @@ export const POST = compose(
   const featureCollection = {
     type: 'FeatureCollection',
     features: validFeatures,
-    generateGeoids: true,
     ...(analysisOptions ? { analysisOptions } : {})
   };
 

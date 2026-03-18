@@ -179,10 +179,8 @@ WHISP offers multiple access methods to accommodate different user needs:
    # Authentication
    JWT_SECRET=your_jwt_secret
    
-   # Asset Registry
-   ASSET_REGISTRY_BASE=https://api-ar.agstack.org
-   AR_API_KEY=your_ar_api_key
-   AR_CLIENT_SECRET=your_ar_client_secret
+   # Asset Registry (GeoID resolution)
+   ASSET_REGISTRY_BASE=https://your-asset-registry-url
    
    # Email Configuration
    EMAIL_SERVICE=smtp.example.com

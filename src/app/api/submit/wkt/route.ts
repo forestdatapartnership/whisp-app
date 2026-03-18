@@ -24,7 +24,6 @@ export const POST = compose(
 )(async (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any): Promise<NextResponse> => {
   validateRequiredFields(body, ['wkt']);
   
-  const generateGeoids = body.generateGeoids || false;
   const analysisOptions = body.analysisOptions;
   const { wkt } = body;
 
@@ -45,11 +44,11 @@ export const POST = compose(
     throw new SystemError(SystemCode.VALIDATION_INVALID_COORDINATES);
   }
 
-  const featureCollection = await wktToFeatureCollection(wkt, generateGeoids) as any;
+  const featureCollection = wktToFeatureCollection(wkt) as any;
   if (!featureCollection || !featureCollection.features?.length) {
     throw new SystemError(SystemCode.VALIDATION_INVALID_WKT);
   }
-  let payload = { ...featureCollection, generateGeoids };
+  let payload = { ...featureCollection };
   if (analysisOptions) {
     payload = { ...payload, analysisOptions };
   }

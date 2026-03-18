@@ -34,7 +34,6 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/app/api/actions.js",
-    "src/utils/getGeoId.js",
     "src/app/(home)/documentation/page.jsx",
     ".next/dev/types/**/*.ts"
   ],

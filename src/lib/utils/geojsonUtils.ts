@@ -1,22 +1,5 @@
-import { hint } from '@mapbox/geojsonhint';
-import { getGeoid } from "./assetRegistry";
 import { Geometry, Feature, FeatureCollection, GeometryObject, Point, Polygon, GeoJsonProperties } from 'geojson';
 import { getIssues } from '@placemarkio/check-geojson'
-
-async function addGeoIdFeature(feature: Feature): Promise<any | null> {
-
-    const geoid = await getGeoid(feature.geometry)
-
-    if (!geoid) {
-        console.error('Error obtaining geoid. There may be a problem with your input.');
-    }
-
-    return {
-        type: 'Feature',
-        properties: { ...feature.properties, ...{ geoid: geoid ? geoid : 'na' } },
-        geometry: feature.geometry
-    };
-}
 
 export const validateGeoJSON = (geojson: string) => {
     const ignoredErrors = [
@@ -32,22 +15,6 @@ export const validateGeoJSON = (geojson: string) => {
 
     return errors;
 };
-
-export async function addGeoId(geojson: any): Promise<any> {
-    switch (geojson.type) {
-        case 'FeatureCollection':
-            const featuresWithGeoId = await Promise.all(geojson.features.map((feature: any) => addGeoIdFeature(feature)));
-            return {
-                type: 'FeatureCollection',
-                features: featuresWithGeoId
-            }
-        case 'Feature':
-            return addGeoIdFeature(geojson);
-        default:
-            throw new Error(`Unsupported geometry type: ${geojson.type}`);
-    }
-}
-
 
 function extractFeatures(geometry: GeometryObject | any, features: any[], properties: any = {}): void {
     if (geometry.type === 'Polygon') {
@@ -116,36 +83,6 @@ export function createFeatureCollection(geojson: any): any {
         features: features
     };
 }
-
-interface ExtendedGeoJsonProperties {
-    [key: string]: any;
-  }
-  
-  // Function to add a new property to each feature in a FeatureCollection
-export function addPropertyToFeatures(
-    featureCollection: FeatureCollection<Geometry, GeoJsonProperties>,
-    propertyName: string,
-    propertyValue: any
-  ): FeatureCollection<Geometry, ExtendedGeoJsonProperties> {
-    const modifiedFeatures = featureCollection.features.map(feature => {
-      // Ensure properties exist
-      const properties = feature.properties || {};
-      // Add new property
-      properties[propertyName] = propertyValue;
-  
-      // Return a new feature object with updated properties
-      return {
-        ...feature,
-        properties: properties
-      } as Feature<Geometry, ExtendedGeoJsonProperties>;
-    });
-  
-    // Return the new FeatureCollection with modified features
-    return {
-      ...featureCollection,
-      features: modifiedFeatures
-    };
-  }
 
 /**
  * Checks if coordinates in a geometry are likely in EPSG:4326 (WGS84).
