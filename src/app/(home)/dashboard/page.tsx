@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
-import Alert from '@/components/Alert';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import Alert from '@/components/shared/Alert';
 
 function DashboardContent() {
   const router = useRouter();

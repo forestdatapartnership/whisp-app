@@ -1,12 +1,12 @@
 'use client'
 import React, { useState, useMemo } from 'react';
-import SubmitGeometry from '@/components/SubmitGeometry';
-import SubmitGeoIds from '@/components/SubmitGeoIds';
+import SubmitGeometry from '@/components/submission/SubmitGeometry';
+import SubmitGeoIds from '@/components/submission/SubmitGeoIds';
 import Link from 'next/link';
 import { useStore } from '@/store';
-import StatusCard from '@/components/StatusCard';
-import Alert from '@/components/Alert';
-import ErrorDetailsPanel from '@/components/ErrorDetailsPanel';
+import StatusCard from '@/components/shared/StatusCard';
+import Alert from '@/components/shared/Alert';
+import ErrorDetailsPanel from '@/components/shared/ErrorDetailsPanel';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';

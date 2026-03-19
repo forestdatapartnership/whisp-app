@@ -1,7 +1,7 @@
 'use client'
 
 import { useStore } from '@/store';
-import { Dropzone, DropzoneState } from './ui/Dropzone';
+import { Dropzone, DropzoneState } from '../ui/Dropzone';
 import { getMaxFileSize } from '@/lib/utils/configUtils';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { Accept, FileRejection } from 'react-dropzone';

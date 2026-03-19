@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link';
-import DataSubmission from '@/components/DataSubmission';
+import DataSubmission from '@/components/submission/DataSubmission';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function Home() {

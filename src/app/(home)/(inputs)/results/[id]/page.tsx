@@ -3,8 +3,8 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
-import StatusCard from '@/components/StatusCard'
-import ErrorDetailsPanel from '@/components/ErrorDetailsPanel'
+import StatusCard from '@/components/shared/StatusCard'
+import ErrorDetailsPanel from '@/components/shared/ErrorDetailsPanel'
 import { useStatusSSE } from '@/lib/hooks/useStatusSSE'
 import { useStatusPolling } from '@/lib/hooks/useStatusPolling'
 import { DataTable } from "@/components/data-table/DataTable"

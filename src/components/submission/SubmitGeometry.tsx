@@ -1,14 +1,14 @@
 'use client'
 import React, { useState } from 'react';
 import { useStore } from '@/store';
-import { FileInput } from '@/components/FileInput';
-import { Buttons } from '@/components/Buttons';
+import { FileInput } from '@/components/submission/FileInput';
+import { Buttons } from '@/components/submission/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/hooks/useSafeRouterPush';
 import { parseWKTAndJSONFile } from "@/lib/utils/fileParser";
 import { createApiHeaders } from '@/lib/secureApiUtils';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
-import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
+import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/submission/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
 
 interface SubmitGeometryProps {
@@ -190,7 +190,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
         <div className="relative">
             <div className="p-2 rounded-b-lg">
                 <FileInput
-                    innerMessage="Only .txt, .json and .geojson files are accepted."
+                    innerMessage="Accepted format: .txt, .json and .geojson files"
                     handleFileChange={handleFileChange}
                     accept={accept}
                 />

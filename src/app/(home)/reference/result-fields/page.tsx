@@ -11,7 +11,7 @@ import {
 } from './actions';
 import { ResultFieldForm } from '@/components/result-fields';
 import { CrudDataTable } from '@/components/data-table/CrudDataTable';
-import Alert from '@/components/Alert';
+import Alert from '@/components/shared/Alert';
 import { Button } from '@/components/ui/Button';
 import { downloadCsv } from '@/lib/utils/downloadCsv';
 import { ChevronDown, Download } from 'lucide-react';

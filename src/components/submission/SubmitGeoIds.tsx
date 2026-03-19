@@ -1,15 +1,15 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { useStore } from '@/store';
-import { Tabs } from '@/components/Tabs';
-import { Buttons } from '@/components/Buttons';
+import { GeoIdInput } from '@/components/submission/GeoIdInput';
+import { Buttons } from '@/components/submission/Buttons';
 import Image from 'next/image';
 import { useSafeRouterPush } from '@/lib/hooks/useSafeRouterPush';
 import { createApiHeaders } from '@/lib/secureApiUtils';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { getAssetRegistryDefaultCatalog, getAssetRegistryDefaultCollection } from '@/lib/utils/configUtils';
-import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/AnalysisOptions';
+import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/submission/AnalysisOptions';
 import { SystemCode } from '@/types/systemCodes';
 import type { CatalogInfo, CollectionInfo } from '@/types/assetRegistry';
 import { fetchCatalogs, fetchCollections } from '@/lib/assetRegistry/actions';
@@ -33,7 +33,6 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
     asyncThreshold,
     maxGeometryLimit
 }) => {
-    const [activeTab, setActiveTab] = useState<number>(0);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
     const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
     const [catalogs, setCatalogs] = useState<CatalogInfo[]>([]);
@@ -105,7 +104,9 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
                 if (count > maxGeometryLimit) {
                     useStore.setState({ 
                         error: `Too many Geo IDs. Maximum allowed is ${maxGeometryLimit} features.`, 
-                        isLoading: false 
+                        isLoading: false,
+                        geoIds: [''],
+                        selectedFile: '',
                     });
                     return;
                 }
@@ -204,14 +205,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
 
     return (
         <div className="relative">
-            <Tabs
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                asyncThreshold={asyncThreshold}
-                maxGeometryLimit={maxGeometryLimit}
-            />
-
-            <div className="mx-2 mt-4">
+            <div className="mx-2 mb-4">
                 <Collapsible open={catalogSectionOpen} onOpenChange={setCatalogSectionOpen}>
                     <div className="border border-gray-300 bg-gray-800 rounded">
                         <CollapsibleTrigger asChild>
@@ -261,6 +255,10 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
                         </CollapsibleContent>
                     </div>
                 </Collapsible>
+            </div>
+
+            <div className="mx-2 mt-4">
+                <GeoIdInput maxGeometryLimit={maxGeometryLimit} />
             </div>
 
             <div className="mx-2 mt-4">

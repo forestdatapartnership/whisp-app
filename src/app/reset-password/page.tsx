@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Alert from "@/components/Alert";
+import Alert from "@/components/shared/Alert";
 
 // Component to handle the search params with suspense
 function ResetPasswordContent() {

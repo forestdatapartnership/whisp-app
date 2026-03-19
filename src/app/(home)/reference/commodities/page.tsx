@@ -11,7 +11,7 @@ import {
 } from './actions';
 import { CommodityForm } from '@/components/commodities';
 import { CrudDataTable } from '@/components/data-table/CrudDataTable';
-import Alert from '@/components/Alert';
+import Alert from '@/components/shared/Alert';
 import { codeColumn, truncatedTextColumn, lastModifiedColumn } from '@/components/data-table/columnHelpers';
 import type { Commodity } from '@/types/models';
 

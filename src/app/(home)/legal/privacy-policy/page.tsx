@@ -1,4 +1,4 @@
-import MarkdownPage from '@/components/MarkdownPage';
+import MarkdownPage from '@/components/layout/MarkdownPage';
 
 export const metadata = {
   title: 'Privacy Policy - Whisp',
