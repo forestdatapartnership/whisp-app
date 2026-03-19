@@ -23,7 +23,10 @@ export const POST = compose(
   validateRequiredFields(body, ['geoIds']);
   
   const geoIds = body['geoIds'];
-  const analysisOptions = body.analysisOptions;
+  const analysisOptions = {
+    ...body.analysisOptions,
+    ...(body.analysisOptions?.externalIdColumn ? {} : { externalIdColumn: 'geoid' }),
+  };
   const assetRegistryOptions = body.assetRegistryOptions;
 
   const client = createRegistryClient();
