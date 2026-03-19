@@ -1,6 +1,5 @@
 'use client'
 import React, { useState } from 'react';
-import Alert from '@/components/Alert';
 import { useStore } from '@/store';
 import { FileInput } from '@/components/FileInput';
 import { Buttons } from '@/components/Buttons';
@@ -24,7 +23,6 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
     const [wkt, setWkt] = useState<string>('');
     const [geojson, setGeojson] = useState<any>(undefined);
     const [isDisabled, setIsDisabled] = useState<boolean>(true);
-    const { error } = useStore();
     const [type, setType] = useState<string>('');
     const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
     const [featureCount, setFeatureCount] = useState<number>(0);
@@ -33,15 +31,13 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
     const safePush = useSafeRouterPush();
     const resetStore = useStore((state) => state.reset);
 
-    const clearError = () => useStore.setState({ error: "" });
-
     const handleFileChange = async (file: File) => {
-        clearError();
+        useStore.setState({ error: '', errorCause: null });
         if (file) {
             const result = await parseWKTAndJSONFile(file);
 
             if (result && 'error' in result) {
-                useStore.setState({ error: result.error, selectedFile: "" });
+                useStore.setState({ error: result.error, errorCause: null, selectedFile: "" });
                 setIsDisabled(true);
                 setFeatureCount(0);
             } else {
@@ -49,7 +45,8 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
                 
                 if (count > maxGeometryLimit) {
                     useStore.setState({ 
-                        error: `Too many geometries. Maximum allowed is ${maxGeometryLimit} features.`, 
+                        error: `Too many geometries. Maximum allowed is ${maxGeometryLimit} features.`,
+                        errorCause: null,
                         selectedFile: "" 
                     });
                     setIsDisabled(true);
@@ -74,13 +71,12 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
 
     const clearInput = () => {
         setIsDisabled(true);
-        clearError();
-        useStore.setState({ selectedFile: "" });
+        useStore.setState({ error: '', errorCause: null, selectedFile: "" });
         setFeatureCount(0);
     };
 
     const analyze = async () => {
-        useStore.setState({ isLoading: true, featureCount });
+        useStore.setState({ isLoading: true, error: '', errorCause: null, featureCount });
 
         try {
             const shouldUseAsync = featureCount > asyncThreshold;
@@ -125,15 +121,16 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
             }
 
             if (!fetchedData || !response) {
-                throw new Error(`No response from the server`);
-            }
-
-            if (!response.ok && fetchedData['message']) {
-                throw new Error(`${fetchedData['message']}`);
+                throw new Error('No response from the server');
             }
 
             if (!response.ok) {
-                throw new Error(`Server error with status ${response.status}`);
+                const cause = typeof fetchedData.cause === 'string' ? fetchedData.cause : null;
+                useStore.setState({
+                    error: fetchedData.message ?? `Server error with status ${response.status}`,
+                    errorCause: cause,
+                });
+                return;
             }
 
             if (fetchedData) {
@@ -175,7 +172,6 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
         >
             <Image
                 className='mr-2'
-                onClick={clearError}
                 src="/download-outline.svg"
                 alt="download-outline"
                 width={20}
@@ -192,10 +188,6 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
 
     return (
         <div className="relative">
-            <div className="mx-2 mb-4">
-                {error && <Alert type="error" message={error} onClose={clearError} />}
-            </div>
-            
             <div className="p-2 rounded-b-lg">
                 <FileInput
                     innerMessage="Only .txt, .json and .geojson files are accepted."

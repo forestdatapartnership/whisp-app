@@ -5,6 +5,8 @@ import SubmitGeoIds from '@/components/SubmitGeoIds';
 import Link from 'next/link';
 import { useStore } from '@/store';
 import StatusCard from '@/components/StatusCard';
+import Alert from '@/components/Alert';
+import ErrorDetailsPanel from '@/components/ErrorDetailsPanel';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
@@ -17,6 +19,10 @@ const DataSubmission: React.FC = () => {
     const resetStore = useStore((state) => state.reset);
     const isLoading = useStore((state) => state.isLoading);
     const featureCount = useStore((state) => state.featureCount);
+    const error = useStore((state) => state.error);
+    const errorCause = useStore((state) => state.errorCause);
+
+    const clearError = () => useStore.setState({ error: '', errorCause: null });
     
     const { config } = useConfig();
     const { isAuthenticated } = useAuth();
@@ -114,6 +120,11 @@ const DataSubmission: React.FC = () => {
                 </h1>
                 
                 {renderModeSelector()}
+
+                <div className="mx-2 mb-4">
+                    {error && <Alert type="error" message={error} onClose={clearError} />}
+                    {error && errorCause && <ErrorDetailsPanel cause={errorCause} />}
+                </div>
                 
                 {renderContent()}
             </div>

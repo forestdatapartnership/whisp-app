@@ -49,11 +49,12 @@ export const POST = compose(
     }
   }));
 
-  const validFeatures = geoJsonArray.filter(feature => feature !== null);
-
-  if (!validFeatures || validFeatures.length === 0) {
-    throw new SystemError(SystemCode.VALIDATION_INVALID_GEOJSON, ["One or more of the GeoIDs submitted is not valid."]);
+  const missingGeoIds = geoIds.filter((geoid: string, i: number) => geoJsonArray[i] === null);
+  if (missingGeoIds.length > 0) {
+    throw new SystemError(SystemCode.VALIDATION_GEO_ID_NOT_FOUND, undefined, "The following GeoIDs were not found:\n" + missingGeoIds.join('\n'));
   }
+
+  const validFeatures = geoJsonArray.filter((feature): feature is NonNullable<typeof feature> => feature !== null);
 
   const featureCollection = {
     type: 'FeatureCollection',

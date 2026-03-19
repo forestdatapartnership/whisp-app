@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { useStore } from '@/store';
-import Alert from '@/components/Alert';
 import { Tabs } from '@/components/Tabs';
 import { Buttons } from '@/components/Buttons';
 import Image from 'next/image';
@@ -44,12 +43,11 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
     const [registryLoading, setRegistryLoading] = useState<boolean>(false);
     const [catalogSectionOpen, setCatalogSectionOpen] = useState<boolean>(true);
 
-    const { error, geoIds } = useStore();
+    const { geoIds } = useStore();
     const resetStore = useStore((state) => state.reset);
     const { apiKey } = useApiKey();
     const { config } = useConfig();
     const safePush = useSafeRouterPush();
-    const clearError = () => useStore.setState({ error: "" });
 
     useEffect(() => {
         const hasGeoIds = geoIds?.some(geoId => geoId.trim() !== '');
@@ -90,8 +88,8 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
     }, [catalog, config]);
 
     const analyze = async () => {
-        useStore.setState({ isLoading: true, error: '' });
-        
+        useStore.setState({ isLoading: true, error: '', errorCause: null });
+
         if (!apiKey) {
             useStore.setState({ error: "Failed to get API key for authentication", isLoading: false });
             return;
@@ -138,15 +136,16 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
                     const fetchedData = await response.json();
 
                     if (!fetchedData) {
-                        throw new Error(`No response from the server`);
-                    }
-
-                    if (!response.ok && fetchedData['message']) {
-                        throw new Error(`${fetchedData['message']}`);
+                        useStore.setState({ error: 'No response from the server' });
+                        return;
                     }
 
                     if (!response.ok) {
-                        throw new Error(`Server error with status ${response.status}`);
+                        useStore.setState({
+                            error: fetchedData.message ?? `Server error with status ${response.status}`,
+                            errorCause: typeof fetchedData.cause === 'string' ? fetchedData.cause : null,
+                        });
+                        return;
                     }
 
                     if (fetchedData) {
@@ -164,7 +163,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
                         }
                     }
                 } catch (error: any) {
-                    useStore.setState({ error: error.message });
+                    useStore.setState({ error: error.message, errorCause: null });
                 } finally {
                     useStore.setState({ isLoading: false });
                 }
@@ -173,7 +172,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
     };
 
     const clearInput = () => {
-        useStore.setState({ geoIds: [''], error: "", selectedFile: "" });
+        useStore.setState({ geoIds: [''], error: '', errorCause: null, selectedFile: '' });
         setIsDisabled(true);
     };
 
@@ -205,10 +204,6 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
 
     return (
         <div className="relative">
-            <div className="mx-2 mb-4">
-                {error && <Alert type="error" message={error} onClose={clearError} />}
-            </div>
-
             <Tabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}

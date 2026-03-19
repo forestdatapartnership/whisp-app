@@ -50,6 +50,7 @@ export enum SystemCode {
   VALIDATION_TOO_MANY_GEOMETRIES = 'validation_too_many_geometries',
   VALIDATION_REQUEST_BODY_TOO_LARGE = 'validation_request_body_too_large',
   VALIDATION_INVALID_EXTERNAL_ID_COLUMN = 'validation_invalid_external_id_column',
+  VALIDATION_GEO_ID_NOT_FOUND = 'validation_geo_id_not_found',
 
   // Service/External Errors
   SERVICE_ASSET_REGISTRY_NOT_CONFIGURED = 'service_asset_registry_not_configured',
@@ -309,6 +310,11 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
   [SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN]: {
     code: SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN,
     message: 'The external ID column "{0}" does not exist in your GeoJSON features. Available columns: {1}',
+    httpStatus: 400
+  },
+  [SystemCode.VALIDATION_GEO_ID_NOT_FOUND]: {
+    code: SystemCode.VALIDATION_GEO_ID_NOT_FOUND,
+    message: 'One or more Geo IDs were not found in the asset registry.',
     httpStatus: 400
   },
 

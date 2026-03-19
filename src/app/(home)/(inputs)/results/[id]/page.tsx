@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import StatusCard from '@/components/StatusCard'
+import ErrorDetailsPanel from '@/components/ErrorDetailsPanel'
 import { useStatusSSE } from '@/lib/hooks/useStatusSSE'
 import { useStatusPolling } from '@/lib/hooks/useStatusPolling'
 import { DataTable } from "@/components/data-table/DataTable"
@@ -14,13 +15,6 @@ import { SystemCode } from '@/types/systemCodes'
 import './styles.css'
 import { ColumnDef } from '@tanstack/react-table'
 import dynamic from 'next/dynamic';
-import { ChevronDown } from 'lucide-react';
-import { 
-  Collapsible, 
-  CollapsibleContent, 
-  CollapsibleTrigger 
-} from "@/components/ui/Collapsible";
-import { AlertTriangle } from "@/components/ui/Icons";
 import { FeatureCollection } from 'geojson';
 import { validateAndProcessGeoJSON, RecordData } from '@/lib/utils/geojsonUtils';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
@@ -47,7 +41,6 @@ export default function ResultsPage() {
   const [defaultSortColumnId, setDefaultSortColumnId] = useState<string | undefined>(undefined);
   const [syncResponse] = useState<any>(() => useStore.getState().response);
   const { apiKey } = useApiKey();
-  const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
   const { fields: resultFields } = useResultFields();
 
   const createColumnDefs = useCallback((data: RecordData[]): ColumnDef<RecordData, any>[] => {
@@ -237,30 +230,7 @@ export default function ResultsPage() {
         title={getErrorTitle()}
         message={getErrorMessage()}
       >
-        {cause && (
-          <div className="w-full max-w-3xl mx-auto mt-4">
-            <Collapsible open={showErrorDetails} onOpenChange={setShowErrorDetails}>
-              <div className="border border-gray-300 bg-gray-800 rounded">
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full justify-between">
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <AlertTriangle className="h-4 w-4" />
-                      Error details
-                    </span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${showErrorDetails ? 'rotate-180' : ''}`} />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="p-3">
-                    <div className="bg-gray-900 border border-gray-700 rounded-md p-3 max-h-48 overflow-y-auto text-left">
-                      <p className="text-sm text-gray-200 whitespace-pre-wrap font-mono">{cause}</p>
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </div>
-            </Collapsible>
-          </div>
-        )}
+        {cause && <ErrorDetailsPanel cause={cause} />}
         <Button
           variant="secondary"
           onClick={() => window.history.back()}
