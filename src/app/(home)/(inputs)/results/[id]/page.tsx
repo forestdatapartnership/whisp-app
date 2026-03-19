@@ -25,8 +25,7 @@ import { FeatureCollection } from 'geojson';
 import { validateAndProcessGeoJSON, RecordData } from '@/lib/utils/geojsonUtils';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
 import { useResultFields } from '@/lib/contexts/ResultFieldsContext';
-import { formatColumnName } from '@/lib/utils/formatColumnName';
-import { formatAnalysisCellValue } from '@/lib/utils/formatters';
+import { formatColumnName, formatCellValue as formatAnalysisCellValue } from "@/lib/analysis/formatters";
 
 // Dynamically import MapView with no SSR to avoid window undefined error
 const MapView = dynamic(() => import("@/components/results/MapView"), {

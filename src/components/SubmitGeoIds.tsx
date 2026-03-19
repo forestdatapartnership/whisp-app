@@ -45,6 +45,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
     const [catalogSectionOpen, setCatalogSectionOpen] = useState<boolean>(true);
 
     const { error, geoIds } = useStore();
+    const resetStore = useStore((state) => state.reset);
     const { apiKey } = useApiKey();
     const { config } = useConfig();
     const safePush = useSafeRouterPush();
@@ -149,6 +150,7 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
                     }
 
                     if (fetchedData) {
+                        resetStore();
                         if (fetchedData.code === SystemCode.ANALYSIS_PROCESSING) {
                             const { token } = fetchedData.data;
                             useStore.setState({ token });

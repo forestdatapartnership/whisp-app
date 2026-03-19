@@ -42,11 +42,11 @@ export function ExportDropdown({
   const canDownloadAll = !!geoJsonData?.features?.length;
   const canDownloadVisible = canDownloadAll && tableData.length > 0 && visibleCols.length > 0;
 
-  const downloadBlob = useCallback((blob: Blob, ext: string) => {
+  const downloadBlob = useCallback((blob: Blob, ext: string, suffix?: string) => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = timestampFilename(ext);
+    a.download = timestampFilename(ext, suffix);
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -57,7 +57,7 @@ export function ExportDropdown({
   const handleDownloadCsvVisible = () => {
     if (visibleCols.length === 0 || !tableData.length) return;
     const rows = tableData.map((row) => visibleCols.map((col) => row[col] ?? ""));
-    downloadCsv(visibleCols, rows, timestampFilename("csv"));
+    downloadCsv(visibleCols, rows, timestampFilename("csv", "api-sel"));
     setOpen(false);
   };
 
@@ -65,7 +65,7 @@ export function ExportDropdown({
     if (!geoJsonData?.features?.length) return;
     const { header, rows } = geojsonToServerCsvFormat(geoJsonData);
     if (!header.length) return;
-    downloadCsv(header, rows, timestampFilename("csv"));
+    downloadCsv(header, rows, timestampFilename("csv", "api"));
     setOpen(false);
   };
 
@@ -87,12 +87,12 @@ export function ExportDropdown({
     };
     const src = geoJsonData as { name?: unknown };
     if (src.name) filtered.name = src.name;
-    downloadBlob(new Blob([JSON.stringify(filtered, null, 2)], { type: "application/geo+json" }), "geojson");
+    downloadBlob(new Blob([JSON.stringify(filtered, null, 2)], { type: "application/geo+json" }), "geojson", "api-sel");
   };
 
   const handleDownloadGeoJsonAll = () => {
     if (!geoJsonData?.features) return;
-    downloadBlob(new Blob([JSON.stringify(geoJsonData, null, 2)], { type: "application/geo+json" }), "geojson");
+    downloadBlob(new Blob([JSON.stringify(geoJsonData, null, 2)], { type: "application/geo+json" }), "geojson", "api");
   };
 
   return (
@@ -108,10 +108,10 @@ export function ExportDropdown({
           <ChevronDown className="h-4 w-4 ml-1" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-72">
         <DropdownMenuItem onClick={handleDownloadCsvVisible} disabled={isDisabled || !canDownloadVisible} className="cursor-pointer">
           <Download className="mr-2 h-4 w-4" />
-          Export CSV (visible fields)
+          Export CSV (selected fields)
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDownloadCsvAll} disabled={isDisabled || !canDownloadAll} className="cursor-pointer">
           <Download className="mr-2 h-4 w-4" />
@@ -120,7 +120,7 @@ export function ExportDropdown({
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleDownloadGeoJsonVisible} disabled={!canDownloadVisible} className="cursor-pointer">
           <Download className="mr-2 h-4 w-4" />
-          Export GeoJSON (visible fields)
+          Export GeoJSON (selected fields)
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDownloadGeoJsonAll} disabled={!canDownloadAll} className="cursor-pointer">
           <Download className="mr-2 h-4 w-4" />

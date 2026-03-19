@@ -58,7 +58,7 @@ export function AnalysisColumnToggle() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="h-8">
           <MixerHorizontalIcon className="mr-2 h-4 w-4" />
-          Toggle fields
+          Select fields
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[350px] h-[400px] overflow-auto" onCloseAutoFocus={(e) => e.preventDefault()}>

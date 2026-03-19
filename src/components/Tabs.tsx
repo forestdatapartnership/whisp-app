@@ -42,7 +42,7 @@ export const Tabs: React.FC<TabsProps> = ({
         'text/plain': ['.txt']
     }
     const tabs =[
-        { title: 'File', content: <FileInput innerMessage="Only .txt files are accepted." alertMessage="Submit a .txt file with up to 100 geoids separated by a comma or new line." handleFileChange={handleFileChange} accept={accept}/> },
+        { title: 'File', content: <FileInput innerMessage="Only .txt files are accepted." alertMessage="Submit a .txt file with geoids separated by a comma or new line." handleFileChange={handleFileChange} accept={accept}/> },
         { title: 'Manual', content: <ManualInput /> }
     ]
     

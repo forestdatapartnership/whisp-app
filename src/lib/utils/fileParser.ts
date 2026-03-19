@@ -23,7 +23,7 @@ export const parseGeoIdFile = (file: File): Promise<string[] | { error: string }
             const text = e.target?.result;
             if (typeof text === 'string') {
                 // Updated regex to match commas or new lines as separators
-                const isValidFormat = /^(\s*\w+\s*[\n,]?)*(\s*\w+\s*)$/.test(text);
+                const isValidFormat = /^(\s*[^\s,\n]+\s*[\n,]?)*(\s*[^\s,\n]+\s*)$/.test(text);
                 if (!isValidFormat) {
                     resolve({ error: 'File content must be a comma-separated set of geoids or have each geoid in a new line.' });
                     return;

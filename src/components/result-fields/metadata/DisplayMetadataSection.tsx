@@ -2,7 +2,7 @@
 
 import { FormField } from '@/components/ui/FormField';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
-import { formatColumnName } from '@/lib/utils/formatColumnName';
+import { formatColumnName } from "@/lib/analysis/formatters";
 import type { DisplayMetadata } from '@/types/models';
 
 interface DisplayMetadataSectionProps {

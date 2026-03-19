@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Separator } from '@/components/ui/Separator';
-import { ChevronDown, ChevronRight, Code, FileText, Settings, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { ChevronDown, ChevronRight, Code, FileText, Settings, AlertTriangle, CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
 
 const DocumentationPage = () => {
   const { apiKey, isLoading: loading, error: apiKeyError } = useApiKey();
@@ -71,16 +71,24 @@ const DocumentationPage = () => {
                     Supported Request Body Structure
                   </CardTitle>
                   <CardDescription className="text-gray-400">
-                    The API accepts two formats for geographic data submission, both with optional analysis configuration. You can process multiple polygons in a single request.
+                    The API accepts two formats for geographic data submission, both with optional analysis configuration.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Card className="bg-gray-900/80 border-gray-600">
+                  <Card className="bg-blue-900/20 border-blue-500/40">
                     <CardContent className="pt-4">
-                      <div className="font-medium text-white mb-2">Multiple Polygons in One Request</div>
-                      <p className="text-sm text-gray-400 mb-2">
-                        Both endpoints support batch processing. For GeoJSON, add multiple features to the <code className="bg-black/40 px-1 rounded">features</code> array. For WKT, use MULTIPOLYGON or GEOMETRYCOLLECTION(POLYGON(...), POLYGON(...)) to include several polygons. Each feature is analyzed independently and results are returned in the same order. The geometry limit applies to the total feature count regardless of input method (e.g. a FeatureCollection with 5 features counts as 5; a MULTIPOLYGON with 3 polygons counts as 3).
-                      </p>
+                      <div className="flex items-start gap-3">
+                        <Zap className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                        <div className="space-y-2">
+                          <div className="font-medium text-white">Batch processing recommended</div>
+                          <p className="text-sm text-gray-300">
+                            The API is designed and optimized to process multiple features in a single request. Instead of sending one request per polygon, batch your geometries for better throughput, fewer rate-limit hits, and more efficient resource usage.
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            For GeoJSON, add multiple features to the <code className="bg-black/40 px-1 rounded">features</code> array. For WKT, use MULTIPOLYGON or GEOMETRYCOLLECTION(POLYGON(...), POLYGON(...)). Each feature is analyzed independently and results are returned in the same order. The geometry limit applies to the total feature count (e.g. a FeatureCollection with 5 features counts as 5; a MULTIPOLYGON with 3 polygons counts as 3).
+                          </p>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                   {/* GeoJSON Format Collapsible */}
@@ -178,10 +186,7 @@ const DocumentationPage = () => {
                             </pre>
                           </div>
                           <div className="mt-3 p-2 bg-gray-800/50 rounded text-xs text-gray-400">
-                            <strong>Multiple polygons:</strong> MULTIPOLYGON(((ring1)),((ring2))) or GEOMETRYCOLLECTION(POLYGON((ring1)), POLYGON((ring2))). POLYGON is one polygon only.
-                          </div>
-                          <div className="mt-2 p-2 bg-gray-800/50 rounded text-xs text-gray-400">
-                            <strong>Other types:</strong> POINT(lng lat), MULTIPOINT((lng1 lat1), (lng2 lat2)), etc.
+                            <strong>Multiple features:</strong> MULTIPOLYGON(((ring1)),((ring2))) or GEOMETRYCOLLECTION(POLYGON((ring1)), POLYGON((ring2))). POLYGON is one polygon only.
                           </div>
                         </CardContent>
                       </Card>
@@ -266,7 +271,7 @@ const DocumentationPage = () => {
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle className="h-3 w-3 text-green-500" />
-                          <strong>Geometry Types:</strong> Point, MultiPoint, Polygon, MultiPolygon, GeometryCollection
+                          <strong>Geometry Types:</strong> Polygon, MultiPolygon, GeometryCollection
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle className="h-3 w-3 text-green-500" />
