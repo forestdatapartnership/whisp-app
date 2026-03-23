@@ -327,7 +327,7 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
   [SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE]: {
     code: SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE,
     message: 'Asset registry service is currently unavailable. Please try again later.',
-    publicCode: SystemCode.ANALYSIS_ERROR
+    httpStatus: 503
   },
 
   // Analysis Status

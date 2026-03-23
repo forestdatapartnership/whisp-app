@@ -16,6 +16,7 @@ RUN python3.11 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m compileall -q /venv/lib/ scripts/analysis/
 
 RUN mkdir -p /app/temp
 COPY --from=builder /app/next.config.js ./

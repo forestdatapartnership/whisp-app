@@ -12,6 +12,9 @@ import { LogFunction } from "@/lib/logger";
 import { compose } from "@/lib/middleware/compose";
 import { SystemError } from "@/types/systemError";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
+import { getMaxGeometryLimit, getMaxGeometryLimitSync } from "@/lib/utils/configUtils";
+
+const RESOLVE_CONCURRENCY = 20;
 
 export const POST = compose(
   withLogging,
@@ -29,25 +32,43 @@ export const POST = compose(
   };
   const assetRegistryOptions = body.assetRegistryOptions;
 
+  const isAsync = analysisOptions?.async === true;
+  const maxGeometryLimit = isAsync ? getMaxGeometryLimit() : getMaxGeometryLimitSync();
+  if (geoIds.length > maxGeometryLimit) {
+    throw new SystemError(SystemCode.VALIDATION_TOO_MANY_GEOMETRIES, [maxGeometryLimit]);
+  }
+
   const client = createRegistryClient();
   const resolveOpts = {
     catalog: assetRegistryOptions?.catalog ?? process.env.ASSET_REGISTRY_DEFAULT_CATALOG ?? 'geoid',
     collection: assetRegistryOptions?.collection ?? process.env.ASSET_REGISTRY_DEFAULT_COLLECTION ?? 'test_coll',
   };
 
-  const geoJsonArray = await Promise.all(geoIds.map(async (geoid: string) => {
+  const geoJsonArray: (import('geojson').Feature | null)[] = new Array(geoIds.length);
+  let cursor = 0;
+
+  async function resolveNext(index: number): Promise<void> {
+    const geoid: string = geoIds[index];
     try {
       const geoJsonFeature = await client.resolveGeoId(geoid, resolveOpts);
-      if (geoJsonFeature) {
-        const geoJsonGeoId = { ...geoJsonFeature, properties: { ...geoJsonFeature.properties, geoid } };
-        return geoJsonGeoId;
-      } else {
-        return null;
-      }
+      geoJsonArray[index] = geoJsonFeature
+        ? { ...geoJsonFeature, properties: { ...geoJsonFeature.properties, geoid } }
+        : null;
     } catch {
       throw new SystemError(SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE);
     }
-  }));
+  }
+
+  async function worker(): Promise<void> {
+    while (true) {
+      const index = cursor++;
+      if (index >= geoIds.length) break;
+      await resolveNext(index);
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(RESOLVE_CONCURRENCY, geoIds.length) }, () => worker());
+  await Promise.all(workers);
 
   const missingGeoIds = geoIds.filter((geoid: string, i: number) => geoJsonArray[i] === null);
   if (missingGeoIds.length > 0) {

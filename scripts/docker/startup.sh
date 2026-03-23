@@ -48,5 +48,8 @@ else
     echo "No .env.local found - skipping migrations."
 fi
 
+echo "Warming up Python environment..."
+python scripts/analysis/warmup.py || echo "Python warmup failed (non-critical)"
+
 echo "Starting app..."
 exec npm start 
