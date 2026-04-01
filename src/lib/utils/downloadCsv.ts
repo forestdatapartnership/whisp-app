@@ -1,3 +1,6 @@
+import type { FeatureCollection } from "geojson";
+import { geojsonToServerCsvFormat } from "./geojsonToCsv";
+
 export function timestampFilename(ext: string, suffix?: string): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -18,9 +21,18 @@ function escapeCSV(value: string | number): string {
   return s;
 }
 
-export function downloadCsv(header: string[], rows: (string | number)[][], filename: string): void {
+export function buildCsvString(header: string[], rows: (string | number)[][]): string {
   const escapeRow = (row: (string | number)[]) => row.map(escapeCSV).join(',');
-  const csv = [header.join(','), ...rows.map(escapeRow)].join('\n');
+  return [header.join(','), ...rows.map(escapeRow)].join('\n');
+}
+
+export function geoJsonFeatureCollectionToCsvString(geojson: FeatureCollection): string | null {
+  const { header, rows } = geojsonToServerCsvFormat(geojson);
+  if (!header.length) return null;
+  return buildCsvString(header, rows);
+}
+
+export function downloadCsv(csv: string, filename: string): void {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

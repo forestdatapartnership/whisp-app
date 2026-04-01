@@ -10,8 +10,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/DropdownMenu";
 import { Button } from "@/components/ui/Button";
-import { downloadCsv, timestampFilename } from "@/lib/utils/downloadCsv";
-import { geojsonToServerCsvFormat } from "@/lib/utils/geojsonToCsv";
+import { buildCsvString, downloadCsv, geoJsonFeatureCollectionToCsvString, timestampFilename } from "@/lib/utils/downloadCsv";
 import { useDataTable } from "@/components/data-table/DataTableContext";
 import type { FeatureCollection } from "geojson";
 import type { RecordData } from "@/lib/utils/geojsonUtils";
@@ -57,15 +56,15 @@ export function ExportDropdown({
   const handleDownloadCsvVisible = () => {
     if (visibleCols.length === 0 || !tableData.length) return;
     const rows = tableData.map((row) => visibleCols.map((col) => row[col] ?? ""));
-    downloadCsv(visibleCols, rows, timestampFilename("csv", "api-sel"));
+    downloadCsv(buildCsvString(visibleCols, rows), timestampFilename("csv", "api-sel"));
     setOpen(false);
   };
 
   const handleDownloadCsvAll = () => {
     if (!geoJsonData?.features?.length) return;
-    const { header, rows } = geojsonToServerCsvFormat(geoJsonData);
-    if (!header.length) return;
-    downloadCsv(header, rows, timestampFilename("csv", "api"));
+    const csv = geoJsonFeatureCollectionToCsvString(geoJsonData);
+    if (!csv) return;
+    downloadCsv(csv, timestampFilename("csv", "api"));
     setOpen(false);
   };
 

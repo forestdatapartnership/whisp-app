@@ -13,7 +13,7 @@ import { ResultFieldForm } from '@/components/result-fields';
 import { CrudDataTable } from '@/components/data-table/CrudDataTable';
 import Alert from '@/components/shared/Alert';
 import { Button } from '@/components/ui/Button';
-import { downloadCsv } from '@/lib/utils/downloadCsv';
+import { buildCsvString, downloadCsv } from '@/lib/utils/downloadCsv';
 import { ChevronDown, Download } from 'lucide-react';
 import {
   DropdownMenu,
@@ -191,7 +191,7 @@ function ResultFieldsContent() {
         ];
         return [...base, ...powerBi, ...display, ...commodityVals, ...analysis];
       });
-    downloadCsv(header, rows, `result_fields_${filenameSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
+    downloadCsv(buildCsvString(header, rows), `result_fields_${filenameSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
   }, [commodities]);
 
   const powerBiFieldsList = useMemo(
