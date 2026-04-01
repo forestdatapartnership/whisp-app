@@ -40,7 +40,8 @@ export const POST = compose(
 
   const client = createRegistryClient();
   const resolveOpts = {
-    catalog: assetRegistryOptions?.catalog ?? process.env.ASSET_REGISTRY_DEFAULT_CATALOG ?? 'geoid',
+    // catalog: assetRegistryOptions?.catalog ?? process.env.ASSET_REGISTRY_DEFAULT_CATALOG ?? 'geoid',
+    catalog: process.env.ASSET_REGISTRY_DEFAULT_CATALOG ?? 'geoid',
     collection: assetRegistryOptions?.collection ?? process.env.ASSET_REGISTRY_DEFAULT_COLLECTION ?? 'test_coll',
   };
 
