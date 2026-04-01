@@ -76,7 +76,10 @@ export const analyzePlots = async (context: AnalysisJob, featureCollection: any,
     const timeout = isAsync ? getPythonTimeoutMs() : getPythonTimeoutSyncMs();
 
     const geometryCount = context.featureCount ?? featureCollection.features.length;
-    
+    if (geometryCount < 1) {
+        throw new SystemError(SystemCode.VALIDATION_MISSING_REQUIRED_FIELDS, ['features']);
+    }
+
     jobCache.set(token, { 
         featureCount: geometryCount,
         startTime: startTime
