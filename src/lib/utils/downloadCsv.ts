@@ -1,5 +1,6 @@
 import type { FeatureCollection } from "geojson";
 import { geojsonToServerCsvFormat } from "./geojsonToCsv";
+import { downloadBlob } from "./downloadFile";
 
 export function timestampFilename(ext: string, suffix?: string): string {
   const now = new Date();
@@ -33,14 +34,5 @@ export function geoJsonFeatureCollectionToCsvString(geojson: FeatureCollection):
 }
 
 export function downloadCsv(csv: string, filename: string): void {
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), filename);
 }

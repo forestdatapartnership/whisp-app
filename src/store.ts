@@ -1,15 +1,14 @@
 import { create } from "zustand";
+import type { FeatureCollection } from "geojson";
 
 type StoreState = {
     token: string,
     response: any | null,
     error: string,
     errorCause: string | null,
-    geoIds: string[],
-    selectedFile: string,
-    geometry: string[],
     isLoading: boolean,
     featureCount: number,
+    preloadedGeojson: FeatureCollection | null,
     reset: () => void;
 };
 
@@ -18,11 +17,9 @@ const initialState: Omit<StoreState, 'reset'> = {
     response: null,
     error: "",
     errorCause: null,
-    geoIds: [""],
-    selectedFile: "",
-    geometry: [],
     isLoading: false,
-    featureCount: 0
+    featureCount: 0,
+    preloadedGeojson: null,
 };
 
 export const useStore = create<StoreState>((set) => ({

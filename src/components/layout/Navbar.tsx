@@ -128,6 +128,13 @@ const Navbar: React.FC = () => {
                                     >
                                         Job stats
                                     </Link>
+                                    <Link
+                                        href="/asset-registry"
+                                        className="block px-4 py-2 hover:bg-gray-600"
+                                        onClick={() => setIsProfileDropdownOpen(false)}
+                                    >
+                                        Asset Registry
+                                    </Link>
                                     <button 
                                         onClick={handleLogout}
                                         className="block w-full text-left px-4 py-2 hover:bg-gray-600 rounded-b-lg"

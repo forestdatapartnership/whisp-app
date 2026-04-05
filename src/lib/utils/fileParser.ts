@@ -1,23 +1,35 @@
-import { getMaxFileSize } from './configUtils';
+import type { Feature } from 'geojson';
 import { normalizeWkt } from './wktUtils';
 import * as wellknown from 'wellknown';
 
-const checkFileSize = (file: File) : string | undefined => {
-    const maxFileSizeBytes = getMaxFileSize();
-    const maxFileSizeKB = maxFileSizeBytes ? maxFileSizeBytes / 1024 : 0;
-    if (maxFileSizeKB > 0 && file.size > maxFileSizeBytes!) {
-        return `The file is too large: ${(file.size/1024).toFixed(2)} KB, the maximum file size allowed is ${maxFileSizeKB} KB.`;
-    }
-};
+export function parseGeoIdText(text: string): string[] {
+    return text.split('\n').map(s => s.trim()).filter(Boolean);
+}
+
+export function parseGeoJsonFile(file: File): Promise<Feature[]> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const data = JSON.parse(reader.result as string);
+                if (data?.type === 'FeatureCollection' && Array.isArray(data.features)) {
+                    resolve(data.features);
+                } else if (data?.type === 'Feature') {
+                    resolve([data]);
+                } else {
+                    reject(new Error('File must be a GeoJSON FeatureCollection or Feature'));
+                }
+            } catch {
+                reject(new Error('Invalid JSON file'));
+            }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+    });
+}
 
 export const parseGeoIdFile = (file: File): Promise<string[] | { error: string }> => {
     return new Promise((resolve, reject) => {
-        const sizeCheckResult = checkFileSize(file);
-        if (sizeCheckResult) {
-            resolve({ error: sizeCheckResult });
-            return;
-        }
-
         const fileReader = new FileReader();
         fileReader.onload = async (e) => {
             const text = e.target?.result;
@@ -45,12 +57,6 @@ export const parseGeoIdFile = (file: File): Promise<string[] | { error: string }
 
 export const parseWKTAndJSONFile = (file: File): Promise<{ wkt: string; featureCount: number } | { json: string; featureCount: number } | { error: string }> => {
     return new Promise((resolve, reject) => {
-        const sizeCheckResult = checkFileSize(file);
-        if (sizeCheckResult) {
-            resolve({ error: sizeCheckResult });
-            return;
-        }
-        
         const fileReader = new FileReader();
         fileReader.onload = async (e) => {
             const text = e.target?.result;

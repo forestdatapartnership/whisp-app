@@ -3,7 +3,16 @@ import type { AssetRegistryClient } from './types';
 import { SystemCode } from '@/types/systemCodes';
 import { SystemError } from '@/types/systemError';
 
-export type { AssetRegistryClient, AssetRegistryConfig, GeoIdResolutionOptions, CatalogInfo, CollectionInfo } from './types';
+export type {
+  AssetRegistryClient,
+  AssetRegistryConfig,
+  GeoIdResolutionOptions,
+  CatalogInfo,
+  CollectionInfo,
+  FeatureListOptions,
+  FeatureListResult,
+  FeatureWritePayload,
+} from './types';
 
 export function createRegistryClient(): AssetRegistryClient {
   const baseUrl = process.env.ASSET_REGISTRY_BASE;

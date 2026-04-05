@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { Button } from "@/components/ui/Button";
 import { buildCsvString, downloadCsv, geoJsonFeatureCollectionToCsvString, timestampFilename } from "@/lib/utils/downloadCsv";
+import { downloadBlob } from "@/lib/utils/downloadFile";
 import { useDataTable } from "@/components/data-table/DataTableContext";
 import type { FeatureCollection } from "geojson";
 import type { RecordData } from "@/lib/utils/geojsonUtils";
@@ -41,15 +42,8 @@ export function ExportDropdown({
   const canDownloadAll = !!geoJsonData?.features?.length;
   const canDownloadVisible = canDownloadAll && tableData.length > 0 && visibleCols.length > 0;
 
-  const downloadBlob = useCallback((blob: Blob, ext: string, suffix?: string) => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = timestampFilename(ext, suffix);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+  const downloadAndClose = useCallback((blob: Blob, ext: string, suffix?: string) => {
+    downloadBlob(blob, timestampFilename(ext, suffix));
     setOpen(false);
   }, []);
 
@@ -86,12 +80,12 @@ export function ExportDropdown({
     };
     const src = geoJsonData as { name?: unknown };
     if (src.name) filtered.name = src.name;
-    downloadBlob(new Blob([JSON.stringify(filtered, null, 2)], { type: "application/geo+json" }), "geojson", "api-sel");
+    downloadAndClose(new Blob([JSON.stringify(filtered, null, 2)], { type: "application/geo+json" }), "geojson", "api-sel");
   };
 
   const handleDownloadGeoJsonAll = () => {
     if (!geoJsonData?.features) return;
-    downloadBlob(new Blob([JSON.stringify(geoJsonData, null, 2)], { type: "application/geo+json" }), "geojson", "api");
+    downloadAndClose(new Blob([JSON.stringify(geoJsonData, null, 2)], { type: "application/geo+json" }), "geojson", "api");
   };
 
   return (

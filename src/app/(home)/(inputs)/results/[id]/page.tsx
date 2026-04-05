@@ -7,35 +7,24 @@ import StatusCard from '@/components/shared/StatusCard'
 import ErrorDetailsPanel from '@/components/shared/ErrorDetailsPanel'
 import { useStatusSSE } from '@/lib/hooks/useStatusSSE'
 import { useStatusPolling } from '@/lib/hooks/useStatusPolling'
-import { DataTable } from "@/components/data-table/DataTable"
 import { AnalysisColumnToggle } from "@/components/results/AnalysisColumnToggle"
 import { ExportDropdown } from "@/components/results/ExportDropdown"
+import { PlotData } from "@/components/plots/PlotData"
 import { useStore } from "@/store";
 import { SystemCode } from '@/types/systemCodes'
 import './styles.css'
 import { ColumnDef } from '@tanstack/react-table'
-import dynamic from 'next/dynamic';
 import { FeatureCollection } from 'geojson';
 import { validateAndProcessGeoJSON, RecordData } from '@/lib/utils/geojsonUtils';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
 import { useResultFields } from '@/lib/contexts/ResultFieldsContext';
 import { formatColumnName, formatCellValue as formatAnalysisCellValue } from "@/lib/analysis/formatters";
 
-// Dynamically import MapView with no SSR to avoid window undefined error
-const MapView = dynamic(() => import("@/components/results/MapView"), {
-  ssr: false,
-  loading: () => <div className="h-full w-full bg-gray-700 rounded-lg flex items-center justify-center">
-      <div className="text-white">Loading map...</div>
-  </div>
-});
-
 export default function ResultsPage() {
   const { id } = useParams<{ id: string }>()
   const [tableData, setTableData] = useState<RecordData[]>([]);
   const [columns, setColumns] = useState<ColumnDef<RecordData, any>[]>([]);
-  const [showMap, setShowMap] = useState<boolean>(false);
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
-  const [selectedRowIndex, setSelectedRowIndex] = useState<number | undefined>(undefined);
   const [dataError, setDataError] = useState<string | null>(null);
   const [hasExternalIds, setHasExternalIds] = useState<boolean>(false);
   const [defaultSortColumnId, setDefaultSortColumnId] = useState<string | undefined>(undefined);
@@ -267,18 +256,6 @@ export default function ResultsPage() {
         title="Results"
       >
         <div className="flex justify-center my-4">
-          <label className="flex items-center gap-2 text-white cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showMap}
-              onChange={(e) => setShowMap(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-sm font-medium">Map View</span>
-          </label>
-        </div>
-        
-        <div className="flex justify-center my-4">
           <button
             onClick={() => generateEarthMap()}
             className="text-white font-bold py-1 px-2 text-sm rounded bg-indigo-500 hover:bg-indigo-700 disabled:bg-gray-500 disabled:opacity-50"
@@ -287,40 +264,28 @@ export default function ResultsPage() {
             View in Whisp Map
           </button>
         </div>
-        
-        <div className={`${showMap ? 'flex flex-col lg:flex-row gap-4' : ''}`}>
-          <div className={`${showMap ? 'lg:w-1/2' : 'w-full'}`}>
-            <DataTable
-              columns={columns}
-              data={tableData}
-              onRowClick={(rowIndex) => setSelectedRowIndex(rowIndex)}
-              selectedRowIndex={selectedRowIndex}
-              initialColumnVisibility={{ external_id: hasExternalIds }}
-              defaultSortColumnId={defaultSortColumnId}
-              formatCellValue={formatAnalysisCellValue}
-              searchFields={hasExternalIds ? ['plotId', 'external_id'] : ['plotId']}
-              toolbarActions={
-                <>
-                  <AnalysisColumnToggle />
-                  <ExportDropdown
-                    tableData={tableData}
-                    geoJsonData={geoJsonData}
-                  />
-                </>
-              }
-            />
-          </div>
 
-          {showMap && geoJsonData && (
-            <div className="lg:w-1/2 h-96 lg:h-[600px]">
-              <MapView
-                geoJsonData={geoJsonData}
-                selectedFeatureIndex={selectedRowIndex}
-                onFeatureClick={(featureIndex) => setSelectedRowIndex(featureIndex)}
-              />
-            </div>
-          )}
-        </div>
+        {geoJsonData && (
+          <PlotData
+            columns={columns}
+            data={tableData}
+            geoJsonData={geoJsonData}
+            defaultShowMap={false}
+            initialColumnVisibility={{ external_id: hasExternalIds }}
+            defaultSortColumnId={defaultSortColumnId}
+            formatCellValue={formatAnalysisCellValue}
+            searchFields={hasExternalIds ? ['plotId', 'external_id'] : ['plotId']}
+            toolbarActions={
+              <>
+                <AnalysisColumnToggle />
+                <ExportDropdown
+                  tableData={tableData}
+                  geoJsonData={geoJsonData}
+                />
+              </>
+            }
+          />
+        )}
       </StatusCard>
     )
   }

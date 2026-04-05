@@ -83,9 +83,14 @@ export async function getAuthUser(req?: NextRequest): Promise<AuthUser | null> {
   return verifyToken(token)
 }
 
-export async function requireAdmin(): Promise<AuthUser> {
+export async function requireAuth(): Promise<AuthUser> {
   const user = await getAuthUser()
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED)
+  return user
+}
+
+export async function requireAdmin(): Promise<AuthUser> {
+  const user = await requireAuth()
   if (!user.isAdmin) throw new SystemError(SystemCode.AUTH_ADMIN_REQUIRED)
   return user
 }

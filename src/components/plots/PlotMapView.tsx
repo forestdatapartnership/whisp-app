@@ -6,7 +6,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FeatureCollection, Feature, Geometry, GeoJsonProperties } from 'geojson';
 
-// Fix for default markers in React Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -14,27 +13,24 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-interface MapViewProps {
+interface PlotMapViewProps {
   geoJsonData: FeatureCollection;
   selectedFeatureIndex?: number;
   onFeatureClick?: (featureIndex: number) => void;
 }
 
-const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, onFeatureClick }) => {
+const PlotMapView: React.FC<PlotMapViewProps> = ({ geoJsonData, selectedFeatureIndex, onFeatureClick }) => {
   const mapRef = useRef<L.Map | null>(null);
   const geoJsonLayerRef = useRef<L.GeoJSON | null>(null);
   const [googleMapsApiKey, setGoogleMapsApiKey] = useState<string | null>(null);
 
-  // Get Google Maps API key from environment
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (apiKey) {
       setGoogleMapsApiKey(apiKey);
-      console.log('Google Maps API key set from environment');
     }
   }, []);
 
-  // Center map on selected feature
   useEffect(() => {
     if (mapRef.current && selectedFeatureIndex !== undefined && geoJsonData.features[selectedFeatureIndex]) {
       const feature = geoJsonData.features[selectedFeatureIndex];
@@ -59,27 +55,24 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
       }
     });
 
-    // Add popup with plotId and risk* properties
     if (feature.properties) {
       const popupItems: string[] = [];
-      
-      // Add Plot Id if it exists
+
       if (feature.properties.plotId) {
         popupItems.push(`<strong>Plot Id:</strong> ${feature.properties.plotId}`);
       }
-      
-      // Add risk properties
+
       const riskProperties = Object.entries(feature.properties)
-        .filter(([key, value]) => 
-          key.toLowerCase().startsWith('risk') && 
-          value !== null && 
+        .filter(([key, value]) =>
+          key.toLowerCase().startsWith('risk') &&
+          value !== null &&
           value !== undefined
         );
-      
+
       riskProperties.forEach(([key, value]) => {
         popupItems.push(`<strong>${key}:</strong> ${value}`);
       });
-      
+
       if (popupItems.length > 0) {
         const popupContent = popupItems.join('<br>');
         layer.bindPopup(popupContent);
@@ -90,7 +83,7 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
   const geoJsonStyle = (feature?: Feature<Geometry, GeoJsonProperties>) => {
     const featureIndex = feature ? geoJsonData.features.findIndex(f => f === feature) : -1;
     const isSelected = featureIndex === selectedFeatureIndex;
-    
+
     return {
       fillColor: isSelected ? '#ff7800' : '#3388ff',
       weight: isSelected ? 3 : 2,
@@ -101,10 +94,8 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
     };
   };
 
-  // Calculate initial bounds
   const getBounds = () => {
     if (geoJsonData.features.length === 0) return undefined;
-    
     const geoJsonLayer = L.geoJSON(geoJsonData);
     return geoJsonLayer.getBounds();
   };
@@ -121,7 +112,6 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
         attributionControl={true}
       >
         <LayersControl position="topright">
-          {/* Dark mode tile layer */}
           <LayersControl.BaseLayer checked name="Dark Map">
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -129,7 +119,6 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
             />
           </LayersControl.BaseLayer>
 
-          {/* Google Satellite layer with API key */}
           {googleMapsApiKey ? (
             <LayersControl.BaseLayer name="Satellite">
               <TileLayer
@@ -139,7 +128,6 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
               />
             </LayersControl.BaseLayer>
           ) : (
-            // Fallback satellite layer without API key (limited usage)
             <LayersControl.BaseLayer name="Satellite">
               <TileLayer
                 url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
@@ -149,7 +137,6 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
             </LayersControl.BaseLayer>
           )}
 
-          {/* Street Map layer */}
           <LayersControl.BaseLayer name="Street Map">
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -157,7 +144,7 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
             />
           </LayersControl.BaseLayer>
         </LayersControl>
-        
+
         <GeoJSON
           ref={geoJsonLayerRef}
           data={geoJsonData}
@@ -169,4 +156,4 @@ const MapView: React.FC<MapViewProps> = ({ geoJsonData, selectedFeatureIndex, on
   );
 };
 
-export default MapView;
+export default PlotMapView;

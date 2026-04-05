@@ -1,44 +1,46 @@
 'use client'
 
-import { useStore } from '@/store';
 import { Dropzone, DropzoneState } from '../ui/Dropzone';
 import { getMaxFileSize } from '@/lib/utils/configUtils';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { parseGeoIdFile } from '@/lib/utils/fileParser';
+import { formatDropzoneError } from '@/lib/utils/dropzoneUtils';
 import { Accept, FileRejection } from 'react-dropzone';
 
 interface GeoIdInputProps {
-    maxGeometryLimit: number;
+    value: string;
+    onChange: (value: string) => void;
+    fileName: string;
+    onFileNameChange: (name: string) => void;
+    onError: (error: string) => void;
 }
 
-export const GeoIdInput: React.FC<GeoIdInputProps> = ({ maxGeometryLimit }) => {
-    const { geoIds, selectedFile } = useStore();
+export const GeoIdInput: React.FC<GeoIdInputProps> = ({
+    value,
+    onChange,
+    fileName,
+    onFileNameChange,
+    onError,
+}) => {
     const { config } = useConfig();
     const maxFileSize = getMaxFileSize(config);
     const accept: Accept = { 'text/plain': ['.txt'] };
 
     const handleFileChange = async (file: File) => {
-        useStore.setState({ error: '' });
+        onError('');
         const result = await parseGeoIdFile(file);
         if (result && 'error' in result) {
-            useStore.setState({ error: result.error, selectedFile: '' });
+            onError(result.error);
+            onFileNameChange('');
         } else {
-            const count = result.length;
-            if (count > maxGeometryLimit) {
-                useStore.setState({
-                    error: `Too many Geo IDs. Maximum allowed is ${maxGeometryLimit} features.`,
-                    selectedFile: '',
-                    geoIds: [''],
-                });
-            } else {
-                useStore.setState({ geometry: result, geoIds: result, selectedFile: file.name });
-            }
+            onChange(result.join('\n'));
+            onFileNameChange(file.name);
         }
     };
 
     const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const lines = e.target.value.split(/\n/);
-        useStore.setState({ error: '', geoIds: lines, selectedFile: '' });
+        onChange(e.target.value);
+        onFileNameChange('');
     };
 
     return (
@@ -51,32 +53,25 @@ export const GeoIdInput: React.FC<GeoIdInputProps> = ({ maxGeometryLimit }) => {
                 accept={accept}
                 onDrop={(acceptedFiles: File[], fileRejections: FileRejection[]) => {
                     if (fileRejections.length > 0) {
-                        const err = fileRejections[0].errors[0];
-                        if (err.code === 'file-too-large') {
-                            err.message = `The file is too large: ${(fileRejections[0].file.size / 1024).toFixed(2)} KB, the maximum file size allowed is ${((maxFileSize || 0) / 1024).toFixed(2)} KB.`;
-                        }
-                        useStore.setState({ error: err.message });
+                        onError(formatDropzoneError(fileRejections[0], maxFileSize));
                     } else if (acceptedFiles.length === 1) {
                         handleFileChange(acceptedFiles[0]);
                     }
                 }}
-                onError={(err: Error) => {
-                    useStore.setState({ error: err.message });
-                }}
+                onError={(err: Error) => onError(err.message)}
             >
                 {(dropzone: DropzoneState) => (
                     <>
-                        {selectedFile ? (
+                        {fileName ? (
                             <div className="flex flex-col items-center justify-center text-gray-300">
                                 <img
-                                    onClick={() => useStore.setState({ error: '' })}
                                     src="/map-icon.svg"
                                     alt="map-icon"
                                     width={48}
                                     height={48}
                                     className="mb-1 cursor-pointer"
                                 />
-                                <p className="text-sm">{selectedFile}</p>
+                                <p className="text-sm">{fileName}</p>
                             </div>
                         ) : (
                             <div className="text-gray-300 flex flex-col items-center justify-center text-center px-4">
@@ -91,7 +86,7 @@ export const GeoIdInput: React.FC<GeoIdInputProps> = ({ maxGeometryLimit }) => {
             <p className="text-center text-sm text-gray-400">or paste below</p>
 
             <textarea
-                value={geoIds.join('\n')}
+                value={value}
                 onChange={handleTextareaChange}
                 placeholder="Enter one Geo ID per line"
                 rows={8}
