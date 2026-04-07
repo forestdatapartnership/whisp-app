@@ -33,7 +33,7 @@ export const config = {
   },
 
   auth: {
-    jwtSecret: env('JWT_SECRET'),
+    get jwtSecret() { return env('JWT_SECRET'); },
   },
 
   email: {
