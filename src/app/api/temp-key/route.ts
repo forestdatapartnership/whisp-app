@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { config } from "@/lib/config";
 import { withLogging } from "@/lib/middleware/withLogging";
 import { compose } from "@/lib/middleware/compose";
 import { LogFunction } from "@/lib/logger";
@@ -8,7 +9,7 @@ import { withErrorHandling } from "@/lib/middleware/withErrorHandling";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 
-const UI_CLIENT_SECRET = process.env.UI_CLIENT_SECRET || 'whisp-ui-client-access';
+const UI_CLIENT_SECRET = config.app.uiClientSecret;
 
 export const GET = compose(
   withLogging,

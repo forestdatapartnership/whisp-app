@@ -13,12 +13,11 @@ import FeatureTable, { summarizeProperties } from '@/components/asset-registry/F
 import type { FeatureRow } from '@/components/asset-registry/FeatureTable';
 
 interface RetrieveFeaturesProps {
-  catalog: string;
   collection: string;
   onLoadingChange?: (loading: boolean) => void;
 }
 
-export default function RetrieveFeatures({ catalog, collection, onLoadingChange }: RetrieveFeaturesProps) {
+export default function RetrieveFeatures({ collection, onLoadingChange }: RetrieveFeaturesProps) {
   const safePush = useSafeRouterPush();
 
   const [geoIdText, setGeoIdText] = useState('');
@@ -40,7 +39,7 @@ export default function RetrieveFeatures({ catalog, collection, onLoadingChange 
     setMessage(null);
     setRetrievedData(null);
     try {
-      const result = await retrieveFeaturesByGeoIds(catalog, collection, ids);
+      const result = await retrieveFeaturesByGeoIds(collection, ids);
       if (!result.ok || !result.featureCollection) {
         setMessage({ type: 'error', text: result.error ?? 'Retrieval failed' });
       } else {
@@ -54,7 +53,7 @@ export default function RetrieveFeatures({ catalog, collection, onLoadingChange 
       setLoading(false);
       onLoadingChange?.(false);
     }
-  }, [catalog, collection, geoIdText]);
+  }, [collection, geoIdText]);
 
   const handleExportGeoJson = useCallback(() => {
     if (!retrievedData) return;

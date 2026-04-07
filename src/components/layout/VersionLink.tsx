@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getAppVersion, getWhispPythonVersion } from '@/lib/utils/configUtils'
+import { useConfig } from '@/lib/contexts/ConfigContext'
 
 export default function VersionLink() {
-  const version = getAppVersion()
-  const pythonVersion = getWhispPythonVersion()
+  const { config } = useConfig()
+  const version = config.appVersion
+  const pythonVersion = config.whispPythonVersion
   const milestonesUrl = 'https://github.com/forestdatapartnership/whisp-app/milestones'
   const specificReleaseUrl = `https://github.com/forestdatapartnership/whisp-app/releases/tag/v${version}`
   const [versionHref, setVersionHref] = useState<string>(milestonesUrl)

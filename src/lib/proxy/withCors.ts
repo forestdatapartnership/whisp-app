@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { config } from "@/lib/config";
 import type { ProxyFactory } from "./types";
 
 const CORS_HEADERS = {
@@ -12,7 +13,7 @@ export const withCors: ProxyFactory = (next) => {
       return next(request);
     }
 
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",").map((o) => o.trim()) || [];
+    const allowedOrigins = config.cors.allowedOrigins;
     const origin = request.headers.get("origin") ?? "";
     const isAllowedOrigin = allowedOrigins.includes(origin);
     const isPreflight = request.method === "OPTIONS";

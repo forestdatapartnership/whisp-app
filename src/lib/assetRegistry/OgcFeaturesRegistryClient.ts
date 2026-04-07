@@ -4,7 +4,6 @@ import type {
   AssetRegistryConfig,
   CatalogInfo,
   CollectionInfo,
-  GeoIdResolutionOptions,
   FeatureListOptions,
   FeatureListResult,
   FeatureWritePayload,
@@ -57,7 +56,8 @@ export class OgcFeaturesRegistryClient implements AssetRegistryClient {
     throw new SystemError(SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE, undefined, 'Operation failed: ' + cause);
   }
 
-  private itemsUrl(catalog: string, collection: string, featureId?: string): string {
+  private itemsUrl(collection: string, featureId?: string): string {
+    const catalog = this.config.defaultCatalog;
     let url = `${this.config.baseUrl}/catalog/features/catalogs/${encodeURIComponent(catalog)}/collections/${encodeURIComponent(collection)}/items`;
     if (featureId) url += `/${encodeURIComponent(featureId)}`;
     return url;
@@ -72,8 +72,8 @@ export class OgcFeaturesRegistryClient implements AssetRegistryClient {
     };
   }
 
-  async resolveGeoId(geoId: string, options: GeoIdResolutionOptions): Promise<Feature | null> {
-    const url = this.itemsUrl(options.catalog, options.collection, geoId);
+  async resolveGeoId(geoId: string, collection: string): Promise<Feature | null> {
+    const url = this.itemsUrl(collection, geoId);
     const data = await this.makeRequest(url);
     if (data?.type === 'Feature' && data?.geometry) {
       return data;
@@ -92,7 +92,8 @@ export class OgcFeaturesRegistryClient implements AssetRegistryClient {
     }));
   }
 
-  async listCollections(catalog: string): Promise<CollectionInfo[]> {
+  async listCollections(): Promise<CollectionInfo[]> {
+    const catalog = this.config.defaultCatalog;
     const url = `${this.config.baseUrl}/catalog/features/catalogs/${encodeURIComponent(catalog)}/collections`;
     const data = await this.makeRequest(url);
     const collections = data?.collections ?? [];
@@ -103,12 +104,12 @@ export class OgcFeaturesRegistryClient implements AssetRegistryClient {
     }));
   }
 
-  async listFeatures(catalog: string, collection: string, options?: FeatureListOptions): Promise<FeatureListResult> {
+  async listFeatures(collection: string, options?: FeatureListOptions): Promise<FeatureListResult> {
     const params = new URLSearchParams();
     if (options?.limit != null) params.set('limit', String(options.limit));
     if (options?.offset != null) params.set('offset', String(options.offset));
     const qs = params.toString();
-    const url = this.itemsUrl(catalog, collection) + (qs ? `?${qs}` : '');
+    const url = this.itemsUrl(collection) + (qs ? `?${qs}` : '');
     const data = await this.makeRequest(url);
     const features = data?.features ?? [];
     return {
@@ -118,22 +119,22 @@ export class OgcFeaturesRegistryClient implements AssetRegistryClient {
     };
   }
 
-  async createFeature(catalog: string, collection: string, payload: FeatureWritePayload): Promise<Feature> {
-    const url = this.itemsUrl(catalog, collection);
+  async createFeature(collection: string, payload: FeatureWritePayload): Promise<Feature> {
+    const url = this.itemsUrl(collection);
     const body = this.toFeatureBody(payload);
     const data = await this.makeRequest(url, 'POST', body);
     return data;
   }
 
-  async updateFeature(catalog: string, collection: string, featureId: string, payload: FeatureWritePayload): Promise<Feature> {
-    const url = this.itemsUrl(catalog, collection, featureId);
+  async updateFeature(collection: string, featureId: string, payload: FeatureWritePayload): Promise<Feature> {
+    const url = this.itemsUrl(collection, featureId);
     const body = this.toFeatureBody({ ...payload, id: featureId });
     const data = await this.makeRequest(url, 'PUT', body);
     return data;
   }
 
-  async deleteFeature(catalog: string, collection: string, featureId: string): Promise<void> {
-    const url = this.itemsUrl(catalog, collection, featureId);
+  async deleteFeature(collection: string, featureId: string): Promise<void> {
+    const url = this.itemsUrl(collection, featureId);
     await this.makeRequest(url, 'DELETE');
   }
 }

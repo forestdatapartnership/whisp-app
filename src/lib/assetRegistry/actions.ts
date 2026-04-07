@@ -2,12 +2,12 @@
 
 import type { Feature, FeatureCollection } from 'geojson';
 import { createRegistryClient } from '@/lib/assetRegistry';
-import { getAppVersion } from '@/lib/utils/configUtils';
+import { config } from '@/lib/config';
 import { requireAuth } from '@/lib/auth';
 import type { CatalogInfo, CollectionInfo, FeatureWritePayload, BulkCreateResultItem } from '@/types/assetRegistry';
 
 function withWhispMetadata(properties: Record<string, unknown>): Record<string, unknown> {
-  return { ...properties, _whisp: { version: getAppVersion() } };
+  return { ...properties, _whisp: { version: config.app.version } };
 }
 
 export async function fetchCatalogs(): Promise<CatalogInfo[]> {
@@ -15,13 +15,12 @@ export async function fetchCatalogs(): Promise<CatalogInfo[]> {
   return client.listCatalogs();
 }
 
-export async function fetchCollections(catalog: string): Promise<CollectionInfo[]> {
+export async function fetchCollections(): Promise<CollectionInfo[]> {
   const client = createRegistryClient();
-  return client.listCollections(catalog);
+  return client.listCollections();
 }
 
 export async function registerFeatureBatchAction(
-  catalog: string,
   collection: string,
   batch: { index: number; feature: FeatureWritePayload }[]
 ): Promise<BulkCreateResultItem[]> {
@@ -32,7 +31,7 @@ export async function registerFeatureBatchAction(
 
   for (const { index, feature } of batch) {
     try {
-      const created = await client.createFeature(catalog, collection, {
+      const created = await client.createFeature(collection, {
         ...feature,
         properties: withWhispMetadata(feature.properties),
       });
@@ -57,7 +56,6 @@ export async function registerFeatureBatchAction(
 }
 
 export async function retrieveFeaturesByGeoIds(
-  catalog: string,
   collection: string,
   geoIds: string[]
 ): Promise<{ ok: boolean; featureCollection?: FeatureCollection; error?: string }> {
@@ -73,7 +71,7 @@ export async function retrieveFeaturesByGeoIds(
     const notFound: string[] = [];
 
     for (const geoId of geoIds) {
-      const feature = await client.resolveGeoId(geoId, { catalog, collection });
+      const feature = await client.resolveGeoId(geoId, collection);
       if (feature) {
         features.push(feature);
       } else {

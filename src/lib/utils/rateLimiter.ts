@@ -1,5 +1,5 @@
 import NodeCache from 'node-cache';
-import { toIntOrDefault } from './valueUtils';
+import { config } from '@/lib/config';
 
 const store = new NodeCache({ stdTTL: 0, checkperiod: 0, useClones: false });
 
@@ -18,15 +18,15 @@ export type RateLimitResult = {
 
 export function getDefaultRateLimitConfig(): RateLimitConfig {
   return {
-    windowMs: toIntOrDefault(process.env.RATE_LIMIT_WINDOW_MS, 60000),
-    limit: toIntOrDefault(process.env.RATE_LIMIT_MAX_REQUESTS, 30)
+    windowMs: config.rateLimit.windowMs,
+    limit: config.rateLimit.maxRequests,
   };
 }
 
-export function checkRateLimit(key: string, config?: Partial<RateLimitConfig>): RateLimitResult {
+export function checkRateLimit(key: string, overrides?: Partial<RateLimitConfig>): RateLimitResult {
   const base = getDefaultRateLimitConfig();
-  const windowMs = config?.windowMs ?? base.windowMs;
-  const maxRequests = config?.limit ?? base.limit;
+  const windowMs = overrides?.windowMs ?? base.windowMs;
+  const maxRequests = overrides?.limit ?? base.limit;
   const now = Date.now();
   const entry = store.get<{ count: number; resetAt: number }>(key);
   if (!entry || entry.resetAt <= now) {

@@ -1,7 +1,6 @@
 'use client'
 
 import { Dropzone } from '../ui/Dropzone';
-import { getMaxFileSize } from '@/lib/utils/configUtils';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { formatDropzoneError } from '@/lib/utils/dropzoneUtils';
 import { Accept, FileRejection } from 'react-dropzone';
@@ -26,7 +25,7 @@ export const FileInput: React.FC<FileInputProps> = ({
     disabled,
 }) => {
     const { config } = useConfig();
-    const maxFileSize = getMaxFileSize(config);
+    const maxFileSize = config.maxUploadFileSizeKb ? config.maxUploadFileSizeKb * 1024 : undefined;
 
     return (
         <>

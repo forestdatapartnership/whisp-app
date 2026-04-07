@@ -18,13 +18,13 @@ export type {
 } from '@/types/assetRegistry';
 
 export interface AssetRegistryClient {
-  resolveGeoId(geoId: string, options: GeoIdResolutionOptions): Promise<Feature | null>;
+  resolveGeoId(geoId: string, collection: string): Promise<Feature | null>;
   listCatalogs(): Promise<CatalogInfo[]>;
-  listCollections(catalog: string): Promise<CollectionInfo[]>;
-  listFeatures(catalog: string, collection: string, options?: FeatureListOptions): Promise<FeatureListResult>;
-  createFeature(catalog: string, collection: string, payload: FeatureWritePayload): Promise<Feature>;
-  updateFeature(catalog: string, collection: string, featureId: string, payload: FeatureWritePayload): Promise<Feature>;
-  deleteFeature(catalog: string, collection: string, featureId: string): Promise<void>;
+  listCollections(): Promise<CollectionInfo[]>;
+  listFeatures(collection: string, options?: FeatureListOptions): Promise<FeatureListResult>;
+  createFeature(collection: string, payload: FeatureWritePayload): Promise<Feature>;
+  updateFeature(collection: string, featureId: string, payload: FeatureWritePayload): Promise<Feature>;
+  deleteFeature(collection: string, featureId: string): Promise<void>;
 }
 
 export interface AssetRegistryConfig {

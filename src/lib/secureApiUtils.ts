@@ -1,23 +1,9 @@
-/**
- * Utilities for secure API key management
- */
-
-import { getUIClientSecret } from './utils/configUtils';
-
-// Client secret for UI-only endpoints - should match server value
-const UI_CLIENT_SECRET = getUIClientSecret();
-
-/**
- * Fetches a temporary API key from the server with appropriate security headers
- * @param source - Identifier for the source of the request (for logging)
- * @returns The API key or throws an error
- */
 type TempApiKeyResponse = {
   apiKey: string;
   expiresAt?: string | null;
 };
 
-export async function fetchTempApiKey(source: string = 'client'): Promise<TempApiKeyResponse> {
+export async function fetchTempApiKey(uiClientSecret: string, source: string = 'client'): Promise<TempApiKeyResponse> {
   try {
     // Generate a timestamp-based token to help prevent replay attacks
     const timestamp = new Date().getTime();
@@ -25,7 +11,7 @@ export async function fetchTempApiKey(source: string = 'client'): Promise<TempAp
     
     const response = await fetch('/api/temp-key', {
       headers: {
-        'X-Client-Secret': UI_CLIENT_SECRET,
+        'X-Client-Secret': uiClientSecret,
         'X-CSRF-Token': csrfToken
       },
       // Cache: 'no-store' ensures the browser doesn't cache this request
@@ -47,10 +33,6 @@ export async function fetchTempApiKey(source: string = 'client'): Promise<TempAp
   }
 }
 
-/**
- * Fetches the authenticated user's API key
- * @returns The user's API key or throws an error
- */
 type ApiKeyWithMeta = {
   apiKey: string;
   createdAt: string | null;
@@ -85,9 +67,6 @@ export async function fetchUserApiKey(): Promise<ApiKeyWithMeta> {
   }
 }
 
-/**
- * Creates headers for API requests including the API key if available
- */
 export function createApiHeaders(apiKey?: string | null): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -99,23 +78,4 @@ export function createApiHeaders(apiKey?: string | null): Record<string, string>
   }
   
   return headers;
-}
-
-export async function fetchApiKey(): Promise<string | null> {
-  const statusRes = await fetch('/api/auth/status', {
-    method: 'GET',
-    credentials: 'include',
-    cache: 'no-store'
-  });
-  const statusData = await statusRes.json();
-  const isAuthenticated = statusRes.ok && statusData?.code === 'auth_status_authenticated';
-  if (isAuthenticated) {
-    const userKey = await fetchUserApiKey();
-    if (userKey.apiKey) {
-      return userKey.apiKey;
-    }
-  }
-
-  const tempKey = await fetchTempApiKey().catch(() => ({ apiKey: '' }));
-  return tempKey.apiKey || null;
 }

@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { Feature, FeatureCollection } from 'geojson';
 import { useConfig } from '@/lib/contexts/ConfigContext';
-import { getMaxGeometryLimit } from '@/lib/utils/configUtils';
 import { FileInput } from '@/components/submission/FileInput';
 import Alert from '@/components/shared/Alert';
 import { parseGeoJsonFile } from '@/lib/utils/fileParser';
@@ -16,14 +15,13 @@ import type { FeatureWritePayload } from '@/types/assetRegistry';
 const BATCH_SIZE = 100;
 
 interface RegisterFeaturesProps {
-  catalog: string;
   collection: string;
   onLoadingChange?: (loading: boolean) => void;
 }
 
-export default function RegisterFeatures({ catalog, collection, onLoadingChange }: RegisterFeaturesProps) {
+export default function RegisterFeatures({ collection, onLoadingChange }: RegisterFeaturesProps) {
   const { config } = useConfig();
-  const maxGeometryLimit = useMemo(() => getMaxGeometryLimit(config), [config]);
+  const maxGeometryLimit = config.geometryLimit;
 
   const [features, setFeatures] = useState<Feature[]>([]);
   const [rows, setRows] = useState<FeatureRow[]>([]);
@@ -96,7 +94,7 @@ export default function RegisterFeatures({ catalog, collection, onLoadingChange 
       }));
 
       try {
-        const results = await registerFeatureBatchAction(catalog, collection, batch);
+        const results = await registerFeatureBatchAction(collection, batch);
         setRows(prev =>
           prev.map(row => {
             const result = results.find(r => r.index === row.index);
@@ -125,7 +123,7 @@ export default function RegisterFeatures({ catalog, collection, onLoadingChange 
 
     setRegistering(false);
     onLoadingChange?.(false);
-  }, [features, catalog, collection, onLoadingChange]);
+  }, [features, collection, onLoadingChange]);
 
   const handleClear = useCallback(() => {
     setFeatures([]);

@@ -1,77 +1,42 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { fetchPublicConfig } from '@/lib/config/actions';
+import type { PublicConfig } from '@/lib/config';
 
-// Generic hashtable for all NEXT_PUBLIC_* environment variables
-export type PublicConfig = Record<string, string | undefined>;
+export type { PublicConfig } from '@/lib/config';
 
-interface ConfigContextType {
-  config: PublicConfig;
+interface ConfigContextValue {
+  config: PublicConfig | null;
   isLoading: boolean;
-  getConfigValue: (key: string) => string | undefined;
 }
 
-const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
+const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
 
-interface ConfigProviderProps {
-  children: ReactNode;
-}
-
-export function ConfigProvider({ children }: ConfigProviderProps) {
-  const [config, setConfig] = useState<PublicConfig>({});
+export function ConfigProvider({ children }: { children: ReactNode }) {
+  const [config, setConfig] = useState<PublicConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadConfig = async () => {
-      try {
-        setIsLoading(true);
-        
-        const response = await fetch('/api/config');
-        
-        if (!response.ok) {
-          throw new Error(`Failed to load config: ${response.status}`);
-        }
-        
-        const configData = await response.json();
-        setConfig(configData);
-      } catch (err) {
-        console.warn('Failed to load runtime config, falling back to build-time config:', err);
-        
-        // Fallback to build-time environment variables (dynamically collect all NEXT_PUBLIC_*)
-        const fallbackConfig: PublicConfig = Object.fromEntries(
-          Object.entries(process.env).filter(([key]) => key.startsWith('NEXT_PUBLIC_'))
-        );
-        
-        setConfig(fallbackConfig);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadConfig();
+    fetchPublicConfig()
+      .then(setConfig)
+      .catch((err) => {
+        console.warn('Failed to load runtime config:', err);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const getConfigValue = (key: string): string | undefined => {
-    return config[key];
-  };
-
-  const value: ConfigContextType = {
-    config,
-    isLoading,
-    getConfigValue,
-  };
-
   return (
-    <ConfigContext.Provider value={value}>
+    <ConfigContext.Provider value={{ config, isLoading }}>
       {children}
     </ConfigContext.Provider>
   );
 }
 
-export function useConfig(): ConfigContextType {
+export function useConfig() {
   const context = useContext(ConfigContext);
   if (context === undefined) {
     throw new Error('useConfig must be used within a ConfigProvider');
   }
-  return context;
+  return context as { config: PublicConfig; isLoading: boolean };
 }

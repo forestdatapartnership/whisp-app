@@ -1,11 +1,6 @@
 import nodemailer from "nodemailer";
 import path from "path";
-
-// Host URL for email assets
-const getHostUrl = (): string => {
-	const hostUrl = process.env.HOST_URL?.trim() || '';
-	return hostUrl.replace(/\/+$/, ''); // Remove trailing slashes
-};
+import { config } from '@/lib/config';
 
 const getEmailHeader = (): string => {
 	return `
@@ -17,17 +12,14 @@ const getEmailHeader = (): string => {
 
 export async function sendVerificationEmail(email: string, token: string) {
 	const transporter = nodemailer.createTransport({
-		service: process.env.EMAIL_SERVICE,
+		service: config.email.service,
 		auth: {
-			user: process.env.EMAIL_USER,
-			pass: process.env.EMAIL_PASS, // App password
+			user: config.email.user,
+			pass: config.email.pass,
 		},
 	});
 
-	// Make sure HOST_URL is defined, with a fallback to localhost
-	const baseUrl = getHostUrl();
-	// Construct the verification URL with proper encoding of the token
-	const verificationUrl = `${baseUrl}/verify-email?token=${encodeURIComponent(token)}`;
+	const verificationUrl = `${config.email.hostUrl}/verify-email?token=${encodeURIComponent(token)}`;
 
 	await transporter.sendMail({
 		from: '"Whisp" <whisp.openforis@gmail.com>',
@@ -93,17 +85,14 @@ export async function sendVerificationEmail(email: string, token: string) {
 
 export async function sendPasswordResetEmail(email: string, token: string) {
 	const transporter = nodemailer.createTransport({
-		service: process.env.EMAIL_SERVICE,
+		service: config.email.service,
 		auth: {
-			user: process.env.EMAIL_USER,
-			pass: process.env.EMAIL_PASS, // App password
+			user: config.email.user,
+			pass: config.email.pass,
 		},
 	});
 
-	// Make sure HOST_URL is defined, with a fallback to localhost
-	const baseUrl = getHostUrl();
-	// Construct the reset password URL with proper encoding of the token
-	const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
+	const resetUrl = `${config.email.hostUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
 	await transporter.sendMail({
 		from: '"Whisp" <whisp.openforis@gmail.com>',

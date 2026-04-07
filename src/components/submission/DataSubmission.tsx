@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import SubmitGeometry from '@/components/submission/SubmitGeometry';
 import SubmitGeoIds from '@/components/submission/SubmitGeoIds';
 import Link from 'next/link';
@@ -10,7 +10,6 @@ import ErrorDetailsPanel from '@/components/shared/ErrorDetailsPanel';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
-import { getAsyncThreshold, getMaxGeometryLimit } from '@/lib/utils/configUtils';
 
 type SubmissionMode = 'geometry' | 'geoids';
 
@@ -27,8 +26,8 @@ const DataSubmission: React.FC = () => {
     const { config } = useConfig();
     const { isAuthenticated } = useAuth();
     const { apiKey } = useApiKey();
-    const asyncThreshold = useMemo(() => getAsyncThreshold(config), [config]);
-    const maxGeometryLimit = useMemo(() => getMaxGeometryLimit(config), [config]);
+    const asyncThreshold = config.asyncThreshold;
+    const maxGeometryLimit = config.geometryLimit;
     
     const requiresUserKey = isAuthenticated && !apiKey;
 

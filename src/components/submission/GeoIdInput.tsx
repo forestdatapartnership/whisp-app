@@ -1,7 +1,6 @@
 'use client'
 
 import { Dropzone, DropzoneState } from '../ui/Dropzone';
-import { getMaxFileSize } from '@/lib/utils/configUtils';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { parseGeoIdFile } from '@/lib/utils/fileParser';
 import { formatDropzoneError } from '@/lib/utils/dropzoneUtils';
@@ -23,7 +22,7 @@ export const GeoIdInput: React.FC<GeoIdInputProps> = ({
     onError,
 }) => {
     const { config } = useConfig();
-    const maxFileSize = getMaxFileSize(config);
+    const maxFileSize = config.maxUploadFileSizeKb ? config.maxUploadFileSizeKb * 1024 : undefined;
     const accept: Accept = { 'text/plain': ['.txt'] };
 
     const handleFileChange = async (file: File) => {

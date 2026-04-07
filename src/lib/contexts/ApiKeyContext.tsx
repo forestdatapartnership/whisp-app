@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+import { useConfig } from './ConfigContext';
 import { fetchTempApiKey, fetchUserApiKey } from '@/lib/secureApiUtils';
 
 type ApiKeyMetadata = {
@@ -26,6 +27,7 @@ const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined);
 
 export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { config } = useConfig();
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [apiKeyMetadata, setApiKeyMetadata] = useState<ApiKeyMetadata | null>(null);
   const [isUserKey, setIsUserKey] = useState(false);
@@ -58,7 +60,7 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
           setApiKeyMetadata(null);
         }
       } else {
-        const tempKey = await fetchTempApiKey('ApiKeyContext');
+        const tempKey = await fetchTempApiKey(config.uiClientSecret, 'ApiKeyContext');
         setApiKey(tempKey.apiKey);
         setIsUserKey(false);
         setApiKeyMetadata(

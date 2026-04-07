@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useCollections } from '@/lib/hooks/useCollections';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import RegisterFeatures from '@/components/asset-registry/RegisterFeatures';
 import RetrieveFeatures from '@/components/asset-registry/RetrieveFeatures';
@@ -11,7 +10,7 @@ import StatusCard from '@/components/shared/StatusCard';
 type Tab = 'register' | 'retrieve';
 
 function AssetRegistryContent() {
-  const { collections, collection: selectedCollection, setCollection: setSelectedCollection, catalog } = useCollections();
+  const [selectedCollection, setSelectedCollection] = useState('');
   const [activeTab, setActiveTab] = useState<Tab>('register');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,18 +57,17 @@ function AssetRegistryContent() {
 
         <div className="mx-2 mb-4">
           <CollectionPicker
-            collections={collections}
             value={selectedCollection}
             onChange={setSelectedCollection}
           />
         </div>
 
         {activeTab === 'register' && (
-          <RegisterFeatures catalog={catalog} collection={selectedCollection} onLoadingChange={handleLoadingChange} />
+          <RegisterFeatures collection={selectedCollection} onLoadingChange={handleLoadingChange} />
         )}
 
         {activeTab === 'retrieve' && (
-          <RetrieveFeatures catalog={catalog} collection={selectedCollection} onLoadingChange={handleLoadingChange} />
+          <RetrieveFeatures collection={selectedCollection} onLoadingChange={handleLoadingChange} />
         )}
       </div>
     </div>

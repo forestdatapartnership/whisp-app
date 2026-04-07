@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { config } from "@/lib/config";
 import { createRegistryClient } from "@/lib/assetRegistry";
 import { analyzePlots } from "@/lib/analysis/analizePlots";
 import { withErrorHandling } from "@/lib/middleware/withErrorHandling";
@@ -12,7 +13,6 @@ import { LogFunction } from "@/lib/logger";
 import { compose } from "@/lib/middleware/compose";
 import { SystemError } from "@/types/systemError";
 import { validateRequiredFields } from "@/lib/utils/fieldValidation";
-import { getMaxGeometryLimit, getMaxGeometryLimitSync } from "@/lib/utils/configUtils";
 
 const RESOLVE_CONCURRENCY = 20;
 
@@ -33,17 +33,13 @@ export const POST = compose(
   const assetRegistryOptions = body.assetRegistryOptions;
 
   const isAsync = analysisOptions?.async === true;
-  const maxGeometryLimit = isAsync ? getMaxGeometryLimit() : getMaxGeometryLimitSync();
+  const maxGeometryLimit = isAsync ? config.analysis.geometryLimit : config.analysis.geometryLimitSync;
   if (geoIds.length > maxGeometryLimit) {
     throw new SystemError(SystemCode.VALIDATION_TOO_MANY_GEOMETRIES, [maxGeometryLimit]);
   }
 
   const client = createRegistryClient();
-  const resolveOpts = {
-    // catalog: assetRegistryOptions?.catalog ?? process.env.ASSET_REGISTRY_DEFAULT_CATALOG ?? 'geoid',
-    catalog: process.env.ASSET_REGISTRY_DEFAULT_CATALOG ?? 'geoid',
-    collection: assetRegistryOptions?.collection ?? process.env.ASSET_REGISTRY_DEFAULT_COLLECTION ?? 'test_coll',
-  };
+  const collection = assetRegistryOptions?.collection ?? config.assetRegistry.defaultCollection;
 
   const geoJsonArray: (import('geojson').Feature | null)[] = new Array(geoIds.length);
   let cursor = 0;
@@ -51,7 +47,7 @@ export const POST = compose(
   async function resolveNext(index: number): Promise<void> {
     const geoid: string = geoIds[index];
     try {
-      const geoJsonFeature = await client.resolveGeoId(geoid, resolveOpts);
+      const geoJsonFeature = await client.resolveGeoId(geoid, collection);
       geoJsonArray[index] = geoJsonFeature
         ? { ...geoJsonFeature, properties: { ...geoJsonFeature.properties, geoid } }
         : null;

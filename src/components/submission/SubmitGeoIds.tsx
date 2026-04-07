@@ -4,7 +4,6 @@ import { GeoIdInput } from '@/components/submission/GeoIdInput';
 import { Buttons } from '@/components/submission/Buttons';
 import { useSubmitAnalysis, setSubmissionError, clearSubmissionError } from '@/lib/hooks/useSubmitAnalysis';
 import { parseGeoIdText } from '@/lib/utils/fileParser';
-import { useCollections } from '@/lib/hooks/useCollections';
 import AnalysisOptions, { AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from '@/components/submission/AnalysisOptions';
 import SampleDownloadButton from '@/components/submission/SampleDownloadButton';
 import CollectionPicker from '@/components/shared/CollectionPicker';
@@ -20,9 +19,8 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
 }) => {
     const [geoIdText, setGeoIdText] = useState('');
     const [geoIdFile, setGeoIdFile] = useState('');
+    const [collection, setCollection] = useState('');
     const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS);
-
-    const { collections, collection, setCollection, loading: registryLoading } = useCollections();
 
     const cleanIds = parseGeoIdText(geoIdText);
     const featureCount = cleanIds.length;
@@ -65,10 +63,8 @@ const SubmitGeoIds: React.FC<SubmitGeoIdsProps> = ({
         <div className="relative">
             <div className="mx-2 mb-4">
                 <CollectionPicker
-                    collections={collections}
                     value={collection}
                     onChange={setCollection}
-                    loading={registryLoading}
                 />
             </div>
 

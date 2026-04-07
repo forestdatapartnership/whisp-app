@@ -8,7 +8,7 @@ import { useResponse } from "@/lib/middleware/responses";
 import { SystemCode, getSystemCodeInfo } from "@/types/systemCodes";
 import { SystemError } from "@/types/systemError";
 import { AnalysisJob } from "@/types/models/analysisJob";
-import { getMaxGeometryLimit, getMaxGeometryLimitSync, getPythonTimeoutMs, getPythonTimeoutSyncMs } from "@/lib/utils/configUtils";
+import { config } from "@/lib/config";
 import { atomicWriteFile } from "@/lib/utils/fileUtils";
 import { getCommonPropertyNames, validateExternalIdColumn } from "../utils/geojsonUtils";
 import { jobCache } from "../utils/jobCache";
@@ -73,7 +73,7 @@ export const analyzePlots = async (context: AnalysisJob, featureCollection: any,
     const token = context.id;
     const filePath = path.join(process.cwd(), 'temp');
     const startTime = Date.now();
-    const timeout = isAsync ? getPythonTimeoutMs() : getPythonTimeoutSyncMs();
+    const timeout = isAsync ? config.analysis.pythonTimeoutMs : config.analysis.pythonTimeoutSyncMs;
 
     const geometryCount = context.featureCount ?? featureCollection.features.length;
     if (geometryCount < 1) {
@@ -102,7 +102,7 @@ export const analyzePlots = async (context: AnalysisJob, featureCollection: any,
         }
     }
     
-    const maxGeometryLimit = isAsync ? getMaxGeometryLimit() : getMaxGeometryLimitSync();
+    const maxGeometryLimit = isAsync ? config.analysis.geometryLimit : config.analysis.geometryLimitSync;
 
     if (geometryCount > maxGeometryLimit) {
         throw new SystemError(SystemCode.VALIDATION_TOO_MANY_GEOMETRIES, [maxGeometryLimit]);

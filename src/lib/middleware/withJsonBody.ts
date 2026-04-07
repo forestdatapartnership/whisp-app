@@ -5,7 +5,7 @@ import { LogFunction } from '../logger';
 import { SystemCode } from '@/types/systemCodes';
 import { SystemError } from '@/types/systemError';
 import { AnalysisJob } from '@/types/models/analysisJob';
-import { getMaxFileSize } from '../utils/configUtils';
+import { config } from '@/lib/config';
 
 export function withAnalysisJobJsonBody(handler: (req: NextRequest, context: AnalysisJob, log: LogFunction, body: any, ...args: any[]) => Promise<NextResponse>) {
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
@@ -19,7 +19,7 @@ export function withAnalysisJobJsonBody(handler: (req: NextRequest, context: Ana
 
     log.enrich({ bodySize });
 
-    const maxFileSize = getMaxFileSize();
+    const maxFileSize = config.app.maxUploadFileSizeKb ? config.app.maxUploadFileSizeKb * 1024 : undefined;
     
     if (maxFileSize && bodySize > maxFileSize) {
       const bodySizeKB = (bodySize / 1024).toFixed(2);

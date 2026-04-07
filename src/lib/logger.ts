@@ -1,5 +1,5 @@
 import winston from "winston";
-import { getLogLevel } from "./utils/configUtils";
+import { config } from "@/lib/config";
 
 export type LogFunction = {
   (level: 'debug' | 'info' | 'warn' | 'error', message: string, source?: string, meta?: Record<string, any>): void;
@@ -20,7 +20,7 @@ const gcpSeverityFormat = winston.format((info) => {
 
 export function useLogger(): winston.Logger {
   return winston.createLogger({
-    level: getLogLevel(),
+    level: config.app.logLevel,
     format: winston.format.combine(
       gcpSeverityFormat(),
       winston.format.json()

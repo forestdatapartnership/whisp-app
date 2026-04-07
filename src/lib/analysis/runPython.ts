@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
+import { config } from '@/lib/config';
 import { LogFunction } from "@/lib/logger";
 import { SystemCode } from "@/types/systemCodes";
 import { SystemError } from '@/types/systemError';
@@ -24,7 +25,7 @@ export const runPythonScript = async (
   log: LogFunction,
   timeout: number
 ): Promise<string> => {
-  const pythonPath = process.env.PYTHON_PATH || 'python';
+  const pythonPath = config.analysis.pythonPath;
   const updateProgress = (token: string, message: string, percent: number | null = null) => {
     const metadata = jobCache.get(token);
     if (metadata) {

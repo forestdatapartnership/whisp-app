@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { jwtVerify, SignJWT } from 'jose'
-import { assertEnvVar } from '@/lib/utils'
+import { config } from '@/lib/config'
 import { AuthUser } from '@/types/auth'
 import { SystemError } from '@/types/systemError'
 import { SystemCode } from '@/types/systemCodes'
@@ -17,7 +17,7 @@ const COOKIE_MAX_AGE = {
 }
 
 function getSecretBytes(): Uint8Array {
-  return new TextEncoder().encode(assertEnvVar('JWT_SECRET'))
+  return new TextEncoder().encode(config.auth.jwtSecret)
 }
 
 export async function verifyToken(token: string | undefined): Promise<AuthUser | null> {

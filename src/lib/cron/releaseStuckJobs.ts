@@ -1,8 +1,14 @@
 import { releaseStuckJobs as releaseStuckJobsInDb } from '@/lib/dal/analysisJobsService';
-import { getStuckJobThresholdMinutes } from '@/lib/utils/configUtils';
+import { config } from '@/lib/config';
 import { useLogger } from '@/lib/logger';
 
+const STUCK_JOB_MARGIN_MINUTES = 5;
 const CRON_INTERVAL_MS = 15 * 60 * 1000;
+
+function getStuckJobThresholdMinutes(): number {
+  const maxTimeoutMs = Math.max(config.analysis.pythonTimeoutMs, config.analysis.pythonTimeoutSyncMs);
+  return Math.ceil(maxTimeoutMs / 60000) + STUCK_JOB_MARGIN_MINUTES;
+}
 
 async function runReleaseStuckJobs(): Promise<void> {
   const logger = useLogger();

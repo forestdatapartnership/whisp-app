@@ -5,7 +5,6 @@ import SwaggerUI from "swagger-ui-react";
 import 'swagger-ui-react/swagger-ui.css';
 import './styles.css';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
-import { getMaxGeometryLimit, getMaxGeometryLimitSync, getMaxRequestSizeMB, getProcessingTimeoutSeconds, getProcessingTimeoutSyncSeconds } from '@/lib/utils/configUtils';
 import { useConfig } from '@/lib/contexts/ConfigContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible';
 import { Button } from '@/components/ui/Button';
@@ -24,11 +23,13 @@ const DocumentationPage = () => {
 
   // Get dynamic limits from environment settings
   const { config } = useConfig();
-  const maxGeometryLimit = getMaxGeometryLimit(config);
-  const maxGeometryLimitSync = getMaxGeometryLimitSync(config);
-  const maxRequestSizeMB = getMaxRequestSizeMB(config);
-  const processingTimeoutSeconds = getProcessingTimeoutSeconds(config);
-  const processingTimeoutSyncSeconds = getProcessingTimeoutSyncSeconds(config);
+  const maxGeometryLimit = config.geometryLimit;
+  const maxGeometryLimitSync = config.geometryLimitSync;
+  const maxRequestSizeMB = config.maxUploadFileSizeKb
+    ? Math.round(config.maxUploadFileSizeKb / 1024 * 100) / 100
+    : undefined;
+  const processingTimeoutSeconds = Math.round(config.pythonTimeoutMs / 1000);
+  const processingTimeoutSyncSeconds = Math.round(config.pythonTimeoutSyncMs / 1000);
 
   useEffect(() => {
     if (apiKeyError) {

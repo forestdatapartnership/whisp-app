@@ -5,13 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function assertEnvVar(name: string): string {
-  const value = process.env[name]
-  if (!value) {
-    throw new Error(`Required environment variable ${name} is not set`)
-  }
-  return value
-}
 
 
 /**
