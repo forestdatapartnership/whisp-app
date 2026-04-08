@@ -73,7 +73,10 @@ export async function retrieveFeaturesByGeoIds(
     for (const geoId of geoIds) {
       const feature = await client.resolveGeoId(geoId, collection);
       if (feature) {
-        features.push(feature);
+        features.push({
+          ...feature,
+          properties: { ...feature.properties, geoid: geoId }
+        });
       } else {
         notFound.push(geoId);
       }

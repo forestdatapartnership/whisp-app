@@ -65,7 +65,10 @@ export default function RetrieveFeatures({ collection, onLoadingChange }: Retrie
 
   const handleSubmitForAnalysis = useCallback(() => {
     if (!retrievedData) return;
-    useStore.setState({ preloadedGeojson: retrievedData });
+    useStore.setState({
+      preloadedGeojson: retrievedData,
+      preloadedAnalysisOptions: { externalIdColumn: 'geoid' }
+    });
     safePush('/');
   }, [retrievedData, safePush]);
 

@@ -24,6 +24,7 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
     const [fileName, setFileName] = useState('');
 
     const preloadedGeojson = useStore((state) => state.preloadedGeojson);
+    const preloadedAnalysisOptions = useStore((state) => state.preloadedAnalysisOptions);
     const submit = useSubmitAnalysis({ asyncThreshold, analysisOptions, featureCount });
 
     useEffect(() => {
@@ -33,8 +34,11 @@ const SubmitGeometry: React.FC<SubmitGeometryProps> = ({
         setFeatureCount(count);
         setIsDisabled(false);
         setFileName('Asset Registry');
-        useStore.setState({ preloadedGeojson: null });
-    }, [preloadedGeojson]);
+        if (preloadedAnalysisOptions) {
+            setAnalysisOptions(prev => ({ ...prev, ...preloadedAnalysisOptions }));
+        }
+        useStore.setState({ preloadedGeojson: null, preloadedAnalysisOptions: null });
+    }, [preloadedGeojson, preloadedAnalysisOptions]);
 
     const handleFileChange = async (file: File) => {
         clearSubmissionError();

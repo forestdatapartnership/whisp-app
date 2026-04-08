@@ -9,7 +9,7 @@ import { formatColumnName } from '@/lib/analysis/formatters';
 export function summarizeProperties(props: Record<string, unknown> | null | undefined): string {
   if (!props) return '';
   return Object.entries(props)
-    .filter(([, v]) => v != null && v !== '' && typeof v !== 'object')
+    .filter(([k, v]) => v != null && v !== '' && typeof v !== 'object' && k !== 'geoid')
     .map(([k, v]) => `${k}: ${v}`)
     .join(', ');
 }
