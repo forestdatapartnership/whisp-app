@@ -16,7 +16,7 @@ import { getBatchSize } from '@/lib/assetRegistry/batchUtils';
 
 interface RegisterFeaturesProps {
   collection: string;
-  onLoadingChange?: (loading: boolean) => void;
+  onLoadingChange?: (loading: boolean, count?: number) => void;
   onProgressUpdate?: (progress: ProgressData | null) => void;
 }
 
@@ -77,7 +77,7 @@ export default function RegisterFeatures({ collection, onLoadingChange, onProgre
   const handleRegister = useCallback(async () => {
     if (features.length === 0) return;
     setRegistering(true);
-    onLoadingChange?.(true);
+    onLoadingChange?.(true, features.length);
     setMessage(null);
 
     const payloads: FeatureWritePayload[] = features.map((f) => ({
@@ -101,8 +101,9 @@ export default function RegisterFeatures({ collection, onLoadingChange, onProgre
         feature,
       }));
 
-      messages.push(`Processing batch ${batchNum}/${totalBatches} (${batch.length} features)...`);
-      onProgressUpdate?.({ percent: Math.round((processed / payloads.length) * 100), processStatusMessages: [...messages] });
+      const percent = Math.round((processed / payloads.length) * 100);
+      messages.push(`Progress: ${batchNum}/${totalBatches} batches (${percent}%)`);
+      onProgressUpdate?.({ percent, processStatusMessages: [...messages] });
 
       try {
         const results = await registerFeatureBatchAction(collection, batch);

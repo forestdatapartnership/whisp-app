@@ -14,9 +14,11 @@ function AssetRegistryContent() {
   const [activeTab, setActiveTab] = useState<Tab>('register');
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [featureCount, setFeatureCount] = useState(0);
 
-  const handleLoadingChange = useCallback((loading: boolean) => {
+  const handleLoadingChange = useCallback((loading: boolean, count?: number) => {
     setIsLoading(loading);
+    if (loading && count) setFeatureCount(count);
     if (!loading) setProgress(null);
   }, []);
 
@@ -30,7 +32,7 @@ function AssetRegistryContent() {
         <div className="absolute inset-0 z-10 rounded bg-gray-800 bg-opacity-75">
           <StatusCard
             title={activeTab === 'register' ? 'Registering Features' : 'Retrieving Features'}
-            message={activeTab === 'register' ? 'Processing features...' : 'Fetching features from the registry...'}
+            message={`Processing ${featureCount} feature${featureCount !== 1 ? 's' : ''}...`}
             showSpinner
             hideBorder
             progress={progress}

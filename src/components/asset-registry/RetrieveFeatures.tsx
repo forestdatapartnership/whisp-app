@@ -16,7 +16,7 @@ import { getBatchSize } from '@/lib/assetRegistry/batchUtils';
 
 interface RetrieveFeaturesProps {
   collection: string;
-  onLoadingChange?: (loading: boolean) => void;
+  onLoadingChange?: (loading: boolean, count?: number) => void;
   onProgressUpdate?: (progress: ProgressData | null) => void;
 }
 
@@ -38,7 +38,7 @@ export default function RetrieveFeatures({ collection, onLoadingChange, onProgre
       return;
     }
     setLoading(true);
-    onLoadingChange?.(true);
+    onLoadingChange?.(true, ids.length);
     setMessage(null);
     setRetrievedData(null);
 
@@ -58,8 +58,9 @@ export default function RetrieveFeatures({ collection, onLoadingChange, onProgre
       const batchIds = ids.slice(start, start + batchSize);
       const batch = batchIds.map((geoId, i) => ({ index: start + i, geoId }));
 
-      messages.push(`Processing batch ${batchNum}/${totalBatches} (${batch.length} GeoIDs)...`);
-      onProgressUpdate?.({ percent: Math.round((processed / ids.length) * 100), processStatusMessages: [...messages] });
+      const percent = Math.round((processed / ids.length) * 100);
+      messages.push(`Progress: ${batchNum}/${totalBatches} batches (${percent}%)`);
+      onProgressUpdate?.({ percent, processStatusMessages: [...messages] });
 
       try {
         const results = await retrieveFeatureBatchAction(collection, batch);
