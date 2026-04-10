@@ -62,6 +62,10 @@ const PlotMapView: React.FC<PlotMapViewProps> = ({ geoJsonData, selectedFeatureI
         popupItems.push(`<strong>Plot Id:</strong> ${feature.properties.plotId}`);
       }
 
+      if (feature.properties.geoid) {
+        popupItems.push(`<strong>Geo Id:</strong> ${feature.properties.geoid}`);
+      }
+
       const riskProperties = Object.entries(feature.properties)
         .filter(([key, value]) =>
           key.toLowerCase().startsWith('risk') &&

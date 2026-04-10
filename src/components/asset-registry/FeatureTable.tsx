@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { FeatureCollection } from 'geojson';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -55,11 +56,23 @@ interface FeatureTableProps {
 }
 
 export default function FeatureTable({ rows, geoJsonData, toolbarActions, showErrors }: FeatureTableProps) {
+  const enrichedGeoJson = useMemo<FeatureCollection>(() => ({
+    type: 'FeatureCollection',
+    features: geoJsonData.features.map((f, i) => ({
+      ...f,
+      properties: {
+        ...f.properties,
+        plotId: (rows[i]?.index ?? i) + 1,
+        ...(rows[i]?.geoId && rows[i].geoId !== '—' ? { geoid: rows[i].geoId } : {}),
+      },
+    })),
+  }), [geoJsonData, rows]);
+
   return (
     <PlotData
       columns={columns}
       data={rows}
-      geoJsonData={geoJsonData}
+      geoJsonData={enrichedGeoJson}
       initialColumnVisibility={showErrors ? undefined : defaultColumnVisibility}
       searchFields={['geoId', 'properties']}
       defaultShowMap={false}
