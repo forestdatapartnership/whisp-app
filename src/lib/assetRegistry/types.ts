@@ -1,6 +1,5 @@
 import type { Feature } from 'geojson';
 import type {
-  GeoIdResolutionOptions,
   CatalogInfo,
   CollectionInfo,
   FeatureListOptions,
@@ -9,7 +8,6 @@ import type {
 } from '@/types/assetRegistry';
 
 export type {
-  GeoIdResolutionOptions,
   CatalogInfo,
   CollectionInfo,
   FeatureListOptions,

@@ -1,15 +1,5 @@
 import type { Feature, Geometry } from 'geojson';
 
-export interface GeoIdResolutionOptions {
-  catalog: string;
-  collection: string;
-}
-
-export interface AssetRegistryOptions {
-  catalog?: string;
-  collection?: string;
-}
-
 export interface CatalogInfo {
   id: string;
   title: string | null;
@@ -44,5 +34,13 @@ export interface BulkCreateResultItem {
   inputId: string;
   generatedId: string;
   status: 'created' | 'error';
+  error?: string;
+}
+
+export interface BulkRetrieveResultItem {
+  index: number;
+  geoId: string;
+  feature?: Feature;
+  status: 'retrieved' | 'not_found' | 'error';
   error?: string;
 }

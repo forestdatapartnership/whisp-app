@@ -11,15 +11,16 @@ import { downloadBlob } from '@/lib/utils/downloadFile';
 import FeatureTable, { summarizeProperties } from '@/components/asset-registry/FeatureTable';
 import type { FeatureRow } from '@/components/asset-registry/FeatureTable';
 import type { FeatureWritePayload } from '@/types/assetRegistry';
-
-const BATCH_SIZE = 100;
+import type { ProgressData } from '@/components/shared/StatusCard';
+import { getBatchSize } from '@/lib/assetRegistry/batchUtils';
 
 interface RegisterFeaturesProps {
   collection: string;
   onLoadingChange?: (loading: boolean) => void;
+  onProgressUpdate?: (progress: ProgressData | null) => void;
 }
 
-export default function RegisterFeatures({ collection, onLoadingChange }: RegisterFeaturesProps) {
+export default function RegisterFeatures({ collection, onLoadingChange, onProgressUpdate }: RegisterFeaturesProps) {
   const { config } = useConfig();
   const maxGeometryLimit = config.geometryLimit;
 
@@ -86,12 +87,22 @@ export default function RegisterFeatures({ collection, onLoadingChange }: Regist
     }));
 
     let processed = 0;
+    const batchSize = getBatchSize(payloads.length);
+    const totalBatches = Math.ceil(payloads.length / batchSize);
+    const messages: string[] = [];
 
-    for (let start = 0; start < payloads.length; start += BATCH_SIZE) {
-      const batch = payloads.slice(start, start + BATCH_SIZE).map((feature, i) => ({
+    messages.push(`Starting registration of ${payloads.length} feature${payloads.length !== 1 ? 's' : ''} in ${totalBatches} batch${totalBatches !== 1 ? 'es' : ''}`);
+    onProgressUpdate?.({ percent: 0, processStatusMessages: [...messages] });
+
+    for (let start = 0; start < payloads.length; start += batchSize) {
+      const batchNum = Math.floor(start / batchSize) + 1;
+      const batch = payloads.slice(start, start + batchSize).map((feature, i) => ({
         index: start + i,
         feature,
       }));
+
+      messages.push(`Processing batch ${batchNum}/${totalBatches} (${batch.length} features)...`);
+      onProgressUpdate?.({ percent: Math.round((processed / payloads.length) * 100), processStatusMessages: [...messages] });
 
       try {
         const results = await registerFeatureBatchAction(collection, batch);
@@ -108,9 +119,10 @@ export default function RegisterFeatures({ collection, onLoadingChange }: Regist
           })
         );
       } catch (e) {
+        messages.push(`Batch ${batchNum}/${totalBatches} failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
         setRows(prev =>
           prev.map(row => {
-            if (row.index >= start && row.index < start + BATCH_SIZE && row.status === 'pending') {
+            if (row.index >= start && row.index < start + batchSize && row.status === 'pending') {
               return { ...row, status: 'error', error: e instanceof Error ? e.message : 'Batch failed' };
             }
             return row;
@@ -119,11 +131,12 @@ export default function RegisterFeatures({ collection, onLoadingChange }: Regist
       }
 
       processed += batch.length;
+      onProgressUpdate?.({ percent: Math.round((processed / payloads.length) * 100), processStatusMessages: [...messages] });
     }
 
     setRegistering(false);
     onLoadingChange?.(false);
-  }, [features, collection, onLoadingChange]);
+  }, [features, collection, onLoadingChange, onProgressUpdate]);
 
   const handleClear = useCallback(() => {
     setFeatures([]);

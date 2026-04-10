@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef } from 'react'
 
-interface ProgressData {
+export interface ProgressData {
   percent?: number
   processStatusMessages?: string[]
 }

@@ -7,7 +7,6 @@ import { SystemError } from '@/types/systemError';
 export type {
   AssetRegistryClient,
   AssetRegistryConfig,
-  GeoIdResolutionOptions,
   CatalogInfo,
   CollectionInfo,
   FeatureListOptions,

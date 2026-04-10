@@ -5,7 +5,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import RegisterFeatures from '@/components/asset-registry/RegisterFeatures';
 import RetrieveFeatures from '@/components/asset-registry/RetrieveFeatures';
 import CollectionPicker from '@/components/shared/CollectionPicker';
-import StatusCard from '@/components/shared/StatusCard';
+import StatusCard, { type ProgressData } from '@/components/shared/StatusCard';
 
 type Tab = 'register' | 'retrieve';
 
@@ -13,9 +13,15 @@ function AssetRegistryContent() {
   const [selectedCollection, setSelectedCollection] = useState('');
   const [activeTab, setActiveTab] = useState<Tab>('register');
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState<ProgressData | null>(null);
 
   const handleLoadingChange = useCallback((loading: boolean) => {
     setIsLoading(loading);
+    if (!loading) setProgress(null);
+  }, []);
+
+  const handleProgressUpdate = useCallback((data: ProgressData | null) => {
+    setProgress(data);
   }, []);
 
   return (
@@ -27,6 +33,7 @@ function AssetRegistryContent() {
             message={activeTab === 'register' ? 'Processing features...' : 'Fetching features from the registry...'}
             showSpinner
             hideBorder
+            progress={progress}
           />
         </div>
       )}
@@ -63,11 +70,11 @@ function AssetRegistryContent() {
         </div>
 
         {activeTab === 'register' && (
-          <RegisterFeatures collection={selectedCollection} onLoadingChange={handleLoadingChange} />
+          <RegisterFeatures collection={selectedCollection} onLoadingChange={handleLoadingChange} onProgressUpdate={handleProgressUpdate} />
         )}
 
         {activeTab === 'retrieve' && (
-          <RetrieveFeatures collection={selectedCollection} onLoadingChange={handleLoadingChange} />
+          <RetrieveFeatures collection={selectedCollection} onLoadingChange={handleLoadingChange} onProgressUpdate={handleProgressUpdate} />
         )}
       </div>
     </div>

@@ -1,23 +1,26 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import type { FeatureCollection } from 'geojson';
+import type { Feature, FeatureCollection } from 'geojson';
 import { useStore } from '@/store';
 import { useSafeRouterPush } from '@/lib/hooks/useSafeRouterPush';
 import { GeoIdInput } from '@/components/submission/GeoIdInput';
 import Alert from '@/components/shared/Alert';
-import { retrieveFeaturesByGeoIds } from '@/lib/assetRegistry/actions';
+import { retrieveFeatureBatchAction } from '@/lib/assetRegistry/actions';
 import { parseGeoIdText } from '@/lib/utils/fileParser';
 import { downloadBlob } from '@/lib/utils/downloadFile';
 import FeatureTable, { summarizeProperties } from '@/components/asset-registry/FeatureTable';
 import type { FeatureRow } from '@/components/asset-registry/FeatureTable';
+import type { ProgressData } from '@/components/shared/StatusCard';
+import { getBatchSize } from '@/lib/assetRegistry/batchUtils';
 
 interface RetrieveFeaturesProps {
   collection: string;
   onLoadingChange?: (loading: boolean) => void;
+  onProgressUpdate?: (progress: ProgressData | null) => void;
 }
 
-export default function RetrieveFeatures({ collection, onLoadingChange }: RetrieveFeaturesProps) {
+export default function RetrieveFeatures({ collection, onLoadingChange, onProgressUpdate }: RetrieveFeaturesProps) {
   const safePush = useSafeRouterPush();
 
   const [geoIdText, setGeoIdText] = useState('');
@@ -38,22 +41,60 @@ export default function RetrieveFeatures({ collection, onLoadingChange }: Retrie
     onLoadingChange?.(true);
     setMessage(null);
     setRetrievedData(null);
-    try {
-      const result = await retrieveFeaturesByGeoIds(collection, ids);
-      if (!result.ok || !result.featureCollection) {
-        setMessage({ type: 'error', text: result.error ?? 'Retrieval failed' });
-      } else {
-        setRetrievedData(result.featureCollection);
-        const count = result.featureCollection.features.length;
-        setMessage({ type: 'success', text: `${count} feature${count !== 1 ? 's' : ''} retrieved` });
+
+    const batchSize = getBatchSize(ids.length);
+    const totalBatches = Math.ceil(ids.length / batchSize);
+    const messages: string[] = [];
+    let processed = 0;
+    const allFeatures: Feature[] = [];
+    const notFound: string[] = [];
+    let hadError = false;
+
+    messages.push(`Starting retrieval of ${ids.length} GeoID${ids.length !== 1 ? 's' : ''} in ${totalBatches} batch${totalBatches !== 1 ? 'es' : ''}`);
+    onProgressUpdate?.({ percent: 0, processStatusMessages: [...messages] });
+
+    for (let start = 0; start < ids.length; start += batchSize) {
+      const batchNum = Math.floor(start / batchSize) + 1;
+      const batchIds = ids.slice(start, start + batchSize);
+      const batch = batchIds.map((geoId, i) => ({ index: start + i, geoId }));
+
+      messages.push(`Processing batch ${batchNum}/${totalBatches} (${batch.length} GeoIDs)...`);
+      onProgressUpdate?.({ percent: Math.round((processed / ids.length) * 100), processStatusMessages: [...messages] });
+
+      try {
+        const results = await retrieveFeatureBatchAction(collection, batch);
+        const retrieved = results.filter(r => r.status === 'retrieved');
+        const missing = results.filter(r => r.status === 'not_found');
+        const errors = results.filter(r => r.status === 'error');
+
+        for (const r of retrieved) {
+          if (r.feature) allFeatures.push(r.feature);
+        }
+        for (const r of missing) notFound.push(r.geoId);
+        if (errors.length > 0) hadError = true;
+
+      } catch (e) {
+        hadError = true;
+        messages.push(`Batch ${batchNum}/${totalBatches} failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
       }
-    } catch (e) {
-      setMessage({ type: 'error', text: e instanceof Error ? e.message : 'Retrieval failed' });
-    } finally {
-      setLoading(false);
-      onLoadingChange?.(false);
+
+      processed += batchIds.length;
+      onProgressUpdate?.({ percent: Math.round((processed / ids.length) * 100), processStatusMessages: [...messages] });
     }
-  }, [collection, geoIdText]);
+
+    if (hadError && allFeatures.length === 0) {
+      setMessage({ type: 'error', text: 'Retrieval failed' });
+    } else if (notFound.length > 0) {
+      setMessage({ type: 'error', text: `GeoIDs not found: ${notFound.join(', ')}` });
+    } else {
+      const fc: FeatureCollection = { type: 'FeatureCollection', features: allFeatures };
+      setRetrievedData(fc);
+      setMessage({ type: 'success', text: `${allFeatures.length} feature${allFeatures.length !== 1 ? 's' : ''} retrieved` });
+    }
+
+    setLoading(false);
+    onLoadingChange?.(false);
+  }, [collection, geoIdText, onLoadingChange, onProgressUpdate]);
 
   const handleExportGeoJson = useCallback(() => {
     if (!retrievedData) return;

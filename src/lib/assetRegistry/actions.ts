@@ -1,10 +1,10 @@
 'use server';
 
-import type { Feature, FeatureCollection } from 'geojson';
+import type { Feature } from 'geojson';
 import { createRegistryClient } from '@/lib/assetRegistry';
 import { config } from '@/lib/config';
 import { requireAuth } from '@/lib/auth';
-import type { CatalogInfo, CollectionInfo, FeatureWritePayload, BulkCreateResultItem } from '@/types/assetRegistry';
+import type { CatalogInfo, CollectionInfo, FeatureWritePayload, BulkCreateResultItem, BulkRetrieveResultItem } from '@/types/assetRegistry';
 
 function withWhispMetadata(properties: Record<string, unknown>): Record<string, unknown> {
   return { ...properties, _whisp: { version: config.app.version } };
@@ -55,42 +55,38 @@ export async function registerFeatureBatchAction(
   return results;
 }
 
-export async function retrieveFeaturesByGeoIds(
+export async function retrieveFeatureBatchAction(
   collection: string,
-  geoIds: string[]
-): Promise<{ ok: boolean; featureCollection?: FeatureCollection; error?: string }> {
-  try {
-    await requireAuth();
-  } catch {
-    return { ok: false, error: 'Authentication required' };
-  }
+  batch: { index: number; geoId: string }[]
+): Promise<BulkRetrieveResultItem[]> {
+  await requireAuth();
 
-  try {
-    const client = createRegistryClient();
-    const features: Feature[] = [];
-    const notFound: string[] = [];
+  const client = createRegistryClient();
+  const results: BulkRetrieveResultItem[] = [];
 
-    for (const geoId of geoIds) {
+  for (const { index, geoId } of batch) {
+    try {
       const feature = await client.resolveGeoId(geoId, collection);
       if (feature) {
-        features.push({
-          ...feature,
-          properties: { ...feature.properties, geoid: geoId }
+        results.push({
+          index,
+          geoId,
+          feature: { ...feature, properties: { ...feature.properties, geoid: geoId } },
+          status: 'retrieved',
         });
       } else {
-        notFound.push(geoId);
+        results.push({ index, geoId, status: 'not_found' });
       }
+    } catch (e) {
+      results.push({
+        index,
+        geoId,
+        status: 'error',
+        error: e instanceof Error ? e.message : 'Unknown error',
+      });
     }
-
-    if (notFound.length > 0) {
-      return { ok: false, error: `GeoIDs not found: ${notFound.join(', ')}` };
-    }
-
-    return {
-      ok: true,
-      featureCollection: { type: 'FeatureCollection', features },
-    };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Retrieval failed' };
   }
+
+  return results;
 }
+
