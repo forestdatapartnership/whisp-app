@@ -8,42 +8,28 @@ export default function VersionLink() {
   const { config } = useConfig()
   const version = config.appVersion
   const pythonVersion = config.whispPythonVersion
+  const releaseUrl = `https://github.com/forestdatapartnership/whisp-app/releases/tag/v${version}`
   const milestonesUrl = 'https://github.com/forestdatapartnership/whisp-app/milestones'
-  const specificReleaseUrl = `https://github.com/forestdatapartnership/whisp-app/releases/tag/v${version}`
-  const [versionHref, setVersionHref] = useState<string>(milestonesUrl)
+  const [versionHref, setVersionHref] = useState(milestonesUrl)
 
   useEffect(() => {
     if (!version) return
-
-    const storageKey = `whisp-release-v${version}`
+    const cacheKey = `whisp-release-v${version}`
     try {
-      const cached = typeof window !== 'undefined' ? window.sessionStorage.getItem(storageKey) : null
-      if (cached && /^https?:\/\//.test(cached)) {
-        setVersionHref(cached)
-        return
-      }
+      const cached = sessionStorage.getItem(cacheKey)
+      if (cached) { setVersionHref(cached); return }
     } catch {}
-
-    const apiUrl = `https://api.github.com/repos/forestdatapartnership/whisp-app/releases/tags/v${version}`
-    let cancelled = false
-    fetch(apiUrl)
+    fetch(`https://api.github.com/repos/forestdatapartnership/whisp-app/releases/tags/v${version}`)
       .then((res) => {
-        if (cancelled) return
         if (res.ok) {
-          setVersionHref(specificReleaseUrl)
-          try { window.sessionStorage.setItem(storageKey, specificReleaseUrl) } catch {}
+          setVersionHref(releaseUrl)
+          try { sessionStorage.setItem(cacheKey, releaseUrl) } catch {}
         } else {
           setVersionHref(milestonesUrl)
-          try { window.sessionStorage.setItem(storageKey, milestonesUrl) } catch {}
         }
       })
-      .catch(() => {
-        try { window.sessionStorage.setItem(storageKey, milestonesUrl) } catch {}
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [version, specificReleaseUrl])
+      .catch(() => setVersionHref(milestonesUrl))
+  }, [version, releaseUrl])
 
   return (
     <>
