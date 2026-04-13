@@ -27,7 +27,7 @@ const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined);
 
 export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { config } = useConfig();
+  const { config, isLoading: configLoading } = useConfig();
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [apiKeyMetadata, setApiKeyMetadata] = useState<ApiKeyMetadata | null>(null);
   const [isUserKey, setIsUserKey] = useState(false);
@@ -93,7 +93,7 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, config]);
 
   const createApiKey = useCallback(async () => {
     setError(null);
@@ -178,10 +178,10 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && !configLoading) {
       loadApiKey();
     }
-  }, [isAuthenticated, authLoading, loadApiKey]);
+  }, [isAuthenticated, authLoading, configLoading, loadApiKey]);
 
   return (
     <ApiKeyContext.Provider
