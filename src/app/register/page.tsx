@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { validateEmailFormat } from "@/lib/utils/emailFormat";
+import { registerUser } from "@/lib/auth/actions";
+import { isValidPassword, PASSWORD_RULES } from "@/lib/utils/fieldValidation";
 
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState("");
@@ -20,26 +21,6 @@ const RegisterPage: React.FC = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [subscribeNotifications, setSubscribeNotifications] = useState(false);
-  const router = useRouter();
-
-  const isValidPassword = (password: string) => {
-    // Check for minimum length
-    if (password.length < 8) return false;
-    
-    // Check for uppercase letter
-    if (!/[A-Z]/.test(password)) return false;
-    
-    // Check for lowercase letter
-    if (!/[a-z]/.test(password)) return false;
-    
-    // Check for number
-    if (!/[0-9]/.test(password)) return false;
-    
-    // Check for special character
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return false;
-    
-    return true;
-  };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPassword = e.target.value;
@@ -100,22 +81,8 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, lastName, organization, email, password, subscribeNotifications }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Registration failed");
-      }
-
+      await registerUser({ name, lastName, organization, email, password, subscribeNotifications });
       setRegistrationSuccess(true);
-      
-      // Clear all form fields after successful registration
       setName("");
       setLastName("");
       setOrganization("");
@@ -123,7 +90,6 @@ const RegisterPage: React.FC = () => {
       setPassword("");
       setConfirmPassword("");
       setSubscribeNotifications(false);
-      
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -289,26 +255,12 @@ const RegisterPage: React.FC = () => {
                   <div className="mt-2 w-full bg-[#2B3341] border border-gray-700 rounded-lg shadow-lg p-4">
                     <div className="text-sm text-gray-300 font-medium mb-2 text-left">Password requirements:</div>
                     <ul className="list-none space-y-2 text-sm text-gray-400">
-                      <li className="flex items-center">
-                        <span className="mr-2 text-gray-400">•</span>
-                        <span className="flex-grow text-left">At least 8 characters long</span>
-                      </li>
-                      <li className="flex items-center">
-                        <span className="mr-2 text-gray-400">•</span>
-                        <span className="flex-grow text-left">Include at least one uppercase letter (A-Z)</span>
-                      </li>
-                      <li className="flex items-center">
-                        <span className="mr-2 text-gray-400">•</span>
-                        <span className="flex-grow text-left">Include at least one lowercase letter (a-z)</span>
-                      </li>
-                      <li className="flex items-center">
-                        <span className="mr-2 text-gray-400">•</span>
-                        <span className="flex-grow text-left">Include at least one number (0-9)</span>
-                      </li>
-                      <li className="flex items-center">
-                        <span className="mr-2 text-gray-400">•</span>
-                        <span className="flex-grow text-left">Include at least one special character (!@#$%^&*(),.?":{}|&lt;&gt;)</span>
-                      </li>
+                      {PASSWORD_RULES.map((rule, i) => (
+                        <li key={i} className="flex items-center">
+                          <span className="mr-2 text-gray-400">•</span>
+                          <span className="flex-grow text-left">{rule.message}</span>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 )}

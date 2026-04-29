@@ -1,12 +1,6 @@
 import { SystemError } from '@/types/systemError';
 import { SystemCode } from '@/types/systemCodes';
 
-/**
- * Validates that all required fields are present in the request body
- * @param body - The request body object
- * @param requiredFields - Array of required field names
- * @throws SystemError with only the missing fields listed
- */
 export function validateRequiredFields(body: any, requiredFields: string[]): void {
   const missingFields: string[] = [];
   
@@ -19,5 +13,21 @@ export function validateRequiredFields(body: any, requiredFields: string[]): voi
   if (missingFields.length > 0) {
     throw new SystemError(SystemCode.VALIDATION_MISSING_REQUIRED_FIELDS, [missingFields.join(', ')]);
   }
+}
+
+export const PASSWORD_RULES: { test: (p: string) => boolean; message: string }[] = [
+  { test: (p) => p.length >= 8, message: 'At least 8 characters long' },
+  { test: (p) => /[A-Z]/.test(p), message: 'Include at least one uppercase letter (A-Z)' },
+  { test: (p) => /[a-z]/.test(p), message: 'Include at least one lowercase letter (a-z)' },
+  { test: (p) => /[0-9]/.test(p), message: 'Include at least one number (0-9)' },
+  { test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p), message: 'Include at least one special character' },
+];
+
+export function getPasswordErrors(password: string): string[] {
+  return PASSWORD_RULES.filter(r => !r.test(password)).map(r => r.message);
+}
+
+export function isValidPassword(password: string): boolean {
+  return PASSWORD_RULES.every(r => r.test(password));
 }
 

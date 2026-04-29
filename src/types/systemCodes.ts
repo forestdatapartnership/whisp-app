@@ -10,14 +10,7 @@ export enum SystemCode {
   AUTH_INVALID_CREDENTIALS = 'auth_invalid_credentials',
   AUTH_EMAIL_NOT_VERIFIED = 'auth_email_not_verified',
   AUTH_INVALID_TOKEN = 'auth_invalid_token',
-  AUTH_LOGIN_SUCCESS = 'auth_login_success',
-  AUTH_LOGOUT_SUCCESS = 'auth_logout_success',
-  AUTH_PASSWORD_RESET_REQUESTED = 'auth_password_reset_requested',
-  AUTH_PASSWORD_RESET_SUCCESS = 'auth_password_reset_success',
   AUTH_RATE_LIMIT_EXCEEDED = 'auth_rate_limit_exceeded',
-  AUTH_PASSWORD_CHANGED_SUCCESS = 'auth_password_changed_success',
-  AUTH_STATUS_AUTHENTICATED = 'auth_status_authenticated',
-  AUTH_STATUS_UNAUTHENTICATED = 'auth_status_unauthenticated',
   AUTH_EMAIL_VERIFIED_SUCCESS = 'auth_email_verified_success',
   AUTH_ADMIN_REQUIRED = 'auth_admin_required',
 
@@ -29,16 +22,6 @@ export enum SystemCode {
   USER_NOT_FOUND = 'user_not_found',
   USER_PASSWORD_CONFIRMATION_REQUIRED = 'user_password_confirmation_required',
   USER_INVALID_PASSWORD = 'user_invalid_password',
-  USER_REGISTRATION_SUCCESS = 'user_registration_success',
-  USER_PROFILE_UPDATE_SUCCESS = 'user_profile_update_success',
-  USER_ACCOUNT_DELETION_SUCCESS = 'user_account_deletion_success',
-  USER_API_KEY_CREATED_SUCCESS = 'user_api_key_created_success',
-  USER_API_KEY_DELETED_SUCCESS = 'user_api_key_deleted_success',
-
-  // Notifications
-  NOTIFICATION_SUBSCRIBED_SUCCESS = 'notification_subscribed_success',
-  NOTIFICATION_UNSUBSCRIBED_SUCCESS = 'notification_unsubscribed_success',
-  NOTIFICATION_INVALID_EMAIL = 'notification_invalid_email',
 
   // Data Validation Errors
   VALIDATION_MISSING_REQUIRED_FIELDS = 'validation_missing_required_fields',
@@ -135,45 +118,10 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     message: 'Invalid or expired token.',
     httpStatus: 400
   },
-  [SystemCode.AUTH_LOGIN_SUCCESS]: {
-    code: SystemCode.AUTH_LOGIN_SUCCESS,
-    message: 'Login successful',
-    httpStatus: 200
-  },
-  [SystemCode.AUTH_LOGOUT_SUCCESS]: {
-    code: SystemCode.AUTH_LOGOUT_SUCCESS,
-    message: 'Logout successful',
-    httpStatus: 200
-  },
-  [SystemCode.AUTH_PASSWORD_RESET_REQUESTED]: {
-    code: SystemCode.AUTH_PASSWORD_RESET_REQUESTED,
-    message: 'If your email is registered, you will receive a password reset link.',
-    httpStatus: 200
-  },
-  [SystemCode.AUTH_PASSWORD_RESET_SUCCESS]: {
-    code: SystemCode.AUTH_PASSWORD_RESET_SUCCESS,
-    message: 'Your password has been reset successfully',
-    httpStatus: 200
-  },
   [SystemCode.AUTH_RATE_LIMIT_EXCEEDED]: {
     code: SystemCode.AUTH_RATE_LIMIT_EXCEEDED,
     message: 'Rate limit exceeded. Try again in {0} seconds.',
     httpStatus: 429
-  },
-  [SystemCode.AUTH_PASSWORD_CHANGED_SUCCESS]: {
-    code: SystemCode.AUTH_PASSWORD_CHANGED_SUCCESS,
-    message: 'Password changed successfully',
-    httpStatus: 200
-  },
-  [SystemCode.AUTH_STATUS_AUTHENTICATED]: {
-    code: SystemCode.AUTH_STATUS_AUTHENTICATED,
-    message: 'User is authenticated',
-    httpStatus: 200
-  },
-  [SystemCode.AUTH_STATUS_UNAUTHENTICATED]: {
-    code: SystemCode.AUTH_STATUS_UNAUTHENTICATED,
-    message: 'User is not authenticated',
-    httpStatus: 200
   },
   [SystemCode.AUTH_EMAIL_VERIFIED_SUCCESS]: {
     code: SystemCode.AUTH_EMAIL_VERIFIED_SUCCESS,
@@ -222,49 +170,6 @@ export const SYSTEM_MESSAGES: Record<SystemCode, SystemCodeInfo> = {
     message: 'Current password is incorrect.',
     httpStatus: 401
   },
-  [SystemCode.USER_REGISTRATION_SUCCESS]: {
-    code: SystemCode.USER_REGISTRATION_SUCCESS,
-    message: 'Registration successful. Please check your email to verify your account.',
-    httpStatus: 201
-  },
-  [SystemCode.USER_PROFILE_UPDATE_SUCCESS]: {
-    code: SystemCode.USER_PROFILE_UPDATE_SUCCESS,
-    message: 'Profile updated successfully',
-    httpStatus: 200
-  },
-  [SystemCode.USER_ACCOUNT_DELETION_SUCCESS]: {
-    code: SystemCode.USER_ACCOUNT_DELETION_SUCCESS,
-    message: 'Account deleted successfully',
-    httpStatus: 200
-  },
-  [SystemCode.USER_API_KEY_CREATED_SUCCESS]: {
-    code: SystemCode.USER_API_KEY_CREATED_SUCCESS,
-    message: 'API key created successfully',
-    httpStatus: 201
-  },
-  [SystemCode.USER_API_KEY_DELETED_SUCCESS]: {
-    code: SystemCode.USER_API_KEY_DELETED_SUCCESS,
-    message: 'API key deleted successfully',
-    httpStatus: 200
-  },
-
-  // Notifications
-  [SystemCode.NOTIFICATION_SUBSCRIBED_SUCCESS]: {
-    code: SystemCode.NOTIFICATION_SUBSCRIBED_SUCCESS,
-    message: 'Successfully subscribed to email notifications',
-    httpStatus: 200
-  },
-  [SystemCode.NOTIFICATION_UNSUBSCRIBED_SUCCESS]: {
-    code: SystemCode.NOTIFICATION_UNSUBSCRIBED_SUCCESS,
-    message: 'Successfully unsubscribed from email notifications',
-    httpStatus: 200
-  },
-  [SystemCode.NOTIFICATION_INVALID_EMAIL]: {
-    code: SystemCode.NOTIFICATION_INVALID_EMAIL,
-    message: 'Invalid email format',
-    httpStatus: 400
-  },
-
   // Data Validation Errors
   [SystemCode.VALIDATION_MISSING_REQUIRED_FIELDS]: {
     code: SystemCode.VALIDATION_MISSING_REQUIRED_FIELDS,

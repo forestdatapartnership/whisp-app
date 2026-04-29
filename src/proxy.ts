@@ -10,10 +10,7 @@ export default function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/api/submit/:path*",
-    "/api/user/:path*",
     "/api/protected-data/:path*",
-    "/auth/logout",
-    "/auth/change-password",
     "/settings/:path*",
     "/dashboard/:path*",
   ],

@@ -64,7 +64,6 @@ export const config = {
     logLevel: env('NEXT_PUBLIC_LOG_LEVEL', 'info'),
     maxUploadFileSizeKb: envOptionalInt('NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_KB'),
     googleMapsApiKey: envOptional('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY'),
-    uiClientSecret: env('NEXT_PUBLIC_UI_CLIENT_SECRET', 'whisp-ui-client-access'),
   },
 
   cors: {
@@ -94,7 +93,6 @@ export function getPublicConfig() {
     appVersion: config.app.version,
     whispPythonVersion: config.app.whispPythonVersion,
     assetRegistryDefaultCollection: config.assetRegistry.defaultCollection,
-    uiClientSecret: config.app.uiClientSecret,
   };
 }
 

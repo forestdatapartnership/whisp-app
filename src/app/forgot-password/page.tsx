@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Alert from "@/components/shared/Alert";
+import { forgotPassword } from "@/lib/auth/actions";
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -16,20 +17,7 @@ const ForgotPasswordPage: React.FC = () => {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Something went wrong");
-      }
-
+      await forgotPassword(email);
       setIsSubmitSuccessful(true);
     } catch (err: any) {
       setError(err.message);

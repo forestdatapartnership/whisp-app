@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { updateUserProfile, deleteUserAccount } from '@/lib/user/actions';
 import Link from 'next/link';
 
 function SettingsContent() {
@@ -59,26 +60,13 @@ function SettingsContent() {
     setUpdating(true);
 
     try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          lastName: formData.lastName,
-          organization: formData.organization || null
-        }),
+      await updateUserProfile({
+        name: formData.name,
+        lastName: formData.lastName,
+        organization: formData.organization || null,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSuccessMessage(data.message || 'Profile updated successfully');
-        await refreshUser();
-      } else {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to update profile');
-      }
+      setSuccessMessage('Profile updated successfully');
+      await refreshUser();
     } catch (error: any) {
       console.error('Error updating profile:', error);
       setErrorMessage(error.message || 'An error occurred while updating your profile');
@@ -98,23 +86,9 @@ function SettingsContent() {
     setDeletionInProgress(true);
 
     try {
-      const response = await fetch('/api/user/profile', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          password: deletePassword
-        }),
-      });
-
-      if (response.ok) {
-        await logout();
-        router.push('/');
-      } else {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to delete account');
-      }
+      await deleteUserAccount(deletePassword);
+      await logout();
+      router.push('/');
     } catch (error: any) {
       console.error('Error deleting account:', error);
       setErrorMessage(error.message || 'An error occurred while deleting your account');

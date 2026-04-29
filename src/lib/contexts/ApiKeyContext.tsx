@@ -2,8 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { useConfig } from './ConfigContext';
-import { fetchTempApiKey, fetchUserApiKey } from '@/lib/secureApiUtils';
+import { fetchTempApiKey, fetchUserApiKey, createUserApiKey, deleteUserApiKey } from '@/lib/auth/actions';
 
 type ApiKeyMetadata = {
   createdAt: string | null;
@@ -27,7 +26,6 @@ const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined);
 
 export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { config } = useConfig();
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [apiKeyMetadata, setApiKeyMetadata] = useState<ApiKeyMetadata | null>(null);
   const [isUserKey, setIsUserKey] = useState(false);
@@ -60,7 +58,7 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
           setApiKeyMetadata(null);
         }
       } else {
-        const tempKey = await fetchTempApiKey(config.uiClientSecret, 'ApiKeyContext');
+        const tempKey = await fetchTempApiKey();
         setApiKey(tempKey.apiKey);
         setIsUserKey(false);
         setApiKeyMetadata(
@@ -99,61 +97,30 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await fetch('/api/user/api-key', {
-        method: 'POST',
-        credentials: 'include',
+      const result = await createUserApiKey();
+      setApiKey(result.apiKey);
+      setIsUserKey(true);
+      setApiKeyMetadata({
+        createdAt: result.createdAt,
+        expiresAt: result.expiresAt,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        const newKey = data.data.apiKey;
-        
-        setApiKey(newKey);
-        setIsUserKey(true);
-        
-        await loadApiKey();
-        
-        return {
-          success: true,
-          apiKey: newKey,
-        };
-      } else {
-        const data = await response.json();
-        const errorMessage = data.message || 'Failed to create API key';
-        setError(errorMessage);
-        return {
-          success: false,
-          error: errorMessage,
-        };
-      }
+      return { success: true, apiKey: result.apiKey };
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred while creating API key';
       setError(errorMessage);
-      return {
-        success: false,
-        error: errorMessage,
-      };
+      return { success: false, error: errorMessage };
     }
-  }, [loadApiKey]);
+  }, []);
 
   const deleteApiKey = useCallback(async () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/user/api-key', {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        setApiKey(null);
-        setIsUserKey(false);
-        setApiKeyMetadata(null);
-        return true;
-      } else {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to delete API key');
-      }
+      await deleteUserApiKey();
+      setApiKey(null);
+      setIsUserKey(false);
+      setApiKeyMetadata(null);
+      return true;
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred while deleting API key';
       setError(errorMessage);

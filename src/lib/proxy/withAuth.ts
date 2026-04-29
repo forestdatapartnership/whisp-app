@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ProxyFactory } from "./types";
-import { verifyToken, createTokens, setTokenCookies } from "@/lib/auth";
+import { verifyToken, createTokens, TOKEN_COOKIE_OPTIONS } from "@/lib/auth";
 
 const PRIVATE_PATHS = [
-  "/api/user",
-  "/auth/logout",
-  "/auth/change-password",
   "/settings",
   "/api/protected-data",
   "/dashboard",
@@ -31,7 +28,8 @@ export const withAuth: ProxyFactory = (next) => {
       if (refreshUser) {
         const tokens = await createTokens(refreshUser);
         const response = NextResponse.next();
-        setTokenCookies(response, tokens);
+        response.cookies.set('token', tokens.accessToken, TOKEN_COOKIE_OPTIONS.access);
+        response.cookies.set('refreshToken', tokens.refreshToken, TOKEN_COOKIE_OPTIONS.refresh);
         hasValidAccess = true;
         refreshedResponse = response;
       }

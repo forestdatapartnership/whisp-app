@@ -12,6 +12,9 @@
     "db:status": "node db/migrate.js status",
     "lint": "eslint .",
     "test": "jest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "update:swagger-version": "node scripts/build/update-swagger-version.js"
   },
   "dependencies": {
@@ -56,6 +59,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/geojson": "^7946.0.16",
     "@types/jest": "^29.5.14",

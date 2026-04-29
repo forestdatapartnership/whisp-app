@@ -3,9 +3,19 @@
 import { useStore } from '@/store';
 import { useApiKey } from '@/lib/contexts/ApiKeyContext';
 import { useSafeRouterPush } from '@/lib/hooks/useSafeRouterPush';
-import { createApiHeaders } from '@/lib/secureApiUtils';
 import { SystemCode } from '@/types/systemCodes';
 import { AnalysisOptionsValue } from '@/components/submission/AnalysisOptions';
+
+function createApiHeaders(apiKey?: string | null): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Whisp-Agent': 'ui'
+  };
+  if (apiKey) {
+    headers['X-API-KEY'] = apiKey;
+  }
+  return headers;
+}
 
 export function setSubmissionError(message: string, cause?: string | null) {
   useStore.setState({

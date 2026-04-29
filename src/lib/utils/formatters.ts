@@ -8,11 +8,11 @@ export const formatDuration = (ms: number | null | undefined) => {
   return `${minutes}m ${remaining}s`;
 };
 
-export const deriveDurationMs = (startedAt?: string | null, completedAt?: string | null) => {
+export const deriveDurationMs = (startedAt?: Date | string | null, completedAt?: Date | string | null) => {
   if (!startedAt) return null;
-  const start = new Date(startedAt);
+  const start = startedAt instanceof Date ? startedAt : new Date(startedAt);
   if (Number.isNaN(start.getTime())) return null;
-  const end = completedAt ? new Date(completedAt) : new Date();
+  const end = completedAt ? (completedAt instanceof Date ? completedAt : new Date(completedAt)) : new Date();
   if (Number.isNaN(end.getTime())) return null;
   const diff = end.getTime() - start.getTime();
   return diff >= 0 ? diff : null;
@@ -25,9 +25,9 @@ export const formatDateTime = (value: Date | string | null | undefined) => {
   return date.toLocaleString();
 };
 
-export const formatRelative = (value: string | null | undefined) => {
+export const formatRelative = (value: Date | string | null | undefined) => {
   if (!value) return { label: "—", tooltip: "—" };
-  const date = new Date(value);
+  const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return { label: "—", tooltip: "—" };
   const now = Date.now();
   const diffMs = now - date.getTime();

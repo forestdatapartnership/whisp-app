@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { subscribeNotifications, unsubscribeNotifications } from "@/lib/notifications/actions";
 
 const NotificationsPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -21,17 +22,15 @@ const NotificationsPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch("/api/notifications", {
-        method: action === "subscribe" ? "POST" : "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      setMessage(data.message || (response.ok ? "Success" : "Failed"));
-      setIsError(!response.ok);
-      if (response.ok) setEmail("");
+      if (action === "subscribe") {
+        await subscribeNotifications(email);
+        setMessage("Successfully subscribed to email notifications");
+      } else {
+        await unsubscribeNotifications(email);
+        setMessage("Successfully unsubscribed from email notifications");
+      }
+      setIsError(false);
+      setEmail("");
     } catch (err: any) {
       setMessage(err.message || "Something went wrong");
       setIsError(true);

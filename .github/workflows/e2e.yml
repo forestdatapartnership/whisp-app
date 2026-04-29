@@ -1,0 +1,54 @@
+name: E2E Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    environment: development
+    timeout-minutes: 15
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WORKLOAD_ID_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+
+      - name: Start Cloud SQL Proxy
+        run: |
+          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy ${{ vars.CLOUDSQL_INSTANCE }} --port ${{ vars.DB_PORT || '5432' }} &
+          sleep 3
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npx playwright test
+        env:
+          CI: true
+          PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_HOST: 127.0.0.1
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PORT: ${{ vars.DB_PORT || '5432' }}
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

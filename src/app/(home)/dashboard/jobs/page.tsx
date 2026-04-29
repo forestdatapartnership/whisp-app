@@ -8,43 +8,9 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { deriveDurationMs, formatDateTime, formatDuration, formatRelative } from "@/lib/utils/formatters";
-
-type Summary = {
-  total: number;
-  last24h: number;
-  last7d: number;
-};
-
-type StatusCounts = {
-  processing: number;
-  completed: number;
-  error: number;
-  timeout: number;
-};
-
-type Timings = {
-  avgRunMs: number | null;
-  p50RunMs: number | null;
-  avgQueueMs: number | null;
-};
-
-type JobRow = {
-  id: string;
-  status: string;
-  featureCount: number | null;
-  createdAt: string;
-  startedAt: string | null;
-  completedAt: string | null;
-  errorMessage: string | null;
-  resultsAvailable: boolean;
-};
-
-type StatsResponse = {
-  summary: Summary;
-  statusCounts: StatusCounts;
-  timings: Timings;
-  recentJobs: JobRow[];
-};
+import { fetchAnalysisJobStats } from "@/lib/analysis/actions";
+import type { AnalysisJobStats } from "@/lib/dal/analysisJobsService";
+import type { AnalysisJob } from "@/types/models/analysisJob";
 
 const statusStyles: Record<string, string> = {
   analysis_processing: "bg-blue-500/20 text-blue-300",
@@ -125,20 +91,15 @@ const StatTile = ({ label, value, helper }: { label: string; value: string | num
 
 function JobStatsContent() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const [stats, setStats] = useState<StatsResponse | null>(null);
+  const [stats, setStats] = useState<AnalysisJobStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [expandedError, setExpandedError] = useState<JobRow | null>(null);
+  const [expandedError, setExpandedError] = useState<AnalysisJob | null>(null);
 
   const refreshStats = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/analysis-jobs/stats", { cache: "no-store" });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Failed to load statistics");
-      }
-      const data: StatsResponse = await res.json();
+      const data = await fetchAnalysisJobStats();
       setStats(data);
     } catch (err: any) {
       console.error("Failed to load statistics", err);
@@ -283,9 +244,9 @@ function JobStatsContent() {
                         </TableCell>
                         <TableCell className="flex items-center justify-end gap-2 text-gray-200">
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${statusStyles[job.status] || "bg-gray-700 text-gray-200"}`}
+                            className={`px-2 py-1 rounded text-xs font-medium ${statusStyles[job.status ?? ""] || "bg-gray-700 text-gray-200"}`}
                           >
-                            {statusLabels[job.status] ?? job.status}
+                            {statusLabels[job.status ?? ""] ?? job.status}
                           </span>
                         {job.status === "analysis_error" ? (
                           <button
@@ -357,9 +318,9 @@ function JobStatsContent() {
             <div className="flex items-center justify-between p-4 border-b border-gray-800 sticky top-0 bg-gray-900">
               <div className="flex items-center gap-2">
                 <span
-                  className={`px-2 py-1 rounded text-xs font-medium ${statusStyles[expandedError.status] || "bg-gray-700 text-gray-200"}`}
+                  className={`px-2 py-1 rounded text-xs font-medium ${statusStyles[expandedError.status ?? ""] || "bg-gray-700 text-gray-200"}`}
                 >
-                  {statusLabels[expandedError.status] ?? expandedError.status}
+                  {statusLabels[expandedError.status ?? ""] ?? expandedError.status}
                 </span>
                 <span className="text-gray-400 text-sm">Token</span>
                 <span className="font-mono text-xs text-gray-100 break-all">{expandedError.id}</span>

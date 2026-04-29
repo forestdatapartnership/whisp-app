@@ -1,18 +1,9 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { SystemCode } from '@/types/systemCodes';
-
-type UserProfile = {
-  id: number;
-  name: string;
-  last_name: string;
-  organization: string | null;
-  email: string;
-  email_verified: boolean;
-  is_admin: boolean;
-};
+import { fetchUserProfile } from '@/lib/user/actions';
+import { loginUser, logoutUser } from '@/lib/auth/actions';
+import type { UserProfile } from '@/types/user';
 
 type AuthContextType = {
   user: UserProfile | null;
@@ -32,37 +23,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
-  const fetchUserProfile = useCallback(async () => {
+  const loadUserProfile = useCallback(async () => {
     try {
-      const statusRes = await fetch('/api/auth/status', { 
-        credentials: 'include' 
-      });
-      
-      if (statusRes.ok) {
-        const status = await statusRes.json();
-        const authenticated = status.code === SystemCode.AUTH_STATUS_AUTHENTICATED;
-        
-        if (!authenticated) {
-          setUser(null);
-          return null;
-        }
-      }
-
-      const response = await fetch('/api/user/profile', {
-        credentials: 'include',
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const userData = data.data.user;
-        setUser(userData ?? null);
-        return userData;
-      } else if (response.status === 401) {
-        setUser(null);
-        return null;
-      }
+      const profile = await fetchUserProfile();
+      setUser(profile ?? null);
+      return profile;
     } catch (err) {
       console.error('Error fetching user profile:', err);
       setUser(null);
@@ -72,24 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     setIsLoading(true);
-    await fetchUserProfile();
+    await loadUserProfile();
     setIsLoading(false);
-  }, [fetchUserProfile]);
+  }, [loadUserProfile]);
 
   const logout = useCallback(async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'GET',
-        credentials: 'include',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
-      
+      await logoutUser();
       setUser(null);
       setError(null);
-      
       window.location.href = '/';
     } catch (err) {
       console.error('Error logging out:', err);
@@ -100,35 +57,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     try {
       setError(null);
-      
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        await fetchUserProfile();
-        return true;
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Login failed');
-        return false;
-      }
-    } catch (err) {
+      const profile = await loginUser(email, password);
+      setUser(profile);
+      return true;
+    } catch (err: any) {
       console.error('Login error:', err);
-      setError('An error occurred during login');
+      setError(err.message || 'An error occurred during login');
       return false;
     }
-  }, [fetchUserProfile]);
+  }, []);
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
   useEffect(() => {
-    fetchUserProfile().finally(() => setIsLoading(false));
+    loadUserProfile().finally(() => setIsLoading(false));
   }, []);
 
   return (
@@ -157,4 +101,3 @@ export function useAuth() {
   }
   return context;
 }
-

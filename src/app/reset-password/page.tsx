@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Alert from "@/components/shared/Alert";
+import { resetPassword } from "@/lib/auth/actions";
+import { getPasswordErrors, PASSWORD_RULES } from "@/lib/utils/fieldValidation";
 
 // Component to handle the search params with suspense
 function ResetPasswordContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,34 +27,14 @@ function ResetPasswordContent() {
     }
   }, [searchParams]);
 
-  const validatePassword = (password: string): string | null => {
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters long';
-    }
-    if (!/[A-Z]/.test(password)) {
-      return 'Password must contain at least one uppercase letter';
-    }
-    if (!/[a-z]/.test(password)) {
-      return 'Password must contain at least one lowercase letter';
-    }
-    if (!/[0-9]/.test(password)) {
-      return 'Password must contain at least one number';
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      return 'Password must contain at least one special character';
-    }
-    return null;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     setError("");
 
-    // Password validation
-    const passwordError = validatePassword(newPassword);
-    if (passwordError) {
-      setError(passwordError);
+    const passwordErrors = getPasswordErrors(newPassword);
+    if (passwordErrors.length > 0) {
+      setError(passwordErrors[0]);
       return;
     }
 
@@ -68,23 +49,7 @@ function ResetPasswordContent() {
     }
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token,
-          newPassword
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to reset password");
-      }
-
+      await resetPassword(token, newPassword);
       setIsSubmitSuccessful(true);
     } catch (err: any) {
       setError(err.message);
@@ -198,11 +163,9 @@ function ResetPasswordContent() {
               <div className="mb-6 text-left">
                 <p className="text-sm text-gray-400 mb-2">Your password must:</p>
                 <ul className="text-xs text-gray-500 list-disc pl-5 space-y-1">
-                  <li>Be at least 8 characters long</li>
-                  <li>Include at least one uppercase letter (A-Z)</li>
-                  <li>Include at least one lowercase letter (a-z)</li>
-                  <li>Include at least one number (0-9)</li>
-                  <li>Include at least one special character (!@#$...)</li>
+                  {PASSWORD_RULES.map((rule, i) => (
+                    <li key={i}>{rule.message}</li>
+                  ))}
                 </ul>
               </div>
               

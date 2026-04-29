@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
@@ -10,27 +9,20 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { login, error, clearError, isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push("/");
+      window.location.assign("/");
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     clearError();
     setIsLoading(true);
-
-    const success = await login(email, password);
-    
-    if (success) {
-      router.push("/");
-    }
-    
+    await login(email, password);
     setIsLoading(false);
   };
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 import { jwtVerify, SignJWT } from 'jose'
 import { config } from '@/lib/config'
@@ -11,9 +11,16 @@ export const TOKEN_EXPIRATION = {
   refresh: '7d'
 }
 
-const COOKIE_MAX_AGE = {
-  access: 1800,
-  refresh: 604800
+const COOKIE_BASE = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  path: '/',
+}
+
+export const TOKEN_COOKIE_OPTIONS = {
+  access:  { ...COOKIE_BASE, maxAge: 1800 },
+  refresh: { ...COOKIE_BASE, maxAge: 604800 },
 }
 
 function getSecretBytes(): Uint8Array {
@@ -55,32 +62,36 @@ export async function createTokens(user: AuthUser): Promise<{ accessToken: strin
   return { accessToken, refreshToken }
 }
 
-export function setTokenCookies(
-  response: NextResponse,
-  tokens: { accessToken: string; refreshToken: string }
-): void {
-  const isProduction = process.env.NODE_ENV === 'production'
-
-  response.cookies.set('token', tokens.accessToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE.access
-  })
-
-  response.cookies.set('refreshToken', tokens.refreshToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE.refresh
-  })
-}
-
 export async function getAuthUser(req?: NextRequest): Promise<AuthUser | null> {
   const token = req ? req.cookies.get('token')?.value : (await cookies()).get('token')?.value
   return verifyToken(token)
+}
+
+export async function setAuthCookies(tokens: { accessToken: string; refreshToken: string }): Promise<void> {
+  const cookieStore = await cookies()
+  cookieStore.set('token', tokens.accessToken, TOKEN_COOKIE_OPTIONS.access)
+  cookieStore.set('refreshToken', tokens.refreshToken, TOKEN_COOKIE_OPTIONS.refresh)
+}
+
+export async function clearAuthCookies(): Promise<void> {
+  const cookieStore = await cookies()
+  cookieStore.set('token', '', { ...COOKIE_BASE, maxAge: 0 })
+  cookieStore.set('refreshToken', '', { ...COOKIE_BASE, maxAge: 0 })
+}
+
+export async function getAuthUserWithRefresh(): Promise<AuthUser | null> {
+  const cookieStore = await cookies()
+
+  const accessUser = await verifyToken(cookieStore.get('token')?.value)
+  if (accessUser) return accessUser
+
+  const refreshUser = await verifyToken(cookieStore.get('refreshToken')?.value)
+  if (!refreshUser) return null
+
+  const tokens = await createTokens(refreshUser)
+  await setAuthCookies(tokens)
+
+  return refreshUser
 }
 
 export async function requireAuth(): Promise<AuthUser> {
