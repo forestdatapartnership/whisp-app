@@ -129,7 +129,7 @@ const Navbar: React.FC = () => {
                                         Job stats
                                     </Link>
                                     <Link
-                                        href="/asset-registry"
+                                        href="/geoids"
                                         className="block px-4 py-2 hover:bg-gray-600"
                                         onClick={() => setIsProfileDropdownOpen(false)}
                                     >
