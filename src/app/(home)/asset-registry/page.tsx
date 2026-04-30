@@ -42,7 +42,7 @@ function AssetRegistryContent() {
 
       <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}>
         <h1 className="text-2xl font-semibold text-center mb-4">
-          Asset Registry
+          GeoIDs
         </h1>
 
         <div className="flex justify-center space-x-1 p-2 mb-4">

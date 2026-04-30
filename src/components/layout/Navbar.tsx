@@ -133,7 +133,7 @@ const Navbar: React.FC = () => {
                                         className="block px-4 py-2 hover:bg-gray-600"
                                         onClick={() => setIsProfileDropdownOpen(false)}
                                     >
-                                        Asset Registry
+                                        GeoIDs
                                     </Link>
                                     <button 
                                         onClick={handleLogout}
