@@ -1,6 +1,10 @@
 {
   "name": "whisp-migrations",
   "private": true,
+  "scripts": {
+    "migrate": "node migrate.js",
+    "status": "node migrate.js status"
+  },
   "dependencies": {
     "dotenv": "^17.4.2",
     "pg": "^8.14.1"
