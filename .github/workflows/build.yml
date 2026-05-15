@@ -31,10 +31,13 @@ jobs:
         with:
           ref: ${{ env.REF_TO_BUILD }}
 
-      - name: Extract version from package.json
+      - name: Sync version to subprojects
+        run: node scripts/build/sync-versions.js
+
+      - name: Extract version
         id: package_version
         run: |
-          VERSION=$(node -p "require('./package.json').version")
+          VERSION=$(cat .version)
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Authenticate to Google Cloud
@@ -46,14 +49,26 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ vars.REGISTRY }}
 
-      - name: Build and push Docker image
+      - name: Build and push app image
         run: |
-          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }} .
-          docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }}
+          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-app:${{ steps.package_version.outputs.version }} -f app/Dockerfile app/
+          docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-app:${{ steps.package_version.outputs.version }}
+
+      - name: Build and push api image
+        run: |
+          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-api:${{ steps.package_version.outputs.version }} -f api/Dockerfile .
+          docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-api:${{ steps.package_version.outputs.version }}
+
+      - name: Build and push db-migrate image
+        run: |
+          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-db-migrate:${{ steps.package_version.outputs.version }} -f db/Dockerfile .
+          docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-db-migrate:${{ steps.package_version.outputs.version }}
 
       - name: Clean up untagged images
         run: |
-          gcloud artifacts docker images list ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }} \
-            --include-tags --filter="-tags:*" \
-            --format="value[separator='@'](IMAGE,DIGEST)" | \
-            xargs -I {} gcloud artifacts docker images delete "{}" --quiet --async || true
+          for IMAGE in whisp-app whisp-api whisp-db-migrate; do
+            gcloud artifacts docker images list ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${IMAGE} \
+              --include-tags --filter="-tags:*" \
+              --format="value[separator='@'](IMAGE,DIGEST)" | \
+              xargs -I {} gcloud artifacts docker images delete "{}" --quiet --async || true
+          done

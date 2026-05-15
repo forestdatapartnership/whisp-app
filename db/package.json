@@ -1,0 +1,8 @@
+{
+  "name": "whisp-migrations",
+  "private": true,
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "pg": "^8.14.1"
+  }
+}

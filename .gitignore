@@ -1,8 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules
+.pnp
 .pnp.js
 .yarn/install-state.gz
 
@@ -10,8 +10,14 @@
 /coverage
 
 # next.js
-/.next/
-/out/
+.next/
+out/
+
+# /app Next.js
+/app/node_modules/
+/app/.next/
+/app/next-env.d.ts
+/app/tsconfig.tsbuildinfo
 
 # production
 /build
@@ -39,6 +45,7 @@ __pycache__/
 
 # Ignore everything in the temp directory
 temp/*
+/api/temp
 
 # Ignore gee credentials
 credentials.*
@@ -51,6 +58,16 @@ venv/
 /lib
 /bin
 
+# Python tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Python build artifacts
+dist/
+build/
+*.egg-info/
+
 # Any log files
 /logs
 
@@ -62,3 +79,6 @@ venv/
 /blob-report/
 /playwright/.cache/
 /.auth/
+
+#redis
+.redis/

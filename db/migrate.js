@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ path: path.resolve(process.cwd(), '.env.local') });
+require('dotenv').config({ path: path.resolve(process.cwd(), '.env.local'), quiet: true });
 const { Client } = require('pg');
 
 class MigrationRunner {
