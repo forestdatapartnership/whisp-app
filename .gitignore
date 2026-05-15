@@ -65,7 +65,6 @@ venv/
 
 # Python build artifacts
 dist/
-build/
 *.egg-info/
 
 # Any log files
