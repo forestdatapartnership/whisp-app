@@ -1,6 +1,20 @@
 FROM python:3.11-slim
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y \
+    libexpat1 \
+    libgdal-dev \
+    libproj-dev \
+    libgeos-dev \
+    libspatialindex-dev \
+    libsqlite3-dev \
+    libcurl4-openssl-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+    
 COPY api/pyproject.toml ./
 COPY api/src ./src
 RUN pip install --no-cache-dir ./
