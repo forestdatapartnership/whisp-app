@@ -173,6 +173,7 @@ async function main() {
         console.error(error.message);
         process.exit(1);
     }
+    process.exit(0);
 }
 
 if (require.main === module) {
