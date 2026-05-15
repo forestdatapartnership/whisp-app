@@ -27,6 +27,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/geojson": "^7946",
     "@types/nodemailer": "^6",
     "@types/pg": "^8",
     "@types/react": "^19",
