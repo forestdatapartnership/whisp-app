@@ -1,6 +1,6 @@
 import 'server-only';
 import { getAuthUser } from '@/lib/auth/session';
-import { getApiKeyByUser, getTempApiKey } from '@/lib/db/api-keys-service';
+import { getCacheableApiKeyByUser, getTempApiKey, type CacheableApiKey } from '@/lib/db/api-keys-service';
 import { config } from '@/lib/server/env';
 
 const CACHE_SAFEGUARD_MS = 60_000;
@@ -17,7 +17,7 @@ export function invalidateApiKeyCache(userId?: string) {
 
 async function cachedApiKey(
   cacheKey: string,
-  fetch: () => Promise<{ apiKey: string; expiresAt: string } | null>
+  fetch: () => Promise<CacheableApiKey | null>
 ): Promise<string | null> {
   const hit = cache.get(cacheKey);
   if (hit && Date.now() < hit.validUntil) return hit.apiKey;
@@ -35,10 +35,12 @@ async function cachedApiKey(
 async function resolveApiKey(): Promise<string> {
   const user = await getAuthUser();
   if (user) {
-    const userKey = await cachedApiKey(`user:${user.id}`, () => getApiKeyByUser(user.id));
+    const userKey = await cachedApiKey(`user:${user.id}`, () => getCacheableApiKeyByUser(user.id));
     if (userKey) return userKey;
   }
-  return (await cachedApiKey('temp', getTempApiKey));
+  const tempKey = await cachedApiKey('temp', getTempApiKey);
+  if (!tempKey) throw new Error('Failed to resolve API key');
+  return tempKey;
 }
 
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {

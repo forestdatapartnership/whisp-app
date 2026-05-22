@@ -4,11 +4,21 @@ import { getPool } from '@/lib/db/pool';
 
 const API_KEY_EXPIRY_DAYS = 365;
 
+export type CacheableApiKey = {
+  apiKey: string;
+  expiresAt: string;
+};
+
 type ApiKeyRow = {
   apiKey: string;
   createdAt: string | null;
   expiresAt: string | null;
 };
+
+function toCacheableApiKey(row: ApiKeyRow | null | undefined): CacheableApiKey | null {
+  if (!row?.expiresAt) return null;
+  return { apiKey: row.apiKey, expiresAt: row.expiresAt };
+}
 
 export type ApiKeyLookupRow = {
   id: number;
@@ -40,6 +50,10 @@ export async function getApiKeyByUser(userId: string): Promise<ApiKeyRow | null>
   return result.rows[0] ?? null;
 }
 
+export async function getCacheableApiKeyByUser(userId: string): Promise<CacheableApiKey | null> {
+  return toCacheableApiKey(await getApiKeyByUser(userId));
+}
+
 export async function createApiKeyForUser(userId: string): Promise<ApiKeyRow> {
   const pool = getPool();
   const key = randomUUID();
@@ -58,7 +72,7 @@ export async function deleteApiKeyByUser(userId: string): Promise<void> {
   await pool.query('SELECT delete_api_key_by_user($1)', [userId]);
 }
 
-export async function getTempApiKey(): Promise<{ apiKey: string; expiresAt: string }> {
+export async function getTempApiKey(): Promise<CacheableApiKey> {
   const pool = getPool();
   const result = await pool.query('SELECT * FROM get_temp_api_key()');
   const row = result.rows[0];
