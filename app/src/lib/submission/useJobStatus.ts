@@ -41,7 +41,7 @@ export function useJobStatus({
 
     const run = async () => {
       try {
-        const res = await fetch(`/api/status/${token}/stream`, {
+        const res = await fetch(`/internal/status/${token}/stream`, {
           signal: controller.signal,
         })
         clearTimeout(timeout)
@@ -85,7 +85,7 @@ export function useJobStatus({
 
     const poll = async () => {
       try {
-        const res = await fetch(`/api/status/${token}`)
+        const res = await fetch(`/internal/status/${token}`)
         const json: JobStatus = await res.json()
         setResponse(json)
         if (json.code === 'analysis_completed') {
