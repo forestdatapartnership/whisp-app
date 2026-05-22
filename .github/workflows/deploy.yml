@@ -50,16 +50,6 @@ jobs:
           printf '%s' "$KUBE_CONFIG" > "$HOME/.kube/config"
           chmod 600 "$HOME/.kube/config"
 
-      - name: Bind workload identity
-        env:
-          PROJECT_ID: ${{ vars.PROJECT_ID }}
-          GKE_NAMESPACE: ${{ vars.GKE_NAMESPACE }}
-          GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
-        run: |
-          gcloud iam service-accounts add-iam-policy-binding "$GCP_SERVICE_ACCOUNT" \
-            --role="roles/iam.workloadIdentityUser" \
-            --member="serviceAccount:${PROJECT_ID}.svc.id.goog[${GKE_NAMESPACE}/whisp-app-ksa]"
-
       - name: Verify images exist
         run: |
           REGISTRY="${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}"
