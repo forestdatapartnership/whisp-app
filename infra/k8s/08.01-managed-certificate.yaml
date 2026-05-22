@@ -1,0 +1,11 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: whisp-managed-cert
+  namespace: ${GKE_NAMESPACE}
+  labels:
+    app: whisp-tls
+    env: ${ENVIRONMENT}
+spec:
+  domains:
+    - ${INGRESS_HOST}

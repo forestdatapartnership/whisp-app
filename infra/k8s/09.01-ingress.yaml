@@ -9,8 +9,26 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: gce
     kubernetes.io/ingress.global-static-ip-name: ${GKE_LB_STATIC_IP_NAME}
+    networking.gke.io/managed-certificates: whisp-managed-cert
 spec:
   rules:
+  - host: ${INGRESS_HOST}
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: whisp-api
+            port:
+              number: 8000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: whisp-app
+            port:
+              number: 80
   - http:
       paths:
       - path: /api
