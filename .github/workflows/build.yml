@@ -7,6 +7,7 @@ on:
       - release/**
     paths-ignore:
       - '.github/**'
+      - 'infra/**'
   workflow_dispatch:
   workflow_call:
     inputs:
