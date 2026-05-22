@@ -68,7 +68,7 @@ function syncRemoteConfig() {
 
 const loadRemote = cache(async () => {
   try {
-    const res = await fetch(`${env('API_URL').replace(/\/$/, '')}/config`, { cache: 'no-store' });
+    const res = await fetch(`${config.api.url}/config`, { cache: 'no-store' });
     if (res.ok) applyRemoteConfig((await res.json()) as ApiConfigResponse);
   } catch {}
 });
@@ -97,7 +97,9 @@ export const config = {
   },
 
   api: {
-    url: env('API_URL').replace(/\/$/, ''),
+    get url() {
+      return env('API_URL').replace(/\/$/, '');
+    },
   },
 
   geoid: {

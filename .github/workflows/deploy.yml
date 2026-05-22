@@ -67,14 +67,42 @@ jobs:
           GEE_SECRET: ${{ vars.GEE_SECRET }}
           GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
           HOST_URL: ${{ vars.HOST_URL }}
-          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
         run: |
           set -euo pipefail
-          VARS='$NAMESPACE $ENVIRONMENT $VERSION $IMAGE_REGISTRY $CLOUDSQL_INSTANCE $GCS_BUCKET $ENV_SECRET $GEE_SECRET $GCP_SERVICE_ACCOUNT $HOST_URL $PUBLIC_URL'
+          VERSION_SLUG=$(echo "$VERSION" | tr '[:upper:]' '[:lower:]' | tr '.+' '-')
+          export VERSION_SLUG
+          VARS='$NAMESPACE $ENVIRONMENT $VERSION $VERSION_SLUG $IMAGE_REGISTRY $CLOUDSQL_INSTANCE $GCS_BUCKET $ENV_SECRET $GEE_SECRET $GCP_SERVICE_ACCOUNT $HOST_URL'
           OUT=/tmp/k8s
           mkdir -p "$OUT"
           for f in infra/k8s/[0-9]*.yaml; do
             envsubst "$VARS" < "$f" > "$OUT/$(basename "$f")"
           done
-          kubectl delete job whisp-db-migrate -n "$NAMESPACE" --ignore-not-found
-          kubectl apply -f "$OUT/"
+
+          shopt -s nullglob
+
+          kubectl apply -f "$OUT"/00.*.yaml
+
+          kubectl apply -f "$OUT"/01.*.yaml
+          kubectl wait --for=condition=available deployment --all -n "$NAMESPACE" --timeout=300s
+
+          kubectl apply -f "$OUT"/02.*.yaml
+          kubectl wait --for=condition=complete job --all -n "$NAMESPACE" --timeout=300s &
+          wp=$!
+          while kill -0 $wp 2>/dev/null; do
+            kubectl get job -n "$NAMESPACE" -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Failed")].status}{"\n"}{end}' | grep -qx True && {
+              kill $wp 2>/dev/null || true
+              wait $wp 2>/dev/null || true
+              kubectl get job -n "$NAMESPACE"
+              exit 1
+            }
+            sleep 2
+          done
+          wait $wp
+
+          kubectl apply -f "$OUT"/03.*.yaml
+          kubectl wait --for=condition=available deployment --all -n "$NAMESPACE" --timeout=300s
+
+          for tier in 04 05 06 07 08 09; do
+            files=("$OUT/${tier}."*.yaml)
+            [ ${#files[@]} -gt 0 ] && kubectl apply -f "${files[@]}"
+          done

@@ -26,8 +26,6 @@ spec:
         env:
         - name: HOST_URL
           value: "${HOST_URL}"
-        - name: NEXT_PUBLIC_WHISP_URL
-          value: "${PUBLIC_URL}"
         - name: DB_HOST
           value: "cloud-sql-proxy"
         - name: DB_PORT
