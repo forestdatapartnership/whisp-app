@@ -1,18 +1,17 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { fetchPublicConfig } from '@/lib/config/actions';
-import type { PublicConfig } from '@/lib/shared/public-config';
+import { fetchPublicConfig, type ClientConfig } from '@/lib/config/actions';
 
 interface ConfigContextValue {
-  config: PublicConfig | null;
+  config: ClientConfig | null;
   isLoading: boolean;
 }
 
 const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
-  const [config, setConfig] = useState<PublicConfig | null>(null);
+  const [config, setConfig] = useState<ClientConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,5 +35,5 @@ export function useConfig() {
   if (context === undefined) {
     throw new Error('useConfig must be used within a ConfigProvider');
   }
-  return context as { config: PublicConfig; isLoading: boolean };
+  return context as { config: ClientConfig; isLoading: boolean };
 }

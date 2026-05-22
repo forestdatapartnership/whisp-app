@@ -40,8 +40,8 @@ export function CollectionPicker({ value, onChange }: CollectionPickerProps) {
         setCollections(data)
         if (!initialized.current) {
           initialized.current = true
-          const def = config?.geoidDefaultCollection
-            ? (data.find((c) => c.id === config.geoidDefaultCollection) ?? data[0])
+          const def = config?.geoid.collection
+            ? (data.find((c) => c.id === config.geoid.collection) ?? data[0])
             : data[0]
           if (def && !value) onChangeRef.current(def.id)
         }

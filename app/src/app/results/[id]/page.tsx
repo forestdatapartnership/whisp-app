@@ -193,10 +193,10 @@ export default function ResultsPage() {
   }, []);
 
   const handleOpenWhispMap = useCallback(() => {
-    if (tableData.length === 0 || !config?.apiUrl) return;
-    const downloadUrl = `${config.apiUrl}/generate-geojson/${id}`;
+    if (tableData.length === 0 || !config?.api.url) return;
+    const downloadUrl = `${config.api.url}/generate-geojson/${id}`;
     window.open(`https://whisp.earthmap.org/?aoi=WHISP&fetchJson=${downloadUrl}`, "_blank");
-  }, [id, tableData.length, config?.apiUrl]);
+  }, [id, tableData.length, config?.api.url]);
 
   const handleExport = (format: string) => {
     if (!geoJsonData) return;
@@ -288,7 +288,7 @@ export default function ResultsPage() {
         onToggleMap={setMapVisible}
         onBack={() => router.push("/")}
         onOpenWhispMap={handleOpenWhispMap}
-        whispMapDisabled={tableData.length === 0 || !config?.apiUrl}
+        whispMapDisabled={tableData.length === 0 || !config?.api.url}
       />
       <div className="flex flex-1 overflow-hidden">
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ flex: mapVisible ? "0 0 56%" : "1 1 0%" }}>

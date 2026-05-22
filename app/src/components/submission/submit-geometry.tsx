@@ -37,10 +37,14 @@ export function SubmitGeometry({
     if (submitError) onError(submitError)
   }, [submitError, onError])
 
-  const reset = () => {
+  const clearFile = () => {
     setFileName('')
     setPayload(null)
     setFeatureCount(0)
+  }
+
+  const reset = () => {
+    clearFile()
     onError('')
   }
 
@@ -48,20 +52,20 @@ export function SubmitGeometry({
     onError('')
     if (maxFileSize && file.size > maxFileSize) {
       onError(`File too large. Maximum is ${maxFileSize / 1024} KB.`)
-      reset()
+      clearFile()
       return
     }
 
     const result = await parseGeometryFile(file)
     if ('error' in result) {
       onError(result.error)
-      reset()
+      clearFile()
       return
     }
 
     if (geometryLimit && result.featureCount > geometryLimit) {
       onError(`Too many geometries. Maximum allowed is ${geometryLimit}.`)
-      reset()
+      clearFile()
       return
     }
 

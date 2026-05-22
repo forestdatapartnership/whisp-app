@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: whisp-db-migrate-${VERSION_SLUG}
+  namespace: ${NAMESPACE}
+  labels:
+    app: whisp-db-migrate
+    version: "${VERSION}"
+    env: ${ENVIRONMENT}
+spec:
+  activeDeadlineSeconds: 300
+  backoffLimit: 2
+  template:
+    spec:
+      serviceAccountName: whisp-app-ksa
+      restartPolicy: Never
+      containers:
+      - name: db-migrate
+        image: ${IMAGE_REGISTRY}/whisp-db-migrate:${VERSION}
+        imagePullPolicy: Always
+        env:
+        - name: DB_HOST
+          value: "cloud-sql-proxy"
+        - name: DB_PORT
+          value: "5432"
+        volumeMounts:
+        - name: gcp-secrets-inline
+          mountPath: /app/.env.local
+          subPath: .env.local
+          readOnly: true
+      volumes:
+      - name: gcp-secrets-inline
+        csi:
+          driver: secrets-store-gke.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "whisp-secrets-provider"

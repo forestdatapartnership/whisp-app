@@ -26,7 +26,7 @@ export function DataSubmission() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { hasApiKey, isLoading: apiKeyLoading } = useApiKey()
 
-  const maxFileSize = config?.maxUploadFileSizeKb ? config.maxUploadFileSizeKb * 1024 : undefined
+  const maxFileSize = config?.submission.maxRequestBodySizeKb ? config.submission.maxRequestBodySizeKb * 1024 : undefined
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab as Tab)
@@ -66,15 +66,15 @@ export function DataSubmission() {
       {activeTab === 'geometry' ? (
         <SubmitGeometry
           maxFileSize={maxFileSize}
-          geometryLimit={config?.geometryLimit}
-          asyncThreshold={config?.asyncThreshold}
+          geometryLimit={config?.submission.geometryLimit}
+          asyncThreshold={config?.submission.asyncThreshold}
           onError={setError}
         />
       ) : (
         <SubmitGeoIds
           maxFileSize={maxFileSize}
-          geometryLimit={config?.geometryLimit}
-          asyncThreshold={config?.asyncThreshold}
+          geometryLimit={config?.submission.geometryLimit}
+          asyncThreshold={config?.submission.asyncThreshold}
           onError={setError}
         />
       )}

@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: whisp-ingress
+  namespace: ${NAMESPACE}
+  labels:
+    app: whisp-ingress
+    env: ${ENVIRONMENT}
+  annotations:
+    kubernetes.io/ingress.class: gce
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: whisp-api
+            port:
+              number: 8000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: whisp-app
+            port:
+              number: 80

@@ -1,0 +1,121 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: whisp-dev
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: whisp-secrets-provider
+  namespace: whisp-dev
+spec:
+  provider: gke
+  parameters:
+    secrets: |
+      - resourceName: "projects/fao-fdp-review/secrets/gke-whisp-app-env-dev/versions/latest"
+        path: ".env.local"
+      - resourceName: "projects/180739071958/secrets/gee-credentials/versions/latest"
+        path: "credentials.json"
+---
+# 1. Kubernetes Service Account in Namespace-ul de DEV
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: whisp-app-ksa
+  namespace: whisp-dev
+  annotations:
+    iam.gke.io/gcp-service-account: 180739071958-compute@developer.gserviceaccount.com
+---
+# 2. Deployment - whisp-dev
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisp-app-dev
+  namespace: whisp-dev
+  labels:
+    app: whisp-app
+    env: development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whisp-app
+  template:
+    metadata:
+      labels:
+        app: whisp-app
+      annotations:
+        gke-internal.autoupdate.gke.io/sidecar-containers: "true"
+        gke-gcsfuse/volumes: "true"
+    spec:
+      serviceAccountName: whisp-app-ksa
+      containers:
+      - name: whisp-app-1
+        image: europe-west1-docker.pkg.dev/fao-fdp-review/whisp-app/whisp-app@sha256:c115b6a61c341ee1d5b7ad03e210e0159cac4be827ed0182500203ecf5d99294 
+        ports:
+        - containerPort: 3000
+        env:
+        - name: HOST_URL
+          value: "http://[EXTERNAL_IP_DEV]"
+        - name: NEXT_PUBLIC_WHISP_URL
+          value: "http://[EXTERNAL_IP_DEV]"
+        resources:
+          requests:
+            cpu: "500m" # Resurse reduse pentru mediul de dev
+            memory: "512Mi"
+        volumeMounts:
+        - name: whisp-volume-gcs
+          mountPath: /app/temp
+          readOnly: false
+        - name: gcp-secrets-inline
+          mountPath: /app/secrets/environment/.env.local
+          subPath: .env.local
+        - name: gcp-secrets-inline
+          mountPath: /app/secrets/gee/credentials.json
+          subPath: credentials.json
+          readOnly: true
+
+      # --- Cloud SQL Auth Proxy Sidecar ---
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.0
+        args:
+          - "--port=5432"
+          - "--private-ip"
+          - "fao-fdp-review:europe-west1:fao-fdp-whisp-shared"
+        securityContext:
+          runAsNonRoot: true
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+
+      volumes:
+      - name: whisp-volume-gcs
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: whisp-app-temp-bucket 
+            mountOptions: "implicit-dirs"
+      
+      - name: gcp-secrets-inline
+        csi:
+          driver: secrets-store-gke.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "whisp-secrets-provider"
+
+---
+# 3. Load Balancer (Public IP) - whisp-dev
+apiVersion: v1
+kind: Service
+metadata:
+  name: whisp-app-lb
+  namespace: whisp-dev
+spec:
+  type: LoadBalancer
+  selector:
+    app: whisp-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000

@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisp-app
+  namespace: ${NAMESPACE}
+  labels:
+    app: whisp-app
+    env: ${ENVIRONMENT}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: whisp-app
+  template:
+    metadata:
+      labels:
+        app: whisp-app
+    spec:
+      serviceAccountName: whisp-app-ksa
+      containers:
+      - name: whisp-app
+        image: ${IMAGE_REGISTRY}/whisp-app:${VERSION}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        env:
+        - name: HOST_URL
+          value: "${HOST_URL}"
+        - name: NEXT_PUBLIC_WHISP_URL
+          value: "${PUBLIC_URL}"
+        - name: DB_HOST
+          value: "cloud-sql-proxy"
+        - name: DB_PORT
+          value: "5432"
+        resources:
+          requests:
+            cpu: 200m
+            memory: 384Mi
+          limits:
+            cpu: 500m
+            memory: 768Mi
+        volumeMounts:
+        - name: gcp-secrets-inline
+          mountPath: /app/.env.local
+          subPath: .env.local
+          readOnly: true
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 20
+      volumes:
+      - name: gcp-secrets-inline
+        csi:
+          driver: secrets-store-gke.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "whisp-secrets-provider"
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: whisp-app-pdb
+  namespace: ${NAMESPACE}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: whisp-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whisp-app
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    app: whisp-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000

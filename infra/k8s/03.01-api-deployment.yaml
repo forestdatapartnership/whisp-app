@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisp-api
+  namespace: ${NAMESPACE}
+  labels:
+    app: whisp-api
+    env: ${ENVIRONMENT}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whisp-api
+  template:
+    metadata:
+      labels:
+        app: whisp-api
+      annotations:
+        gke-internal.autoupdate.gke.io/sidecar-containers: "true"
+        gke-gcsfuse/volumes: "true"
+    spec:
+      serviceAccountName: whisp-app-ksa
+      containers:
+      - name: whisp-api
+        image: ${IMAGE_REGISTRY}/whisp-api:${VERSION}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DB_HOST
+          value: "cloud-sql-proxy"
+        - name: DB_PORT
+          value: "5432"
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1
+            memory: 1Gi
+        volumeMounts:
+        - name: whisp-volume-gcs
+          mountPath: /app/temp
+          readOnly: false
+        - name: gcp-secrets-inline
+          mountPath: /app/credentials.json
+          subPath: credentials.json
+          readOnly: true
+        - name: gcp-secrets-inline
+          mountPath: /app/.env.local
+          subPath: .env.local
+          readOnly: true
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+      volumes:
+      - name: whisp-volume-gcs
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: ${GCS_BUCKET}
+            mountOptions: "implicit-dirs"
+      - name: gcp-secrets-inline
+        csi:
+          driver: secrets-store-gke.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "whisp-secrets-provider"
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: whisp-api-backend-config
+  namespace: ${NAMESPACE}
+spec:
+  timeoutSec: 120
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whisp-api
+  namespace: ${NAMESPACE}
+  annotations:
+    cloud.google.com/backend-config: '{"default": "whisp-api-backend-config"}'
+spec:
+  selector:
+    app: whisp-api
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000

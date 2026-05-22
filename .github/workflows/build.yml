@@ -31,13 +31,11 @@ jobs:
         with:
           ref: ${{ env.REF_TO_BUILD }}
 
-      - name: Sync version to subprojects
-        run: node scripts/build/sync-versions.js
-
       - name: Extract version
         id: package_version
         run: |
-          VERSION=$(cat .version)
+          VERSION=$(tr -d '[:space:]' < .version)
+          [ -n "$VERSION" ] || { echo "Missing .version"; exit 1; }
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Authenticate to Google Cloud
@@ -51,12 +49,12 @@ jobs:
 
       - name: Build and push app image
         run: |
-          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-app:${{ steps.package_version.outputs.version }} -f app/Dockerfile .
+          docker build --build-arg VERSION=${{ steps.package_version.outputs.version }} -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-app:${{ steps.package_version.outputs.version }} -f app/Dockerfile .
           docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-app:${{ steps.package_version.outputs.version }}
 
       - name: Build and push api image
         run: |
-          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-api:${{ steps.package_version.outputs.version }} -f api/Dockerfile .
+          docker build --build-arg VERSION=${{ steps.package_version.outputs.version }} -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-api:${{ steps.package_version.outputs.version }} -f api/Dockerfile .
           docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-api:${{ steps.package_version.outputs.version }}
 
       - name: Build and push db-migrate image

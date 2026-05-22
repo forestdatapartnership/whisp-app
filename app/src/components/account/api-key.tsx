@@ -18,7 +18,7 @@ export function useAccountApiKey() {
   const [revokeOpen, setRevokeOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const apiBase = config?.apiUrl ?? '';
+  const apiBase = config?.api.url ?? '';
 
   const handleRegen = async () => {
     setRegenOpen(false);

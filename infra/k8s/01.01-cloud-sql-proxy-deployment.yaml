@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-sql-proxy
+  namespace: ${NAMESPACE}
+  labels:
+    app: cloud-sql-proxy
+    env: ${ENVIRONMENT}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-sql-proxy
+  template:
+    metadata:
+      labels:
+        app: cloud-sql-proxy
+    spec:
+      serviceAccountName: whisp-app-ksa
+      containers:
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.0
+        args:
+        - "--address=0.0.0.0"
+        - "--port=5432"
+        - "--private-ip"
+        - "${CLOUDSQL_INSTANCE}"
+        ports:
+        - containerPort: 5432
+        securityContext:
+          runAsNonRoot: true
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-sql-proxy
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    app: cloud-sql-proxy
+  ports:
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432

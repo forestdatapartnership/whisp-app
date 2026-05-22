@@ -1,12 +1,12 @@
-name: Deploy to Cloud Run
+name: Deploy to GKE
 
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy to'
-        required: false
-        default: 'development'
+        description: Environment to deploy to
+        required: true
+        default: development
         type: choice
         options:
           - development
@@ -19,103 +19,62 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
-          fetch-depth: 0
-          ref: ${{ github.ref }}
+          fetch-depth: 1
 
-      - name: Extract version from package.json
-        id: package_version
+      - name: Read version
+        id: version
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG_VERSION=$(echo "${VERSION}" | tr '.' '-')
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "tag_version=v${TAG_VERSION}" >> $GITHUB_OUTPUT
+          VERSION=$(tr -d '[:space:]' < .version)
+          [ -n "$VERSION" ] || { echo "Missing .version"; exit 1; }
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+      - uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.WORKLOAD_ID_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
-      - name: Verify image exists and get digest
-        id: image
-        run: |
-          IMAGE_REF="${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:${{ steps.package_version.outputs.version }}"
-          echo "Checking if image exists: ${IMAGE_REF}"
-          IMAGE_WITH_DIGEST=$(gcloud artifacts docker images describe "${IMAGE_REF}" --format=json | jq -r '.image_summary.fully_qualified_digest') || {
-            echo "Image not found! Make sure you've built version ${{ steps.package_version.outputs.version }} from main branch first."
-            exit 1
-          }
-          [ -n "${IMAGE_WITH_DIGEST}" ] || { echo "Failed to extract image digest"; exit 1; }
-          echo "Deploying image: ${IMAGE_WITH_DIGEST}"
-          echo "image_ref=${IMAGE_WITH_DIGEST}" >> $GITHUB_OUTPUT
+      - uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GKE_LOCATION }}
 
-      - name: Get service URL
+      - name: Verify images exist
         run: |
-          SERVICE_URL=$(gcloud run services describe ${{ vars.SERVICE }} --region ${{ vars.REGION }} --format="value(status.url)" 2>/dev/null || echo "")
-          if [ -z "$SERVICE_URL" ]; then
-            echo "Service does not exist yet, will be created"
-            echo "service_url=https://${{ vars.SERVICE }}-${{ vars.REGION }}.run.app" >> $GITHUB_OUTPUT
-          else
-            echo "service_url=${SERVICE_URL}" >> $GITHUB_OUTPUT
-          fi
-        id: service_url
-
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy ${{ vars.SERVICE }} \
-            --image ${{ steps.image.outputs.image_ref }} \
-            --region ${{ vars.REGION }} \
-            --platform managed \
-            --allow-unauthenticated \
-            --port 8080 \
-            --memory ${{vars.MEMORY}} \
-            --cpu ${{vars.CPU}} \
-            --concurrency ${{vars.CONCURRENCY}} \
-            --min-instances 1 \
-            --max-instances 10 \
-            --timeout 300 \
-            --add-cloudsql-instances ${{ vars.CLOUDSQL_INSTANCE }} \
-            --tag "${{ steps.package_version.outputs.tag_version }}" \
-            --set-env-vars "HOST_URL=${{ steps.service_url.outputs.service_url }},NEXT_PUBLIC_WHISP_URL=${{ steps.service_url.outputs.service_url }}" \
-            --update-secrets "/app/secrets/environment/.env.local=${{ vars.ENV_SECRET_NAME }}:latest,/app/secrets/gee/credentials.json=gee-credentials:latest" \
-            --no-cpu-throttling \
-            --update-labels environment=${{ github.event.inputs.environment }}
-          
-          gcloud run services update-traffic ${{ vars.SERVICE }} \
-            --region=${{ vars.REGION }} \
-            --to-tags "${{ steps.package_version.outputs.tag_version }}=100"
-
-      - name: Clean up old revisions
-        run: |
-          CURRENT_TAG="${{ steps.package_version.outputs.tag_version }}"
-          
-          SERVICE_JSON=$(gcloud run services describe ${{ vars.SERVICE }} --region=${{ vars.REGION }} --format=json)
-          REVISIONS_JSON=$(gcloud run revisions list --service=${{ vars.SERVICE }} --region=${{ vars.REGION }} --format=json)
-          
-          for REVISION in $(echo "$REVISIONS_JSON" | jq -r '.[].metadata.name'); do
-            REVISION_TAG=$(echo "$SERVICE_JSON" | jq -r --arg rev "$REVISION" '.status.traffic[] | select(.revisionName == $rev) | .tag // ""')
-            
-            if [ -z "$REVISION_TAG" ]; then
-              echo "Deleting untagged revision: $REVISION"
-              gcloud run revisions delete $REVISION --region=${{ vars.REGION }} --quiet
-            elif [ "$REVISION_TAG" != "$CURRENT_TAG" ]; then
-              MIN_INSTANCES=$(echo "$REVISIONS_JSON" | jq -r --arg rev "$REVISION" '.[] | select(.metadata.name == $rev) | .metadata.annotations."autoscaling.knative.dev/minScale" // "0"')
-              CPU_THROTTLING=$(echo "$REVISIONS_JSON" | jq -r --arg rev "$REVISION" '.[] | select(.metadata.name == $rev) | .metadata.annotations."run.googleapis.com/cpu-throttling" // "true"')
-              
-              if [ "$MIN_INSTANCES" != "0" ] || [ "$CPU_THROTTLING" != "true" ]; then
-                echo "Setting min-instances to 0 and cpu-throttling for old tagged revision: $REVISION (tag: $REVISION_TAG)"
-                gcloud run services update ${{ vars.SERVICE }} \
-                  --region=${{ vars.REGION }} \
-                  --tag "$REVISION_TAG" \
-                  --min-instances 0 \
-                  --cpu-throttling
-              fi
-            else
-              echo "Keeping current revision: $REVISION (tag: $REVISION_TAG)"
-            fi
+          REGISTRY="${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          for IMAGE in whisp-app whisp-api whisp-db-migrate; do
+            IMAGE_REF="${REGISTRY}/${IMAGE}:${VERSION}"
+            echo "Checking ${IMAGE_REF}"
+            gcloud artifacts docker images describe "${IMAGE_REF}" >/dev/null || {
+              echo "Image not found: ${IMAGE_REF}"
+              exit 1
+            }
           done
+
+      - name: Deploy
+        env:
+          NAMESPACE: ${{ vars.NAMESPACE }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+          VERSION: ${{ steps.version.outputs.version }}
+          IMAGE_REGISTRY: ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}
+          CLOUDSQL_INSTANCE: ${{ vars.CLOUDSQL_INSTANCE }}
+          GCS_BUCKET: ${{ vars.GCS_BUCKET }}
+          ENV_SECRET: ${{ vars.ENV_SECRET }}
+          GEE_SECRET: ${{ vars.GEE_SECRET }}
+          GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          HOST_URL: ${{ vars.HOST_URL }}
+          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+        run: |
+          set -euo pipefail
+          VARS='$NAMESPACE $ENVIRONMENT $VERSION $IMAGE_REGISTRY $CLOUDSQL_INSTANCE $GCS_BUCKET $ENV_SECRET $GEE_SECRET $GCP_SERVICE_ACCOUNT $HOST_URL $PUBLIC_URL'
+          OUT=/tmp/k8s
+          mkdir -p "$OUT"
+          for f in infra/k8s/[0-9]*.yaml; do
+            envsubst "$VARS" < "$f" > "$OUT/$(basename "$f")"
+          done
+          kubectl delete job whisp-db-migrate -n "$NAMESPACE" --ignore-not-found
+          kubectl apply -f "$OUT/"

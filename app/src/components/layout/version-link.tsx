@@ -6,8 +6,8 @@ import { useConfig } from '@/lib/config/config-context'
 
 export function VersionLink() {
   const { config } = useConfig()
-  const version = config?.appVersion
-  const pythonVersion = config?.whispPythonVersion
+  const version = config?.app.version
+  const pythonVersion = config?.app.openforisWhispVersion
   const releaseUrl = version ? `https://github.com/forestdatapartnership/whisp-app/releases/tag/v${version}` : ''
   const milestonesUrl = 'https://github.com/forestdatapartnership/whisp-app/milestones'
   const [versionHref, setVersionHref] = useState(milestonesUrl)

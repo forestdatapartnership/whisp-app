@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisp-worker-sync
+  namespace: ${NAMESPACE}
+  labels:
+    app: whisp-worker-sync
+    env: ${ENVIRONMENT}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whisp-worker-sync
+  template:
+    metadata:
+      labels:
+        app: whisp-worker-sync
+      annotations:
+        gke-internal.autoupdate.gke.io/sidecar-containers: "true"
+        gke-gcsfuse/volumes: "true"
+    spec:
+      serviceAccountName: whisp-app-ksa
+      containers:
+      - name: whisp-worker-sync
+        image: ${IMAGE_REGISTRY}/whisp-api:${VERSION}
+        imagePullPolicy: Always
+        command:
+        - celery
+        - -A
+        - src.worker.celery_app
+        - worker
+        - -Q
+        - sync
+        - --concurrency=2
+        - --loglevel=info
+        env:
+        - name: EE_HIGH_VOL
+          value: "0"
+        - name: DB_HOST
+          value: "cloud-sql-proxy"
+        - name: DB_PORT
+          value: "5432"
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 2
+            memory: 2Gi
+        volumeMounts:
+        - name: whisp-volume-gcs
+          mountPath: /app/temp
+          readOnly: false
+        - name: gcp-secrets-inline
+          mountPath: /app/credentials.json
+          subPath: credentials.json
+          readOnly: true
+        - name: gcp-secrets-inline
+          mountPath: /app/.env.local
+          subPath: .env.local
+          readOnly: true
+      volumes:
+      - name: whisp-volume-gcs
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: ${GCS_BUCKET}
+            mountOptions: "implicit-dirs"
+      - name: gcp-secrets-inline
+        csi:
+          driver: secrets-store-gke.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "whisp-secrets-provider"
