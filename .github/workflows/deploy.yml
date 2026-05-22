@@ -88,30 +88,25 @@ jobs:
           done
 
           shopt -s nullglob
-
-          kubectl apply -f "$OUT"/00.*.yaml
-
-          kubectl apply -f "$OUT"/01.*.yaml
-          kubectl wait --for=condition=available deployment --all -n "$GKE_NAMESPACE" --timeout=300s
-
-          kubectl apply -f "$OUT"/02.*.yaml
-          kubectl wait --for=condition=complete job --all -n "$GKE_NAMESPACE" --timeout=300s &
-          wp=$!
-          while kill -0 $wp 2>/dev/null; do
-            kubectl get job -n "$GKE_NAMESPACE" -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Failed")].status}{"\n"}{end}' | grep -qx True && {
-              kill $wp 2>/dev/null || true
-              wait $wp 2>/dev/null || true
-              kubectl get job -n "$GKE_NAMESPACE"
-              exit 1
-            }
-            sleep 2
-          done
-          wait $wp
-
-          kubectl apply -f "$OUT"/03.*.yaml
-          kubectl wait --for=condition=available deployment --all -n "$GKE_NAMESPACE" --timeout=300s
-
-          for tier in 04 05 06 07 08 09; do
-            files=("$OUT/${tier}."*.yaml)
-            [ ${#files[@]} -gt 0 ] && kubectl apply -f "${files[@]}"
+          for tier in 00 01 02 03 04 05 06 07 08 09; do
+            for f in "$OUT/${tier}."*.yaml; do
+              kubectl apply -f "$f"
+            done
+            case $tier in
+              01|03) kubectl wait --for=condition=available deployment --all -n "$GKE_NAMESPACE" --timeout=300s ;;
+              02)
+                kubectl wait --for=condition=complete job --all -n "$GKE_NAMESPACE" --timeout=300s &
+                wp=$!
+                while kill -0 $wp 2>/dev/null; do
+                  kubectl get job -n "$GKE_NAMESPACE" -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Failed")].status}{"\n"}{end}' | grep -qx True && {
+                    kill $wp 2>/dev/null || true
+                    wait $wp 2>/dev/null || true
+                    kubectl get job -n "$GKE_NAMESPACE"
+                    exit 1
+                  }
+                  sleep 2
+                done
+                wait $wp
+                ;;
+            esac
           done
