@@ -89,6 +89,11 @@ jobs:
 
           shopt -s nullglob
           for tier in 00 01 02 03 04 05 06 07 08 09; do
+            if [ "$tier" = "02" ]; then
+              for f in "$OUT/${tier}."*.yaml; do
+                kubectl delete -f "$f" --ignore-not-found
+              done
+            fi
             for f in "$OUT/${tier}."*.yaml; do
               kubectl apply -f "$f"
             done
