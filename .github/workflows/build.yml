@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and push app image
         run: |
-          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-app:${{ steps.package_version.outputs.version }} -f app/Dockerfile app/
+          docker build -t ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-app:${{ steps.package_version.outputs.version }} -f app/Dockerfile .
           docker push ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}/whisp-app:${{ steps.package_version.outputs.version }}
 
       - name: Build and push api image
