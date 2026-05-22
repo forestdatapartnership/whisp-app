@@ -2,8 +2,8 @@ import 'server-only';
 import { getPool } from '@/lib/db/pool';
 import type { BaseModel } from '@/types/models';
 import { type ColumnDefinition, type ColumnMapping, isWritable, buildReturningFields } from './mappings/column-mapping';
-import { SystemCode } from '@/types/systemCodes';
-import { SystemError } from '@/types/systemError';
+import { SystemCode } from '@/types/system-codes';
+import { SystemError } from '@/types/system-error';
 
 export abstract class BaseCrudService<
   T extends BaseModel,

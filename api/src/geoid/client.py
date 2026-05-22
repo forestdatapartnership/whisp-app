@@ -4,7 +4,7 @@ from typing import Any
 import httpx
 
 from src.codes import SystemCode
-from src.config import get_settings
+from src.config import Settings
 from src.exceptions import AppError
 
 _RETRY_DELAY_S = 0.5
@@ -32,25 +32,26 @@ async def _request(client: httpx.AsyncClient, url: str) -> dict[str, Any] | None
         cause = f"{resp.status_code} {resp.text}"
         if not _is_retryable(resp.status_code):
             break
-    raise AppError(SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE, cause=f"Operation failed: {cause}")
+    raise AppError(SystemCode.SERVICE_GEOID_UNAVAILABLE, cause=f"Operation failed: {cause}")
 
 
-async def resolve_geo_ids(geo_ids: list[str], collection: str | None = None) -> list[dict | None]:
-    settings = get_settings()
-    if not settings.asset_registry_base_url or not settings.asset_registry_catalog:
-        raise AppError(SystemCode.SERVICE_ASSET_REGISTRY_NOT_CONFIGURED)
+async def resolve_geo_ids(
+    geo_ids: list[str], collection: str | None, settings: Settings
+) -> list[dict | None]:
+    if not settings.geoid_base_url or not settings.geoid_catalog:
+        raise AppError(SystemCode.SERVICE_GEOID_NOT_CONFIGURED)
 
-    coll = collection or settings.asset_registry_collection
+    coll = collection or settings.geoid_collection
     if not coll:
-        raise AppError(SystemCode.SERVICE_ASSET_REGISTRY_NOT_CONFIGURED)
+        raise AppError(SystemCode.SERVICE_GEOID_NOT_CONFIGURED)
 
-    base = settings.asset_registry_base_url.rstrip("/")
+    base = settings.geoid_base_url.rstrip("/")
     results: list[dict | None] = [None] * len(geo_ids)
-    sem = asyncio.Semaphore(settings.asset_registry_concurrency)
+    sem = asyncio.Semaphore(settings.geoid_resolve_concurrency)
 
     async with httpx.AsyncClient(timeout=30) as client:
         async def _resolve_one(i: int, geo_id: str):
-            url = f"{base}/catalog/features/catalogs/{settings.asset_registry_catalog}/collections/{coll}/items/{geo_id}"
+            url = f"{base}/catalog/features/catalogs/{settings.geoid_catalog}/collections/{coll}/items/{geo_id}"
             async with sem:
                 data = await _request(client, url)
             if isinstance(data, dict) and data.get("type") == "Feature" and data.get("geometry"):

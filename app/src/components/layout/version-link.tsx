@@ -34,18 +34,18 @@ export function VersionLink() {
   if (!config || !version || !pythonVersion) return null
 
   return (
-    <>
-      <span className="text-text-dim">App version</span>
+    <span className="text-text-dim">
+      <span >App</span>
       {' '}
       <Link href={versionHref} target="_blank">
         v{version}
       </Link>
       {' · '}
-      <span className="text-text-dim">Powered by Analysis Engine</span>
+      <span>whisp-py</span>
       {' '}
       <Link href={`https://pypi.org/project/openforis-whisp/${pythonVersion}`} target="_blank">
         v{pythonVersion}
       </Link>
-    </>
+    </span>
   )
 } 

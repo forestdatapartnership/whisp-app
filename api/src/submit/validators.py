@@ -13,8 +13,6 @@ _VALID_CRS_TOKENS = (
 _WKT_DIMENSION = re.compile(r"\s+(Z|M|ZM)(?=\s*\()", re.IGNORECASE)
 
 
-# ── GeoJSON ──────────────────────────────────────────────────────────────────
-
 def validate_geojson_structure(obj: Any) -> list[str]:
     if not isinstance(obj, dict):
         return ["GeoJSON must be a JSON object"]
@@ -177,8 +175,6 @@ def validate_external_id_column(fc: dict, column: str) -> bool:
         return False
     return all(isinstance(f, dict) and column in (f.get("properties") or {}) for f in features)
 
-
-# ── WKT ──────────────────────────────────────────────────────────────────────
 
 def wkt_to_geojson(wkt: str) -> dict | None:
     try:

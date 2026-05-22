@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional
+
+from src.codes import SystemCode
 
 
 @dataclass
@@ -22,10 +23,17 @@ class AnalysisOptions:
 
 
 @dataclass
+class SubmitResult:
+    code: SystemCode
+    data: dict | None = None
+    context: dict | None = None
+
+
+@dataclass
 class JobContext:
-    api_key_id: Optional[int] = None
-    user_id: Optional[int] = None
-    max_concurrent_analyses: Optional[int] = None
-    agent: Optional[str] = None
-    ip_address: Optional[str] = None
-    endpoint: Optional[str] = None
+    api_key_id: int | None = None
+    user_id: int | None = None
+    max_concurrent_analyses: int | None = None
+    agent: str | None = None
+    ip_address: str | None = None
+    endpoint: str | None = None

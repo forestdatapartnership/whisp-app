@@ -31,9 +31,10 @@ export enum SystemCode {
   VALIDATION_INVALID_EXTERNAL_ID_COLUMN = 'validation_invalid_external_id_column',
   VALIDATION_GEO_ID_NOT_FOUND = 'validation_geo_id_not_found',
 
-  SERVICE_ASSET_REGISTRY_NOT_CONFIGURED = 'service_asset_registry_not_configured',
-  SERVICE_ASSET_REGISTRY_UNAVAILABLE = 'service_asset_registry_unavailable',
+  SERVICE_GEOID_NOT_CONFIGURED = 'service_geoid_not_configured',
+  SERVICE_GEOID_UNAVAILABLE = 'service_geoid_unavailable',
 
+  ANALYSIS_QUEUED = 'analysis_queued',
   ANALYSIS_PROCESSING = 'analysis_processing',
   ANALYSIS_COMPLETED = 'analysis_completed',
   ANALYSIS_ERROR = 'analysis_error',
@@ -76,11 +77,12 @@ export const SYSTEM_MESSAGES: Record<SystemCode, string> = {
   [SystemCode.VALIDATION_TOO_MANY_GEOMETRIES]: 'Too many geometries provided. Maximum allowed is {0}.',
   [SystemCode.VALIDATION_REQUEST_BODY_TOO_LARGE]: 'Request body is too large: {0} KB. Maximum allowed size is {1} KB.',
   [SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN]: 'The external ID column "{0}" does not exist in your GeoJSON features. Available columns: {1}',
-  [SystemCode.VALIDATION_GEO_ID_NOT_FOUND]: 'One or more Geo IDs were not found in the asset registry.',
+  [SystemCode.VALIDATION_GEO_ID_NOT_FOUND]: 'One or more Geo IDs were not found in GeoID.',
 
-  [SystemCode.SERVICE_ASSET_REGISTRY_NOT_CONFIGURED]: 'Asset registry is not configured. Please contact the administrator.',
-  [SystemCode.SERVICE_ASSET_REGISTRY_UNAVAILABLE]: 'Asset registry service is currently unavailable. Please try again later.',
+  [SystemCode.SERVICE_GEOID_NOT_CONFIGURED]: 'GeoID service is not configured. Please contact the administrator.',
+  [SystemCode.SERVICE_GEOID_UNAVAILABLE]: 'GeoID service is currently unavailable. Please try again later.',
 
+  [SystemCode.ANALYSIS_QUEUED]: 'Analysis queued, waiting for available worker...',
   [SystemCode.ANALYSIS_PROCESSING]: 'Analysis in progress...',
   [SystemCode.ANALYSIS_COMPLETED]: 'Analysis completed successfully',
   [SystemCode.ANALYSIS_ERROR]: 'Analysis service encountered an error. Please try again.',

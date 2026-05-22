@@ -1,4 +1,4 @@
-import { SystemCode, formatSystemMessage } from './systemCodes';
+import { SystemCode, formatSystemMessage } from './system-codes';
 
 export class SystemError extends Error {
   public readonly systemCode: SystemCode;

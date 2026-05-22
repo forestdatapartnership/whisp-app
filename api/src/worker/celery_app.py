@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 app = Celery(
     "whisp",
-    broker=settings.broker_url,
+    broker=settings.redis_url,
     broker_connection_retry_on_startup=True,
 )
 app.conf.update(
@@ -23,8 +23,6 @@ app.conf.update(
     task_track_started=True,
     task_acks_late=True,
     worker_prefetch_multiplier=1,
-    task_soft_time_limit=settings.analysis_timeout_seconds,
-    task_time_limit=settings.analysis_timeout_seconds + 60,
     worker_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "name": "%(name)s", "message": "%(message)s"}',
     worker_task_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "task": "%(task_name)s[%(task_id)s]", "message": "%(message)s"}',
 )
@@ -32,7 +30,7 @@ app.conf.update(
 
 @worker_init.connect
 @worker_process_init.connect
-def _init_ee(sender=None, **kwargs):
+def _init_worker(sender=None, **kwargs):
     import openforis_whisp as whisp
 
     high_vol = os.environ.get("EE_HIGH_VOL") == "1"

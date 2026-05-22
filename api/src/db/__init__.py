@@ -1,3 +1,11 @@
-from src.db.pool import get_pool, init_pool, close_pool
+from src.db.pool import acquire_pool, check_db, close_pool, connection_params, get_pool, init_pool, run_sync
 
-__all__ = ["get_pool", "init_pool", "close_pool"]
+__all__ = [
+    "acquire_pool",
+    "check_db",
+    "close_pool",
+    "connection_params",
+    "get_pool",
+    "init_pool",
+    "run_sync",
+]

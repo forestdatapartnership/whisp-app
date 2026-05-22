@@ -2,8 +2,8 @@
 
 import { randomBytes } from 'crypto';
 import { createTokens, setAuthCookies, clearAuthCookies } from '@/lib/auth/session';
-import { SystemError } from '@/types/systemError';
-import { SystemCode } from '@/types/systemCodes';
+import { SystemError } from '@/types/system-error';
+import { SystemCode } from '@/types/system-codes';
 import { action } from '@/lib/server/action';
 import { validateRequiredFields, isValidPassword } from '@/lib/shared/field-validation';
 import { normalizeEmail } from '@/lib/shared/email-format';
@@ -15,6 +15,7 @@ import {
   insertVerificationToken,
   createPasswordResetToken,
   resetPasswordWithToken,
+  verifyEmailByToken,
 } from '@/lib/db/users-service';
 import { subscribeNotifications as dalSubscribeNotifications } from '@/lib/db/notifications-service';
 import type { UserProfile } from '@/types/user';
@@ -58,7 +59,7 @@ export const registerUser = action(async (data: {
   const now = Date.now();
   const attemptRecord = emailAttemptCache.get(normalizedEmail);
   if (attemptRecord && now - attemptRecord.firstAttempt < WINDOW_MS && attemptRecord.count >= MAX_ATTEMPTS) {
-    return;
+    throw new SystemError(SystemCode.AUTH_RATE_LIMIT_EXCEEDED);
   }
   if (!attemptRecord || now - attemptRecord.firstAttempt >= WINDOW_MS) {
     emailAttemptCache.set(normalizedEmail, { count: 1, firstAttempt: now });
@@ -104,8 +105,16 @@ export const forgotPassword = action(async (email: string): Promise<void> => {
   }
 });
 
+export const verifyEmail = action(async (token: string): Promise<string> => {
+  validateRequiredFields({ token }, ['token']);
+  const message = await verifyEmailByToken(token);
+  if (message === 'Email verified successfully') return message;
+  throw new SystemError(SystemCode.AUTH_INVALID_TOKEN);
+});
+
 export const resetPassword = action(async (token: string, newPassword: string): Promise<void> => {
   validateRequiredFields({ token, newPassword }, ['token', 'newPassword']);
+  if (!isValidPassword(newPassword)) throw new SystemError(SystemCode.USER_WEAK_PASSWORD);
 
   const status = await resetPasswordWithToken(token, newPassword);
 

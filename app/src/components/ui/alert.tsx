@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
-import { AlertTriangle, CheckCircle2, XCircle, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { CloseButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type AlertType = "error" | "success" | "warning";
@@ -36,9 +37,7 @@ export function Alert({ type, message, onClose, className }: AlertProps) {
       <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
       <span className="flex-1 text-left">{message}</span>
       {onClose && (
-        <button onClick={onClose} aria-label="Dismiss" className="shrink-0 opacity-60 hover:opacity-100">
-          <X className="size-4" />
-        </button>
+        <CloseButton onClick={onClose} aria-label="Dismiss" className="shrink-0" />
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import 'server-only';
-import { SystemCode } from '@/types/systemCodes';
+import { SystemCode } from '@/types/system-codes';
 import type { ResultField } from '@/types/models';
 import { BaseCrudService } from './base-crud-service';
 import { resultFieldMapping } from './mappings/result-field-mapping';

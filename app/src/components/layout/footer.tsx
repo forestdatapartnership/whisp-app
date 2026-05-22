@@ -6,16 +6,15 @@ import { Link } from "@/components/ui/link";
 import { VersionLink } from "@/components/layout/version-link";
 
 const docsLinks = [
-  { href: "/docs/api", label: "API Reference" },
-  { href: "/docs/fields", label: "Reference Fields" },
-  { href: "/docs/commodities", label: "Commodities" },
+  { href: "https://github.com/openforis/whisp", label: "API (GitHub)" },
+  { href: "/docs/reference/result-fields", label: "Reference Fields" },
+  { href: "/docs/reference/commodities", label: "Commodities" },
 ];
 
 const legalLinks = [
-  { href: "/privacy", label: "Privacy Policy" },
-  { href: "/terms", label: "Terms of Use" },
-  { divider: true } as const,
-  { href: "/license", label: "MIT License" },
+  { href: "/legal/privacy-policy", label: "Privacy Policy" },
+  { href: "/legal/terms-of-service", label: "Terms of Use" },
+  { href: "/legal/gee-data-separation", label: "GEE Data Separation" },
 ];
 
 function FooterDropdown({ label, items }: {
@@ -74,13 +73,23 @@ export function Footer() {
     <footer className="flex flex-wrap items-center gap-y-1 border-t border-border px-8 py-4 text-xs text-text-dim">
       <span className="whitespace-nowrap pr-1">
         © 2026{" "}
-        <Link href="https://openforis.org" variant="muted">
+        <Link href="https://openforis.org" variant="muted" target="_blank" rel="noopener noreferrer">
           Open Foris
         </Link>
       </span>
       <Sep />
-      <Link href="/about" variant="muted" className="whitespace-nowrap">
+      <Link
+        href="https://openforis.org/whisp"
+        variant="muted"
+        className="whitespace-nowrap"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         About
+      </Link>
+      <Sep />
+      <Link href="/legal/license" variant="muted" className="whitespace-nowrap">
+        MIT License
       </Link>
       <Sep />
       <FooterDropdown label="Docs" items={docsLinks} />

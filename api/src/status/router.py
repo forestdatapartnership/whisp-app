@@ -1,128 +1,108 @@
-import asyncio
-import json
+import re
 from typing import AsyncIterator
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from src.codes import SystemCode, format_message, http_status
-from src.db import jobs as db_jobs
+from src.auth.api_key import ApiKey, api_key_dependency
+from src.config import SettingsDep
+from src.codes import SystemCode, RUNNING_STATUSES, TERMINAL_STATUSES
+from src.io.files import load_completed_result
+from src.job_progress import JobProgress
+from src.responses import api_response
+from src.redis import subscribe
 from src.status import service
 
 router = APIRouter(prefix="/status", tags=["status"])
 
+_SSE_HEADERS = {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+}
 
-def _envelope(code: SystemCode, data=None, context: dict | None = None, cause: str | None = None) -> JSONResponse:
-    body: dict = {"code": code.value, "message": format_message(code)}
-    if data is not None:
-        body["data"] = data
-    if context:
-        body["context"] = context
-    if cause:
-        body["cause"] = cause
-    return JSONResponse(status_code=http_status(code), content=body)
+_TIMEOUT_SECONDS = re.compile(r"after (\d+) seconds")
 
-
-def _sse(payload: dict) -> bytes:
-    return f"data: {json.dumps(payload)}\n\n".encode("utf-8")
-
+# workaround to extract timeout seconds from error message since the redis job state doesn't store it
+def _terminal_response(job: JobProgress) -> JSONResponse:
+    if job.status == SystemCode.ANALYSIS_TIMEOUT:
+        match = _TIMEOUT_SECONDS.search(job.error_message or "")
+        args = [match.group(1)] if match else None
+        return api_response(job.status, args=args)
+    return api_response(job.status, cause=job.error_message)
 
 @router.get("/{token}")
-async def get_status(token: str) -> JSONResponse:
-    job = await db_jobs.get_job(token)
+async def get_status(
+    token: str,
+    settings: SettingsDep,
+    _api_key: ApiKey = Depends(api_key_dependency),
+) -> JSONResponse:
+    job = await service.get_job_state(token)
     if not job:
-        return _envelope(SystemCode.ANALYSIS_JOB_NOT_FOUND)
+        return api_response(SystemCode.ANALYSIS_JOB_NOT_FOUND)
 
-    try:
-        code = SystemCode(job["status"])
-    except ValueError:
-        code = SystemCode.ANALYSIS_ERROR
+    if job.status == SystemCode.ANALYSIS_COMPLETED:
+        data = load_completed_result(token, settings)
+        if data is None:
+            return api_response(SystemCode.ANALYSIS_JOB_NOT_FOUND)
+        return api_response(job.status, data=data)
 
-    data: dict = {"token": token}
-    if job.get("feature_count") is not None:
-        data["featureCount"] = job["feature_count"]
-    if job.get("progress_percent") is not None:
-        data["percent"] = job["progress_percent"]
-    if job.get("progress_message"):
-        data["processStatusMessages"] = [job["progress_message"]]
+    if job.status in RUNNING_STATUSES:
+        return api_response(job.status, data=service.progress_api_data(job, token=token))
 
-    if code == SystemCode.ANALYSIS_COMPLETED:
-        if service.result_path(token).exists():
-            data = service.read_json(service.result_path(token))
-        else:
-            return _envelope(SystemCode.ANALYSIS_RESULT_NOT_FOUND)
+    return _terminal_response(job)
 
-    return _envelope(code, data=data, cause=job.get("error_message"))
+
+@router.post("/{token}/cancel")
+async def cancel_status(
+    token: str,
+    _api_key: ApiKey = Depends(api_key_dependency),
+) -> JSONResponse:
+    job = await service.get_job_state(token)
+    if not job:
+        return api_response(SystemCode.ANALYSIS_JOB_NOT_FOUND)
+
+    if job.status in TERMINAL_STATUSES:
+        return _terminal_response(job)
+
+    message = "Cancelled by user"
+    await service.terminate_analysis(token, message)
+    return api_response(
+        SystemCode.ANALYSIS_CANCELLED,
+        context={"token": token},
+        cause=message,
+    )
 
 
 @router.get("/{token}/stream")
-async def status_stream(token: str, request: Request) -> StreamingResponse:
-    headers = {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-    }
-
-    job = await db_jobs.get_job(token)
+async def status_stream(
+    token: str,
+    request: Request,
+    settings: SettingsDep,
+    _api_key: ApiKey = Depends(api_key_dependency),
+) -> StreamingResponse:
+    job = await service.get_job_state(token)
     if not job:
-        body = _sse({"code": SystemCode.ANALYSIS_JOB_NOT_FOUND.value, "final": True})
-        return StreamingResponse(iter([body]), headers=headers)
+        return StreamingResponse(iter([service.not_found_sse()]), headers=_SSE_HEADERS)
 
-    try:
-        code = SystemCode(job["status"])
-    except ValueError:
-        code = SystemCode.ANALYSIS_ERROR
-
-    if code in (SystemCode.ANALYSIS_COMPLETED, SystemCode.ANALYSIS_ERROR, SystemCode.ANALYSIS_TIMEOUT):
-        payload: dict = {"code": code.value, "final": True}
-        if code == SystemCode.ANALYSIS_COMPLETED and service.result_path(token).exists():
-            payload["data"] = service.read_json(service.result_path(token))
-        if job.get("error_message"):
-            payload["cause"] = job["error_message"]
-        return StreamingResponse(iter([_sse(payload)]), headers=headers)
+    if job.status in TERMINAL_STATUSES:
+        return StreamingResponse(
+            iter([service.terminal_sse(token, job, settings)]),
+            headers=_SSE_HEADERS,
+        )
 
     async def _gen() -> AsyncIterator[bytes]:
-        last_percent = job.get("progress_percent") or -1
-        yield _sse({
-            "code": code.value,
-            "data": {
-                "featureCount": job.get("feature_count"),
-                "percent": job.get("progress_percent"),
-            },
-        })
+        yield service.progress_sse(job, token=token)
 
-        while True:
+        async for event in subscribe(token, skip_cached=True):
             if await request.is_disconnected():
                 break
-            await asyncio.sleep(2)
 
-            current = await db_jobs.get_job(token)
-            if not current:
+            progress = JobProgress.from_redis(event, id=token)
+            if progress.status in TERMINAL_STATUSES:
+                yield service.terminal_sse(token, progress, settings)
                 break
 
-            try:
-                current_code = SystemCode(current["status"])
-            except ValueError:
-                break
+            yield service.progress_sse(progress)
 
-            if current_code in (SystemCode.ANALYSIS_COMPLETED, SystemCode.ANALYSIS_ERROR, SystemCode.ANALYSIS_TIMEOUT):
-                payload = {"code": current_code.value, "final": True}
-                if current_code == SystemCode.ANALYSIS_COMPLETED and service.result_path(token).exists():
-                    payload["data"] = service.read_json(service.result_path(token))
-                if current.get("error_message"):
-                    payload["cause"] = current["error_message"]
-                yield _sse(payload)
-                break
-
-            percent = current.get("progress_percent")
-            if percent is not None and percent != last_percent:
-                last_percent = percent
-                yield _sse({
-                    "code": SystemCode.ANALYSIS_PROCESSING.value,
-                    "data": {
-                        "percent": percent,
-                        "processStatusMessages": [current.get("progress_message", "")] if current.get("progress_message") else [],
-                    },
-                })
-
-    return StreamingResponse(_gen(), headers=headers)
+    return StreamingResponse(_gen(), headers=_SSE_HEADERS)

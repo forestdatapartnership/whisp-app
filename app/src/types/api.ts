@@ -1,4 +1,4 @@
-import { SystemCode } from '@/types/systemCodes';
+import { SystemCode } from '@/types/system-codes';
 
 export interface ApiResponse<T = any> {
   code?: SystemCode;     

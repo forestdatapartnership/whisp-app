@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { forgotPassword } from "@/lib/auth/actions";
-import { formatSystemMessage } from "@/types/systemCodes";
+import { formatSystemMessage } from "@/types/system-codes";
 import { Alert } from "@/components/ui/alert";
+import { CenteredShell } from "@/components/layout/page-section";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -27,6 +28,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
+    <CenteredShell>
     <Card className="w-full max-w-[400px]">
       <CardHeader>
         <CardTitle>Reset password</CardTitle>
@@ -69,5 +71,6 @@ export default function ForgotPasswordPage() {
         )}
       </CardContent>
     </Card>
+    </CenteredShell>
   );
 }

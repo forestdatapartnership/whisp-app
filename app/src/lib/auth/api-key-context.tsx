@@ -1,9 +1,9 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { useAuth } from './auth-context';
-import { fetchTempApiKey, fetchUserApiKey, createUserApiKey, deleteUserApiKey } from '@/lib/auth/api-key-actions';
-import { formatSystemMessage } from '@/types/systemCodes';
+import { fetchUserApiKey, createUserApiKey, deleteUserApiKey } from '@/lib/auth/api-key-actions';
+import { formatSystemMessage } from '@/types/system-codes';
 
 type ApiKeyMetadata = {
   createdAt: string | null;
@@ -32,8 +32,6 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const [isUserKey, setIsUserKey] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const tempKeyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const loadApiKeyRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
   const clearKey = useCallback(() => {
     setApiKey(null);
@@ -42,55 +40,28 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadApiKey = useCallback(async () => {
-    if (tempKeyTimerRef.current) {
-      clearTimeout(tempKeyTimerRef.current);
-      tempKeyTimerRef.current = null;
-    }
     setIsLoading(true);
     setError(null);
 
-    if (isAuthenticated) {
-      const result = await fetchUserApiKey();
-      if (!result.ok) {
-        setError(formatSystemMessage(result.code, result.args));
-        clearKey();
-      } else if (result.data.apiKey) {
-        setApiKey(result.data.apiKey);
-        setIsUserKey(true);
-        setApiKeyMetadata({ createdAt: result.data.createdAt, expiresAt: result.data.expiresAt });
-      } else {
-        clearKey();
-      }
-    } else {
-      const result = await fetchTempApiKey();
-      if (!result.ok) {
-        setError(formatSystemMessage(result.code, result.args));
-        clearKey();
-      } else {
-        const tempKey = result.data;
-        setApiKey(tempKey.apiKey);
-        setIsUserKey(false);
-        setApiKeyMetadata(tempKey.expiresAt ? { createdAt: null, expiresAt: tempKey.expiresAt } : null);
+    if (!isAuthenticated) {
+      clearKey();
+      setIsLoading(false);
+      return;
+    }
 
-        if (tempKey.expiresAt) {
-          const expiresTime = new Date(tempKey.expiresAt).getTime();
-          if (!Number.isNaN(expiresTime)) {
-            const delay = expiresTime - Date.now();
-            if (delay > 0) {
-              tempKeyTimerRef.current = setTimeout(() => {
-                loadApiKeyRef.current?.();
-              }, delay);
-            }
-          }
-        }
-      }
+    const result = await fetchUserApiKey();
+    if (!result.ok) {
+      setError(formatSystemMessage(result.code, result.args));
+      clearKey();
+    } else if (result.data.apiKey) {
+      setApiKey(result.data.apiKey);
+      setIsUserKey(true);
+      setApiKeyMetadata({ createdAt: result.data.createdAt, expiresAt: result.data.expiresAt });
+    } else {
+      clearKey();
     }
     setIsLoading(false);
   }, [isAuthenticated, clearKey]);
-
-  useEffect(() => {
-    loadApiKeyRef.current = loadApiKey;
-  });
 
   const createApiKey = useCallback(async () => {
     setError(null);
@@ -122,12 +93,6 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   }, [loadApiKey]);
 
   const clearError = useCallback(() => setError(null), []);
-
-  useEffect(() => {
-    return () => {
-      if (tempKeyTimerRef.current) clearTimeout(tempKeyTimerRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     if (!authLoading) loadApiKey();

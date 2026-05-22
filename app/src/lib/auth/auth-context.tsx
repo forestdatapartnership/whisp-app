@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { fetchUserProfile } from '@/lib/auth/user-actions';
 import { loginUser, logoutUser } from '@/lib/auth/actions';
-import { formatSystemMessage } from '@/types/systemCodes';
+import { formatSystemMessage } from '@/types/system-codes';
 import type { UserProfile } from '@/types/user';
 
 type AuthContextType = {

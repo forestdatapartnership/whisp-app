@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, ReactNode } from "react";
-import { Info, X } from "lucide-react";
+import { Info } from "lucide-react";
+import { CloseButton } from "@/components/ui/button";
 
 interface InfoToastProps {
   storageKey: string;
@@ -37,13 +38,7 @@ export function InfoToast({ storageKey, title, children }: InfoToastProps) {
           <p className="mb-1 text-[13px] font-semibold text-text-primary">{title}</p>
           <div className="text-[12px] leading-relaxed text-text-muted">{children}</div>
         </div>
-        <button
-          onClick={dismiss}
-          aria-label="Dismiss"
-          className="shrink-0 self-start text-text-muted opacity-60 hover:opacity-100 transition-opacity"
-        >
-          <X className="size-4" />
-        </button>
+        <CloseButton onClick={dismiss} aria-label="Dismiss" className="shrink-0 self-start" />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import type { SystemCode } from './systemCodes';
+import type { SystemCode } from './system-codes';
 
 export type ActionResult<T = void> =
   | { ok: true; data: T }

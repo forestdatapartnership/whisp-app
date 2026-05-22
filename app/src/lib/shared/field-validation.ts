@@ -1,5 +1,5 @@
-import { SystemError } from '@/types/systemError';
-import { SystemCode } from '@/types/systemCodes';
+import { SystemError } from '@/types/system-error';
+import { SystemCode } from '@/types/system-codes';
 
 export function validateRequiredFields(body: any, requiredFields: string[]): void {
   const missingFields: string[] = [];

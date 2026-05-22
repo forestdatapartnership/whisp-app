@@ -58,7 +58,7 @@ export async function deleteApiKeyByUser(userId: string): Promise<void> {
   await pool.query('SELECT delete_api_key_by_user($1)', [userId]);
 }
 
-export async function getTempApiKey(): Promise<{ apiKey: string; expiresAt: string | null }> {
+export async function getTempApiKey(): Promise<{ apiKey: string; expiresAt: string }> {
   const pool = getPool();
   const result = await pool.query('SELECT * FROM get_temp_api_key()');
   const row = result.rows[0];
@@ -69,6 +69,6 @@ export async function getTempApiKey(): Promise<{ apiKey: string; expiresAt: stri
 
   return {
     apiKey: row.api_key,
-    expiresAt: row.expires_at ?? null,
+    expiresAt: row.expires_at,
   };
 }

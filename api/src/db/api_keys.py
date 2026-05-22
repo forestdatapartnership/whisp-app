@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from src.db.pool import get_pool
 
@@ -8,19 +7,15 @@ from src.db.pool import get_pool
 class ApiKeyRow:
     id: int
     user_id: int
-    user_email: str
-    rate_limit_window_ms: Optional[int]
-    rate_limit_max_requests: Optional[int]
-    max_concurrent_analyses: Optional[int]
+    rate_limit_window_ms: int | None
+    rate_limit_max_requests: int | None
+    max_concurrent_analyses: int | None
 
 
-async def find_api_key(api_key: str) -> Optional[ApiKeyRow]:
+async def find_api_key(api_key: str) -> ApiKeyRow | None:
     pool = get_pool()
-    if pool is None:
-        return None
-
     row = await pool.fetchrow(
-        "SELECT id, user_id, user_email, rate_limit_window_ms, rate_limit_max_requests, max_concurrent_analyses "
+        "SELECT id, user_id, rate_limit_window_ms, rate_limit_max_requests, max_concurrent_analyses "
         "FROM find_api_key($1)",
         api_key,
     )
@@ -29,7 +24,6 @@ async def find_api_key(api_key: str) -> Optional[ApiKeyRow]:
     return ApiKeyRow(
         id=row["id"],
         user_id=row["user_id"],
-        user_email=row["user_email"],
         rate_limit_window_ms=row["rate_limit_window_ms"],
         rate_limit_max_requests=row["rate_limit_max_requests"],
         max_concurrent_analyses=row["max_concurrent_analyses"],

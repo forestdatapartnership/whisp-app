@@ -1,21 +1,30 @@
 import 'server-only';
-import path from 'path';
 import { getPool } from '@/lib/db/pool';
-import { SystemCode } from '@/types/systemCodes';
-import type { AnalysisJob } from '@/types/models/analysisJob';
+import { SystemCode } from '@/types/system-codes';
+import type { AnalysisJob } from '@/types/models/analysis-job';
 import { toIntOrDefault, toNumberOrNull } from '@/lib/shared/value-utils';
-import { fileExists } from '@/lib/server/file-utils';
 import { BaseCrudService } from './base-crud-service';
 import { analysisJobMapping } from './mappings/analysis-job-mapping';
 
+const RESULTS_MAX_AGE_MS = 10 * 60 * 1000;
+
+function resultsAvailableWithinMaxAge(completedAt: Date | string | undefined): boolean {
+  if (!completedAt) return false;
+  const completedMs =
+    completedAt instanceof Date ? completedAt.getTime() : new Date(completedAt).getTime();
+  if (Number.isNaN(completedMs)) return false;
+  return Date.now() - completedMs <= RESULTS_MAX_AGE_MS;
+}
+
 export type AnalysisJobStats = {
   summary:      { total: number; last24h: number; last7d: number };
-  statusCounts: { processing: number; completed: number; error: number; timeout: number };
+  statusCounts: { queued: number; processing: number; completed: number; error: number; timeout: number };
   timings:      { avgRunMs: number | null; p50RunMs: number | null; avgQueueMs: number | null };
   recentJobs:   AnalysisJob[];
 };
 
 const STATUS_ORDER = [
+  SystemCode.ANALYSIS_QUEUED,
   SystemCode.ANALYSIS_PROCESSING,
   SystemCode.ANALYSIS_COMPLETED,
   SystemCode.ANALYSIS_ERROR,
@@ -52,17 +61,18 @@ class AnalysisJobsService extends BaseCrudService<AnalysisJob, typeof analysisJo
              COUNT(*)                                                                        AS total_jobs,
              COUNT(*) FILTER (WHERE created_at >= now() - interval '24 hours')             AS jobs_last_24h,
              COUNT(*) FILTER (WHERE created_at >= now() - interval '7 days')               AS jobs_last_7d,
-             COUNT(*) FILTER (WHERE status = $2)                                            AS processing_count,
-             COUNT(*) FILTER (WHERE status = $3)                                            AS completed_count,
-             COUNT(*) FILTER (WHERE status = $4)                                            AS error_count,
-             COUNT(*) FILTER (WHERE status = $5)                                            AS timeout_count,
+             COUNT(*) FILTER (WHERE status = $2)                                            AS queued_count,
+             COUNT(*) FILTER (WHERE status = $3)                                            AS processing_count,
+             COUNT(*) FILTER (WHERE status = $4)                                            AS completed_count,
+             COUNT(*) FILTER (WHERE status = $5)                                            AS error_count,
+             COUNT(*) FILTER (WHERE status = $6)                                            AS timeout_count,
              AVG(EXTRACT(EPOCH FROM (completed_at - started_at)) * 1000)
-               FILTER (WHERE completed_at IS NOT NULL AND started_at IS NOT NULL)           AS avg_run_ms,
+               FILTER (WHERE status = $4 AND completed_at IS NOT NULL AND started_at IS NOT NULL) AS avg_run_ms,
              PERCENTILE_CONT(0.5) WITHIN GROUP (
                ORDER BY EXTRACT(EPOCH FROM (completed_at - started_at)) * 1000
-             ) FILTER (WHERE completed_at IS NOT NULL AND started_at IS NOT NULL)           AS p50_run_ms,
+             ) FILTER (WHERE status = $4 AND completed_at IS NOT NULL AND started_at IS NOT NULL) AS p50_run_ms,
              AVG(EXTRACT(EPOCH FROM (started_at - created_at)) * 1000)
-               FILTER (WHERE started_at IS NOT NULL)                                        AS avg_queue_ms
+               FILTER (WHERE started_at IS NOT NULL AND status <> $2)                       AS avg_queue_ms
            FROM user_jobs`,
           [userId, ...STATUS_ORDER]
         ),
@@ -72,22 +82,19 @@ class AnalysisJobsService extends BaseCrudService<AnalysisJob, typeof analysisJo
            JOIN users u ON aj.user_id = u.id
            WHERE u.uuid = $1
            ORDER BY aj.created_at DESC
-           LIMIT 20`,
+           LIMIT 100`,
           [userId]
         ),
       ]);
 
       const summary = summaryResult.rows[0] ?? {};
 
-      const recentJobs = await Promise.all(
-        recentResult.rows.map(async (row: AnalysisJob) => {
-          if (row.status !== SystemCode.ANALYSIS_COMPLETED || !row.completedAt) {
-            return { ...row, resultsAvailable: false };
-          }
-          const resultPath = path.join(process.cwd(), 'temp', `${row.id}-result.json`);
-          return { ...row, resultsAvailable: await fileExists(resultPath) };
-        })
-      );
+      const recentJobs = recentResult.rows.map((row: AnalysisJob) => ({
+        ...row,
+        resultsAvailable:
+          row.status === SystemCode.ANALYSIS_COMPLETED &&
+          resultsAvailableWithinMaxAge(row.completedAt),
+      }));
 
       return {
         summary: {
@@ -96,6 +103,7 @@ class AnalysisJobsService extends BaseCrudService<AnalysisJob, typeof analysisJo
           last7d:  toIntOrDefault(summary.jobs_last_7d),
         },
         statusCounts: {
+          queued:     toIntOrDefault(summary.queued_count),
           processing: toIntOrDefault(summary.processing_count),
           completed:  toIntOrDefault(summary.completed_count),
           error:      toIntOrDefault(summary.error_count),

@@ -8,9 +8,6 @@ from dataclasses import dataclass
 class RateLimitResult:
     allowed: bool
     retry_after: int
-    limit: int
-    remaining: int
-    reset_at_ms: int
 
 
 _lock = threading.Lock()
@@ -28,12 +25,12 @@ def check_rate_limit(key: str, window_ms: int, limit: int) -> RateLimitResult:
         if entry is None or entry[1] <= now:
             reset_at = now + window_ms
             _store[key] = (1, reset_at)
-            return RateLimitResult(True, 0, limit, max(0, limit - 1), reset_at)
+            return RateLimitResult(True, 0)
 
         count, reset_at = entry
         if count >= limit:
             retry_after = max(1, math.ceil((reset_at - now) / 1000))
-            return RateLimitResult(False, retry_after, limit, 0, reset_at)
+            return RateLimitResult(False, retry_after)
 
         _store[key] = (count + 1, reset_at)
-        return RateLimitResult(True, 0, limit, max(0, limit - (count + 1)), reset_at)
+        return RateLimitResult(True, 0)

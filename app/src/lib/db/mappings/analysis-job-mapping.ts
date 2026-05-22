@@ -1,4 +1,4 @@
-import type { AnalysisJob } from '@/types/models/analysisJob';
+import type { AnalysisJob } from '@/types/models/analysis-job';
 import type { ColumnMapping } from './column-mapping';
 
 // apiKey, resultsAvailable, timeoutMs → not stored in DB

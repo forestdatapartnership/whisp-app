@@ -1,4 +1,4 @@
-import { SystemCode } from '../systemCodes';
+import { SystemCode } from '../system-codes';
 import { ApiKey } from '../api';
 import type { BaseModel } from './base';
 

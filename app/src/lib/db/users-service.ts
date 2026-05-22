@@ -88,6 +88,12 @@ export async function createPasswordResetToken(email: string, token: string, exp
   return result.rows[0].create_password_reset_token;
 }
 
+export async function verifyEmailByToken(token: string): Promise<string> {
+  const pool = getPool();
+  const result = await pool.query('SELECT verify_email_by_token($1) AS message', [token]);
+  return result.rows[0].message;
+}
+
 export async function deleteUser(uuid: string): Promise<void> {
   const pool = getPool();
   await pool.query(

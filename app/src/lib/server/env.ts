@@ -36,7 +36,9 @@ export const config = {
   },
 
   auth: {
-    get jwtSecret() { return env('JWT_SECRET'); },
+    get jwtSecret() {
+      return env('JWT_SECRET');
+    },
   },
 
   email: {
@@ -47,54 +49,38 @@ export const config = {
     hostUrl: (process.env.HOST_URL?.trim() || '').replace(/\/+$/, ''),
   },
 
-  assetRegistry: {
-    baseUrl: envOptional('ASSET_REGISTRY_BASE')?.replace(/\/$/, ''),
-    defaultCatalog: env('ASSET_REGISTRY_DEFAULT_CATALOG', 'geoid'),
-    defaultCollection: env('ASSET_REGISTRY_DEFAULT_COLLECTION', 'test_coll'),
+  api: {
+    get url() {
+      return env('API_URL').replace(/\/$/, '');
+    },
   },
 
-  analysis: {
-    pythonPath: env('PYTHON_PATH', 'python'),
-    pythonTimeoutMs: envInt('NEXT_PUBLIC_PYTHON_TIMEOUT_MS', 90000),
-    pythonTimeoutSyncMs: envInt('NEXT_PUBLIC_PYTHON_TIMEOUT_SYNC_MS', 30000),
+  geoid: {
+    baseUrl: envOptional('GEOID_BASE')?.replace(/\/$/, ''),
+    defaultCatalog: env('GEOID_DEFAULT_CATALOG', 'geoid'),
+    defaultCollection: env('GEOID_DEFAULT_COLLECTION', 'test_coll'),
+  },
+
+  submission: {
     geometryLimit: envInt('NEXT_PUBLIC_GEOMETRY_LIMIT', 1000),
-    geometryLimitSync: envInt('NEXT_PUBLIC_GEOMETRY_LIMIT_SYNC', 300),
     asyncThreshold: envInt('NEXT_PUBLIC_ASYNC_THRESHOLD', 50),
   },
 
   app: {
     version: process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0',
     whispPythonVersion: process.env.NEXT_PUBLIC_WHISP_PYTHON_VERSION || 'unknown',
-    logLevel: env('NEXT_PUBLIC_LOG_LEVEL', 'info'),
     maxUploadFileSizeKb: envOptionalInt('NEXT_PUBLIC_MAX_UPLOAD_FILE_SIZE_KB'),
-    googleMapsApiKey: envOptional('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY'),
-  },
-
-  cors: {
-    allowedOrigins: (process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim())) || [],
-  },
-
-  rateLimit: {
-    windowMs: envInt('RATE_LIMIT_WINDOW_MS', 60000),
-    maxRequests: envInt('RATE_LIMIT_MAX_REQUESTS', 30),
-  },
-
-  pii: {
-    retentionDays: envInt('PII_RETENTION_DAYS', 90),
   },
 };
 
 export function getPublicConfig(): PublicConfig {
   return {
-    geometryLimit: config.analysis.geometryLimit,
-    geometryLimitSync: config.analysis.geometryLimitSync,
-    asyncThreshold: config.analysis.asyncThreshold,
-    pythonTimeoutMs: config.analysis.pythonTimeoutMs,
-    pythonTimeoutSyncMs: config.analysis.pythonTimeoutSyncMs,
+    apiUrl: config.api.url,
+    geometryLimit: config.submission.geometryLimit,
+    asyncThreshold: config.submission.asyncThreshold,
     maxUploadFileSizeKb: config.app.maxUploadFileSizeKb,
-    logLevel: config.app.logLevel,
     appVersion: config.app.version,
     whispPythonVersion: config.app.whispPythonVersion,
-    assetRegistryDefaultCollection: config.assetRegistry.defaultCollection,
+    geoidDefaultCollection: config.geoid.defaultCollection,
   };
 }

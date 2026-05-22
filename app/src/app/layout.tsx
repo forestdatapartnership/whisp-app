@@ -8,6 +8,7 @@ import { ConfigProvider } from "@/lib/config/config-context";
 import { ContextsInitializer } from "@/lib/providers/contexts-initializer";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { ApiKeyProvider } from "@/lib/auth/api-key-context";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Whisp",
@@ -36,12 +37,13 @@ export default function RootLayout({
             <TooltipProvider>
               <ContextsInitializer>
                 <Navbar />
-                <main className="flex flex-1 flex-col items-center justify-center px-6 py-8">
+                <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-8 has-data-[full-bleed]:px-0 has-data-[full-bleed]:py-0">
                   {children}
                 </main>
                 <Footer />
               </ContextsInitializer>
             </TooltipProvider>
+            <Toaster position="bottom-right" />
           </ThemeProvider>
           </ApiKeyProvider>
           </AuthProvider>

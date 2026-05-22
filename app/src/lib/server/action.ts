@@ -1,6 +1,6 @@
 import 'server-only';
-import { SystemError } from '@/types/systemError';
-import { SystemCode } from '@/types/systemCodes';
+import { SystemError } from '@/types/system-error';
+import { SystemCode } from '@/types/system-codes';
 import type { ActionResult } from '@/types/action-result';
 
 function isNextSentinel(err: unknown): boolean {

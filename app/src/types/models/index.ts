@@ -8,4 +8,4 @@ export type {
   AnalysisMetadata,
   ResultField,
   ResultFieldsMap,
-} from './resultField';
+} from './result-field';

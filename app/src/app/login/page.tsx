@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,24 +9,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Alert } from "@/components/ui/alert";
+import { CenteredShell } from "@/components/layout/page-section";
 
-export default function LoginPage() {
-  const { login, logout, error, clearError, isAuthenticated, isLoading: authLoading } = useAuth();
+function LoginForm() {
+  const params = useSearchParams();
+  const next = params.get("next") || "/";
+  const { login, error, clearError, isAuthenticated, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      window.location.assign("/");
+      window.location.assign(next.startsWith("/") ? next : "/");
     }
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, next]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
     setIsLoading(true);
-    await login(email, password);
+    const ok = await login(email, password);
+    if (ok) window.location.assign(next.startsWith("/") ? next : "/");
     setIsLoading(false);
   };
 
@@ -72,12 +77,19 @@ export default function LoginPage() {
           </Button>
         </form>
         <p className="mt-5 text-center text-[13px] text-muted-foreground">
-          No account yet?{" "}
-          <Link href="/register">
-            Register free
-          </Link>
+          No account yet? <Link href="/register">Register free</Link>
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <CenteredShell>
+      <Suspense>
+        <LoginForm />
+      </Suspense>
+    </CenteredShell>
   );
 }

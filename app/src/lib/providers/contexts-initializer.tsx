@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { useApiKey } from '@/lib/auth/api-key-context';
 import { useConfig } from '@/lib/config/config-context';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/icons';
 
 const INIT_TIMEOUT_MS = 15000;
@@ -29,17 +30,15 @@ interface ContextsInitializerProps {
 
 export function ContextsInitializer({ children }: ContextsInitializerProps) {
   const { isLoading: authLoading, error: authError } = useAuth();
-  const { isLoading: apiKeyLoading, error: apiKeyError } = useApiKey();
   const { isLoading: configLoading } = useConfig();
 
   const [timedOut, setTimedOut] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  const isLoading = authLoading || apiKeyLoading || configLoading;
+  const isLoading = authLoading || configLoading;
 
   const errors: string[] = [
     authError,
-    apiKeyError,
     timedOut ? 'Initialization timed out. Please refresh the page.' : null,
   ].filter((e): e is string => e !== null);
 
@@ -76,10 +75,10 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
 
   if (shouldBlockInitialLoad) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b3d0b]">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
         <div className="text-center">
-          <Spinner className="h-12 w-12 text-white mx-auto" />
-          <p className="mt-4 text-white">Loading...</p>
+          <Spinner className="mx-auto h-10 w-10 text-accent-green" />
+          <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
         </div>
       </div>
     );
@@ -87,24 +86,23 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
 
   if (!hasInitialized && hasError) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b3d0b] p-4">
-        <div className="p-4 bg-gray-800 rounded shadow-md border border-gray-300 max-w-md w-full">
-          <div className="text-center py-8">
-            <h1 className="text-2xl font-semibold text-white mb-4">Error</h1>
-            <div className="text-gray-300 mb-6 space-y-1">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-[400px]">
+          <CardHeader>
+            <CardTitle>Something went wrong</CardTitle>
+            <CardDescription>We couldn&apos;t load the application.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               {errors.map((err, i) => (
-                <p key={i}>{err}</p>
+                <Alert key={i} type="error" message={err} />
               ))}
             </div>
-            <Button
-              variant="secondary"
-              onClick={() => window.location.reload()}
-              className="bg-gray-600 hover:bg-gray-700 text-white"
-            >
-              Refresh Page
+            <Button type="button" className="w-full" onClick={() => window.location.reload()}>
+              Refresh page
             </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

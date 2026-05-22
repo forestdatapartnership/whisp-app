@@ -1,9 +1,10 @@
 'use server';
 
 import { getAuthUser } from '@/lib/auth/session';
-import { SystemError } from '@/types/systemError';
-import { SystemCode } from '@/types/systemCodes';
+import { SystemError } from '@/types/system-error';
+import { SystemCode } from '@/types/system-codes';
 import { action } from '@/lib/server/action';
+import { invalidateApiKeyCache } from '@/lib/server/api-client';
 import {
   getTempApiKey,
   getApiKeyByUser,
@@ -32,11 +33,14 @@ export const fetchUserApiKey = action(async (): Promise<ApiKeyResult> => {
 export const createUserApiKey = action(async (): Promise<ApiKeyResult> => {
   const user = await getAuthUser();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
-  return createApiKeyForUser(user.id);
+  const result = await createApiKeyForUser(user.id);
+  invalidateApiKeyCache(user.id);
+  return result;
 });
 
 export const deleteUserApiKey = action(async (): Promise<void> => {
   const user = await getAuthUser();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
   await deleteApiKeyByUser(user.id);
+  invalidateApiKeyCache(user.id);
 });

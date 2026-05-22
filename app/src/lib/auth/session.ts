@@ -4,8 +4,8 @@ import { cookies } from 'next/headers';
 import { jwtVerify, SignJWT } from 'jose';
 import { config } from '@/lib/server/env';
 import { AuthUser } from '@/types/auth';
-import { SystemError } from '@/types/systemError';
-import { SystemCode } from '@/types/systemCodes';
+import { SystemError } from '@/types/system-error';
+import { SystemCode } from '@/types/system-codes';
 
 export const TOKEN_EXPIRATION = {
   access: '30m',

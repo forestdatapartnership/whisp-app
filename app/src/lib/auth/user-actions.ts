@@ -1,10 +1,10 @@
 'use server';
 
 import { getAuthUser, getAuthUserWithRefresh } from '@/lib/auth/session';
-import { SystemError } from '@/types/systemError';
-import { SystemCode } from '@/types/systemCodes';
+import { SystemError } from '@/types/system-error';
+import { SystemCode } from '@/types/system-codes';
 import { action } from '@/lib/server/action';
-import { validateRequiredFields } from '@/lib/shared/field-validation';
+import { validateRequiredFields, isValidPassword } from '@/lib/shared/field-validation';
 import {
   getUserByUuid,
   updateUserProfile as dalUpdateProfile,
@@ -49,6 +49,7 @@ export const changePassword = action(async (currentPassword: string, newPassword
   const user = await getAuthUser();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
   validateRequiredFields({ currentPassword, newPassword }, ['currentPassword', 'newPassword']);
+  if (!isValidPassword(newPassword)) throw new SystemError(SystemCode.USER_WEAK_PASSWORD);
   const success = await changeUserPassword(user.id, currentPassword, newPassword);
   if (!success) throw new SystemError(SystemCode.USER_INVALID_PASSWORD);
 });
