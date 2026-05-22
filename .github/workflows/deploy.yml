@@ -57,7 +57,7 @@ jobs:
 
       - name: Deploy
         env:
-          NAMESPACE: ${{ vars.NAMESPACE }}
+          GKE_NAMESPACE: ${{ vars.GKE_NAMESPACE }}
           ENVIRONMENT: ${{ github.event.inputs.environment }}
           VERSION: ${{ steps.version.outputs.version }}
           IMAGE_REGISTRY: ${{ vars.REGISTRY }}/${{ vars.PROJECT_ID }}/${{ vars.REPOSITORY }}
@@ -66,12 +66,13 @@ jobs:
           ENV_SECRET: ${{ vars.ENV_SECRET }}
           GEE_SECRET: ${{ vars.GEE_SECRET }}
           GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          GKE_LB_STATIC_IP_NAME: ${{ vars.GKE_LB_STATIC_IP_NAME }}
           HOST_URL: ${{ vars.HOST_URL }}
         run: |
           set -euo pipefail
           VERSION_SLUG=$(echo "$VERSION" | tr '[:upper:]' '[:lower:]' | tr '.+' '-')
           export VERSION_SLUG
-          VARS='$NAMESPACE $ENVIRONMENT $VERSION $VERSION_SLUG $IMAGE_REGISTRY $CLOUDSQL_INSTANCE $GCS_BUCKET $ENV_SECRET $GEE_SECRET $GCP_SERVICE_ACCOUNT $HOST_URL'
+          VARS='$GKE_NAMESPACE $ENVIRONMENT $VERSION $VERSION_SLUG $IMAGE_REGISTRY $CLOUDSQL_INSTANCE $GCS_BUCKET $ENV_SECRET $GEE_SECRET $GCP_SERVICE_ACCOUNT $GKE_LB_STATIC_IP_NAME $HOST_URL'
           OUT=/tmp/k8s
           mkdir -p "$OUT"
           for f in infra/k8s/[0-9]*.yaml; do
@@ -83,16 +84,16 @@ jobs:
           kubectl apply -f "$OUT"/00.*.yaml
 
           kubectl apply -f "$OUT"/01.*.yaml
-          kubectl wait --for=condition=available deployment --all -n "$NAMESPACE" --timeout=300s
+          kubectl wait --for=condition=available deployment --all -n "$GKE_NAMESPACE" --timeout=300s
 
           kubectl apply -f "$OUT"/02.*.yaml
-          kubectl wait --for=condition=complete job --all -n "$NAMESPACE" --timeout=300s &
+          kubectl wait --for=condition=complete job --all -n "$GKE_NAMESPACE" --timeout=300s &
           wp=$!
           while kill -0 $wp 2>/dev/null; do
-            kubectl get job -n "$NAMESPACE" -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Failed")].status}{"\n"}{end}' | grep -qx True && {
+            kubectl get job -n "$GKE_NAMESPACE" -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Failed")].status}{"\n"}{end}' | grep -qx True && {
               kill $wp 2>/dev/null || true
               wait $wp 2>/dev/null || true
-              kubectl get job -n "$NAMESPACE"
+              kubectl get job -n "$GKE_NAMESPACE"
               exit 1
             }
             sleep 2
@@ -100,7 +101,7 @@ jobs:
           wait $wp
 
           kubectl apply -f "$OUT"/03.*.yaml
-          kubectl wait --for=condition=available deployment --all -n "$NAMESPACE" --timeout=300s
+          kubectl wait --for=condition=available deployment --all -n "$GKE_NAMESPACE" --timeout=300s
 
           for tier in 04 05 06 07 08 09; do
             files=("$OUT/${tier}."*.yaml)

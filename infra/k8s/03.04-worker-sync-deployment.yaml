@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: whisp-worker-sync
-  namespace: ${NAMESPACE}
+  namespace: ${GKE_NAMESPACE}
   labels:
     app: whisp-worker-sync
     env: ${ENVIRONMENT}

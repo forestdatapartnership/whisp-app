@@ -2,12 +2,13 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: whisp-ingress
-  namespace: ${NAMESPACE}
+  namespace: ${GKE_NAMESPACE}
   labels:
     app: whisp-ingress
     env: ${ENVIRONMENT}
   annotations:
     kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: ${GKE_LB_STATIC_IP_NAME}
 spec:
   rules:
   - http:

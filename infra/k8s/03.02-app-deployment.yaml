@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: whisp-app
-  namespace: ${NAMESPACE}
+  namespace: ${GKE_NAMESPACE}
   labels:
     app: whisp-app
     env: ${ENVIRONMENT}
@@ -66,7 +66,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: whisp-app-pdb
-  namespace: ${NAMESPACE}
+  namespace: ${GKE_NAMESPACE}
 spec:
   minAvailable: 1
   selector:
@@ -77,7 +77,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: whisp-app
-  namespace: ${NAMESPACE}
+  namespace: ${GKE_NAMESPACE}
 spec:
   selector:
     app: whisp-app
