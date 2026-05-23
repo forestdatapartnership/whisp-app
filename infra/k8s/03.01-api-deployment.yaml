@@ -27,6 +27,8 @@ spec:
         ports:
         - containerPort: 8000
         env:
+        - name: DEPLOYED_AT
+          value: "${DEPLOYED_AT}"
         - name: DB_HOST
           value: "cloud-sql-proxy"
         - name: DB_PORT

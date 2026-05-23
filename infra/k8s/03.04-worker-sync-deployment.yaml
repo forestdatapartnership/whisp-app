@@ -34,6 +34,8 @@ spec:
         - --concurrency=2
         - --loglevel=info
         env:
+        - name: DEPLOYED_AT
+          value: "${DEPLOYED_AT}"
         - name: EE_HIGH_VOL
           value: "0"
         - name: DB_HOST

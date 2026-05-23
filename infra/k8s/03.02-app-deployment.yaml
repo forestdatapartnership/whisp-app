@@ -24,6 +24,8 @@ spec:
         ports:
         - containerPort: 3000
         env:
+        - name: DEPLOYED_AT
+          value: "${DEPLOYED_AT}"
         - name: HOST_URL
           value: "${HOST_URL}"
         - name: DB_HOST
