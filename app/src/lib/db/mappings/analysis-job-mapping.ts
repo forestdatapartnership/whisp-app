@@ -1,7 +1,7 @@
 import type { AnalysisJob } from '@/types/models/analysis-job';
 import type { ColumnMapping } from './column-mapping';
 
-// apiKey, resultsAvailable, timeoutMs → not stored in DB
+// apiKey, resultsAvailable → not stored in DB
 export const analysisJobMapping = {
   id:                    { name: 'id'                          },
   createdAt:             { name: 'created_at',  readonly: true },
@@ -9,7 +9,8 @@ export const analysisJobMapping = {
   userId:                { name: 'user_id',    path: 'apiKey.userId' },
   status:                { name: 'status'                      },
   featureCount:          { name: 'feature_count'               },
-  analysisOptions:       { name: 'analysis_options'            },
+  analysisOptions:       { name: 'analysis_options', jsonb: true },
+  timeoutSeconds:        { name: 'timeout_seconds'             },
   startedAt:             { name: 'started_at'                  },
   completedAt:           { name: 'completed_at'                },
   errorMessage:          { name: 'error_message'               },

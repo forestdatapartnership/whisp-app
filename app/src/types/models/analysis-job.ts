@@ -13,7 +13,7 @@ export interface AnalysisJob extends BaseModel {
   status?: SystemCode;
   startedAt?: Date;
   completedAt?: Date;
-  timeoutMs?: number;
+  timeoutSeconds?: number;
   errorMessage?: string;
   resultsAvailable?: boolean;
   agent?: 'ui' | 'api';

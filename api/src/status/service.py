@@ -1,11 +1,14 @@
 import json
 
+from fastapi.responses import JSONResponse
+
 from src.codes import RUNNING_STATUSES, SystemCode
 from src.config import Settings
 from src.db import jobs as db_jobs
 from src.io.files import load_completed_result
 from src.job_progress import JobProgress
 from src.redis import get, publish
+from src.responses import api_response
 from src.worker.celery_app import app as celery_app
 from src.worker.analysis_task import AnalysisTask
 
@@ -18,6 +21,15 @@ async def get_job_state(token: str) -> JobProgress | None:
     if db_job is not None:
         return JobProgress.from_db(db_job)
     return None
+
+
+async def terminal_api_response(token: str, job: JobProgress) -> JSONResponse:
+    if job.status == SystemCode.ANALYSIS_TIMEOUT:
+        db_job = await db_jobs.get_job(token)
+        timeout = db_job.get("timeout_seconds") if db_job else None
+        if timeout is not None:
+            return api_response(job.status, args=[str(timeout)])
+    return api_response(job.status, cause=job.error_message)
 
 
 async def terminate_analysis(token: str, error_message: str | None = None) -> None:

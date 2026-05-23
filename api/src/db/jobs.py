@@ -20,6 +20,7 @@ async def create_analysis_job(
     endpoint: str | None,
     feature_count: int | None,
     analysis_options: dict | None,
+    timeout_seconds: int | None = None,
     status: SystemCode,
     openforis_whisp_version: str | None = None,
     earthengine_api_version: str | None = None,
@@ -44,9 +45,9 @@ async def create_analysis_job(
                 """
                 INSERT INTO analysis_jobs (
                     id, api_key_id, user_id, agent, ip_address, api_version, endpoint,
-                    feature_count, analysis_options, status,
+                    feature_count, analysis_options, timeout_seconds, status,
                     openforis_whisp_version, earthengine_api_version, created_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, now())
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13, now())
                 """,
                 job_id,
                 api_key_id,
@@ -57,6 +58,7 @@ async def create_analysis_job(
                 endpoint,
                 feature_count,
                 json.dumps(analysis_options) if analysis_options is not None else None,
+                timeout_seconds,
                 status.value,
                 openforis_whisp_version,
                 earthengine_api_version,
@@ -103,7 +105,7 @@ async def update_analysis_job(job_id: str, **updates: Any) -> None:
 async def get_job(job_id: str) -> dict | None:
     pool = await acquire_pool()
     row = await pool.fetchrow(
-        "SELECT id, status, feature_count, error_message, analysis_options "
+        "SELECT id, status, feature_count, error_message, timeout_seconds, analysis_options "
         "FROM analysis_jobs WHERE id = $1",
         job_id,
     )

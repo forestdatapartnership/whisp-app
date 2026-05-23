@@ -1,4 +1,3 @@
-import re
 from typing import AsyncIterator
 
 from fastapi import APIRouter, Depends, Request
@@ -21,15 +20,6 @@ _SSE_HEADERS = {
     "Connection": "keep-alive",
 }
 
-_TIMEOUT_SECONDS = re.compile(r"after (\d+) seconds")
-
-# workaround to extract timeout seconds from error message since the redis job state doesn't store it
-def _terminal_response(job: JobProgress) -> JSONResponse:
-    if job.status == SystemCode.ANALYSIS_TIMEOUT:
-        match = _TIMEOUT_SECONDS.search(job.error_message or "")
-        args = [match.group(1)] if match else None
-        return api_response(job.status, args=args)
-    return api_response(job.status, cause=job.error_message)
 
 @router.get("/{token}")
 async def get_status(
@@ -50,7 +40,7 @@ async def get_status(
     if job.status in RUNNING_STATUSES:
         return api_response(job.status, data=service.progress_api_data(job, token=token))
 
-    return _terminal_response(job)
+    return await service.terminal_api_response(token, job)
 
 
 @router.post("/{token}/cancel")
@@ -63,7 +53,7 @@ async def cancel_status(
         return api_response(SystemCode.ANALYSIS_JOB_NOT_FOUND)
 
     if job.status in TERMINAL_STATUSES:
-        return _terminal_response(job)
+        return await service.terminal_api_response(token, job)
 
     message = "Cancelled by user"
     await service.terminate_analysis(token, message)

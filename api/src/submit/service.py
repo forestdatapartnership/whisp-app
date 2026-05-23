@@ -39,8 +39,8 @@ def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Setti
     return count
 
 
-def _options_payload(opts: AnalysisOptions, timeout_seconds: int) -> dict:
-    payload: dict = {"timeoutSeconds": timeout_seconds}
+def _options_payload(opts: AnalysisOptions) -> dict:
+    payload: dict = {}
     if opts.external_id_column:
         payload["externalIdColumn"] = opts.external_id_column
     if opts.unit_type:
@@ -104,7 +104,7 @@ async def submit(
 ) -> SubmitResult:
     feature_count = len(fc.get("features") or [])
     timeout = settings.analysis_timeout_seconds(async_mode=opts.async_mode)
-    options_payload = _options_payload(opts, timeout)
+    options_payload = _options_payload(opts)
 
     await db_jobs.create_analysis_job(
         job_id=token,
@@ -115,7 +115,8 @@ async def submit(
         api_version=settings.api_version,
         endpoint=ctx.endpoint,
         feature_count=feature_count,
-        analysis_options=options_payload,
+        analysis_options=options_payload or None,
+        timeout_seconds=timeout,
         status=SystemCode.ANALYSIS_QUEUED,
         openforis_whisp_version=settings.openforis_whisp_version,
         earthengine_api_version=settings.earthengine_api_version,

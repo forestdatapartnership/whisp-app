@@ -36,10 +36,6 @@ class AnalysisJobsService extends BaseCrudService<AnalysisJob, typeof analysisJo
   protected readonly columnsMapping      = analysisJobMapping;
   protected readonly defaultOrderBy = 'created_at DESC';
 
-  async create(job: AnalysisJob): Promise<AnalysisJob> {
-    return super.create({ ...job, status: job.status ?? SystemCode.ANALYSIS_PROCESSING });
-  }
-
   async getStats(userId: string): Promise<AnalysisJobStats> {
     const pool   = getPool();
     const client = await pool.connect();
@@ -120,23 +116,8 @@ class AnalysisJobsService extends BaseCrudService<AnalysisJob, typeof analysisJo
       client.release();
     }
   }
-
-  async releaseStuckJobs(thresholdMinutes: number): Promise<number> {
-    const pool = getPool();
-    const result = await pool.query(
-      `UPDATE analysis_jobs
-       SET status = $1, completed_at = NOW(), error_message = $2
-       WHERE status = $3 AND COALESCE(started_at, created_at) < NOW() - INTERVAL '1 minute' * $4
-       RETURNING id`,
-      [SystemCode.ANALYSIS_ERROR, 'Job automatically marked as failed - stuck in processing mode for too long', SystemCode.ANALYSIS_PROCESSING, thresholdMinutes]
-    );
-    return result.rowCount ?? 0;
-  }
 }
 
 const service = new AnalysisJobsService();
 
-export const createAnalysisJob   = (job: AnalysisJob)                          => service.create(job);
-export const updateAnalysisJob   = (id: string, updates: Partial<AnalysisJob>) => service.update(id, updates);
-export const getAnalysisJobStats = (userId: string)                             => service.getStats(userId);
-export const releaseStuckJobs    = (thresholdMinutes: number)                   => service.releaseStuckJobs(thresholdMinutes);
+export const getAnalysisJobStats = (userId: string) => service.getStats(userId);
