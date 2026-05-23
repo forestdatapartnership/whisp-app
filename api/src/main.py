@@ -35,7 +35,14 @@ async def lifespan(_app: FastAPI):
 def create_app() -> FastAPI:
     settings = get_settings()
 
-    app = FastAPI(title="Whisp API", version=settings.api_version, lifespan=lifespan)
+    app = FastAPI(
+        title="Whisp API",
+        version=settings.api_version,
+        lifespan=lifespan,
+        docs_url="/api/docs",
+        redoc_url="/api/redoc",
+        openapi_url="/api/openapi.json",
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
