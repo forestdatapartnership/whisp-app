@@ -1,4 +1,0 @@
-importlib_metadata
-pandas
-earthengine-api==1.6.11
-openforis-whisp==3.0.0a13
