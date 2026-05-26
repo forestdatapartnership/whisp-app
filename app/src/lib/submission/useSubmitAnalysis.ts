@@ -2,10 +2,16 @@
 
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { submitAnalysis } from '@/lib/submission/actions'
 import { storeSyncResult } from '@/lib/submission/sync-result'
-import { formatSystemMessage } from '@/types/system-codes'
 import type { AnalysisOptionsValue } from '@/components/submission/analysis-options'
+
+type ApiEnvelope = {
+  code: string
+  message?: string
+  data?: Record<string, unknown>
+  context?: Record<string, unknown>
+  cause?: string
+}
 
 export type GeoPayload =
   | { type: 'wkt'; wkt: string }
@@ -54,14 +60,14 @@ export function useSubmitAnalysis({
 
       setIsLoading(true)
       try {
-        const result = await submitAnalysis(endpoint, body)
-        if (!result.ok) {
-          setError(formatSystemMessage(result.code, result.args))
-          return
-        }
-        const { status, body: data } = result.data
-        if (status >= 400) {
-          setError(data.message ?? `Error ${status}`)
+        const res = await fetch(`/internal/submit/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        const data = (await res.json()) as ApiEnvelope
+        if (!res.ok) {
+          setError(data.message ?? `Error ${res.status}`)
           return
         }
         let token: string | undefined

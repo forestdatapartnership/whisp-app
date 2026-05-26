@@ -101,16 +101,6 @@ export function ResultsSearchBar({
             <FileText className="h-3 w-3" />
             GeoJSON
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              onExportExcel?.();
-              setOpen(false);
-            }}
-            className="text-xs text-text-muted gap-2 cursor-pointer focus:bg-surface-raised focus:text-text-primary"
-          >
-            <FileText className="h-3 w-3" />
-            Excel
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

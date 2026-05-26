@@ -6,7 +6,7 @@ import { Link } from "@/components/ui/link";
 import { VersionLink } from "@/components/layout/version-link";
 
 const docsLinks = [
-  { href: "https://github.com/openforis/whisp", label: "API (GitHub)" },
+  { href: "/api/docs", label: "API" },
   { href: "/docs/reference/result-fields", label: "Reference Fields" },
   { href: "/docs/reference/commodities", label: "Commodities" },
 ];
