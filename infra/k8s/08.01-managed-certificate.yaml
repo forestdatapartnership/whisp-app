@@ -1,11 +1,18 @@
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: whisp-managed-cert
-  namespace: ${GKE_NAMESPACE}
-  labels:
-    app: whisp-tls
-    env: ${ENVIRONMENT}
-spec:
-  domains:
-    - ${INGRESS_HOST}
+# GKE ManagedCertificate — disabled in favor of self-signed TLS secret (whisp-ingress-tls).
+# To re-enable:
+#   1. Uncomment this file
+#   2. Restore networking.gke.io/managed-certificates on infra/k8s/09.01-ingress.yaml
+#   3. Remove spec.tls from the ingress
+#   4. kubectl delete secret whisp-ingress-tls -n ${GKE_NAMESPACE}
+#
+# apiVersion: networking.gke.io/v1
+# kind: ManagedCertificate
+# metadata:
+#   name: whisp-managed-cert
+#   namespace: ${GKE_NAMESPACE}
+#   labels:
+#     app: whisp-tls
+#     env: ${ENVIRONMENT}
+# spec:
+#   domains:
+#     - ${INGRESS_HOST}
