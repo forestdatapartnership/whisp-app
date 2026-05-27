@@ -86,7 +86,7 @@ jobs:
           export INGRESS_HOST
           export DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           if ! kubectl get secret whisp-ingress-tls -n "$GKE_NAMESPACE" >/dev/null 2>&1; then
-            bash scripts/gcp/create-ingress-tls-secret.sh "$GKE_NAMESPACE" "$INGRESS_HOST"
+            bash infra/gcp/create-ingress-tls-secret.sh "$GKE_NAMESPACE" "$INGRESS_HOST"
           else
             echo "TLS secret whisp-ingress-tls already exists in $GKE_NAMESPACE, skipping generation"
           fi
