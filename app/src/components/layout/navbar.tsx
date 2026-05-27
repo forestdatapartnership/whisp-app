@@ -31,10 +31,12 @@ export function Navbar() {
     <nav className="sticky top-0 z-[250] flex h-14 items-center gap-4 border-b border-border bg-bg px-8">
       <Link href="/" className="flex items-center gap-2.5 no-underline">
         <Image
-          src={theme === "dark" ? "/whisp_logo_2_white.svg" : "/whisp_logo_2.svg"}
+          src={theme === "dark" ? "/whisp_logo_nav_white.svg" : "/whisp_logo_nav.svg"}
           alt="Whisp"
-          width={60}
-          height={60}
+          width={140}
+          height={40}
+          className="h-10 w-auto"
+          priority
         />
       </Link>
 
