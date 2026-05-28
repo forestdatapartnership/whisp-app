@@ -6,6 +6,8 @@ metadata:
   labels:
     app: redis
     env: ${ENVIRONMENT}
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
 spec:
   replicas: 1
   selector:
