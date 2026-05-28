@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import threading
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from typing import Any, TypeVar
 
 import asyncpg
@@ -108,15 +108,19 @@ def _ensure_worker_pool(loop: asyncio.AbstractEventLoop) -> asyncpg.Pool:
     return pool
 
 
-def run_sync(coro: Coroutine[Any, Any, T]) -> T:
+def _run_sync(factory: Callable[[], Coroutine[Any, Any, T]]) -> T:
     loop = _worker_loop()
     _ensure_worker_pool(loop)
     try:
-        return loop.run_until_complete(coro)
+        return loop.run_until_complete(factory())
     except Exception:
         _reset_worker_pool()
         _ensure_worker_pool(loop)
-        return loop.run_until_complete(coro)
+        return loop.run_until_complete(factory())
+
+
+def run_sync(fn: Callable[..., Coroutine[Any, Any, T]], /, *args: Any, **kwargs: Any) -> T:
+    return _run_sync(lambda: fn(*args, **kwargs))
 
 
 async def check_db() -> None:

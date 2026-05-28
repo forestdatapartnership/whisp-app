@@ -12,7 +12,6 @@ settings = get_settings()
 app = Celery(
     "whisp",
     broker=settings.redis_url,
-    broker_connection_retry_on_startup=True,
 )
 app.conf.update(
     task_serializer="json",
@@ -23,6 +22,15 @@ app.conf.update(
     task_track_started=True,
     task_acks_late=True,
     worker_prefetch_multiplier=1,
+    broker_connection_retry=True,
+    broker_connection_retry_on_startup=True,
+    broker_transport_options={
+        "socket_timeout": 30,
+        "socket_connect_timeout": 30,
+        "retry_on_timeout": True,
+        "health_check_interval": 30,
+    },
+    worker_cancel_long_running_tasks_on_connection_loss=True,
     worker_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "name": "%(name)s", "message": "%(message)s"}',
     worker_task_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "task": "%(task_name)s[%(task_id)s]", "message": "%(message)s"}',
 )

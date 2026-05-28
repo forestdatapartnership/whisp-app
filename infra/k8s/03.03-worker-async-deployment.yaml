@@ -32,6 +32,8 @@ spec:
         - -Q
         - async
         - --concurrency=4
+        - --without-mingle
+        - --without-gossip
         - --loglevel=info
         env:
         - name: DEPLOYED_AT

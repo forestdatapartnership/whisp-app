@@ -76,14 +76,14 @@ Wait-ForHttp -Url "http://127.0.0.1:$ApiPort/health" -MaxSeconds 120
 $env:EE_HIGH_VOL = "0"
 $SyncProc = Start-Process -FilePath "python" -ArgumentList @(
     "-m", "celery", "-A", "src.worker.celery_app", "worker",
-    "-Q", "sync", "--concurrency=1", "--pool=threads", "--loglevel=info", "--hostname", "sync@%h"
+    "-Q", "sync", "--concurrency=1", "--pool=threads", "--without-mingle", "--without-gossip", "--loglevel=info", "--hostname", "sync@%h"
 ) -WorkingDirectory $ApiDir -PassThru -NoNewWindow
 $Processes += $SyncProc
 
 $env:EE_HIGH_VOL = "1"
 $AsyncProc = Start-Process -FilePath "python" -ArgumentList @(
     "-m", "celery", "-A", "src.worker.celery_app", "worker",
-    "-Q", "async", "--concurrency=1", "--pool=threads", "--loglevel=info", "--hostname", "async@%h"
+    "-Q", "async", "--concurrency=1", "--pool=threads", "--without-mingle", "--without-gossip", "--loglevel=info", "--hostname", "async@%h"
 ) -WorkingDirectory $ApiDir -PassThru -NoNewWindow
 $Processes += $AsyncProc
 

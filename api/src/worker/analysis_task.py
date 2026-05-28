@@ -63,14 +63,14 @@ class AnalysisTask(Task):
         status: SystemCode,
         error_message: str | None = None,
     ) -> None:
-        run_sync(db_jobs.update_analysis_job(token, status=status, completed_at=db_jobs.utc_now(), error_message=error_message))
+        run_sync(db_jobs.update_analysis_job, token, status=status, completed_at=db_jobs.utc_now(), error_message=error_message)
         publish_sync(
             token,
             JobProgress.of(status, error_message=error_message).to_redis(),
         )
 
     def _already_cancelled(self, token: str) -> bool:
-        job = run_sync(db_jobs.get_job(token))
+        job = run_sync(db_jobs.get_job, token)
         return bool(job and job.get("status") == SystemCode.ANALYSIS_CANCELLED.value)
 
     def before_start(self, task_id, args, kwargs):
@@ -82,11 +82,10 @@ class AnalysisTask(Task):
         if token is None:
             return
         run_sync(
-            db_jobs.update_analysis_job(
-                token,
-                status=SystemCode.ANALYSIS_PROCESSING,
-                started_at=db_jobs.utc_now(),
-            )
+            db_jobs.update_analysis_job,
+            token,
+            status=SystemCode.ANALYSIS_PROCESSING,
+            started_at=db_jobs.utc_now(),
         )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
