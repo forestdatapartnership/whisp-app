@@ -31,8 +31,8 @@ app.conf.update(
         "health_check_interval": 30,
     },
     worker_cancel_long_running_tasks_on_connection_loss=True,
-    worker_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "name": "%(name)s", "message": "%(message)s"}',
-    worker_task_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "task": "%(task_name)s[%(task_id)s]", "message": "%(message)s"}',
+    worker_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "pid": %(process)d, "process": "%(processName)s", "name": "%(name)s", "message": "%(message)s"}',
+    worker_task_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "pid": %(process)d, "process": "%(processName)s", "task": "%(task_name)s[%(task_id)s]", "message": "%(message)s"}',
 )
 
 
