@@ -1,6 +1,7 @@
 import contextvars
 import logging
 import logging.config
+import re
 from typing import Any
 
 from pythonjsonlogger import jsonlogger
@@ -11,6 +12,7 @@ _UVICORN_LOGGERS = ("uvicorn", "uvicorn.error", "uvicorn.access")
 _LOG_FMT = (
     "%(levelname)s %(asctime)s %(name)s %(process)d %(processName)s %(message)s"
 )
+_ACCESS_STATUS_RE = re.compile(r"\s(\d{3})\s*$")
 
 _context: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
     "log_context", default={}
@@ -31,6 +33,16 @@ def bind(**fields: Any) -> None:
 
 def clear_context() -> None:
     _context.set({})
+
+
+class DropSuccessfulAccessLogFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.name != "uvicorn.access":
+            return True
+        match = _ACCESS_STATUS_RE.search(record.getMessage())
+        if not match:
+            return True
+        return int(match.group(1)) >= 400
 
 
 class AppJsonFormatter(jsonlogger.JsonFormatter):
@@ -61,11 +73,17 @@ def log_config_dict() -> dict[str, Any]:
                 "fmt": _LOG_FMT,
             },
         },
+        "filters": {
+            "drop_successful_access": {
+                "()": "src.app_logging.DropSuccessfulAccessLogFilter",
+            },
+        },
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
                 "formatter": "json",
                 "stream": "ext://sys.stdout",
+                "filters": ["drop_successful_access"],
             },
         },
         "root": {
