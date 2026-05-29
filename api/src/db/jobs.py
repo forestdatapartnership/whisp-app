@@ -1,13 +1,10 @@
 import json
-import logging
 from datetime import datetime, timezone
 from typing import Any
 
 from src.codes import RUNNING_STATUSES, SystemCode
 from src.db.pool import acquire_pool
 from src.exceptions import AppError
-
-logger = logging.getLogger(__name__)
 
 async def create_analysis_job(
     *,

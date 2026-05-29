@@ -25,16 +25,9 @@ spec:
         image: ${IMAGE_REGISTRY}/whisp-api:${VERSION}
         imagePullPolicy: Always
         command:
-        - celery
-        - -A
-        - src.worker.celery_app
-        - worker
-        - -Q
-        - sync
-        - --concurrency=2
-        - --without-mingle
-        - --without-gossip
-        - --loglevel=info
+        - sh
+        - -c
+        - exec celery -A src.worker.celery_app worker -Q sync --concurrency=2 --without-mingle --without-gossip 2>&1
         env:
         - name: DEPLOYED_AT
           value: "${DEPLOYED_AT}"

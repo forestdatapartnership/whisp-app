@@ -2,9 +2,18 @@ import logging
 import os
 
 from celery import Celery
-from celery.signals import worker_init, worker_process_init
+from celery.signals import (
+    setup_logging,
+    task_failure,
+    task_postrun,
+    task_prerun,
+    worker_init,
+    worker_process_init,
+)
 
+from src.app_logging import bind, clear_context, configure
 from src.config import get_settings
+from src.submit.schemas import AnalysisTaskContext
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +40,36 @@ app.conf.update(
         "health_check_interval": 30,
     },
     worker_cancel_long_running_tasks_on_connection_loss=True,
-    worker_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "pid": %(process)d, "process": "%(processName)s", "name": "%(name)s", "message": "%(message)s"}',
-    worker_task_log_format='{"time": "%(asctime)s", "level": "%(levelname)s", "pid": %(process)d, "process": "%(processName)s", "task": "%(task_name)s[%(task_id)s]", "message": "%(message)s"}',
 )
+
+
+@setup_logging.connect
+def _setup_logging(**kwargs):
+    configure()
+
+
+@task_prerun.connect
+def _bind_task_log_context(
+    task_id: str | None = None,
+    task=None,
+    args: tuple | None = None,
+    kwargs: dict | None = None,
+    **_,
+):
+    ctx = AnalysisTaskContext.from_task_message(args, kwargs)
+    bind(
+        task_id=task_id,
+        task_name=task.name if task else None,
+        token=ctx.token if ctx else None,
+        user_id=ctx.user_id if ctx else None,
+        api_key_id=ctx.api_key_id if ctx else None,
+    )
+
+
+@task_postrun.connect
+@task_failure.connect
+def _clear_task_log_context(**_):
+    clear_context()
 
 
 @worker_init.connect

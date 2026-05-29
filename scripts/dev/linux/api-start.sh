@@ -113,17 +113,17 @@ start_redis() {
 
 start_redis
 
-(cd "$API_DIR" && python -m uvicorn src.main:app --host 0.0.0.0 --port "$API_PORT" --reload) &
+(cd "$API_DIR" && python -m src 2>&1) &
 PIDS+=($!)
 wait_for_http "http://localhost:$API_PORT/health" 60
 
 (cd "$API_DIR" && EE_HIGH_VOL=0 python -m celery -A src.worker.celery_app worker \
-    -Q sync --concurrency=1 --pool=prefork --without-mingle --without-gossip --loglevel=info --hostname sync@%h) &
+    -Q sync --concurrency=1 --pool=prefork --without-mingle --without-gossip --hostname sync@%h) &
 SYNC_PID=$!
 PIDS+=($SYNC_PID)
 
 (cd "$API_DIR" && EE_HIGH_VOL=1 python -m celery -A src.worker.celery_app worker \
-    -Q async --concurrency=1 --pool=prefork --without-mingle --without-gossip --loglevel=info --hostname async@%h) &
+    -Q async --concurrency=1 --pool=prefork --without-mingle --without-gossip --hostname async@%h) &
 ASYNC_PID=$!
 PIDS+=($ASYNC_PID)
 

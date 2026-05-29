@@ -40,6 +40,7 @@ class Settings(BaseSettings):
 
     temp_dir: Path = Field(default=Path("./temp"))
     ee_credential_path: Path = Field(default=Path("./credentials.json"))
+    log_level: str = "info"
 
     max_request_body_size_kb: int | None = None
 

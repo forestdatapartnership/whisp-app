@@ -22,4 +22,4 @@ RUN sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
 RUN pip install --no-cache-dir ./
 
 EXPOSE 8000
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-keep-alive", "65"]
+CMD ["sh", "-c", "exec python -m src.run 2>&1"]

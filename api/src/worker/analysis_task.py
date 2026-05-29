@@ -11,6 +11,7 @@ from src.db import jobs as db_jobs
 from src.db.pool import run_sync
 from src.redis import publish_sync
 from src.job_progress import JobProgress
+from src.submit.schemas import AnalysisTaskContext
 
 logger = logging.getLogger(__name__)
 
@@ -46,16 +47,8 @@ class AnalysisTask(Task):
         return f"analysis-{token}"
 
     @staticmethod
-    def _task_args(args: tuple, kwargs: dict) -> tuple[str | None, int | None]:
-        if args and len(args) >= 3:
-            return args[0], args[2]
-        token = kwargs.get("token")
-        timeout = kwargs.get("timeout")
-        if token is not None and timeout is not None:
-            return token, timeout
-        if args and len(args) >= 1:
-            return args[0], kwargs.get("timeout")
-        return None, None
+    def _task_context(args: tuple, kwargs: dict) -> AnalysisTaskContext | None:
+        return AnalysisTaskContext.from_task_message(args, kwargs)
 
     def _persist_terminal(
         self,
@@ -76,20 +69,21 @@ class AnalysisTask(Task):
     def before_start(self, task_id, args, kwargs):
         self._outcome: SystemCode | None = None
         self._error_message: str | None = None
-        token, _ = self._task_args(args, kwargs)
-        logger.info(f"Starting analysis {token}")
-
-        if token is None:
+        ctx = self._task_context(args, kwargs)
+        if ctx is None:
             return
+        logger.info(f"Starting analysis {ctx.token}")
         run_sync(
             db_jobs.update_analysis_job,
-            token,
+            ctx.token,
             status=SystemCode.ANALYSIS_PROCESSING,
             started_at=db_jobs.utc_now(),
         )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        token, timeout = self._task_args(args, kwargs)
+        ctx = self._task_context(args, kwargs)
+        token = ctx.token if ctx else None
+        timeout = ctx.timeout if ctx else None
         logger.error(f"Analysis {token} failed: {exc}")
 
         if isinstance(exc, TimeLimitExceeded):
@@ -102,7 +96,8 @@ class AnalysisTask(Task):
         super().on_failure(exc, task_id, args, kwargs, einfo)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        token, timeout = self._task_args(args, kwargs)
+        ctx = self._task_context(args, kwargs)
+        token = ctx.token if ctx else None
         logger.info(f"Analysis {token} completed with status {status}")
         if token is None or self._already_cancelled(token):
             return

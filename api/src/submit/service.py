@@ -1,4 +1,3 @@
-import logging
 import uuid
 from dataclasses import asdict
 
@@ -9,12 +8,10 @@ from src.exceptions import AppError
 from src.io import files
 from src.job_progress import JobProgress
 from src.redis import publish, wait_for
-from src.submit.schemas import AnalysisOptions, JobContext, SubmitResult
+from src.submit.schemas import AnalysisOptions, AnalysisTaskContext, JobContext, SubmitResult
 from src.submit.validators import get_common_property_names, validate_external_id_column
 from src.worker.celery_app import app as celery_app
 from src.worker.analysis_task import AnalysisTask
-
-logger = logging.getLogger(__name__)
 
 
 def new_token() -> str:
@@ -137,9 +134,15 @@ async def submit(
     files.atomic_write_json(files.input_path(token), payload)
 
     queue = "async" if opts.async_mode else "sync"
+    task_context = AnalysisTaskContext(
+        token=token,
+        timeout=timeout,
+        user_id=ctx.user_id,
+        api_key_id=ctx.api_key_id,
+    )
     celery_app.send_task(
         "src.worker.tasks.run_analysis",
-        args=[token, asdict(opts), timeout],
+        args=[asdict(task_context), asdict(opts)],
         queue=queue,
         task_id=AnalysisTask.task_id_for(token),
         time_limit=timeout,

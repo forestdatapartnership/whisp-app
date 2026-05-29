@@ -23,6 +23,34 @@ class AnalysisOptions:
 
 
 @dataclass
+class AnalysisTaskContext:
+    token: str
+    timeout: int
+    user_id: int | None = None
+    api_key_id: int | None = None
+
+    @classmethod
+    def parse(cls, raw: dict) -> "AnalysisTaskContext":
+        return cls(
+            token=raw["token"],
+            timeout=int(raw["timeout"]),
+            user_id=raw.get("user_id"),
+            api_key_id=raw.get("api_key_id"),
+        )
+
+    @classmethod
+    def from_task_message(
+        cls, args: tuple | None, kwargs: dict | None = None
+    ) -> "AnalysisTaskContext | None":
+        if not args or not isinstance(args[0], dict):
+            return None
+        try:
+            return cls.parse(args[0])
+        except (KeyError, TypeError, ValueError):
+            return None
+
+
+@dataclass
 class SubmitResult:
     code: SystemCode
     data: dict | None = None

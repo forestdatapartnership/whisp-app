@@ -6,10 +6,12 @@ import numpy as np
 import pandas as pd
 
 from src.codes import SystemCode
+from src.config import get_settings
+from src.app_logging import resolve_level
 from src.redis import publish_sync
 from src.job_progress import JobProgress
 from src.io import files
-from src.submit.schemas import AnalysisOptions
+from src.submit.schemas import AnalysisOptions, AnalysisTaskContext
 from src.worker.celery_app import app
 from src.worker.analysis_task import AnalysisTask
 
@@ -22,7 +24,7 @@ _PROGRESS_RE = re.compile(r"Progress: [\d,]+/[\d,]+ batches \((\d+)%\)")
 
 class _ProgressHandler(logging.Handler):
     def __init__(self, token: str, messages: list[str]):
-        super().__init__(level=logging.INFO)
+        super().__init__(level=resolve_level(get_settings().log_level))
         self.token = token
         self._messages = messages
         self._last_percent = 0
@@ -97,6 +99,7 @@ def _run_whisp_blocking(token: str, opts: AnalysisOptions) -> None:
 
 
 @app.task(base=AnalysisTask, bind=True, name="src.worker.tasks.run_analysis")
-def run_analysis(self: AnalysisTask, token: str, opts_dict: dict, timeout: int) -> None:
+def run_analysis(self: AnalysisTask, context: dict, opts_dict: dict) -> None:
+    ctx = AnalysisTaskContext.parse(context)
     opts = AnalysisOptions(**opts_dict)
-    _run_whisp_blocking(token, opts)
+    _run_whisp_blocking(ctx.token, opts)

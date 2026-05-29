@@ -1,11 +1,8 @@
-import logging
-import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
-from pythonjsonlogger import jsonlogger
 
 from src.config import get_settings
 from src.db import close_pool, init_pool
@@ -15,10 +12,6 @@ from src.geojson.router import router as geojson_router
 from src.public_config.router import router as config_router
 from src.status.router import router as status_router
 from src.submit.router import router as submit_router
-
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(jsonlogger.JsonFormatter())
-logging.basicConfig(level=logging.INFO, handlers=[handler])
 
 
 @asynccontextmanager
