@@ -16,6 +16,7 @@ from src.worker.celery_app import app
 from src.worker.analysis_task import AnalysisTask
 
 logger = logging.getLogger(__name__)
+logging.getLogger("whisp").propagate = False
 
 _SKIP_MESSAGE_PREFIX = "Mode:"
 _SKIP_MESSAGE_CONTAINS = "Concurrent processing + formatting + validation complete"
