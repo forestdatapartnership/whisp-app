@@ -59,8 +59,11 @@ export function useJobStatus({
           while ((idx = buffer.indexOf('\n\n')) !== -1) {
             const chunk = buffer.slice(0, idx)
             buffer = buffer.slice(idx + 2)
-            if (!chunk.startsWith('data:')) continue
-            const data: JobStatus = JSON.parse(chunk.slice(5))
+            const line = chunk.trim()
+            if (!line.startsWith('data:')) continue
+            const json = line.slice(5).trim()
+            if (!json) continue
+            const data: JobStatus = JSON.parse(json)
             setResponse(data)
             if (data.code === 'analysis_completed') {
               handleCompleted(data.data)
