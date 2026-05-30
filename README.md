@@ -18,252 +18,261 @@ WHISP is a comprehensive geospatial analysis tool that provides detailed risk as
 
 ## System Architecture
 
+The application is split into independently deployable services:
+
+| Component | Path | Role |
+|-----------|------|------|
+| **App** | `app/` | Next.js web UI — auth, account management, geometry submission, results viewer |
+| **API** | `api/` | FastAPI service — submit, status, GeoJSON/CSV export |
+| **Workers** | `api/` (Celery) | Background analysis — runs `openforis-whisp` against Google Earth Engine |
+| **Database** | `db/` | PostgreSQL schema and migrations |
+| **Infra** | `infra/k8s/` | GKE manifests (API, app, sync/async workers, Redis, Cloud SQL proxy) |
+
 ### High-Level Architecture
 
 ```mermaid
 graph TB
-    subgraph "User Interfaces"
-        A[Web Application]
-        B[API Access]
-        C[Python Package]
-        D[Whisp in Earthmap]
-        N[QGIS Whisp Plugin]
+    subgraph Clients
+        UI[Web App]
+        EXT[External API Clients]
+        MAP[Whisp in Earthmap]
+        QGIS[QGIS Plugin]
     end
-    
-    subgraph "Application Layer"
-        E[Next.js Frontend]
-        F[API Routes]
-        G[Authentication Middleware]
+
+    subgraph App["app/ — Next.js"]
+        FE[Frontend UI]
+        AUTH[Auth & User Mgmt]
+        PROXY[Internal API Proxy]
     end
-    
-    subgraph "Processing Layer"
-        H[Python Analysis Engine]
-        I[openforis-whisp Library]
-        J[Google Earth Engine]
+
+    subgraph API["api/ — FastAPI"]
+        SUBMIT[Submit Routes]
+        STATUS[Status & SSE]
+        EXPORT[GeoJSON / CSV Export]
     end
-    
-    subgraph "Data Layer"
-        K[PostgreSQL Database]
-        L[Temporary Storage]
-        M[GEE Credentials]
+
+    subgraph Workers["Celery Workers"]
+        SYNC[sync queue]
+        ASYNC[async queue]
+        WHISP[openforis-whisp]
     end
-    
-    A --> E
-    B --> F
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-    I --> J
-    F --> K
-    H --> L
-    J --> M
+
+    subgraph Data
+        PG[(PostgreSQL)]
+        REDIS[(Redis)]
+        TEMP[Temp Storage]
+        GEE[Google Earth Engine]
+    end
+
+    UI --> FE
+    FE --> AUTH
+    FE --> PROXY
+    PROXY --> SUBMIT
+    PROXY --> STATUS
+    EXT --> SUBMIT
+    EXT --> STATUS
+    EXT --> EXPORT
+    MAP --> EXPORT
+
+    SUBMIT --> PG
+    SUBMIT --> TEMP
+    SUBMIT --> REDIS
+    SUBMIT --> SYNC
+    SUBMIT --> ASYNC
+    SYNC --> WHISP
+    ASYNC --> WHISP
+    WHISP --> GEE
+    WHISP --> TEMP
+    WHISP --> REDIS
+    STATUS --> REDIS
+    STATUS --> TEMP
+    EXPORT --> TEMP
+    AUTH --> PG
 ```
 
-### Component Interaction Flow
+### Analysis Job Flow
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant FE as Frontend
-    participant API as API Routes
-    participant AUTH as Auth Middleware
-    participant PY as Python Engine
-    participant GEE as Google Earth Engine
-    participant DB as Database
-    
-    U->>FE: Upload Geometry
-    FE->>API: POST /api/submit/*
-    API->>AUTH: Validate API Key
-    AUTH->>DB: Check API Key
-    DB-->>AUTH: Key Valid
-    AUTH-->>API: Authorized
-    API->>PY: Execute Analysis
-    PY->>GEE: Process Geometry
-    GEE-->>PY: Analysis Results
-    PY-->>API: Results Data
-    API->>DB: Store Results
-    API-->>FE: Return Token
-    FE->>U: Display Results
+    participant U as User / Client
+    participant APP as Next.js App
+    participant API as FastAPI
+    participant DB as PostgreSQL
+    participant R as Redis
+    participant W as Celery Worker
+    participant GEE as Earth Engine
+
+    U->>APP: Submit geometry
+    APP->>API: POST /submit/*
+    API->>DB: Create analysis_jobs row
+    API->>API: Write input GeoJSON to temp storage
+    API->>R: Publish queued progress
+    API->>W: Enqueue run_analysis (sync or async queue)
+    API-->>APP: Return token + statusUrl
+
+    loop Progress updates
+        W->>GEE: openforis-whisp analysis
+        W->>R: Publish progress events
+        APP->>API: GET /status/{token}/stream (SSE)
+        API->>R: Subscribe to job events
+        API-->>APP: Progress / completion
+    end
+
+    W->>API: Write result GeoJSON to temp storage
+    W->>DB: Mark job completed
+    APP->>U: Display results
 ```
+
+### Key Design Notes
+
+- **Token = one analysis job**, not one plot. A batch submission (multi-feature GeoJSON) produces a single token containing results for all features.
+- **Results are ephemeral.** Output files live in temp storage; job progress snapshots in Redis expire after 10 minutes. WHISP does not provide long-term result storage — integrators should persist GeoJSON/CSV themselves if needed.
+- **Two worker queues:** `sync` for small, inline requests; `async` for larger batches (uses the Earth Engine high-volume endpoint).
+- **Shared PostgreSQL** stores users, API keys, rate limits, analysis job metadata, and reference data (result fields, commodities).
+- **Production deployment** runs API, app, sync worker, async worker, Redis, and Cloud SQL proxy as separate GKE workloads. Temp storage is mounted via GCS FUSE.
 
 ## Access Methods
 
 WHISP offers multiple access methods to accommodate different user needs:
 
-| Access Method | Description | Geometry Limit | Best For |
-|---------------|-------------|----------------|----------|
-| **[Web App](https://whisp.openforis.org/)** | User-friendly interface with interactive map | Currently 500 | Non-technical users, quick assessments |
-| **[API](https://whisp.openforis.org/documentation/api-guide)** | Programmatic access with authentication | Currently 500 | Integration with other systems |
-| **[Python Package](https://pypi.org/project/openforis-whisp/)** | Direct access via `openforis-whisp` | No limit (depends on GEE quotas) | Data scientists, large datasets |
-| **[Whisp in Earthmap](https://whisp.earthmap.org/)** | Visualization-focused interface | Limited (visualization tool) | Visual exploration of specific plots |
-| **[QGIS Whisp Plugin](https://plugins.qgis.org/plugins/whisp_plugin/)** | Analyze geometries within QGIS through the Whisp API | Currently 500 | GIS analysts, desktop workflows | 
+| Access Method | Description | Best For |
+|---------------|-------------|----------|
+| **[Web App](https://whisp.openforis.org/)** | User-friendly interface with interactive map | Non-technical users, quick assessments |
+| **[API](https://whisp.openforis.org/api/docs)** | Programmatic access with API key | Integration with other systems |
+| **[Python Package](https://pypi.org/project/openforis-whisp/)** | Direct access via `openforis-whisp` | Data scientists, large datasets |
+| **[Whisp in Earthmap](https://whisp.earthmap.org/)** | Visualization-focused interface | Visual exploration of specific plots |
+| **[QGIS Whisp Plugin](https://plugins.qgis.org/plugins/whisp_plugin/)** | Analyze geometries within QGIS through the Whisp API | GIS analysts, desktop workflows |
+
+Geometry limits for the web app and API are runtime-configurable and exposed via `GET /config`.
 
 ## Technology Stack
 
-### Frontend Technologies
-- **Framework**: Next.js 14.2.26 with React 18
-- **Language**: TypeScript 5.8.2
-- **Styling**: Tailwind CSS with custom components
-- **UI Components**: Radix UI component library
-- **Mapping**: Leaflet 1.9.4 with react-leaflet 4.2.1
-- **State Management**: Zustand 4.4.7
-- **Data Tables**: TanStack Table 8.20.1
-- **File Handling**: react-dropzone 14.2.3
+### App (`app/`)
+- **Framework**: Next.js 16 with React 19
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS 4
+- **Mapping**: Leaflet with react-leaflet
+- **Database**: PostgreSQL via `pg`
+- **Authentication**: JWT (jose), server actions
 
-### Backend Technologies
-- **Runtime**: Node.js with Next.js API routes
-- **Database**: PostgreSQL with pg driver 8.14.1
-- **Authentication**: JWT tokens via jose 6.0.10
-- **Email**: Nodemailer 6.10.0 for verification/reset
-- **Python Integration**: Subprocess execution
-- **API Documentation**: Swagger UI React 5.21.0
-- **Logging**: Winston 3.15.0
+### API & Workers (`api/`)
+- **Framework**: FastAPI with Uvicorn
+- **Task queue**: Celery with Redis broker
+- **Database**: PostgreSQL via asyncpg
+- **Analysis**: `openforis-whisp`, Google Earth Engine API
+- **Observability**: Prometheus metrics, structured JSON logging
 
-### Python Environment
-- **Core Library**: `openforis-whisp` for risk assessment
-- **Data Processing**: `pandas`, `numpy` for data manipulation
-- **Geospatial**: Google Earth Engine API
-- **Output Formats**: JSON, CSV, GeoJSON
+### Database (`db/`)
+- PostgreSQL migrations managed via Node.js runner (`npm run migrate`)
 
 ## Setup and Installation
 
 ### Prerequisites
-- [Node.js](https://nodejs.org) (v18 or higher)
-- [PostgreSQL](https://www.postgresql.org/) (v12 or higher)
+- [Node.js](https://nodejs.org) v18+
 - [Python 3.11+](https://www.python.org/downloads/)
+- [PostgreSQL](https://www.postgresql.org/) v12+
+- [Redis](https://redis.io/)
 - Google Earth Engine service account
 
-### Installation Steps
+### Quick Start (local dev)
 
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/openforis/whisp-app.git
-   cd whisp-app
-   ```
+```bash
+git clone https://github.com/openforis/whisp-app.git
+cd whisp-app
 
-2. **Install Dependencies**
+# Install app + API dependencies
+bash scripts/dev/linux/setup.sh    # or scripts/dev/windows/setup.ps1
 
-    - Install the whisp Python package and other requirements
-      
-        ```bash
-        pip install -r requirements.txt
-        ```
-      
-    - Install project dependencies  
-  
-        ```bash
-        npm install
-        ```
+# Configure environment (see app/.env.example and api/.env.example)
+# Place GEE credentials at api/credentials.json
 
-3. **Set Up PostgreSQL Database**
+# Run database migrations
+cd db && npm install && npm run migrate
 
-    - Create a new PostgreSQL database for the application
-    - Run the database schema scripts located in `src/db/*`
-    - Create a database user with appropriate permissions
+# Start API, workers, Redis, and Next.js dev server
+bash scripts/dev/linux/start.sh    # or scripts/dev/windows/start.ps1
+```
 
-4. **Environment Configuration**
+Default local URLs:
+- App: `http://localhost:3001`
+- API: `http://localhost:8001`
+- API docs: `http://localhost:8001/api/docs`
 
-   - Create `.env.local` file:
-   ```env
-   # Python Configuration
-   PYTHON_PATH=/path/to/your/python
-   
-   # Database Configuration
-   DB_USER=postgres
-   DB_HOST=localhost
-   DB_NAME=whisp
-   DB_PASSWORD=your_password
-   DB_PORT=5432
-   
-   # Authentication
-   JWT_SECRET=your_jwt_secret
-   
-   # Asset Registry (GeoID resolution)
-   ASSET_REGISTRY_BASE=https://your-asset-registry-url
-   
-   # Email Configuration
-   EMAIL_SERVICE=smtp.example.com
-   EMAIL_USER=user@example.com
-   EMAIL_PASS=your_email_password
-   
-    # Google Maps API Key (for satellite view - with referrer restrictions)
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
-    ```
+### Environment Configuration
 
-5. **Google Earth Engine Setup**
+**App** (`app/.env.local`):
+```env
+JWT_SECRET=
+API_URL=http://localhost:8001
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=whisp_db
+DB_USER=
+DB_PASSWORD=
+HOST_URL=http://localhost:3001
+```
 
-   - Place your service Google Earth engine account credentials in `credentials.json` at the root directory.
-
-6. **Create Temp Directory**
-   ```bash
-   mkdir temp
-   ```
-
-7. **Run the Application**
-   ```bash
-   npm run dev
-   ```
-
-8. **Create an API Key** (optional for direct API calls)
-
-    - After setting up, register a user account on the application
-    - Generate an API key from your user profile
-    - Use this API key for authenticated requests to the API endpoints
+**API** (`api/.env.local`):
+```env
+TEMP_DIR=./temp
+EE_CREDENTIAL_PATH=./credentials.json
+REDIS_URL=redis://localhost:6379
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=whisp_db
+DB_USER=
+DB_PASSWORD=
+ALLOWED_ORIGINS=http://localhost:3001
+GEOID_BASE_URL=
+GEOID_CATALOG=
+GEOID_COLLECTION=
+```
 
 ## API Reference
 
-The Whisp API provides endpoints for user management, data submission, and analysis. The API is protected by authentication middleware. A full, interactive API documentation is available via Swagger UI at the `/documentation/api-guide` endpoint.
+The Whisp API is a FastAPI service. Interactive documentation is available at `/api/docs` (Swagger) and `/api/redoc`.
 
-The main API endpoints are located in `src/app/api/`.
+All analysis endpoints require an `X-API-KEY` header.
 
-- **`/api/auth`**: Handles user authentication, including login, registration, password reset, and email verification.
-- **`/api/user`**: Manages user profiles and API keys.
-- **`/api/submit`**: Accepts geospatial data in various formats (WKT, GeoJSON) for analysis. This endpoint initiates the Python processing script.
-- **`/api/temp-key`**: Manages temporary keys for unauthenticated analysis.
-- **`/api/generate-geojson`**: Generates GeoJSON output from analysis results.
-- **`/api/report`**: Creates and serves analysis reports.
-- **`/api/download-csv`**: Allows downloading analysis results as a CSV file.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/submit/geojson` | POST | Submit a GeoJSON FeatureCollection for analysis |
+| `/submit/wkt` | POST | Submit a WKT geometry for analysis |
+| `/submit/geo-ids` | POST | Submit Asset Registry GeoIDs for analysis |
+| `/status/{token}` | GET | Poll job status; returns result GeoJSON when complete |
+| `/status/{token}/stream` | GET | Server-sent events stream for live progress |
+| `/status/{token}/cancel` | POST | Cancel a running analysis |
+| `/generate-geojson/{token}` | GET | Download result as GeoJSON (public, no auth) |
+| `/download-csv/{token}` | GET | Download result as CSV |
+| `/config` | GET | Public runtime configuration |
+| `/health` | GET | Health check |
+
+Routes are also available under the `/api` prefix (e.g. `/api/submit/geojson`).
+
+The Next.js app proxies authenticated submit and status calls through `/internal/submit/*` and `/internal/status/*` so browser sessions can use the user's API key without exposing it client-side.
 
 ## Python Integration
 
-### Analysis Engine
-
-The Python analysis is handled by `src/python/analysis.py`:
+Analysis runs inside Celery workers via `api/src/worker/tasks.py`:
 
 ```python
 import openforis_whisp as whisp
-import pandas as pd
 
-# Initialize Google Earth Engine
-whisp.initialize_ee(CREDENTIAL_PATH)
+whisp.initialize_ee(credential_path, use_high_vol_endpoint=async_mode)
 
-def main(file_path, legacy_mode=False):
-    # Process geometry data
-    whisp_df = whisp.whisp_formatted_stats_geojson_to_df(
-        file_path, 
-        national_codes=['co', 'ci', 'br']
-    )
-    
-    # Perform risk assessment
-    whisp_df_risk = whisp.whisp_risk(
-        whisp_df, 
-        national_codes=['co', 'ci', 'br']
-    )
-    
-    # Export results
-    whisp_df_risk.to_csv(csv_file_path, index=False)
-    whisp.convert_df_to_geojson(whisp_df_risk, json_file_path)
+stats_df = whisp.whisp_formatted_stats_geojson_to_df(
+    input_file,
+    mode="concurrent" if async_mode else "sequential",
+    national_codes=["co", "ci", "br"],
+)
+
+risk_df = whisp.whisp_risk(stats_df, national_codes=["co", "ci", "br"])
+whisp.convert_df_to_geojson(risk_df, result_file)
 ```
 
-### Integration Flow
+Workers publish progress to Redis during execution. On completion, the result GeoJSON is written to temp storage and the job record in PostgreSQL is updated.
 
-1. User submits geometry via web interface
-2. Next.js API validates input and authentication
-3. Geometry is saved to temporary file
-4. Python script is executed via subprocess
-5. Results are processed and stored
-6. User receives analysis results
+For direct library use without the API, see the [openforis-whisp package](https://pypi.org/project/openforis-whisp/).
 
 ## License
 
