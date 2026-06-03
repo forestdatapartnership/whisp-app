@@ -87,6 +87,10 @@ metadata:
   namespace: ${GKE_NAMESPACE}
 spec:
   timeoutSec: 120
+  healthCheck:
+    type: HTTP
+    port: 8000
+    requestPath: /api/health
 ---
 apiVersion: v1
 kind: Service
