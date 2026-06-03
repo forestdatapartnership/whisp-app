@@ -203,7 +203,7 @@ Default local URLs:
 **App** (`app/.env.local`):
 ```env
 JWT_SECRET=
-API_URL=http://localhost:8001
+API_URL=http://localhost:8001/api
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=whisp_db
@@ -211,6 +211,14 @@ DB_USER=
 DB_PASSWORD=
 HOST_URL=http://localhost:3001
 ```
+
+`API_URL` is the server-to-server API base used by server code only (it never
+reaches the browser). Browser-facing URLs (quick-start cURL, footer API docs
+link, Whisp map download) use the **public** API base, which defaults to
+`API_URL`. Set `PUBLIC_API_URL` only when `API_URL` is not publicly reachable —
+e.g. in Kubernetes set `API_URL` to the internal cluster service URL
+(`http://whisp-api:8000/api`) to skip an ingress roundtrip, and
+`PUBLIC_API_URL` to the externally reachable URL.
 
 **API** (`api/.env.local`):
 ```env

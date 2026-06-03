@@ -153,7 +153,7 @@ async def submit(
             SystemCode.ANALYSIS_QUEUED,
             data={
                 "token": token,
-                "statusUrl": f"/status/{token}",
+                "statusUrl": f"/api/status/{token}",
                 "featureCount": feature_count,
             },
         )

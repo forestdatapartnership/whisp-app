@@ -66,12 +66,13 @@ if ($LASTEXITCODE -ne 0) {
     Write-DevFail "missing API dependencies - run: scripts\dev\windows\setup.ps1"
 }
 
+$env:API_PORT = $ApiPort
 $UvicornProc = Start-Process -FilePath "python" -ArgumentList @(
     "-m", "src"
 ) -WorkingDirectory $ApiDir -PassThru -NoNewWindow
 $Processes += $UvicornProc
 
-Wait-ForHttp -Url "http://127.0.0.1:$ApiPort/health" -MaxSeconds 120
+Wait-ForHttp -Url "http://127.0.0.1:$ApiPort/api/health" -MaxSeconds 120
 
 $env:EE_HIGH_VOL = "0"
 $SyncProc = Start-Process -FilePath "python" -ArgumentList @(

@@ -7,6 +7,7 @@ API_DIR="$ROOT_DIR/api"
 source "$SCRIPT_DIR/common.sh"
 
 API_PORT="${API_PORT:-8001}"
+export API_PORT
 
 PIDS=()
 
@@ -115,7 +116,7 @@ start_redis
 
 (cd "$API_DIR" && python -m src 2>&1) &
 PIDS+=($!)
-wait_for_http "http://localhost:$API_PORT/health" 60
+wait_for_http "http://localhost:$API_PORT/api/health" 60
 
 (cd "$API_DIR" && EE_HIGH_VOL=0 python -m celery -A src.worker.celery_app worker \
     -Q sync --concurrency=1 --pool=prefork --without-mingle --without-gossip --hostname sync@%h) &

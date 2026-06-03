@@ -4,12 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { Link } from "@/components/ui/link";
 import { VersionLink } from "@/components/layout/version-link";
-
-const docsLinks = [
-  { href: "/api/docs", label: "API" },
-  { href: "/docs/reference/result-fields", label: "Reference Fields" },
-  { href: "/docs/reference/commodities", label: "Commodities" },
-];
+import { useConfig } from "@/lib/config/config-context";
 
 const legalLinks = [
   { href: "/legal/privacy-policy", label: "Privacy Policy" },
@@ -20,7 +15,7 @@ const legalLinks = [
 function FooterDropdown({ label, items }: {
   label: string;
   items: readonly (
-    | { href: string; label: string; divider?: undefined }
+    | { href: string; label: string; divider?: undefined; target?: string }
     | { divider: true; href?: undefined; label?: undefined }
   )[];
 }) {
@@ -53,6 +48,8 @@ function FooterDropdown({ label, items }: {
               <Link
                 key={item.href}
                 href={item.href}
+                target={item.target}
+                onClick={() => setOpen(false)}
                 variant="subtle"
                 className="block rounded-md px-3 py-1.5 text-[13px] hover:bg-white/[0.04] hover:text-text-primary"
               >
@@ -69,6 +66,12 @@ function FooterDropdown({ label, items }: {
 const Sep = () => <span className="px-2 text-xs text-border select-none">·</span>;
 
 export function Footer() {
+  const { config } = useConfig();
+  const docsLinks = [
+    { href: `${config?.api.url ?? "/api"}/docs`, label: "API", target: "_blank" },
+    { href: "/docs/reference/result-fields", label: "Reference Fields" },
+    { href: "/docs/reference/commodities", label: "Commodities" },
+  ];
   return (
     <footer className="flex flex-wrap items-center gap-y-1 border-t border-border px-8 py-4 text-xs text-text-dim">
       <span className="whitespace-nowrap pr-1">

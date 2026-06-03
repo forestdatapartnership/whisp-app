@@ -98,7 +98,10 @@ export const config = {
 
   api: {
     get url() {
-      return env('API_URL').replace(/\/$/, '');
+      return env('API_URL').replace(/\/+$/, '');
+    },
+    get publicUrl() {
+      return (envOptional('PUBLIC_API_URL') ?? config.api.url).replace(/\/+$/, '');
     },
   },
 
@@ -128,7 +131,7 @@ export const config = {
 export async function getClientConfig() {
   await loadRemote();
   return {
-    api: config.api,
+    api: { url: config.api.publicUrl },
     hostUrl: config.email.hostUrl,
     app: config.app,
     submission: config.submission,

@@ -10,8 +10,9 @@ $RootDir = Get-DevRoot
 $ApiDir = Join-Path $RootDir "api"
 $AppDir = Join-Path $RootDir "app"
 $ApiPort = if ($env:API_PORT) { $env:API_PORT } else { "8001" }
+$env:API_PORT = $ApiPort
 $AppPort = if ($env:APP_PORT) { $env:APP_PORT } else { "3001" }
-$ApiUrl = "http://localhost:$ApiPort"
+$ApiUrl = "http://localhost:$ApiPort/api"
 
 $Processes = @()
 

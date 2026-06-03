@@ -13,6 +13,8 @@ from src.public_config.router import router as config_router
 from src.status.router import router as status_router
 from src.submit.router import router as submit_router
 
+API_PREFIX = "/api"
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -32,9 +34,9 @@ def create_app() -> FastAPI:
         title="Whisp API",
         version=settings.api_version,
         lifespan=lifespan,
-        docs_url="/api/docs",
-        redoc_url="/api/redoc",
-        openapi_url="/api/openapi.json",
+        docs_url=f"{API_PREFIX}/docs",
+        redoc_url=f"{API_PREFIX}/redoc",
+        openapi_url=f"{API_PREFIX}/openapi.json",
     )
     app.add_middleware(
         CORSMiddleware,
@@ -45,17 +47,12 @@ def create_app() -> FastAPI:
     )
 
     register(app)
-    app.include_router(config_router)
-    app.include_router(config_router, prefix="/api", include_in_schema=False)
-    app.include_router(submit_router)
-    app.include_router(submit_router, prefix="/api", include_in_schema=False)
-    app.include_router(status_router)
-    app.include_router(status_router, prefix="/api", include_in_schema=False)
-    app.include_router(geojson_router)
-    app.include_router(geojson_router, prefix="/api", include_in_schema=False)
+    app.include_router(config_router, prefix=API_PREFIX)
+    app.include_router(submit_router, prefix=API_PREFIX)
+    app.include_router(status_router, prefix=API_PREFIX)
+    app.include_router(geojson_router, prefix=API_PREFIX)
 
-    @app.get("/health", tags=["meta"])
-    @app.get("/api/health", tags=["meta"], include_in_schema=False)
+    @app.get(f"{API_PREFIX}/health", tags=["meta"])
     async def health_response():
         return {"ok": True}
 
