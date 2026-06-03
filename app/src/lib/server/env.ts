@@ -129,6 +129,7 @@ export async function getClientConfig() {
   await loadRemote();
   return {
     api: config.api,
+    hostUrl: config.email.hostUrl,
     app: config.app,
     submission: config.submission,
     geoid: { collection: config.geoid.collection },
