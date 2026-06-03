@@ -28,6 +28,8 @@ spec:
           value: "${DEPLOYED_AT}"
         - name: HOST_URL
           value: "${HOST_URL}"
+        - name: PUBLIC_API_URL
+          value: "$(HOST_URL)/api"
         - name: DB_HOST
           value: "cloud-sql-proxy"
         - name: DB_PORT
