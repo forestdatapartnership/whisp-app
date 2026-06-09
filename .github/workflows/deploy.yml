@@ -37,18 +37,18 @@ jobs:
           workload_identity_provider: ${{ vars.WORKLOAD_ID_PROVIDER }}
           service_account: ${{ vars.SERVICE_ACCOUNT }}
 
-      #- uses: google-github-actions/get-gke-credentials@v2
-      #  with:
-      #    cluster_name: ${{ vars.GKE_CLUSTER }}
-      #    location: ${{ vars.GKE_LOCATION }}
+      - uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GKE_LOCATION }}
       # woraround until we fix the service account
-      - name: Configure kubeconfig
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-        run: |
-          mkdir -p "$HOME/.kube"
-          printf '%s' "$KUBE_CONFIG" > "$HOME/.kube/config"
-          chmod 600 "$HOME/.kube/config"
+      #- name: Configure kubeconfig
+      #  env:
+      #    KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      #  run: |
+      #    mkdir -p "$HOME/.kube"
+      #    printf '%s' "$KUBE_CONFIG" > "$HOME/.kube/config"
+      #    chmod 600 "$HOME/.kube/config"
 
       - name: Verify images exist
         run: |
