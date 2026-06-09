@@ -7,7 +7,7 @@ metadata:
     app: whisp-app
     env: ${ENVIRONMENT}
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: whisp-app
@@ -67,17 +67,6 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "whisp-secrets-provider"
----
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: whisp-app-pdb
-  namespace: ${GKE_NAMESPACE}
-spec:
-  minAvailable: 1
-  selector:
-    matchLabels:
-      app: whisp-app
 ---
 apiVersion: v1
 kind: Service

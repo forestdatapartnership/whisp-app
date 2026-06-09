@@ -20,10 +20,10 @@
   --accent-bright: #599609;
   --accent-blue: #1b5471;
   --accent-blue-light: #26769e;
-  --btn-primary-bg: #4c7e0b;
+  --btn-primary-bg: #467507;
   --btn-primary-bg-hover: #3a6008;
   --btn-primary-text: #ffffff;
-  --text-dim: #8a9a7e;
+  --text-dim: #5c6d53;
   --toast-bg: #edfcd4;
 
   --background: var(--bg);
@@ -51,7 +51,7 @@
   --surface-raised: #1e2428;
   --border: #2a3035;
   --text-primary: #e8eaeb;
-  --text-muted: #7a8a90;
+  --text-muted: #8a9aa0;
   --accent-green: #7dc00d;
   --accent-green-dim: #4c7e0b;
   --accent-bright: #a0ce31;
@@ -60,7 +60,7 @@
   --btn-primary-bg: #4c7e0b;
   --btn-primary-bg-hover: #53870b;
   --btn-primary-text: #ffffff;
-  --text-dim: #4a6070;
+  --text-dim: #718fa0;
   --toast-bg: #0d1f10;
 
   --destructive: #f87171;
@@ -105,7 +105,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-loaded), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @layer base {
@@ -118,4 +118,9 @@
   html {
     @apply font-sans;
   }
+
+  h1 { font-weight: 800; letter-spacing: -0.04em; }
+  h2 { font-weight: 700; letter-spacing: -0.03em; }
+  h3 { font-weight: 600; letter-spacing: -0.02em; }
+  p  { font-weight: 450; }
 }

@@ -3,6 +3,8 @@ import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Manrope } from 'next/font/google';
+
 import "./globals.css";
 import { ConfigProvider } from "@/lib/config/config-context";
 import { ContextsInitializer } from "@/lib/providers/contexts-initializer";
@@ -15,13 +17,20 @@ export const metadata: Metadata = {
   description: "Deforestation risk assessment powered by Google Earth Engine",
 };
 
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-loaded',
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="en" className={`h-full antialiased ${manrope.variable} `} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
