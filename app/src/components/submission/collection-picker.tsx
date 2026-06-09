@@ -78,7 +78,6 @@ export function CollectionPicker({ value, onChange }: CollectionPickerProps) {
         <Button
           type="button"
           variant="outline"
-          size="icon-sm"
           onClick={reload}
           disabled={loading}
           title="Refresh collections"

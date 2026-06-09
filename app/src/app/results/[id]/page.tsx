@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AnalysisProgress } from "@/components/results/analysis-progress";
+import { AnalysisError } from "@/components/results/analysis-error";
 import { ResultsToolbar } from "@/components/results/results-toolbar";
 import { ResultsSearchBar } from "@/components/results/results-search-bar";
 import { ResultsTable, type ColumnDef, type ResultRow } from "@/components/results/results-table";
@@ -254,16 +255,11 @@ export default function ResultsPage() {
 
   if (isError) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-text-muted">
-          <AlertTriangle className="size-8 text-red-400" />
-          <p className="text-sm">{response?.message ?? error?.message ?? 'An error occurred.'}</p>
-          {response?.cause && <p className="text-xs max-w-md text-center">{response.cause}</p>}
-          <Button variant="outline" size="sm" onClick={() => router.back()}>
-            <ArrowLeft className="size-3.5" /> Go Back
-          </Button>
-        </div>
-      </div>
+      <AnalysisError
+        message={response?.message ?? error?.message ?? 'An error occurred.'}
+        cause={response?.cause}
+        onBack={() => router.back()}
+      />
     );
   }
 

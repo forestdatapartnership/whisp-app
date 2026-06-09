@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Key } from 'lucide-react'
 import { useConfig } from '@/lib/config/config-context'
+import { Card } from '@/components/ui/card'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useApiKey } from '@/lib/auth/api-key-context'
 import {
@@ -39,7 +40,7 @@ export function DataSubmission() {
 
   if (isAuthenticated && !hasApiKey) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-8 text-center">
+      <Card className="text-center">
         <Key className="mx-auto mb-4 size-12 text-amber-400" strokeWidth={1.5} />
         <h2 className="mb-2 text-lg font-semibold text-text-primary">API Key Required</h2>
         <p className="mb-6 text-sm text-text-muted">
@@ -48,7 +49,7 @@ export function DataSubmission() {
         <Button nativeButton={false} render={<Link href="/account" />}>
           Go to Account
         </Button>
-      </div>
+      </Card>
     )
   }
 

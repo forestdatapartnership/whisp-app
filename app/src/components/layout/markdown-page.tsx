@@ -19,11 +19,13 @@ export function MarkdownPage({
 
   return (
     <CenteredShell className="items-start py-10">
+      <style>{`[data-markdown] [id] { scroll-margin-top: 4rem; }`}</style>
       <article
+        data-markdown
         className={[
           'prose prose-sm max-w-3xl w-full',
           'prose-headings:text-text-primary prose-p:text-text-muted prose-li:text-text-muted',
-          'prose-strong:text-text-primary prose-a:text-accent-green prose-a:no-underline hover:prose-a:underline',
+          'prose-strong:text-text-primary prose-a:text-accent-green prose-a:no-underline prose-a:hover:underline',
           'prose-th:border-border prose-td:border-border prose-hr:border-border',
           'dark:prose-invert',
         ].join(' ')}

@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { UploadCloud } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { controlRounded } from '@/components/ui/styles'
 
 interface FileDropZoneProps {
   accept: string
@@ -34,7 +35,7 @@ export function FileDropZone({
       onDragLeave={() => setIsDrag(false)}
       onDrop={(e) => { e.preventDefault(); setIsDrag(false); const f = e.dataTransfer.files[0]; if (f) onFile(f) }}
       className={cn(
-        'border-[1.5px] border-dashed rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors',
+        `border-[1.5px] border-dashed ${controlRounded} flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors`,
         compact ? 'flex-1 p-5' : 'p-8',
         fileName
           ? 'border-accent-green-dim bg-accent-green/[0.06]'
@@ -52,7 +53,7 @@ export function FileDropZone({
         onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f) }}
       />
       <div className={cn(
-        'size-10 rounded-[10px] flex items-center justify-center mb-1',
+        `size-10 ${controlRounded} flex items-center justify-center mb-1`,
         fileName ? 'bg-accent-green/20 text-accent-green' : 'bg-surface-raised text-text-muted'
       )}>
         <UploadCloud className="size-5" />

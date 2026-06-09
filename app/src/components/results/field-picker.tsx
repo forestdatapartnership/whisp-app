@@ -5,6 +5,7 @@ import { Button, CloseButton } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { controlRounded } from "@/components/ui/styles";
 import type { CommodityMetadataMap } from "@/types/models";
 
 export interface ColumnGroup {
@@ -176,7 +177,7 @@ export function FieldPicker({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search fields…"
             aria-label="Search fields"
-            className="h-[30px] w-[180px] rounded-[7px] border border-border bg-bg pl-[30px] pr-[10px] text-xs text-text-primary outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent-green"
+            className={`h-[30px] w-[180px] ${controlRounded} border border-border bg-bg pl-[30px] pr-[10px] text-xs text-text-primary outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent-green`}
           />
         </div>
         <div className="flex-1" />
@@ -221,7 +222,7 @@ export function FieldPicker({
                 return (
                   <label
                     key={key}
-                    className="flex cursor-pointer items-center gap-2 rounded-[6px] px-2 py-1.5 transition-colors hover:bg-surface-raised"
+                    className={`flex cursor-pointer items-center gap-2 ${controlRounded} px-2 py-1.5 transition-colors hover:bg-surface-raised`}
                   >
                     <Checkbox
                       checked={visible.includes(key)}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { controlRounded } from "@/components/ui/styles";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -61,7 +62,7 @@ export function ResultsSearchBar({
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search plot ID, external ID, country…"
-          className="h-[30px] w-[180px] rounded-[7px] border border-border bg-bg pl-[30px] pr-[10px] text-xs text-text-primary outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent-green"
+          className={`h-[30px] w-[180px] ${controlRounded} border border-border bg-bg pl-[30px] pr-[10px] text-xs text-text-primary outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent-green`}
         />
       </div>
       <div className="flex-1" />

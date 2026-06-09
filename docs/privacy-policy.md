@@ -43,7 +43,7 @@ When you submit geometries for geospatial analysis:
 | **Analysis options** (technical parameters) | Configuring the analysis run |
 | **Analysis job metadata** (timestamps, status, agent type, endpoint) | Service operation, auditing, debugging |
 
-Geometries may be sensitive depending on context (e.g. a farm boundary linked to a person). WHISP's analysis engine processes geometries **without any user-identifying context** — see the [GEE Data Separation Annex](/gee-data-separation) for technical evidence.
+Geometries may be sensitive depending on context (e.g. a farm boundary linked to a person). WHISP's analysis engine processes geometries **without any user-identifying context** — see the [GEE Data Separation Annex](./gee-data-separation) for technical evidence.
 
 ### 2.4 Notification Data
 
@@ -90,7 +90,7 @@ WHISP interacts with the following third-party services during operation:
 | **Google Gmail SMTP** | Recipient email address, email content | Sending verification and password reset emails |
 | **Google Maps API** | Client-side map interactions (subject to Google's privacy policy) | Map visualisation in the UI |
 
-For the technical evidence of data separation between WHISP and Google Earth Engine, see the [GEE Data Separation Annex](/gee-data-separation).
+For the technical evidence of data separation between WHISP and Google Earth Engine, see the [GEE Data Separation Annex](./gee-data-separation).
 
 ## 6. Cookies and Local Storage
 

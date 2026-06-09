@@ -96,38 +96,44 @@ function CommoditiesPage() {
 
   const columns = [
     { key: "id" as const, header: "Code" },
-    { key: "description" as const, header: "Description" },
+    { key: "description" as const, header: "Description", truncate: true },
   ];
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-[960px]">
-      <h1 className="text-xl font-semibold">Commodities</h1>
-      {message && <Alert type={message.type} message={message.text} onClose={() => setMessage(null)} />}
+    <div className="-mx-6 -my-8 flex flex-1 flex-col self-stretch overflow-hidden">
+      {message && (
+        <div className="shrink-0 px-[14px] py-2">
+          <Alert type={message.type} message={message.text} onClose={() => setMessage(null)} />
+        </div>
+      )}
 
       {isAdmin && mode !== "list" ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{mode === "create" ? "New Commodity" : `Edit ${editingId}`}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col gap-1.5">
-              <Label>Code</Label>
-              <Input value={form.id ?? ""} disabled={mode === "edit"} placeholder="e.g. pcrop"
-                onChange={(e) => updateField("id", e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label>Description</Label>
-              <Input value={form.description ?? ""} placeholder="Description"
-                onChange={(e) => updateField("description", e.target.value)} />
-            </div>
-          </CardContent>
-          <CardFooter className="flex gap-2">
-            <Button onClick={handleSave} disabled={loading}>{loading ? "Saving..." : "Save"}</Button>
-            <Button variant="secondary" onClick={reset} disabled={loading}>Cancel</Button>
-          </CardFooter>
-        </Card>
+        <div className="flex flex-1 items-start justify-center overflow-auto p-8">
+          <Card className="w-full max-w-[560px]">
+            <CardHeader>
+              <CardTitle>{mode === "create" ? "New Commodity" : `Edit ${editingId}`}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>Code</Label>
+                <Input value={form.id ?? ""} disabled={mode === "edit"} placeholder="e.g. pcrop"
+                  onChange={(e) => updateField("id", e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Description</Label>
+                <Input value={form.description ?? ""} placeholder="Description"
+                  onChange={(e) => updateField("description", e.target.value)} />
+              </div>
+            </CardContent>
+            <CardFooter className="flex gap-2">
+              <Button onClick={handleSave} disabled={loading}>{loading ? "Saving..." : "Save"}</Button>
+              <Button variant="secondary" onClick={reset} disabled={loading}>Cancel</Button>
+            </CardFooter>
+          </Card>
+        </div>
       ) : (
         <CrudDataTable
+          title="Commodities"
           entityLabel="commodity"
           columns={columns}
           data={commodities}

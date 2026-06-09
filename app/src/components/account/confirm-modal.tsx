@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export function ConfirmModal({
   open,
@@ -30,7 +31,7 @@ export function ConfirmModal({
       className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-[400px] rounded-xl border border-border bg-surface p-6 shadow-xl">
+      <Card size="sm" className="w-full max-w-[400px] shadow-xl">
         <h3 className="text-lg font-semibold leading-snug text-foreground mb-2">{title}</h3>
         <div className="text-sm text-muted-foreground leading-relaxed mb-5">{body}</div>
         {children}
@@ -47,7 +48,7 @@ export function ConfirmModal({
             {confirmLabel}
           </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

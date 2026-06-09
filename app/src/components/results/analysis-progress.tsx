@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { controlRounded } from "@/components/ui/styles";
+import { Card } from "@/components/ui/card";
 import { CenteredShell } from "@/components/layout/page-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/icons";
@@ -28,7 +30,7 @@ export function AnalysisProgress({
 
   return (
     <CenteredShell className="px-4">
-      <div className="flex w-full max-w-[520px] flex-col gap-6 rounded-[14px] border border-border bg-surface p-8">
+      <Card className="w-full max-w-[520px] gap-6">
         <div className="flex flex-col items-center gap-4 text-center">
           <Spinner className="size-10 text-accent-green" />
           <div className="flex flex-col gap-1.5">
@@ -59,7 +61,7 @@ export function AnalysisProgress({
             <span className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
               Status
             </span>
-            <ScrollArea className="h-44 rounded-[10px] border border-border bg-bg">
+            <ScrollArea className={`h-44 ${controlRounded} border border-border bg-bg`}>
               <div className="space-y-0.5 p-3">
                 {messages.map((msg, index) => (
                   <p
@@ -77,7 +79,7 @@ export function AnalysisProgress({
             </ScrollArea>
           </div>
         )}
-      </div>
+      </Card>
     </CenteredShell>
   );
 }

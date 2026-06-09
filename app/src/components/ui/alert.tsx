@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { CloseButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { controlRounded } from "@/components/ui/styles";
 
 export type AlertType = "error" | "success" | "warning";
 
@@ -33,7 +34,7 @@ export function Alert({ type, message, onClose, className }: AlertProps) {
   const { icon: Icon, className: typeClass } = config[type];
 
   return (
-    <div className={cn("flex items-start gap-2 rounded-lg border px-3 py-2 text-sm", typeClass, className)}>
+    <div className={cn("flex items-start gap-2 border px-3 py-2 text-sm", controlRounded, typeClass, className)}>
       <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
       <span className="flex-1 text-left">{message}</span>
       {onClose && (

@@ -4,7 +4,7 @@ import * as React from "react"
 import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { controlFocus, controlHeight, controlPadding } from "@/components/ui/styles"
+import { controlFocus, controlHeight, controlPadding, controlRounded } from "@/components/ui/styles"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -82,14 +82,14 @@ export function MultiSelect({
           <button
             type="button"
             onClick={() => onChange([])}
-            className="inline-flex h-7 items-center rounded-[min(var(--radius-md),10px)] border border-border bg-transparent px-2 text-xs text-text-muted transition-colors hover:border-text-muted hover:text-text-primary cursor-pointer"
+            className={`inline-flex h-7 items-center ${controlRounded} border border-border bg-transparent px-2 text-xs text-text-muted transition-colors hover:border-text-muted hover:text-text-primary cursor-pointer`}
           >
             Select None
           </button>
           <button
             type="button"
             onClick={() => onChange(options.map((o) => o.value))}
-            className="inline-flex h-7 items-center rounded-[min(var(--radius-md),10px)] border border-border bg-transparent px-2 text-xs text-text-muted transition-colors hover:border-text-muted hover:text-text-primary cursor-pointer"
+            className={`inline-flex h-7 items-center ${controlRounded} border border-border bg-transparent px-2 text-xs text-text-muted transition-colors hover:border-text-muted hover:text-text-primary cursor-pointer`}
           >
             Select All
           </button>

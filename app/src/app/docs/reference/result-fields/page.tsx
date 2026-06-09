@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Alert } from "@/components/ui/alert";
 import { CrudDataTable } from "@/components/crud/data-table";
+import { controlRounded } from "@/components/ui/styles";
 import { formatSystemMessage } from "@/types/system-codes";
 import type { ResultField, Commodity, CommodityMetadata } from "@/types/models";
 
@@ -135,7 +136,7 @@ function ResultFieldsPage() {
     { key: "order" as const, header: "Order" },
     { key: "id" as const, header: "Code" },
     { key: "category" as const, header: "Category" },
-    { key: "description" as const, header: "Description" },
+    { key: "description" as const, header: "Description", truncate: true },
   ], []);
 
   const formatDate = (v?: Date | string) => v ? new Date(v).toLocaleString() : "";
@@ -160,18 +161,22 @@ function ResultFieldsPage() {
   const disabled = readonly;
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-[960px]">
-      <h1 className="text-xl font-semibold">Result Fields</h1>
-      {message && <Alert type={message.type} message={message.text} onClose={() => setMessage(null)} />}
+    <div className="-mx-6 -my-8 flex flex-1 flex-col self-stretch overflow-hidden">
+      {message && (
+        <div className="shrink-0 px-[14px] py-2">
+          <Alert type={message.type} message={message.text} onClose={() => setMessage(null)} />
+        </div>
+      )}
 
       {mode !== "list" ? (
-        <Card>
+        <div className="flex flex-1 items-start justify-center overflow-auto p-8">
+        <Card className="w-full max-w-[960px]">
           <CardHeader>
             <CardTitle>
               {mode === "create" ? "New Result Field" : readonly ? `Result Field: ${editingId}` : `Edit ${editingId}`}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6 max-h-[70vh] overflow-y-auto">
+          <CardContent className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label>Code</Label>
@@ -230,7 +235,7 @@ function ResultFieldsPage() {
                 onChange={(e) => updateField("comments", e.target.value)} />
             </div>
 
-            <div className="rounded-lg border border-border p-4 space-y-4">
+            <div className={`${controlRounded} border border-border p-4 space-y-4`}>
               <h3 className="text-sm font-medium">Display metadata</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5">
@@ -251,7 +256,7 @@ function ResultFieldsPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-border p-4 space-y-4">
+            <div className={`${controlRounded} border border-border p-4 space-y-4`}>
               <h3 className="text-sm font-medium">Power BI metadata</h3>
               <div className="flex items-center gap-2">
                 <Checkbox checked={!!form.powerBiMetadata?.dashboard} disabled={disabled}
@@ -260,7 +265,7 @@ function ResultFieldsPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-border p-4 space-y-4">
+            <div className={`${controlRounded} border border-border p-4 space-y-4`}>
               <h3 className="text-sm font-medium">Analysis metadata</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5">
@@ -302,7 +307,7 @@ function ResultFieldsPage() {
             </div>
 
             {sortedCommodities.length > 0 && (
-              <div className="rounded-lg border border-border p-4 space-y-4">
+              <div className={`${controlRounded} border border-border p-4 space-y-4`}>
                 <h3 className="text-sm font-medium">Commodity metadata</h3>
                 <div className="space-y-3">
                   {sortedCommodities.map((c) => {
@@ -349,8 +354,10 @@ function ResultFieldsPage() {
             )}
           </CardFooter>
         </Card>
+        </div>
       ) : (
         <CrudDataTable
+          title="Result Fields"
           entityLabel="result field"
           columns={columns}
           data={fields}

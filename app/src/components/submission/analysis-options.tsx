@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { SlidersHorizontal, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { controlRounded } from '@/components/ui/styles'
 import {
   Collapsible,
   CollapsibleContent,
@@ -53,7 +54,7 @@ export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisO
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="border border-border rounded-[10px] bg-surface overflow-hidden">
+      <div className={`border border-border ${controlRounded} bg-surface overflow-hidden`}>
         <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3.5 text-text-muted hover:text-text-primary transition-colors cursor-pointer">
           <span className="flex items-center gap-2 text-[13px] font-medium">
             <SlidersHorizontal className="size-3.5" />

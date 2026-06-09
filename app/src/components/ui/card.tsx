@@ -1,6 +1,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { cardBase } from "@/components/ui/styles"
 
 function Card({
   className,
@@ -12,7 +13,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-5 overflow-hidden rounded-[14px] border border-border bg-surface p-8 text-sm text-card-foreground has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:p-6 data-[size=sm]:has-data-[slot=card-footer]:pb-0",
+        `group/card flex flex-col gap-5 overflow-hidden ${cardBase} p-8 text-sm text-card-foreground has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:p-6 data-[size=sm]:has-data-[slot=card-footer]:pb-0`,
         className
       )}
       {...props}
