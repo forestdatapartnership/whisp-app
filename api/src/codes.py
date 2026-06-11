@@ -11,13 +11,12 @@ class SystemCode(str, Enum):
         return obj
 
     SYSTEM_INTERNAL_SERVER_ERROR = ("system_internal_server_error", 500, "An internal server error occurred. Please try again later.")
-    SYSTEM_MISSING_REQUEST_BODY = ("system_missing_request_body", 400, "Missing or invalid request body.")
 
     AUTH_MISSING_API_KEY = ("auth_missing_api_key", 401, "API key is required for this request.")
     AUTH_INVALID_API_KEY = ("auth_invalid_api_key", 401, "Invalid or expired API key.")
     AUTH_RATE_LIMIT_EXCEEDED = ("auth_rate_limit_exceeded", 429, "Rate limit exceeded. Try again in {0} seconds.")
 
-    VALIDATION_MISSING_REQUIRED_FIELDS = ("validation_missing_required_fields", 400, "Missing required fields: {0}")
+    VALIDATION_MISSING_REQUEST_BODY = ("validation_missing_request_body", 400, "Missing or invalid request body.")
     VALIDATION_INVALID_GEOJSON = ("validation_invalid_geojson", 400, "The body does not contain a valid GeoJSON. Errors:\n{0}")
     VALIDATION_INVALID_WKT = ("validation_invalid_wkt", 400, "Invalid WKT format. Unable to parse geometry.")
     VALIDATION_INVALID_COORDINATES = ("validation_invalid_coordinates", 400, "Invalid coordinates. Please ensure your data uses EPSG:4326 (WGS84) coordinate reference system.",)

@@ -1,10 +1,13 @@
 from fastapi import APIRouter
 
+from src.codes import SystemCode
 from src.config import SettingsDep
 from fastapi.responses import JSONResponse, Response
 
 from src.geojson import csv_export
 from src.io import files
+from src.responses import api_response
+from src.schemas import route_responses
 
 router = APIRouter(tags=["geojson"])
 
@@ -16,37 +19,42 @@ _WHISP_NAME = {
 }
 
 
-@router.get("/generate-geojson/{token}")
+@router.get(
+    "/generate-geojson/{token}",
+    response_model=None,
+    responses=route_responses(SystemCode.ANALYSIS_JOB_NOT_FOUND, SystemCode.SYSTEM_INTERNAL_SERVER_ERROR),
+)
 async def generate_geojson(token: str, settings: SettingsDep) -> JSONResponse:
-    if not token:
-        return JSONResponse(status_code=400, content={"error": "ID parameter is missing."})
-
     path = files.result_path(token, settings)
     if not path.exists():
-        return JSONResponse(status_code=404, content={"error": "Report not found."})
+        return api_response(SystemCode.ANALYSIS_JOB_NOT_FOUND)
 
     try:
         parsed = files.read_json(path)
     except Exception:
-        return JSONResponse(status_code=500, content={"error": "Failed to parse JSON data."})
+        return api_response(SystemCode.SYSTEM_INTERNAL_SERVER_ERROR)
 
     if not parsed:
-        return JSONResponse(status_code=400, content={"error": "No report was found."})
+        return api_response(SystemCode.ANALYSIS_JOB_NOT_FOUND)
 
     geojson = {**parsed, "name": _WHISP_NAME}
     return JSONResponse(content=geojson)
 
 
-@router.get("/download-csv/{token}")
+@router.get(
+    "/download-csv/{token}",
+    response_model=None,
+    responses=route_responses(SystemCode.ANALYSIS_JOB_NOT_FOUND, SystemCode.SYSTEM_INTERNAL_SERVER_ERROR),
+)
 async def download_csv(token: str) -> Response:
     if not csv_export.valid_token(token):
-        return JSONResponse(status_code=404, content={"error": "Report not found."})
+        return api_response(SystemCode.ANALYSIS_JOB_NOT_FOUND)
 
     csv, err = csv_export.load_or_build_csv(token)
     if err == "not_found":
-        return JSONResponse(status_code=404, content={"error": "Report not found."})
+        return api_response(SystemCode.ANALYSIS_JOB_NOT_FOUND)
     if err or csv is None:
-        return JSONResponse(status_code=400, content={"error": "No exportable features."})
+        return api_response(SystemCode.SYSTEM_INTERNAL_SERVER_ERROR)
 
     filename = csv_export.timestamp_filename("csv")
     return Response(

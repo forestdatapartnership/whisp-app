@@ -2,6 +2,7 @@ import logging
 import traceback
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 
 from src.codes import SystemCode
 from src.responses import api_response
@@ -22,6 +23,10 @@ def register(app: FastAPI) -> None:
     async def _app_error(_req: Request, exc: AppError):
         logger.warning("app_error code=%s cause=%s", exc.code.value, exc.cause or "")
         return api_response(exc.code, args=exc.format_args, cause=exc.cause)
+
+    @app.exception_handler(RequestValidationError)
+    async def _validation_error(_req: Request, _exc: RequestValidationError):
+        return api_response(SystemCode.VALIDATION_MISSING_REQUEST_BODY)
 
     @app.exception_handler(Exception)
     async def _unhandled(_req: Request, exc: Exception):

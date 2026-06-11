@@ -10,6 +10,7 @@ from src.io.files import load_completed_result
 from src.job_progress import JobProgress
 from src.responses import api_response
 from src.redis import subscribe
+from src.schemas import AUTH_ERRORS, route_responses
 from src.status import service
 
 router = APIRouter(prefix="/status", tags=["status"])
@@ -21,7 +22,18 @@ _SSE_HEADERS = {
 }
 
 
-@router.get("/{token}")
+@router.get(
+    "/{token}",
+    response_model=None,
+    responses=route_responses(
+        SystemCode.ANALYSIS_COMPLETED,
+        SystemCode.ANALYSIS_PROCESSING,
+        SystemCode.ANALYSIS_JOB_NOT_FOUND,
+        SystemCode.ANALYSIS_ERROR,
+        SystemCode.ANALYSIS_TIMEOUT,
+        *AUTH_ERRORS,
+    ),
+)
 async def get_status(
     token: str,
     settings: SettingsDep,
@@ -43,7 +55,18 @@ async def get_status(
     return await service.terminal_api_response(token, job)
 
 
-@router.post("/{token}/cancel")
+@router.post(
+    "/{token}/cancel",
+    response_model=None,
+    responses=route_responses(
+        SystemCode.ANALYSIS_COMPLETED,
+        SystemCode.ANALYSIS_CANCELLED,
+        SystemCode.ANALYSIS_JOB_NOT_FOUND,
+        SystemCode.ANALYSIS_ERROR,
+        SystemCode.ANALYSIS_TIMEOUT,
+        *AUTH_ERRORS,
+    ),
+)
 async def cancel_status(
     token: str,
     _api_key: ApiKey = Depends(api_key_dependency),
@@ -64,7 +87,20 @@ async def cancel_status(
     )
 
 
-@router.get("/{token}/stream")
+@router.get(
+    "/{token}/stream",
+    response_model=None,
+    responses={
+        200: {
+            "content": {"text/event-stream": {"schema": {"type": "string"}}},
+            "description": (
+                "Server-Sent Events stream. Each event is a JSON object with `code` and optional `data` / `cause`. "
+                "The final event has `\"final\": true`."
+            ),
+        },
+        **route_responses(*AUTH_ERRORS),
+    },
+)
 async def status_stream(
     token: str,
     request: Request,
