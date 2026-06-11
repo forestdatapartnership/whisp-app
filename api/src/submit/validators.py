@@ -181,7 +181,8 @@ def wkt_to_geojson(wkt: str) -> dict | None:
         geom = shapely_wkt.loads(_WKT_DIMENSION.sub("", wkt))
     except Exception:
         return None
-    return mapping(geom)
+    # mapping() returns tuples; json round-trip coerces to lists
+    return json.loads(json.dumps(mapping(geom)))
 
 
 def wkt_to_feature_collection(wkt: str) -> dict | None:
