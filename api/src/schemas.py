@@ -154,7 +154,7 @@ _CODE_EXAMPLES: dict[SystemCode, Any] = {
         }]
     },
     SystemCode.ANALYSIS_QUEUED: {"token": "abc123", "statusUrl": "/api/status/abc123", "featureCount": 1},
-    SystemCode.ANALYSIS_PROCESSING: {"token": "abc123", "percent": 42.0, "processStatusMessage: []"},
+    SystemCode.ANALYSIS_PROCESSING: {"token": "abc123", "percent": 42.0, "processStatusMessage": []},
 }
 
 
