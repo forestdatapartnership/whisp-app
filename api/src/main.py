@@ -36,15 +36,20 @@ def create_app() -> FastAPI:
         title="Whisp API",
         version=settings.api_version,
         description=(
-            "Analyse geospatial features against WHISP (What Is in my Plot) forest and land-use monitoring datasets.\n\n"
+            "Submit plot geometries as GeoJSON, WKT, or GeoIDs and get back forest, "
+            "land-use, and deforestation-risk analysis from the "
+            "[openforis-whisp](https://pypi.org/project/openforis-whisp/) Python library, "
+            "backed by Google Earth Engine.\n\n"
             "## Authentication\n"
-            "All `/submit/*` and `/status/*` endpoints require an `x-api-key` header.\n\n"
+            "All `/submit/*` and `/status/*` endpoints require an `x-api-key` header. "
+            "Register for free to get an API key at [/register](/register).\n\n"
             "## Response format\n"
             "Every response shares the same envelope:\n"
             "```json\n"
             "{\"code\": \"analysis_completed\", \"message\": \"...\", \"data\": [...]}\n"
             "```\n"
-            "Error responses omit `data` and may include a `cause` field."
+            "Error responses omit `data` and may include a `cause` field. "
+            "See the [SystemCode](#/components/schemas/SystemCode) schema for all possible codes."
         ),
         openapi_tags=[
             {"name": "submit", "description": "Submit geometries for analysis (GeoJSON, WKT, or GeoIDs)"},
