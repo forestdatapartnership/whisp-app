@@ -41,14 +41,6 @@ jobs:
         with:
           cluster_name: ${{ vars.GKE_CLUSTER }}
           location: ${{ vars.GKE_LOCATION }}
-      # woraround until we fix the service account
-      #- name: Configure kubeconfig
-      #  env:
-      #    KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-      #  run: |
-      #    mkdir -p "$HOME/.kube"
-      #    printf '%s' "$KUBE_CONFIG" > "$HOME/.kube/config"
-      #    chmod 600 "$HOME/.kube/config"
 
       - name: Verify images exist
         run: |
@@ -85,11 +77,6 @@ jobs:
           INGRESS_HOST="${INGRESS_HOST%%/*}"
           export INGRESS_HOST
           export DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          if ! kubectl get secret whisp-ingress-tls -n "$GKE_NAMESPACE" >/dev/null 2>&1; then
-            bash infra/gcp/create-ingress-tls-secret.sh "$GKE_NAMESPACE" "$INGRESS_HOST"
-          else
-            echo "TLS secret whisp-ingress-tls already exists in $GKE_NAMESPACE, skipping generation"
-          fi
           VARS='$GKE_NAMESPACE $ENVIRONMENT $VERSION $VERSION_SLUG $IMAGE_REGISTRY $CLOUDSQL_INSTANCE $GCS_BUCKET $ENV_SECRET $GEE_SECRET $GCP_SERVICE_ACCOUNT $GKE_LB_STATIC_IP_NAME $HOST_URL $INGRESS_HOST $DEPLOYED_AT'
           OUT=/tmp/k8s
           mkdir -p "$OUT"
