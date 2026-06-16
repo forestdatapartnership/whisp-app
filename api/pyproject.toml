@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "FastAPI service for Whisp geospatial analysis submit and status routes"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.115.0",
+    "fastapi>=0.115.0,<0.137",
     "uvicorn[standard]>=0.32.0",
     "pydantic>=2.9.0",
     "pydantic-settings>=2.6.0",
