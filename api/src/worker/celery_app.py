@@ -63,6 +63,7 @@ def _bind_task_log_context(
         token=ctx.token if ctx else None,
         user_id=ctx.user_id if ctx else None,
         api_key_id=ctx.api_key_id if ctx else None,
+        feature_count=ctx.feature_count if ctx else None,
     )
 
 

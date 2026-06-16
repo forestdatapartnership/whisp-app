@@ -72,7 +72,7 @@ class AnalysisTask(Task):
         ctx = self._task_context(args, kwargs)
         if ctx is None:
             return
-        logger.info(f"Starting analysis {ctx.token}")
+        logger.info("starting analysis...")
         run_sync(
             db_jobs.update_analysis_job,
             ctx.token,
@@ -82,9 +82,7 @@ class AnalysisTask(Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         ctx = self._task_context(args, kwargs)
-        token = ctx.token if ctx else None
         timeout = ctx.timeout if ctx else None
-        logger.error(f"Analysis {token} failed: {exc}")
 
         if isinstance(exc, TimeLimitExceeded):
             self._outcome = SystemCode.ANALYSIS_TIMEOUT
@@ -98,7 +96,6 @@ class AnalysisTask(Task):
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         ctx = self._task_context(args, kwargs)
         token = ctx.token if ctx else None
-        logger.info(f"Analysis {token} completed with status {status}")
         if token is None or self._already_cancelled(token):
             return
 
@@ -111,8 +108,8 @@ class AnalysisTask(Task):
         self._persist_terminal(token, outcome, error_message=error_message)
 
         if outcome == SystemCode.ANALYSIS_COMPLETED:
-            logger.info("analysis completed for token %s", token)
+            logger.info("analysis completed")
         elif outcome == SystemCode.ANALYSIS_TIMEOUT:
-            logger.warning("analysis timed out for token %s: %s", token, error_message or "")
+            logger.warning("analysis timed out: %s", error_message or "unknown")
         else:
-            logger.error("analysis failed for token %s: %s", token, error_message or "")
+            logger.error("analysis failed: %s", error_message or "unknown")

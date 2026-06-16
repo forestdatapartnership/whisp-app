@@ -139,6 +139,7 @@ async def submit(
         timeout=timeout,
         user_id=ctx.user_id,
         api_key_id=ctx.api_key_id,
+        feature_count=feature_count,
     )
     celery_app.send_task(
         "src.worker.tasks.run_analysis",

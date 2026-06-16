@@ -28,6 +28,7 @@ class AnalysisTaskContext:
     timeout: int
     user_id: int | None = None
     api_key_id: int | None = None
+    feature_count: int | None = None
 
     @classmethod
     def parse(cls, raw: dict) -> "AnalysisTaskContext":
@@ -36,6 +37,7 @@ class AnalysisTaskContext:
             timeout=int(raw["timeout"]),
             user_id=raw.get("user_id"),
             api_key_id=raw.get("api_key_id"),
+            feature_count=raw.get("feature_count"),
         )
 
     @classmethod

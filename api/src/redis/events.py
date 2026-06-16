@@ -62,7 +62,6 @@ async def init_redis() -> None:
 
     _async_redis = aioredis.from_url(get_settings().redis_url, decode_responses=True)
     await _async_redis.ping()
-    logger.info("redis client initialized")
 
 
 async def close_redis() -> None:
