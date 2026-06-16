@@ -22,7 +22,7 @@ def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Setti
     features = fc.get("features") or []
     count = len(features)
     if count < 1:
-        raise AppError(SystemCode.VALIDATION_MISSING_REQUIRED_FIELDS, ["features"])
+        raise AppError(SystemCode.VALIDATION_MISSING_REQUEST_BODY)
 
     limit = settings.geometry_limit_async if opts.async_mode else settings.geometry_limit_sync
     if count > limit:
