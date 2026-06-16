@@ -38,7 +38,8 @@ jobs:
 
           if [ "$BRANCH" = "main" ]; then
             MODE="create"
-            VER=$(node -p "require('./package.json').version")
+            VER=$(tr -d '[:space:]' < .version)
+            [ -n "$VER" ] || { echo "Missing .version" >&2; exit 1; }
             TAG="v$VER"
             RELEASE_BRANCH="release/$TAG"
           elif echo "$BRANCH" | grep -q "^release/"; then
@@ -141,13 +142,24 @@ jobs:
             --draft=false \
             --latest
 
-      - name: Bump package.json version (major/minor/patch)
+      - name: Bump .version (major/minor/patch)
         if: ${{ steps.vars.outputs.mode == 'create' }}
         run: |
           BUMP_TYPE="${{ github.event.inputs.bump-type || 'patch' }}"
+          CURRENT=$(tr -d '[:space:]' < .version)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          case "$BUMP_TYPE" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+            *) echo "Unknown bump type: $BUMP_TYPE" >&2; exit 1 ;;
+          esac
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "$NEW_VERSION" > .version
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          npm version "$BUMP_TYPE" -m "chore: bump version to %s [skip ci]"
+          git add .version
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
           git push origin HEAD:main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
