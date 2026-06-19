@@ -38,10 +38,9 @@ spec:
           value: "5432"
         resources:
           requests:
-            cpu: 200m
+            cpu: 100m
             memory: 384Mi
           limits:
-            cpu: 500m
             memory: 768Mi
         volumeMounts:
         - name: gcp-secrets-inline

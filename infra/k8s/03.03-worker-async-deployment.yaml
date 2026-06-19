@@ -41,10 +41,9 @@ spec:
           value: "redis://redis-service:6379"
         resources:
           requests:
-            cpu: 1
+            cpu: 500m
             memory: 1Gi
           limits:
-            cpu: 4
             memory: 4Gi
         volumeMounts:
         - name: whisp-volume-gcs
