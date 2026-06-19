@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _API_ROOT = Path(__file__).resolve().parents[1]
@@ -48,13 +48,6 @@ class Settings(BaseSettings):
     geometry_limit_async: int = 10000
     analysis_timeout_sync_seconds: int = 60
     analysis_timeout_async_seconds: int = 1800
-
-    @field_validator("analysis_timeout_sync_seconds")
-    @classmethod
-    def _sync_timeout_cap(cls, value: int) -> int:
-        if value > 60:
-            raise ValueError("analysis_timeout_sync_seconds must not exceed 60")
-        return value
 
     def analysis_timeout_seconds(self, *, async_mode: bool) -> int:
         return (

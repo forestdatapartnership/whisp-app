@@ -41,7 +41,7 @@ export function VersionLink() {
         v{version}
       </Link>
       {' · '}
-      <span>whisp-py</span>
+      <span>openforis-whisp</span>
       {' '}
       <Link href={`https://pypi.org/project/openforis-whisp/${pythonVersion}`} target="_blank">
         v{pythonVersion}
