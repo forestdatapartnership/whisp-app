@@ -190,8 +190,7 @@ async def submit_geo_ids(
     raw_options.setdefault("externalIdColumn", "geoid")
     opts = AnalysisOptions.parse(raw_options)
 
-    collection = body.geoidOptions.collection if body.geoidOptions else None
-    resolved = await geoid.resolve_geo_ids(body.geoIds, collection, settings)
+    resolved = await geoid.resolve_geo_ids(body.geoIds, settings)
 
     missing = [gid for gid, feat in zip(body.geoIds, resolved) if feat is None]
     if missing:

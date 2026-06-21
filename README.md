@@ -12,7 +12,7 @@
 
 ## Overview
 
-WHISP is a comprehensive geospatial analysis tool that provides detailed risk assessment for zero-deforestation claims. The system ingests geometries in various formats (WKT, GeoJSON, or Asset Registry GeoIDs) and performs analysis using Google Earth Engine data through the `openforis-whisp` Python library.
+WHISP is a comprehensive geospatial analysis tool that provides detailed risk assessment for zero-deforestation claims. The system ingests geometries in various formats (WKT, GeoJSON, or GeoIDs) and performs analysis using Google Earth Engine data through the `openforis-whisp` Python library.
 
 **Live Application**: [https://whisp.openforis.org/](https://whisp.openforis.org/)
 
@@ -231,10 +231,11 @@ DB_NAME=whisp_db
 DB_USER=
 DB_PASSWORD=
 ALLOWED_ORIGINS=http://localhost:3001
-GEOID_BASE_URL=
-GEOID_CATALOG=
+GEOID_BASE_URL=https://data.review.fao.org/geoid
 GEOID_COLLECTION=
 ```
+
+`GEOID_BASE_URL` is the GeoID service root. GeoIDs are resolved with `GET {GEOID_BASE_URL}/{geoid}`. The app loads collections from `GET {GEOID_BASE_URL}/collections`. `GEOID_COLLECTION` is an optional default for the collection picker in the UI.
 
 ## API Reference
 
@@ -246,7 +247,7 @@ All analysis endpoints require an `X-API-KEY` header.
 |----------|--------|-------------|
 | `/submit/geojson` | POST | Submit a GeoJSON FeatureCollection for analysis |
 | `/submit/wkt` | POST | Submit a WKT geometry for analysis |
-| `/submit/geo-ids` | POST | Submit Asset Registry GeoIDs for analysis |
+| `/submit/geo-ids` | POST | Submit GeoIDs for analysis |
 | `/status/{token}` | GET | Poll job status; returns result GeoJSON when complete |
 | `/status/{token}/stream` | GET | Server-sent events stream for live progress |
 | `/status/{token}/cancel` | POST | Cancel a running analysis |

@@ -113,7 +113,6 @@ class PublicConfigResponse(BaseModel):
     analysisTimeoutAsyncSeconds: int
     openforisWhispVersion: str
     geoidBaseUrl: str | None
-    geoidCatalog: str | None
     geoidCollection: str | None
 
 
