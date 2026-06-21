@@ -17,11 +17,12 @@ def _is_retryable(status: int) -> bool:
 
 async def _request(client: httpx.AsyncClient, url: str) -> dict[str, Any] | None:
     cause: str | None = None
+    headers = {"Accept": "application/geo+json, application/json"}
     for attempt in range(_MAX_ATTEMPTS):
         if attempt > 0:
             await asyncio.sleep(_RETRY_DELAY_S)
         try:
-            resp = await client.get(url)
+            resp = await client.get(url, headers=headers)
         except Exception as e:
             cause = str(e)
             continue
@@ -35,14 +36,8 @@ async def _request(client: httpx.AsyncClient, url: str) -> dict[str, Any] | None
     raise AppError(SystemCode.SERVICE_GEOID_UNAVAILABLE, cause=f"Operation failed: {cause}")
 
 
-async def resolve_geo_ids(
-    geo_ids: list[str], collection: str | None, settings: Settings
-) -> list[dict | None]:
-    if not settings.geoid_base_url or not settings.geoid_catalog:
-        raise AppError(SystemCode.SERVICE_GEOID_NOT_CONFIGURED)
-
-    coll = collection or settings.geoid_collection
-    if not coll:
+async def resolve_geo_ids(geo_ids: list[str], settings: Settings) -> list[dict | None]:
+    if not settings.geoid_base_url:
         raise AppError(SystemCode.SERVICE_GEOID_NOT_CONFIGURED)
 
     base = settings.geoid_base_url.rstrip("/")
@@ -51,7 +46,7 @@ async def resolve_geo_ids(
 
     async with httpx.AsyncClient(timeout=30) as client:
         async def _resolve_one(i: int, geo_id: str):
-            url = f"{base}/catalog/features/catalogs/{settings.geoid_catalog}/collections/{coll}/items/{geo_id}"
+            url = f"{base}/{geo_id}"
             async with sem:
                 data = await _request(client, url)
             if isinstance(data, dict) and data.get("type") == "Feature" and data.get("geometry"):

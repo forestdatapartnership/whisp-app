@@ -1,5 +1,6 @@
 import logging
 import re
+from contextlib import redirect_stdout
 from typing import Any
 
 import numpy as np
@@ -76,27 +77,33 @@ def _run_whisp_blocking(token: str, opts: AnalysisOptions) -> None:
 
     handler = _ProgressHandler(token, messages)
     whisp_logger = logging.getLogger("whisp")
+    removed = [h for h in whisp_logger.handlers if isinstance(h, logging.StreamHandler)]
+    for h in removed:
+        whisp_logger.removeHandler(h)
     whisp_logger.addHandler(handler)
     try:
-        input_file = str(files.input_path(token))
-        stats_df = whisp.whisp_formatted_stats_geojson_to_df(input_file, **df_kwargs)
+        with redirect_stdout(None):
+            input_file = str(files.input_path(token))
+            stats_df = whisp.whisp_formatted_stats_geojson_to_df(input_file, **df_kwargs)
 
-        risk_df = whisp.whisp_risk(
-            stats_df,
-            explicit_unit_type=opts.unit_type,
-            national_codes=opts.national_codes,
-        )
+            risk_df = whisp.whisp_risk(
+                stats_df,
+                explicit_unit_type=opts.unit_type,
+                national_codes=opts.national_codes,
+            )
 
-        for col in risk_df.columns:
-            if pd.api.types.is_numeric_dtype(risk_df[col]):
-                risk_df[col] = risk_df[col].replace([np.nan, np.inf, -np.inf], None)
-            elif risk_df[col].dtype == "object":
-                risk_df[col] = risk_df[col].fillna("")
+            for col in risk_df.columns:
+                if pd.api.types.is_numeric_dtype(risk_df[col]):
+                    risk_df[col] = risk_df[col].replace([np.nan, np.inf, -np.inf], None)
+                elif risk_df[col].dtype == "object":
+                    risk_df[col] = risk_df[col].fillna("")
 
-        result_file = str(files.result_path(token))
-        whisp.convert_df_to_geojson(risk_df, result_file)
+            result_file = str(files.result_path(token))
+            whisp.convert_df_to_geojson(risk_df, result_file)
     finally:
         whisp_logger.removeHandler(handler)
+        for h in removed:
+            whisp_logger.addHandler(h)
 
 
 @app.task(base=AnalysisTask, bind=True, name="src.worker.tasks.run_analysis")
