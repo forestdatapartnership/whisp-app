@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 class AnalysisRequest(Request):
     # TODO remove, this is temp workaround until Celery 5.7
     def on_timeout(self, soft, timeout):
+        ctx = AnalysisTask._task_context(self.args, self.kwargs)
+        if ctx and self.task._already_terminal(ctx.token):
+            super().on_timeout(soft, timeout)
+            return
+
         exc = TimeLimitExceeded(timeout)
         einfo = None
         try:
@@ -62,9 +67,16 @@ class AnalysisTask(Task):
             JobProgress.of(status, error_message=error_message).to_redis(),
         )
 
-    def _already_cancelled(self, token: str) -> bool:
+    def _already_terminal(self, token: str) -> bool:
         job = run_sync(db_jobs.get_job, token)
-        return bool(job and job.get("status") == SystemCode.ANALYSIS_CANCELLED.value)
+        if not job:
+            return False
+        return job.get("status") in {
+            SystemCode.ANALYSIS_COMPLETED.value,
+            SystemCode.ANALYSIS_CANCELLED.value,
+            SystemCode.ANALYSIS_TIMEOUT.value,
+            SystemCode.ANALYSIS_ERROR.value,
+        }
 
     def before_start(self, task_id, args, kwargs):
         self._outcome: SystemCode | None = None
@@ -96,7 +108,7 @@ class AnalysisTask(Task):
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         ctx = self._task_context(args, kwargs)
         token = ctx.token if ctx else None
-        if token is None or self._already_cancelled(token):
+        if token is None or self._already_terminal(token):
             return
 
         if status == SUCCESS:

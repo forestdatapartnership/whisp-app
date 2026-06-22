@@ -9,7 +9,6 @@ type ApiConfigResponse = {
   geometryLimitAsync?: number;
   openforisWhispVersion?: string;
   geoidBaseUrl?: string | null;
-  geoidCollection?: string | null;
 };
 
 function env(name: string, fallback?: string): string {
@@ -45,7 +44,6 @@ function geometryLimit(data: ApiConfigResponse): number | undefined {
 
 function applyRemoteConfig(data: ApiConfigResponse) {
   if (data.geoidBaseUrl) process.env.GEOID_BASE_URL = data.geoidBaseUrl;
-  if (data.geoidCollection) process.env.GEOID_COLLECTION = data.geoidCollection;
   if (data.openforisWhispVersion) process.env.OPENFORIS_WHISP_VERSION = data.openforisWhispVersion;
   if (data.maxRequestBodySizeKb != null) {
     process.env.MAX_REQUEST_BODY_SIZE_KB = String(data.maxRequestBodySizeKb);
@@ -57,7 +55,6 @@ function applyRemoteConfig(data: ApiConfigResponse) {
 
 function syncRemoteConfig() {
   config.geoid.baseUrl = envOptional('GEOID_BASE_URL')?.replace(/\/$/, '');
-  config.geoid.collection = envOptional('GEOID_COLLECTION');
   config.app.openforisWhispVersion = envOptional('OPENFORIS_WHISP_VERSION') ?? '';
   config.submission.maxRequestBodySizeKb = envOptionalInt('MAX_REQUEST_BODY_SIZE_KB');
   config.submission.geometryLimit = envOptionalInt('GEOMETRY_LIMIT');
@@ -104,12 +101,6 @@ export const config = {
 
   geoid: {
     baseUrl: envOptional('GEOID_BASE_URL')?.replace(/\/$/, ''),
-    collection: envOptional('GEOID_COLLECTION'),
-    async collectionsUrl() {
-      await loadRemote();
-      if (!config.geoid.baseUrl) return undefined;
-      return `${config.geoid.baseUrl}/collections`;
-    },
   },
 
   submission: {
@@ -131,7 +122,6 @@ export async function getClientConfig() {
     hostUrl: config.email.hostUrl,
     app: config.app,
     submission: config.submission,
-    geoid: { collection: config.geoid.collection },
   };
 }
 

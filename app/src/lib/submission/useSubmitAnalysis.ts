@@ -19,7 +19,7 @@ export type GeoPayload =
 
 export type SubmitPayload =
   | { type: 'geometry'; payload: GeoPayload }
-  | { type: 'geo-ids'; geoIds: string[]; collection?: string }
+  | { type: 'geo-ids'; geoIds: string[] }
 
 export function useSubmitAnalysis({
   analysisOptions,
@@ -54,7 +54,6 @@ export function useSubmitAnalysis({
         body = {
           geoIds: params.geoIds,
           analysisOptions: mergedOptions,
-          ...(params.collection && { geoidOptions: { collection: params.collection } }),
         }
       }
 
