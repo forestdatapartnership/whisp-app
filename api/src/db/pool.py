@@ -37,6 +37,7 @@ async def _create_pool() -> asyncpg.Pool:
         **params,
         min_size=s.db_min_pool_size,
         max_size=s.db_max_pool_size,
+        statement_cache_size=0,
     )
     async with pool.acquire() as conn:
         await conn.fetchval("SELECT 1")

@@ -7,7 +7,6 @@ import { useSubmitAnalysis } from '@/lib/submission/useSubmitAnalysis'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { FileDropZone } from './file-drop-zone'
-import { CollectionPicker } from './collection-picker'
 import { AnalysisOptions, AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from './analysis-options'
 
 interface SubmitGeoIdsProps {
@@ -25,7 +24,6 @@ export function SubmitGeoIds({
 }: SubmitGeoIdsProps) {
   const [geoIdText, setGeoIdText] = useState('')
   const [geoIdFileName, setGeoIdFileName] = useState('')
-  const [collection, setCollection] = useState('')
   const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS)
 
   const cleanIds = parseGeoIdText(geoIdText)
@@ -73,7 +71,7 @@ export function SubmitGeoIds({
       onError(`Too many Geo IDs. Maximum allowed is ${geometryLimit}.`)
       return
     }
-    submit({ type: 'geo-ids', geoIds: cleanIds, ...(collection && { collection }) })
+    submit({ type: 'geo-ids', geoIds: cleanIds })
   }
 
   const downloadExample = () => {
@@ -85,8 +83,6 @@ export function SubmitGeoIds({
 
   return (
     <div className="flex flex-col gap-3">
-      <CollectionPicker value={collection} onChange={setCollection} />
-
       <div className="flex items-stretch gap-0 min-h-40 max-sm:flex-col">
         <FileDropZone
           accept=".txt"

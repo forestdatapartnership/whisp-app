@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -50,8 +50,6 @@ class SubmitGeoJsonRequest(BaseModel):
         }
     )
 
-    type: Literal["FeatureCollection"] = "FeatureCollection"
-    features: list[dict[str, Any]]
     analysisOptions: AnalysisOptionsInput | None = None
 
 
@@ -73,16 +71,11 @@ class SubmitWktRequest(BaseModel):
     analysisOptions: AnalysisOptionsInput | None = None
 
 
-class GeoidOptions(BaseModel):
-    collection: str | None = None
-
-
 class SubmitGeoIdsRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "geoIds": ["1b17337e-83dc-43df-8fc1-a7415d5c0890","d5d6af39-8e7c-4130-b220-1bf3c1373b79"],
-                "geoidOptions": {"collection": "test_coll"},
                 "analysisOptions": {
                     "unitType": "ha",
                     "async": True
@@ -93,7 +86,6 @@ class SubmitGeoIdsRequest(BaseModel):
 
     geoIds: list[str]
     analysisOptions: AnalysisOptionsInput | None = None
-    geoidOptions: GeoidOptions | None = None
 
 
 # ── Response model ─────────────────────────────────────────────────────────────
@@ -113,7 +105,6 @@ class PublicConfigResponse(BaseModel):
     analysisTimeoutAsyncSeconds: int
     openforisWhispVersion: str
     geoidBaseUrl: str | None
-    geoidCollection: str | None
 
 
 # ── Route response helper ──────────────────────────────────────────────────────

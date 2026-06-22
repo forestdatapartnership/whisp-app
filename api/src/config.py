@@ -57,7 +57,6 @@ class Settings(BaseSettings):
         )
 
     geoid_base_url: str = ""
-    geoid_collection: str = ""
     geoid_resolve_concurrency: int = 20
 
     allowed_origins: str = "*"
@@ -99,7 +98,6 @@ class Settings(BaseSettings):
             "analysisTimeoutAsyncSeconds": self.analysis_timeout_async_seconds,
             "openforisWhispVersion": self.openforis_whisp_version,
             "geoidBaseUrl": self.geoid_base_url or None,
-            "geoidCollection": self.geoid_collection or None,
         }
 
 
