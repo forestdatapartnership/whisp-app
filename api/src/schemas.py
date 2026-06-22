@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -50,8 +50,6 @@ class SubmitGeoJsonRequest(BaseModel):
         }
     )
 
-    type: Literal["FeatureCollection"] = "FeatureCollection"
-    features: list[dict[str, Any]]
     analysisOptions: AnalysisOptionsInput | None = None
 
 
