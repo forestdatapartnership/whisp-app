@@ -93,7 +93,7 @@ export function ApiQuickStart({ apiBase, className }: { apiBase: string; classNa
               </Tabs>
             </div>
             <p className="border-t border-border pt-3 text-sm">
-              <Link href="https://github.com/openforis/whisp" target="_blank">
+              <Link href={`${apiBase || '/api'}/docs`} target="_blank">
                 Full API documentation →
               </Link>
             </p>
