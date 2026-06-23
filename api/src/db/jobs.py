@@ -27,7 +27,6 @@ async def create_analysis_job(
     async with pool.acquire() as conn:
         async with conn.transaction():
             if user_id is not None and max_concurrent_analyses:
-                await conn.execute("SELECT pg_advisory_xact_lock($1)", user_id)
                 row = await conn.fetchrow(
                     "SELECT COUNT(*)::int AS running FROM analysis_jobs "
                     "WHERE user_id = $1 AND status = ANY($2::text[])",
