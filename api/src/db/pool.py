@@ -133,6 +133,7 @@ def _run_sync(factory: Callable[[], Coroutine[Any, Any, T]]) -> T:
             exc,
         )
         _reset_worker_pool()
+        loop = _worker_loop()
         _ensure_worker_pool(loop)
         return loop.run_until_complete(factory())
 
