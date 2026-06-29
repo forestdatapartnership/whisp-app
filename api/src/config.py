@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     db_password: str = ""
     db_min_pool_size: int = 1
     db_max_pool_size: int = 10
+    db_connect_timeout: float = 5.0
+    db_command_timeout: float = 10.0
 
     redis_url: str = "redis://localhost:6379"
 

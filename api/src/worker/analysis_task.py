@@ -1,9 +1,8 @@
 import logging
 
-from billiard.einfo import ExceptionInfo
 from celery import Task
 from celery.exceptions import TimeLimitExceeded
-from celery.states import FAILURE, SUCCESS
+from celery.states import SUCCESS
 from celery.worker.request import Request
 
 from src.codes import SystemCode
@@ -20,27 +19,12 @@ class AnalysisRequest(Request):
     # TODO remove, this is temp workaround until Celery 5.7
     def on_timeout(self, soft, timeout):
         ctx = AnalysisTask._task_context(self.args, self.kwargs)
-        if ctx and self.task._already_terminal(ctx.token):
-            super().on_timeout(soft, timeout)
-            return
-
-        exc = TimeLimitExceeded(timeout)
-        einfo = None
-        try:
-            try:
-                raise exc
-            except TimeLimitExceeded:
-                einfo = ExceptionInfo()
-
-            self.task.on_failure(exc, self.id, self.args, self.kwargs, einfo)
-            self.task.after_return(
-                FAILURE, exc, self.id, self.args, self.kwargs, None,
+        if ctx is not None and not self.task._already_terminal(ctx.token):
+            error_message = SystemCode.ANALYSIS_TIMEOUT.format(ctx.timeout)
+            self.task._persist_terminal(
+                ctx.token, SystemCode.ANALYSIS_TIMEOUT, error_message=error_message,
             )
-        finally:
-            if einfo is not None:
-                del einfo
-            exc.__traceback__ = None
-
+            logger.warning("analysis timed out: %s", error_message)
         super().on_timeout(soft, timeout)
 
 

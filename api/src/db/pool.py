@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
+_POOL_CLOSE_TIMEOUT = 10.0
+
 _pool: asyncpg.Pool | None = None
 _pool_lock = asyncio.Lock()
 _worker_local = threading.local()
@@ -35,15 +37,23 @@ def connection_params() -> dict[str, str | int]:
 async def _create_pool() -> asyncpg.Pool:
     params = connection_params()
     s = get_settings()
-    pool = await asyncpg.create_pool(
-        **params,
-        min_size=s.db_min_pool_size,
-        max_size=s.db_max_pool_size,
-        statement_cache_size=0,
-        max_inactive_connection_lifetime=300,
+    pool = await asyncio.wait_for(
+        asyncpg.create_pool(
+            **params,
+            min_size=s.db_min_pool_size,
+            max_size=s.db_max_pool_size,
+            statement_cache_size=0,
+            max_inactive_connection_lifetime=300,
+            command_timeout=s.db_command_timeout,
+        ),
+        timeout=s.db_connect_timeout,
     )
-    async with pool.acquire() as conn:
-        await conn.fetchval("SELECT 1")
+    try:
+        async with pool.acquire() as conn:
+            await asyncio.wait_for(conn.fetchval("SELECT 1"), timeout=s.db_connect_timeout)
+    except BaseException:
+        await pool.close()
+        raise
     logger.info(
         "database pool initialized (%s@%s:%s/%s)",
         params["user"],
@@ -97,21 +107,20 @@ def _worker_loop() -> asyncio.AbstractEventLoop:
 def _reset_worker_pool() -> None:
     pool = getattr(_worker_local, "pool", None)
     loop = getattr(_worker_local, "loop", None)
-    if pool is not None and loop is not None:
+    if loop is not None:
         logger.warning("resetting worker db pool (pid=%d)", os.getpid())
-        try:
-            loop.run_until_complete(asyncio.wait_for(pool.close(), timeout=10))
-        except asyncio.TimeoutError:
-            logger.error("worker pool close timed out after 10s (pid=%d)", os.getpid())
-            pool.terminate()
-        except Exception:
-            logger.exception("worker pool close failed (pid=%d)", os.getpid())
+        if pool is not None:
+            try:
+                loop.run_until_complete(asyncio.wait_for(pool.close(), timeout=_POOL_CLOSE_TIMEOUT))
+            except Exception:
+                logger.exception("worker pool close failed, terminating (pid=%d)", os.getpid())
+                pool.terminate()
+        loop.close()
     _worker_local.pool = None
+    _worker_local.loop = None
 
 
 def _ensure_worker_pool(loop: asyncio.AbstractEventLoop) -> asyncpg.Pool:
-    if _pool is not None:
-        return _pool
     pool = getattr(_worker_local, "pool", None)
     if pool is None:
         logger.info("creating worker db pool (pid=%d)", os.getpid())
@@ -120,7 +129,10 @@ def _ensure_worker_pool(loop: asyncio.AbstractEventLoop) -> asyncpg.Pool:
     return pool
 
 
-def _run_sync(factory: Callable[[], Coroutine[Any, Any, T]]) -> T:
+def run_sync(fn: Callable[..., Coroutine[Any, Any, T]], /, *args: Any, **kwargs: Any) -> T:
+    def factory() -> Coroutine[Any, Any, T]:
+        return fn(*args, **kwargs)
+
     loop = _worker_loop()
     _ensure_worker_pool(loop)
     try:
@@ -136,12 +148,3 @@ def _run_sync(factory: Callable[[], Coroutine[Any, Any, T]]) -> T:
         loop = _worker_loop()
         _ensure_worker_pool(loop)
         return loop.run_until_complete(factory())
-
-
-def run_sync(fn: Callable[..., Coroutine[Any, Any, T]], /, *args: Any, **kwargs: Any) -> T:
-    return _run_sync(lambda: fn(*args, **kwargs))
-
-
-async def check_db() -> None:
-    async with acquire_pool().acquire() as conn:
-        await conn.fetchval("SELECT 1")
