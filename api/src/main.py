@@ -97,7 +97,7 @@ def create_app() -> FastAPI:
     async def health_response():
         return {"ok": True}
 
-    Instrumentator().instrument(app).expose(app, include_in_schema=False)
+    Instrumentator().instrument(app).expose(app, endpoint=f"{API_PREFIX}/metrics", include_in_schema=False)
 
     _orig_openapi = app.openapi
 

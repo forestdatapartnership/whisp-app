@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-exporter
+  namespace: ${GKE_NAMESPACE}
+  labels:
+    app: celery-exporter
+    env: ${ENVIRONMENT}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-exporter
+  template:
+    metadata:
+      labels:
+        app: celery-exporter
+    spec:
+      containers:
+      - name: celery-exporter
+        image: danihodovic/celery-exporter:0.9.1
+        args:
+        - "--broker-url=redis://redis-service:6379/0"
+        ports:
+        - name: metrics
+          containerPort: 9808
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            memory: 256Mi
+        livenessProbe:
+          tcpSocket:
+            port: 9808
+          initialDelaySeconds: 10
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: celery-exporter
+  namespace: ${GKE_NAMESPACE}
+spec:
+  selector:
+    app: celery-exporter
+  ports:
+  - name: metrics
+    protocol: TCP
+    port: 9808
+    targetPort: 9808
