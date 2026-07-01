@@ -102,10 +102,3 @@ class AnalysisTask(Task):
 
         error_message = self._error_message or None
         self._persist_terminal(token, outcome, error_message=error_message)
-
-        if outcome == SystemCode.ANALYSIS_COMPLETED:
-            logger.info("analysis completed")
-        elif outcome == SystemCode.ANALYSIS_TIMEOUT:
-            logger.warning("analysis timed out: %s", error_message or "unknown")
-        else:
-            logger.error("analysis failed: %s", error_message or "unknown")
