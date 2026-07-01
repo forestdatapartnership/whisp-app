@@ -1,0 +1,257 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  namespace: monitoring
+  labels:
+    app: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        uid: prometheus
+        isDefault: true
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki:3100
+        uid: loki
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+  labels:
+    app: grafana
+data:
+  celery-workers.json: |
+    {
+      "uid": "celery-workers",
+      "title": "Celery Workers",
+      "schemaVersion": 39,
+      "editable": true,
+      "time": {"from": "now-6h", "to": "now"},
+      "refresh": "30s",
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "label": "Namespace",
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "definition": "label_values(celery_worker_up, namespace)",
+            "query": {
+              "query": "label_values(celery_worker_up, namespace)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "sort": 1,
+            "includeAll": false,
+            "multi": false
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Workers up",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+          "targets": [
+            {"expr": "sum(celery_worker_up{namespace=\"$namespace\"})", "refId": "A"}
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Active tasks",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+          "targets": [
+            {"expr": "sum(celery_worker_tasks_active{namespace=\"$namespace\"})", "refId": "A"}
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Queue length",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 12, "x": 12, "y": 0},
+          "targets": [
+            {"expr": "sum(celery_queue_length{namespace=\"$namespace\"}) by (queue_name)", "legendFormat": "{{queue_name}}", "refId": "A"}
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Task throughput (tasks/s)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+          "targets": [
+            {"expr": "sum(rate(celery_task_succeeded_total{namespace=\"$namespace\"}[$__rate_interval])) by (name)", "legendFormat": "ok {{name}}", "refId": "A"},
+            {"expr": "sum(rate(celery_task_failed_total{namespace=\"$namespace\"}[$__rate_interval])) by (name)", "legendFormat": "fail {{name}}", "refId": "B"}
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Task runtime p95 (s)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+          "targets": [
+            {"expr": "histogram_quantile(0.95, sum(rate(celery_task_runtime_bucket{namespace=\"$namespace\"}[$__rate_interval])) by (le, name))", "legendFormat": "{{name}}", "refId": "A"}
+          ]
+        },
+        {
+          "type": "logs",
+          "title": "Logs",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+          "targets": [
+            {"expr": "{namespace=\"$namespace\"}", "refId": "A"}
+          ]
+        }
+      ]
+    }
+  cluster-resources.json: |
+    {
+      "uid": "cluster-resources",
+      "title": "Cluster Resources",
+      "schemaVersion": 39,
+      "editable": true,
+      "time": {"from": "now-6h", "to": "now"},
+      "refresh": "30s",
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Node CPU used %",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}},
+          "targets": [
+            {"expr": "100 * (1 - avg by (node) (rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval])))", "legendFormat": "{{node}}", "refId": "A"}
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Node memory used %",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}},
+          "targets": [
+            {"expr": "100 * (1 - sum by (node)(node_memory_MemAvailable_bytes) / sum by (node)(node_memory_MemTotal_bytes))", "legendFormat": "{{node}}", "refId": "A"}
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Pod CPU (cores)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "targets": [
+            {"expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\",pod!=\"\"}[$__rate_interval])) by (namespace, pod)", "legendFormat": "{{namespace}}/{{pod}}", "refId": "A"}
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Pod memory (working set)",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "fieldConfig": {"defaults": {"unit": "bytes"}},
+          "targets": [
+            {"expr": "sum(container_memory_working_set_bytes{container!=\"\",pod!=\"\"}) by (namespace, pod)", "legendFormat": "{{namespace}}/{{pod}}", "refId": "A"}
+          ]
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:11.2.0
+        env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: "Admin"
+        - name: GF_SECURITY_ALLOW_EMBEDDING
+          value: "true"
+        ports:
+        - name: web
+          containerPort: 3000
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            memory: 256Mi
+        volumeMounts:
+        - name: provisioning-datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: provisioning-dashboards
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: dashboards
+          mountPath: /var/lib/grafana/dashboards
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+      volumes:
+      - name: provisioning-datasources
+        configMap:
+          name: grafana-provisioning
+          items:
+          - key: datasources.yaml
+            path: datasources.yaml
+      - name: provisioning-dashboards
+        configMap:
+          name: grafana-provisioning
+          items:
+          - key: dashboards.yaml
+            path: dashboards.yaml
+      - name: dashboards
+        configMap:
+          name: grafana-dashboards
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  selector:
+    app: grafana
+  ports:
+  - name: web
+    protocol: TCP
+    port: 3000
+    targetPort: 3000
