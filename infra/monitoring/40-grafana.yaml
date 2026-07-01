@@ -15,11 +15,15 @@ data:
         url: http://prometheus:9090
         uid: prometheus
         isDefault: true
+        jsonData:
+          manageAlerts: false
       - name: Loki
         type: loki
         access: proxy
         url: http://loki:3100
         uid: loki
+        jsonData:
+          manageAlerts: false
   dashboards.yaml: |
     apiVersion: 1
     providers:
@@ -52,18 +56,34 @@ data:
         "list": [
           {
             "name": "namespace",
-            "type": "query",
+            "type": "custom",
             "label": "Namespace",
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "definition": "label_values(celery_worker_up, namespace)",
-            "query": {
-              "query": "label_values(celery_worker_up, namespace)",
-              "refId": "StandardVariableQuery"
-            },
-            "refresh": 1,
-            "sort": 1,
+            "query": "whisp-development,whisp-production",
+            "current": {"selected": true, "text": "whisp-development", "value": "whisp-development"},
+            "options": [
+              {"selected": true, "text": "whisp-development", "value": "whisp-development"},
+              {"selected": false, "text": "whisp-production", "value": "whisp-production"}
+            ],
             "includeAll": false,
             "multi": false
+          },
+          {
+            "name": "severity",
+            "type": "custom",
+            "label": "Severity",
+            "query": "DEBUG,INFO,WARNING,ERROR,CRITICAL",
+            "current": {"selected": true, "text": "All", "value": "$__all"},
+            "options": [
+              {"selected": true, "text": "All", "value": "$__all"},
+              {"selected": false, "text": "DEBUG", "value": "DEBUG"},
+              {"selected": false, "text": "INFO", "value": "INFO"},
+              {"selected": false, "text": "WARNING", "value": "WARNING"},
+              {"selected": false, "text": "ERROR", "value": "ERROR"},
+              {"selected": false, "text": "CRITICAL", "value": "CRITICAL"}
+            ],
+            "includeAll": true,
+            "allValue": "DEBUG|INFO|WARNING|ERROR|CRITICAL",
+            "multi": true
           }
         ]
       },
@@ -116,11 +136,108 @@ data:
         },
         {
           "type": "logs",
+          "title": "Worker logs",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 10, "w": 12, "x": 12, "y": 12},
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "showLabels": false,
+            "showTime": true,
+            "sortOrder": "Descending",
+            "wrapLogMessage": true
+          },
+          "targets": [
+            {
+              "expr": "{namespace=\"$namespace\", app=~\"whisp-worker-async|whisp-worker-sync\", level=~\"$severity\"} | json | drop __error__, __error_details__ | line_format \"{{ if .message }}{{ .message }}{{ else }}{{ __line__ }}{{ end }}\"",
+              "refId": "A"
+            }
+          ]
+        }
+      ]
+    }
+  logs.json: |
+    {
+      "uid": "logs",
+      "title": "Logs",
+      "schemaVersion": 39,
+      "editable": true,
+      "time": {"from": "now-1h", "to": "now"},
+      "refresh": "30s",
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "custom",
+            "label": "Namespace",
+            "query": "whisp-development,whisp-production",
+            "current": {"selected": true, "text": "whisp-development", "value": "whisp-development"},
+            "options": [
+              {"selected": true, "text": "whisp-development", "value": "whisp-development"},
+              {"selected": false, "text": "whisp-production", "value": "whisp-production"}
+            ],
+            "includeAll": false,
+            "multi": false
+          },
+          {
+            "name": "severity",
+            "type": "custom",
+            "label": "Severity",
+            "query": "DEBUG,INFO,WARNING,ERROR,CRITICAL",
+            "current": {"selected": true, "text": "All", "value": "$__all"},
+            "options": [
+              {"selected": true, "text": "All", "value": "$__all"},
+              {"selected": false, "text": "DEBUG", "value": "DEBUG"},
+              {"selected": false, "text": "INFO", "value": "INFO"},
+              {"selected": false, "text": "WARNING", "value": "WARNING"},
+              {"selected": false, "text": "ERROR", "value": "ERROR"},
+              {"selected": false, "text": "CRITICAL", "value": "CRITICAL"}
+            ],
+            "includeAll": true,
+            "allValue": "DEBUG|INFO|WARNING|ERROR|CRITICAL",
+            "multi": true
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Log volume by severity",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 6, "w": 24, "x": 0, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "custom": {"stacking": {"mode": "normal"}, "fillOpacity": 80}
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum by (level) (count_over_time({namespace=\"$namespace\", level=~\"$severity\"}[$__interval]))",
+              "legendFormat": "{{level}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "logs",
           "title": "Logs",
           "datasource": {"type": "loki", "uid": "loki"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+          "gridPos": {"h": 18, "w": 24, "x": 0, "y": 6},
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "prettifyLogMessage": false,
+            "showCommonLabels": false,
+            "showLabels": false,
+            "showTime": true,
+            "sortOrder": "Descending",
+            "wrapLogMessage": true
+          },
           "targets": [
-            {"expr": "{namespace=\"$namespace\"}", "refId": "A"}
+            {
+              "expr": "{namespace=\"$namespace\", level=~\"$severity\"} | json | drop __error__, __error_details__ | line_format \"{{ if .message }}{{ .message }}{{ else }}{{ __line__ }}{{ end }}\"",
+              "refId": "A"
+            }
           ]
         }
       ]
@@ -176,6 +293,173 @@ data:
       ]
     }
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-alerting
+  namespace: monitoring
+  labels:
+    app: grafana
+data:
+  contactpoints.yaml: |
+    apiVersion: 1
+    contactPoints:
+      - orgId: 1
+        name: email
+        receivers:
+          - uid: email-default
+            type: email
+            settings:
+              addresses: radu.urdea@fao.org
+  policies.yaml: |
+    apiVersion: 1
+    policies:
+      - orgId: 1
+        receiver: email
+        group_by: ['alertname']
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+  rules.yaml: |
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: resources
+        folder: Monitoring
+        interval: 1m
+        rules:
+          - uid: node-cpu-high
+            title: Node CPU above 90%
+            condition: C
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: 'Node {{ $labels.node }} CPU above 90%'
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: A
+                  editorMode: code
+                  instant: true
+                  range: false
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  expr: '100 * (1 - avg by (node) (rate(node_cpu_seconds_total{mode="idle"}[5m])))'
+              - refId: C
+                datasourceUid: __expr__
+                model:
+                  refId: C
+                  type: threshold
+                  expression: A
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  conditions:
+                    - type: query
+                      evaluator:
+                        type: gt
+                        params: [90]
+                      operator:
+                        type: and
+                      query:
+                        params: [C]
+                      reducer:
+                        type: last
+                        params: []
+          - uid: node-mem-high
+            title: Node memory above 90%
+            condition: C
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: 'Node {{ $labels.node }} memory above 90%'
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: A
+                  editorMode: code
+                  instant: true
+                  range: false
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  expr: '100 * (1 - sum by (node)(node_memory_MemAvailable_bytes) / sum by (node)(node_memory_MemTotal_bytes))'
+              - refId: C
+                datasourceUid: __expr__
+                model:
+                  refId: C
+                  type: threshold
+                  expression: A
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  conditions:
+                    - type: query
+                      evaluator:
+                        type: gt
+                        params: [90]
+                      operator:
+                        type: and
+                      query:
+                        params: [C]
+                      reducer:
+                        type: last
+                        params: []
+      - orgId: 1
+        name: logs
+        folder: Monitoring
+        interval: 1m
+        rules:
+          - uid: error-logs
+            title: Errors logged
+            condition: C
+            for: 0m
+            labels:
+              severity: warning
+            annotations:
+              summary: 'Errors detected in application logs (last 5m)'
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: loki
+                model:
+                  refId: A
+                  editorMode: code
+                  queryType: instant
+                  expr: 'sum(count_over_time({level=~"ERROR|CRITICAL"}[5m]))'
+              - refId: C
+                datasourceUid: __expr__
+                model:
+                  refId: C
+                  type: threshold
+                  expression: A
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  conditions:
+                    - type: query
+                      evaluator:
+                        type: gt
+                        params: [0]
+                      operator:
+                        type: and
+                      query:
+                        params: [C]
+                      reducer:
+                        type: last
+                        params: []
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -198,11 +482,47 @@ spec:
         image: grafana/grafana:11.2.0
         env:
         - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "false"
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-admin
+              key: admin-user
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-admin
+              key: admin-password
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        - name: GF_SMTP_ENABLED
           value: "true"
-        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-          value: "Admin"
-        - name: GF_SECURITY_ALLOW_EMBEDDING
-          value: "true"
+        - name: GF_SMTP_HOST
+          valueFrom:
+            secretKeyRef:
+              name: grafana-smtp
+              key: host
+              optional: true
+        - name: GF_SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-smtp
+              key: user
+              optional: true
+        - name: GF_SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-smtp
+              key: password
+              optional: true
+        - name: GF_SMTP_FROM_ADDRESS
+          valueFrom:
+            secretKeyRef:
+              name: grafana-smtp
+              key: from_address
+              optional: true
+        - name: GF_SMTP_FROM_NAME
+          value: "Whisp Grafana"
         ports:
         - name: web
           containerPort: 3000
@@ -217,6 +537,8 @@ spec:
           mountPath: /etc/grafana/provisioning/datasources
         - name: provisioning-dashboards
           mountPath: /etc/grafana/provisioning/dashboards
+        - name: provisioning-alerting
+          mountPath: /etc/grafana/provisioning/alerting
         - name: dashboards
           mountPath: /var/lib/grafana/dashboards
         readinessProbe:
@@ -238,6 +560,9 @@ spec:
           items:
           - key: dashboards.yaml
             path: dashboards.yaml
+      - name: provisioning-alerting
+        configMap:
+          name: grafana-alerting
       - name: dashboards
         configMap:
           name: grafana-dashboards
