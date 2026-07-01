@@ -5,6 +5,9 @@ import re
 from typing import Any
 
 from pythonjsonlogger import jsonlogger
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from src.config import get_settings
 
@@ -33,6 +36,14 @@ def bind(**fields: Any) -> None:
 
 def clear_context() -> None:
     _context.set({})
+
+
+class LogContextMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next) -> Response:
+        try:
+            return await call_next(request)
+        finally:
+            clear_context()
 
 
 class DropSuccessfulAccessLogFilter(logging.Filter):

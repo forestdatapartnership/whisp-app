@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from fastapi import Header
 
+from src.app_logging import bind
 from src.auth.rate_limiter import check_rate_limit
 from src.codes import SystemCode
 from src.db.api_keys import ApiKeyRow, find_api_key
@@ -27,6 +28,8 @@ async def api_key_dependency(
     row: ApiKeyRow | None = await find_api_key(x_api_key)
     if row is None:
         raise AppError(SystemCode.AUTH_INVALID_API_KEY)
+
+    bind(user_id=row.user_id, api_key_id=row.id)
 
     window_ms = row.rate_limit_window_ms or _DEFAULT_RATE_LIMIT_WINDOW_MS
     limit = row.rate_limit_max_requests or _DEFAULT_RATE_LIMIT_MAX_REQUESTS

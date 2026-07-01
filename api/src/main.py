@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
+from src.app_logging import LogContextMiddleware
 from src.config import get_settings
 from src.db import close_pool, init_pool
 from src.redis import close_redis, init_redis
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(LogContextMiddleware)
 
     register(app)
     app.include_router(config_router, prefix=API_PREFIX)
