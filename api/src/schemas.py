@@ -190,6 +190,7 @@ SUBMIT_ERRORS: tuple[SystemCode, ...] = (
 SUBMIT_GEOID_ERRORS: tuple[SystemCode, ...] = (
     *SUBMIT_ERRORS,
     SystemCode.VALIDATION_GEO_ID_NOT_FOUND,
+    SystemCode.VALIDATION_INVALID_GEO_ID,
     SystemCode.SERVICE_GEOID_NOT_CONFIGURED,
     SystemCode.SERVICE_GEOID_UNAVAILABLE,
 )

@@ -66,7 +66,8 @@ export function useSubmitAnalysis({
         })
         const data = (await res.json()) as ApiEnvelope
         if (!res.ok) {
-          setError(data.message ?? `Error ${res.status}`)
+          const parts = [data.message, data.cause].filter(Boolean)
+          setError(parts.length > 0 ? parts.join('\n') : `Error ${res.status}`)
           return
         }
         let token: string | undefined

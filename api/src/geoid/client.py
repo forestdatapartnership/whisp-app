@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from typing import Any
 
 import httpx
@@ -15,7 +16,14 @@ def _is_retryable(status: int) -> bool:
     return status >= 500 or status in (408, 429)
 
 
-async def _request(client: httpx.AsyncClient, url: str) -> dict[str, Any] | None:
+def _check_geo_id(geo_id: str) -> None:
+    try:
+        uuid.UUID(geo_id)
+    except ValueError:
+        raise AppError(SystemCode.VALIDATION_INVALID_GEO_ID, args=[geo_id])
+
+
+async def _request(client: httpx.AsyncClient, url: str, geo_id: str) -> dict[str, Any] | None:
     cause: str | None = None
     headers = {"Accept": "application/geo+json, application/json"}
     for attempt in range(_MAX_ATTEMPTS):
@@ -30,6 +38,8 @@ async def _request(client: httpx.AsyncClient, url: str) -> dict[str, Any] | None
             return resp.json()
         if resp.status_code == 404:
             return None
+        if 400 <= resp.status_code < 500 and not _is_retryable(resp.status_code):
+            raise AppError(SystemCode.VALIDATION_INVALID_GEO_ID, args=[geo_id])
         cause = f"{resp.status_code} {resp.text}"
         if not _is_retryable(resp.status_code):
             break
@@ -46,9 +56,10 @@ async def resolve_geo_ids(geo_ids: list[str], settings: Settings) -> list[dict |
 
     async with httpx.AsyncClient(timeout=30) as client:
         async def _resolve_one(i: int, geo_id: str):
+            _check_geo_id(geo_id)
             url = f"{base}/{geo_id}"
             async with sem:
-                data = await _request(client, url)
+                data = await _request(client, url, geo_id)
             if isinstance(data, dict) and data.get("type") == "Feature" and data.get("geometry"):
                 results[i] = {**data, "properties": {**(data.get("properties") or {}), "geoid": geo_id}}
 

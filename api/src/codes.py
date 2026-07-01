@@ -27,6 +27,7 @@ class SystemCode(str, Enum):
     VALIDATION_REQUEST_BODY_TOO_LARGE = ("validation_request_body_too_large", 413, "Request body is too large: {0} KB. Maximum allowed size is {1} KB.")
     VALIDATION_INVALID_EXTERNAL_ID_COLUMN = ("validation_invalid_external_id_column", 400, 'The external ID column "{0}" does not exist in your GeoJSON features. Available columns: {1}')
     VALIDATION_GEO_ID_NOT_FOUND = ("validation_geo_id_not_found", 400, "One or more Geo IDs were not found in GeoID.")
+    VALIDATION_INVALID_GEO_ID = ("validation_invalid_geo_id", 400, 'Invalid Geo ID "{0}".')
 
     SERVICE_GEOID_NOT_CONFIGURED = ("service_geoid_not_configured", 503, "GeoID service is not configured. Please contact the administrator.")
     SERVICE_GEOID_UNAVAILABLE = ("service_geoid_unavailable", 503, "GeoID service is currently unavailable. Please try again later.")
