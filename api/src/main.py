@@ -13,6 +13,7 @@ from src.redis import close_redis, init_redis
 from src.exceptions import register
 from src.geojson.router import router as geojson_router
 from src.public_config.router import router as config_router
+from src.result_fields.router import router as result_fields_router
 from src.status.router import router as status_router
 from src.submit.router import router as submit_router
 
@@ -56,6 +57,7 @@ def create_app() -> FastAPI:
             {"name": "submit", "description": "Submit geometries for analysis (GeoJSON, WKT, or GeoIDs)"},
             {"name": "status", "description": "Poll or stream job status; cancel running jobs"},
             {"name": "geojson", "description": "Download completed results as GeoJSON or CSV"},
+            {"name": "result-fields", "description": "Export result field definitions"},
             {"name": "config", "description": "Public API configuration (limits, versions)"},
             {"name": "meta", "description": "Health check"},
         ],
@@ -78,6 +80,7 @@ def create_app() -> FastAPI:
     app.include_router(submit_router, prefix=API_PREFIX)
     app.include_router(status_router, prefix=API_PREFIX)
     app.include_router(geojson_router, prefix=API_PREFIX)
+    app.include_router(result_fields_router, prefix=API_PREFIX)
 
     @app.get(f"{API_PREFIX}/docs", include_in_schema=False)
     async def swagger_ui() -> HTMLResponse:

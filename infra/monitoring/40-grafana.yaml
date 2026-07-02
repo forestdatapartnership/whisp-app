@@ -335,7 +335,7 @@ data:
             labels:
               severity: critical
             annotations:
-              summary: 'Node {{ $labels.node }} CPU above 90%'
+              summary: 'Node {{ $labels.node }} CPU above 90% (CPU: {{ printf "%.1f" $values.A.Value }}%, Memory: {{ printf "%.1f" $values.B.Value }}%)'
             data:
               - refId: A
                 relativeTimeRange:
@@ -350,6 +350,19 @@ data:
                   intervalMs: 1000
                   maxDataPoints: 43200
                   expr: '100 * (1 - avg by (node) (rate(node_cpu_seconds_total{mode="idle"}[5m])))'
+              - refId: B
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: B
+                  editorMode: code
+                  instant: true
+                  range: false
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  expr: '100 * (1 - sum by (node)(node_memory_MemAvailable_bytes) / sum by (node)(node_memory_MemTotal_bytes))'
               - refId: C
                 datasourceUid: __expr__
                 model:
@@ -378,7 +391,7 @@ data:
             labels:
               severity: critical
             annotations:
-              summary: 'Node {{ $labels.node }} memory above 90%'
+              summary: 'Node {{ $labels.node }} memory above 90% (Memory: {{ printf "%.1f" $values.A.Value }}%, CPU: {{ printf "%.1f" $values.B.Value }}%)'
             data:
               - refId: A
                 relativeTimeRange:
@@ -393,6 +406,19 @@ data:
                   intervalMs: 1000
                   maxDataPoints: 43200
                   expr: '100 * (1 - sum by (node)(node_memory_MemAvailable_bytes) / sum by (node)(node_memory_MemTotal_bytes))'
+              - refId: B
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: B
+                  editorMode: code
+                  instant: true
+                  range: false
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  expr: '100 * (1 - avg by (node) (rate(node_cpu_seconds_total{mode="idle"}[5m])))'
               - refId: C
                 datasourceUid: __expr__
                 model:
@@ -423,10 +449,11 @@ data:
             title: Errors logged
             condition: C
             for: 0m
+            noDataState: OK
             labels:
               severity: warning
             annotations:
-              summary: 'Errors detected in application logs (last 5m)'
+              summary: 'Errors detected in application logs (last 5m): [{{ $labels.namespace }}/{{ $labels.pod }}] {{ $labels.name }}: {{ $labels.message }}'
             data:
               - refId: A
                 relativeTimeRange:
@@ -437,7 +464,7 @@ data:
                   refId: A
                   editorMode: code
                   queryType: instant
-                  expr: 'sum(count_over_time({level=~"ERROR|CRITICAL"}[5m]))'
+                  expr: 'sum by (namespace, pod, name, message) (count_over_time({level=~"ERROR|CRITICAL"} | json [5m]))'
               - refId: C
                 datasourceUid: __expr__
                 model:
