@@ -150,7 +150,7 @@ export function FieldPicker({
   if (!open) return null;
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col overflow-hidden bg-bg">
+    <div className="absolute inset-0 z-50 flex flex-col overflow-hidden bg-bg">
       <div
         role="search"
         className="flex shrink-0 items-center gap-2 border-b border-border bg-surface px-[14px] py-2"

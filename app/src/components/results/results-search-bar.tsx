@@ -76,7 +76,7 @@ export function ResultsSearchBar({
         Select fields
       </Button>
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
+        <DropdownMenuTrigger render={<Button variant="secondary" size="sm" />}>
           <Download />
           Export
           <ChevronDown />

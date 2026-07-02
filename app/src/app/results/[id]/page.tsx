@@ -21,10 +21,10 @@ import type { ResultField } from "@/types/models";
 import type { FeatureCollection } from "geojson";
 
 function buildFromFields(fields: ResultField[]) {
-  const visible = fields.filter(
-    (f) => f.displayMetadata?.excludeFromResults !== true && f.analysisMetadata?.excludeFromOutput !== true
+  const eligible = fields.filter(
+    (f) => f.analysisMetadata?.excludeFromOutput !== true
   );
-  const sorted = [...visible].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
+  const sorted = [...eligible].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
 
   const allColumns: ColumnDef[] = sorted.map((f) => ({
     key: f.id,
@@ -32,6 +32,7 @@ function buildFromFields(fields: ResultField[]) {
     type: f.type,
     category: f.category,
     commodityMetadata: f.commodityMetadata,
+    excludeFromResults: f.displayMetadata?.excludeFromResults === true,
   }));
 
   const categoryMap = new Map<string, string[]>();
@@ -43,7 +44,7 @@ function buildFromFields(fields: ResultField[]) {
   const columnGroups: ColumnGroup[] = [...categoryMap.entries()].map(([name, columns]) => ({ name, columns }));
 
   const defaultVisible = sorted
-    .filter((f) => f.displayMetadata?.visibleByDefault !== false)
+    .filter((f) => f.displayMetadata?.excludeFromResults !== true && f.displayMetadata?.visibleByDefault !== false)
     .map((f) => f.id);
 
   return { allColumns, columnGroups, defaultVisible };
@@ -204,7 +205,7 @@ export default function ResultsPage() {
 
   const handleExport = (format: string) => {
     if (!geoJsonData) return;
-    const cols = visibleCols.length ? visibleCols : allColumns.map((c) => c.key);
+    const cols = allColumns.map((c) => c.key);
     if (format === "csv") {
       const rows = tableData.map((row) => {
         const out: Record<string, unknown> = {};
@@ -320,8 +321,8 @@ export default function ResultsPage() {
             />
             <FieldPicker
               open={fieldPickerOpen}
-              columns={allColumns}
-              groups={columnGroups}
+              columns={allColumns.filter((c) => !c.excludeFromResults)}
+              groups={columnGroups.map((g) => ({ ...g, columns: g.columns.filter((c) => !allColumns.find((col) => col.key === c)?.excludeFromResults) }))}
               visible={visibleCols}
               defaultVisible={defaultVisibleCols}
               onChange={setVisibleCols}

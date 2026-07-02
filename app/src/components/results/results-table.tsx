@@ -22,6 +22,7 @@ export interface ColumnDef {
   hidden?: boolean;
   category?: string;
   commodityMetadata?: CommodityMetadataMap;
+  excludeFromResults?: boolean;
 }
 
 export interface ResultRow {
@@ -41,6 +42,7 @@ interface ResultsTableProps {
 
 const TRUNCATE_THRESHOLD = 30;
 const TRUNCATE_LIMIT = 20;
+const STICKY_KEY = "plotId";
 
 function isCoordinateColumn(key: string): boolean {
   const col = key.toLowerCase();
@@ -127,20 +129,35 @@ export function ResultsTable({
   onSort,
   className,
 }: ResultsTableProps) {
-  const visibleColumns = useMemo(() => columns.filter((c) => !c.hidden), [columns]);
-  const idKey = visibleColumns[0]?.key ?? "plotId";
-
+  const visibleColumns = useMemo(
+    () =>
+      columns.filter((c) => {
+        if (c.hidden) return false;
+        if (c.key === "external_id") {
+          const hasValue = data.some((row) => {
+            const v = row[c.key];
+            return v !== null && v !== undefined && String(v).trim() !== "";
+          });
+          if (!hasValue) return false;
+        }
+        return true;
+      }),
+    [columns, data]
+  );
+  const idKey = "plotId";
   return (
     <ScrollArea horizontal className={cn("min-h-0 flex-1", className)}>
-      <Table scrollable={false} className="w-max min-w-full border-collapse text-xs">
+      <Table scrollable={false} className="w-max min-w-full border-separate border-spacing-0 text-xs">
         <TableHeader>
-          <TableRow className="border-b-2 border-border bg-surface">
-            {visibleColumns.map((col) => (
+          <TableRow className="bg-surface">
+            {visibleColumns.map((col, cidx) => (
               <TableHead
                 key={col.key}
                 onClick={() => onSort?.(col.key)}
                 className={cn(
-                  "cursor-pointer border-r border-border px-[14px] py-2 text-left text-[10px] font-semibold uppercase tracking-[0.07em] text-text-muted transition-colors last:border-r-0 hover:text-text-primary select-none whitespace-nowrap"
+                  "cursor-pointer border-b border-border border-r border-border px-[14px] py-2 text-left text-[10px] font-semibold uppercase tracking-[0.07em] text-text-muted transition-colors last:border-r-0 hover:text-text-primary select-none whitespace-nowrap",
+                  "sticky top-0 z-20 bg-surface",
+                  col.key === STICKY_KEY && "left-0 z-30 bg-surface"
                 )}
               >
                 <span className="flex items-center gap-[3px]">
@@ -186,8 +203,10 @@ export function ResultsTable({
                   <TableCell
                     key={col.key}
                     className={cn(
-                      "px-[14px] py-[7px] whitespace-nowrap border-r border-white/[0.03] last:border-r-0",
-                      cidx === 0 && isSelected && "border-l-2 border-l-accent-green"
+                      "px-[14px] py-[7px] whitespace-nowrap border-b border-border border-r border-white/[0.03] last:border-r-0",
+                      col.key === STICKY_KEY && "sticky left-0 z-10 bg-surface",
+                      col.key === STICKY_KEY && isSelected && "bg-[rgba(125,192,13,0.06)]",
+                      col.key === idKey && isSelected && "border-l-2 border-l-accent-green"
                     )}
                   >
                     {renderCell(row[col.key], col.type, col.key)}
