@@ -290,8 +290,8 @@ export default function ResultsPage() {
         onOpenWhispMap={handleOpenWhispMap}
         whispMapDisabled={tableData.length === 0 || !config?.api.url}
       />
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ flex: mapVisible ? "0 0 56%" : "1 1 0%" }}>
+      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row lg:overflow-hidden">
+        <div className={`flex min-w-0 flex-col overflow-hidden ${mapVisible ? "flex-1 lg:flex-[0_0_56%]" : "flex-1"}`}>
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
             <ResultsSearchBar
               searchValue={search}
@@ -331,6 +331,7 @@ export default function ResultsPage() {
           </div>
         </div>
         <MapPane
+          key={mapVisible ? rowsPerPage : 0}
           visible={mapVisible}
           geoJsonData={geoJsonData}
           selectedFeatureIndex={selectedFeatureIndex}

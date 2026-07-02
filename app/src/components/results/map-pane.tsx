@@ -36,11 +36,10 @@ export function MapPane({
   return (
     <div
       className={cn(
-        "flex flex-col border-l border-border bg-[#0d1214]",
+        "flex flex-col border-t border-border bg-[#0d1214] h-[300px] lg:h-auto lg:border-l lg:border-t-0 lg:flex-[0_0_44%]",
         visible ? "flex" : "hidden",
         className
       )}
-      style={{ flex: "0 0 44%" }}
     >
       <div className="relative flex flex-1 overflow-hidden">
         {geoJsonData ? (
