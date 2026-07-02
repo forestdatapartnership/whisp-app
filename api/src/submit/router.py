@@ -119,12 +119,12 @@ async def submit_geojson(
 
     fc = v.to_feature_collection(fc_dict)
     opts = AnalysisOptions.parse(raw_options.model_dump(by_alias=True) if raw_options else None)
-    service.validate_feature_collection(fc, opts, settings)
+    input_metrics = service.validate_feature_collection(fc, opts, settings)
 
     ctx = _build_context(request, api_key)
 
     token = service.new_token()
-    result = await service.submit(token, fc, opts, ctx, settings)
+    result = await service.submit(token, fc, opts, ctx, settings, input_metrics=input_metrics)
     return api_response(result.code, data=result.data, context=result.context)
 
 
@@ -160,12 +160,12 @@ async def submit_wkt(
     opts = AnalysisOptions.parse(
         body.analysisOptions.model_dump(by_alias=True) if body.analysisOptions else None
     )
-    service.validate_feature_collection(fc, opts, settings)
+    input_metrics = service.validate_feature_collection(fc, opts, settings)
 
     ctx = _build_context(request, api_key)
 
     token = service.new_token()
-    result = await service.submit(token, fc, opts, ctx, settings)
+    result = await service.submit(token, fc, opts, ctx, settings, input_metrics=input_metrics)
     return api_response(result.code, data=result.data, context=result.context)
 
 
@@ -200,10 +200,10 @@ async def submit_geo_ids(
         )
 
     fc = {"type": "FeatureCollection", "features": [f for f in resolved if f is not None]}
-    service.validate_feature_collection(fc, opts, settings)
+    input_metrics = service.validate_feature_collection(fc, opts, settings)
 
     ctx = _build_context(request, api_key)
 
     token = service.new_token()
-    result = await service.submit(token, fc, opts, ctx, settings)
+    result = await service.submit(token, fc, opts, ctx, settings, input_metrics=input_metrics)
     return api_response(result.code, data=result.data, context=result.context)

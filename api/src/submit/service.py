@@ -1,3 +1,4 @@
+import logging
 import uuid
 from dataclasses import asdict
 
@@ -13,12 +14,16 @@ from src.submit.validators import get_common_property_names, validate_external_i
 from src.worker.celery_app import app as celery_app
 from src.worker.analysis_task import AnalysisTask
 
+logger = logging.getLogger(__name__)
+
 
 def new_token() -> str:
     return str(uuid.uuid4())
 
 
-def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Settings) -> int:
+def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Settings) -> dict:
+    import openforis_whisp as whisp
+
     features = fc.get("features") or []
     count = len(features)
     if count < 1:
@@ -33,7 +38,13 @@ def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Setti
             SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN,
             [opts.external_id_column, ", ".join(get_common_property_names(fc))],
         )
-    return count
+
+    try:
+        metrics = whisp.analyze_geojson(fc)
+    except Exception as e:
+        logger.warning("analyze_geojson failed, falling back to count-only metrics: %s", e)
+        metrics = {"count": count}
+    return metrics
 
 
 def _options_payload(opts: AnalysisOptions) -> dict:
@@ -97,9 +108,10 @@ async def _wait_for_completion(token: str, timeout: int, settings: Settings) -> 
 
 
 async def submit(
-    token: str, fc: dict, opts: AnalysisOptions, ctx: JobContext, settings: Settings
+    token: str, fc: dict, opts: AnalysisOptions, ctx: JobContext, settings: Settings,
+    input_metrics: dict | None = None,
 ) -> SubmitResult:
-    feature_count = len(fc.get("features") or [])
+    feature_count = (input_metrics or {}).get("count") or len(fc.get("features") or [])
     timeout = settings.analysis_timeout_seconds(async_mode=opts.async_mode)
     options_payload = _options_payload(opts)
 
@@ -118,6 +130,7 @@ async def submit(
         openforis_whisp_version=settings.openforis_whisp_version,
         earthengine_api_version=settings.earthengine_api_version,
         max_concurrent_analyses=ctx.max_concurrent_analyses,
+        input_metrics=input_metrics,
     )
 
     await publish(

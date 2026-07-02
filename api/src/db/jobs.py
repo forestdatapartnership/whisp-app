@@ -22,6 +22,7 @@ async def create_analysis_job(
     openforis_whisp_version: str | None = None,
     earthengine_api_version: str | None = None,
     max_concurrent_analyses: int | None = None,
+    input_metrics: dict | None = None,
 ) -> None:
     pool = await acquire_pool()
     async with pool.acquire() as conn:
@@ -42,8 +43,8 @@ async def create_analysis_job(
                 INSERT INTO analysis_jobs (
                     id, api_key_id, user_id, agent, ip_address, api_version, endpoint,
                     feature_count, analysis_options, timeout_seconds, status,
-                    openforis_whisp_version, earthengine_api_version, created_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13, now())
+                    openforis_whisp_version, earthengine_api_version, input_metrics, created_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13, $14::jsonb, now())
                 """,
                 job_id,
                 api_key_id,
@@ -58,6 +59,7 @@ async def create_analysis_job(
                 status.value,
                 openforis_whisp_version,
                 earthengine_api_version,
+                json.dumps(input_metrics) if input_metrics is not None else None,
             )
 
 
@@ -69,6 +71,7 @@ _FIELD_TO_COLUMN: dict[str, str] = {
     "openforis_whisp_version": "openforis_whisp_version",
     "earthengine_api_version": "earthengine_api_version",
     "feature_count": "feature_count",
+    "input_metrics": "input_metrics",
 }
 
 
