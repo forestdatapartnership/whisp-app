@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-proxy-config
+  namespace: whisp-development
+  labels:
+    app: grafana-proxy
+data:
+  nginx.conf: |
+    events {}
+    http {
+      server {
+        listen 80;
+        location / { return 200; }
+        location /monitoring {
+          proxy_pass http://grafana.monitoring.svc.cluster.local:3000;
+          proxy_set_header Host $host;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-proxy
+  namespace: whisp-development
+  labels:
+    app: grafana-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-proxy
+  template:
+    metadata:
+      labels:
+        app: grafana-proxy
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.27-alpine
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            memory: 32Mi
+        readinessProbe:
+          httpGet: { path: /, port: 80 }
+        livenessProbe:
+          httpGet: { path: /, port: 80 }
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: grafana-proxy-config
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: grafana-proxy-backend-config
+  namespace: whisp-development
+spec:
+  timeoutSec: 300
+  healthCheck:
+    type: HTTP
+    port: 80
+    requestPath: /
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-proxy
+  namespace: whisp-development
+  annotations:
+    cloud.google.com/backend-config: '{"default": "grafana-proxy-backend-config"}'
+spec:
+  selector:
+    app: grafana-proxy
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
