@@ -2,7 +2,6 @@ import logging
 import os
 
 from celery import Celery
-from celery.schedules import crontab
 from celery.signals import (
     setup_logging,
     task_failure,
@@ -43,16 +42,6 @@ app.conf.update(
         "health_check_interval": 30,
     },
     worker_cancel_long_running_tasks_on_connection_loss=True,
-    beat_schedule={
-        "release-stuck-jobs": {
-            "task": "src.worker.tasks.release_stuck_jobs",
-            "schedule": crontab(minute="*/5"),
-        },
-        "anonymize-pii": {
-            "task": "src.worker.tasks.anonymize_pii",
-            "schedule": crontab(minute=0, hour=0),
-        },
-    },
 )
 
 

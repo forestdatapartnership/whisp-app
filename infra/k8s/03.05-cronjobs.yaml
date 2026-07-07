@@ -1,0 +1,103 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: whisp-release-stuck-jobs
+  namespace: ${GKE_NAMESPACE}
+  labels:
+    app: whisp-release-stuck-jobs
+    env: ${ENVIRONMENT}
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: whisp-app-ksa
+          restartPolicy: OnFailure
+          containers:
+          - name: whisp-release-stuck-jobs
+            image: postgres:16-slim
+            command:
+            - sh
+            - -c
+            - |
+              set -a; . /app/.env.local; set +a
+              export PGPASSWORD="$DB_PASSWORD"
+              psql -h cloud-sql-proxy -p 5432 -U "$DB_USER" -d "$DB_NAME" \
+                -c "SELECT release_stuck_analysis_jobs();"
+            env:
+            - name: DEPLOYED_AT
+              value: "${DEPLOYED_AT}"
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 128Mi
+            volumeMounts:
+            - name: gcp-secrets-inline
+              mountPath: /app/.env.local
+              subPath: .env.local
+              readOnly: true
+          volumes:
+          - name: gcp-secrets-inline
+            csi:
+              driver: secrets-store-gke.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "whisp-secrets-provider"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: whisp-anonymize-pii
+  namespace: ${GKE_NAMESPACE}
+  labels:
+    app: whisp-anonymize-pii
+    env: ${ENVIRONMENT}
+spec:
+  schedule: "0 0 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: whisp-app-ksa
+          restartPolicy: OnFailure
+          containers:
+          - name: whisp-anonymize-pii
+            image: postgres:16-slim
+            command:
+            - sh
+            - -c
+            - |
+              set -a; . /app/.env.local; set +a
+              export PGPASSWORD="$DB_PASSWORD"
+              psql -h cloud-sql-proxy -p 5432 -U "$DB_USER" -d "$DB_NAME" \
+                -c "SELECT target, rows_affected FROM anonymize_expired_pii(${PII_RETENTION_DAYS:-90});"
+            env:
+            - name: DEPLOYED_AT
+              value: "${DEPLOYED_AT}"
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 128Mi
+            volumeMounts:
+            - name: gcp-secrets-inline
+              mountPath: /app/.env.local
+              subPath: .env.local
+              readOnly: true
+          volumes:
+          - name: gcp-secrets-inline
+            csi:
+              driver: secrets-store-gke.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "whisp-secrets-provider"
