@@ -36,7 +36,7 @@ export function FileDropZone({
       onDrop={(e) => { e.preventDefault(); setIsDrag(false); const f = e.dataTransfer.files[0]; if (f) onFile(f) }}
       className={cn(
         `border-[1.5px] border-dashed ${controlRounded} flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors`,
-        compact ? 'flex-1 p-5' : 'p-8',
+        compact ? 'flex-1 p-5' : 'p-8 h-40',
         fileName
           ? 'border-accent-green-dim bg-accent-green/[0.06]'
           : isDrag
