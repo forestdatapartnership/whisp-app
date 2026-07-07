@@ -19,7 +19,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: whisp-release-stuck-jobs
-            image: postgres:16-slim
+            image: postgres:17-alpine
             command:
             - sh
             - -c
@@ -71,7 +71,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: whisp-anonymize-pii
-            image: postgres:16-slim
+            image: postgres:17-alpine
             command:
             - sh
             - -c
