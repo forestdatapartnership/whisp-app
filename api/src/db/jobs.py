@@ -113,5 +113,19 @@ async def get_job(job_id: str) -> dict | None:
     return dict(row)
 
 
+async def release_stuck_analysis_jobs() -> int:
+    pool = await acquire_pool()
+    return await pool.fetchval("SELECT release_stuck_analysis_jobs()")
+
+
+async def anonymize_expired_pii(retention_days: int = 90) -> list[dict]:
+    pool = await acquire_pool()
+    rows = await pool.fetch(
+        "SELECT target, rows_affected FROM anonymize_expired_pii($1)",
+        retention_days,
+    )
+    return [dict(r) for r in rows]
+
+
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)

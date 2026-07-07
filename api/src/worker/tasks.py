@@ -12,6 +12,7 @@ from src.app_logging import resolve_level
 from src.redis import publish_sync
 from src.job_progress import JobProgress
 from src.io import files
+from src.db.pool import run_sync
 from src.submit.schemas import AnalysisOptions, AnalysisTaskContext
 from src.worker.celery_app import app
 from src.worker.analysis_task import AnalysisTask
@@ -111,3 +112,19 @@ def run_analysis(self: AnalysisTask, context: dict, opts_dict: dict) -> None:
     ctx = AnalysisTaskContext.parse(context)
     opts = AnalysisOptions(**opts_dict)
     _run_whisp_blocking(ctx.token, opts)
+
+
+@app.task(name="src.worker.tasks.release_stuck_jobs")
+def release_stuck_jobs() -> None:
+    from src.db import jobs as db_jobs
+    released = run_sync(db_jobs.release_stuck_analysis_jobs)
+    if released:
+        logger.info("released %d stuck analysis jobs", released)
+
+
+@app.task(name="src.worker.tasks.anonymize_pii")
+def anonymize_pii() -> None:
+    from src.db import jobs as db_jobs
+    results = run_sync(db_jobs.anonymize_expired_pii)
+    for r in results:
+        logger.info("anonymized %s: %d rows affected", r["target"], r["rows_affected"])
