@@ -37,7 +37,7 @@ class SystemCode(str, Enum):
     ANALYSIS_COMPLETED = ("analysis_completed", 200, "Analysis completed successfully")
     ANALYSIS_ERROR = ("analysis_error", 500, "Analysis service encountered an error. Please try again.")
     ANALYSIS_TIMEOUT = ("analysis_timeout", 408, "Analysis timed out after {0} seconds. Please try with a smaller dataset or contact support.")
-    ANALYSIS_CANCELLED = ("analysis_cancelled", 400, "Analysis cancelled.")
+    ANALYSIS_CANCELLED = ("analysis_cancelled", 200, "Analysis cancelled.")
     ANALYSIS_JOB_NOT_FOUND = ("analysis_job_not_found", 404, "Analysis job not found.")
     ANALYSIS_TOO_MANY_CONCURRENT = ("analysis_too_many_concurrent", 429, "Too many concurrent analyses. Please wait for existing analyses to finish.")
 
