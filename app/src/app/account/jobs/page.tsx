@@ -37,6 +37,7 @@ const STATUS_LABEL: Record<string, string> = {
   [SystemCode.ANALYSIS_COMPLETED]: "Completed",
   [SystemCode.ANALYSIS_ERROR]: "Error",
   [SystemCode.ANALYSIS_TIMEOUT]: "Timeout",
+  [SystemCode.ANALYSIS_CANCELLED]: "Cancelled",
 };
 
 const FILTER_OPTIONS = [
@@ -44,6 +45,7 @@ const FILTER_OPTIONS = [
   { key: SystemCode.ANALYSIS_COMPLETED, label: "Completed" },
   { key: SystemCode.ANALYSIS_ERROR, label: "Error" },
   { key: SystemCode.ANALYSIS_TIMEOUT, label: "Timeout" },
+  { key: SystemCode.ANALYSIS_CANCELLED, label: "Cancelled" },
   { key: SystemCode.ANALYSIS_QUEUED, label: "Queued" },
   { key: SystemCode.ANALYSIS_PROCESSING, label: "Processing" },
 ] as const;
@@ -54,6 +56,7 @@ const BADGE_CLASS: Record<string, string> = {
   [SystemCode.ANALYSIS_ERROR]: "bg-[#e05a5a]/12 text-[#e05a5a] [&_.badge-dot]:bg-[#e05a5a]",
   [SystemCode.ANALYSIS_QUEUED]: "bg-violet-500/12 text-violet-400 [&_.badge-dot]:bg-violet-400",
   [SystemCode.ANALYSIS_PROCESSING]: "bg-[#5ea4e4]/12 text-[#5ea4e4] [&_.badge-dot]:bg-[#5ea4e4]",
+  [SystemCode.ANALYSIS_CANCELLED]: "bg-text-muted/12 text-text-muted [&_.badge-dot]:bg-text-muted",
 };
 
 function StatusBadge({ status }: { status?: string }) {
@@ -133,7 +136,7 @@ function JobRowActions({ job, onShowError }: { job: AnalysisJob; onShowError: (j
       </span>
     );
   }
-  return null;
+  return <span className="inline-block size-6 shrink-0" aria-hidden="true" />;
 }
 
 function JobErrorModal({

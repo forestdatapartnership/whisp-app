@@ -12,7 +12,7 @@ export interface JobStatus {
   final?: boolean
 }
 
-const TERMINAL = new Set(['analysis_completed', 'analysis_error', 'analysis_timeout'])
+const TERMINAL = new Set(['analysis_completed', 'analysis_error', 'analysis_timeout', 'analysis_cancelled'])
 
 export function useJobStatus({
   token,

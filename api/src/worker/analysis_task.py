@@ -1,7 +1,7 @@
 import logging
 
 from celery import Task
-from celery.exceptions import TimeLimitExceeded
+from celery.exceptions import Ignore, TimeLimitExceeded
 from celery.states import SUCCESS
 from celery.worker.request import Request
 
@@ -68,6 +68,8 @@ class AnalysisTask(Task):
         ctx = self._task_context(args, kwargs)
         if ctx is None:
             return
+        if self._already_terminal(ctx.token):
+            raise Ignore()
         logger.info("starting analysis...")
         run_sync(
             db_jobs.update_analysis_job,

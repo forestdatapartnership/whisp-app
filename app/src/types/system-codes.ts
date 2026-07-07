@@ -23,6 +23,7 @@ export enum SystemCode {
   ANALYSIS_COMPLETED = 'analysis_completed',
   ANALYSIS_ERROR = 'analysis_error',
   ANALYSIS_TIMEOUT = 'analysis_timeout',
+  ANALYSIS_CANCELLED = 'analysis_cancelled',
 
   RESULT_FIELDS_DUPLICATE_CODE = 'result_fields_duplicate_code',
   COMMODITIES_DUPLICATE_CODE = 'commodities_duplicate_code',
@@ -53,6 +54,7 @@ export const SYSTEM_MESSAGES: Record<SystemCode, string> = {
   [SystemCode.ANALYSIS_COMPLETED]: 'Analysis completed successfully',
   [SystemCode.ANALYSIS_ERROR]: 'Analysis service encountered an error. Please try again.',
   [SystemCode.ANALYSIS_TIMEOUT]: 'Analysis timed out after {0} seconds. Please try with a smaller dataset or contact support.',
+  [SystemCode.ANALYSIS_CANCELLED]: 'Analysis cancelled.',
 
   [SystemCode.RESULT_FIELDS_DUPLICATE_CODE]: 'A field with this name already exists',
   [SystemCode.COMMODITIES_DUPLICATE_CODE]: 'A commodity with this code already exists',

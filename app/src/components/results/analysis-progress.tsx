@@ -1,22 +1,29 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { controlRounded } from "@/components/ui/styles";
 import { Card } from "@/components/ui/card";
 import { CenteredShell } from "@/components/layout/page-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/icons";
+import { Button } from "@/components/ui/button";
 
 export function AnalysisProgress({
+  token,
   featureCount,
   percent,
   messages,
+  onCancelled,
 }: {
+  token: string;
   featureCount?: number;
   percent?: number;
   messages?: string[];
+  onCancelled?: () => void;
 }) {
+  const [cancelling, setCancelling] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const latestIndex = (messages?.length ?? 0) - 1;
 
@@ -79,6 +86,25 @@ export function AnalysisProgress({
             </ScrollArea>
           </div>
         )}
+
+        <Button
+          variant="destructive"
+          size="sm"
+          className="self-center"
+          disabled={cancelling}
+          onClick={async () => {
+            setCancelling(true);
+            try {
+              await fetch(`/internal/status/${token}/cancel`, { method: 'POST' });
+              onCancelled?.();
+            } catch {
+              setCancelling(false);
+            }
+          }}
+        >
+          <XCircle className="size-3.5" />
+          {cancelling ? 'Cancelling…' : 'Cancel analysis'}
+        </Button>
       </Card>
     </CenteredShell>
   );

@@ -247,9 +247,11 @@ export default function ResultsPage() {
     const processStatusMessages = response?.data?.processStatusMessages as string[] | undefined;
     return (
       <AnalysisProgress
+        token={id}
         featureCount={featureCount}
         percent={percent}
         messages={processStatusMessages}
+        onCancelled={() => router.push('/')}
       />
     );
   }
