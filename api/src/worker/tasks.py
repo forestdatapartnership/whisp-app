@@ -68,6 +68,8 @@ def _run_whisp_blocking(token: str, opts: AnalysisOptions, feature_count: int | 
         df_kwargs["external_id_column"] = opts.external_id_column
     if opts.unit_type:
         df_kwargs["unit_type"] = opts.unit_type
+    if opts.geometry_audit_trail:
+        df_kwargs["geometry_audit_trail"] = True
 
     state = get_sync(token) or {}
     messages = [*(state.get("messages") or []), timestamped("Starting analysis")]

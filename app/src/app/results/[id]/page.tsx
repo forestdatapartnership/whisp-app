@@ -223,6 +223,32 @@ export default function ResultsPage() {
     downloadGeoJson(filtered, timestampFilename("geojson"));
   }, [geoJsonData, allColumns]);
 
+  const handleExportSelectedCsv = useCallback(() => {
+    if (!geoJsonData) return;
+    const cols = visibleCols.length > 0 ? visibleCols : allColumns.map((c) => c.key);
+    const rows = tableData.map((row) => {
+      const out: Record<string, unknown> = {};
+      for (const c of cols) out[c] = row[c];
+      return out;
+    });
+    downloadCsv(cols, rows, timestampFilename("csv", "selected"));
+  }, [geoJsonData, visibleCols, allColumns, tableData]);
+
+  const handleExportSelectedGeoJson = useCallback(() => {
+    if (!geoJsonData) return;
+    const cols = visibleCols.length > 0 ? visibleCols : allColumns.map((c) => c.key);
+    const filtered: FeatureCollection = {
+      type: "FeatureCollection",
+      features: geoJsonData.features.map((f) => ({
+        ...f,
+        properties: Object.fromEntries(
+          cols.map((c) => [c, f.properties?.[c]]).filter(([, v]) => v !== undefined)
+        ),
+      })),
+    };
+    downloadGeoJson(filtered, timestampFilename("geojson", "selected"));
+  }, [geoJsonData, visibleCols, allColumns]);
+
   const selectedFeatureIndex = useMemo(() => {
     if (!selectedRow || !geoJsonData) return undefined;
     return geoJsonData.features.findIndex((f) => f.properties?.plotId === selectedRow.plotId);
@@ -309,6 +335,8 @@ export default function ResultsPage() {
               onOpenFieldPicker={() => setFieldPickerOpen(true)}
               onExportCSV={handleExportCsv}
               onExportGeoJSON={handleExportGeoJson}
+              onExportSelectedCSV={handleExportSelectedCsv}
+              onExportSelectedGeoJSON={handleExportSelectedGeoJson}
             />
             <ResultsTable
               columns={allColumns}

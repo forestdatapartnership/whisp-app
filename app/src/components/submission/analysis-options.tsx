@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { SlidersHorizontal, ChevronDown } from 'lucide-react'
+import { SlidersHorizontal, ChevronDown, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { controlRounded } from '@/components/ui/styles'
 import {
@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { MultiSelect } from '@/components/ui/multi-select'
+import { Switch } from '@/components/ui/switch'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 export type UnitType = 'ha' | 'percent'
 
@@ -27,6 +29,7 @@ export interface AnalysisOptionsValue {
   nationalCodes: string[]
   unitType: UnitType
   async: boolean
+  geometryAuditTrail: boolean
 }
 
 export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptionsValue = {
@@ -34,6 +37,7 @@ export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptionsValue = {
   nationalCodes: ['cm', 'co', 'ci', 'br'],
   unitType: 'ha',
   async: true,
+  geometryAuditTrail: false,
 }
 
 const COUNTRIES = [
@@ -104,6 +108,31 @@ export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisO
                   onChange={(e) => onChange({ ...value, externalIdColumn: e.target.value })}
                   disabled={disabled}
                 />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Label>Geometry Audit Trail</Label>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={(props) => (
+                        <button type="button" {...props} className="text-text-muted hover:text-text-primary transition-colors">
+                          <Info className="size-3.5" />
+                        </button>
+                      )}
+                    />
+                    <TooltipContent className="max-w-xs text-left leading-relaxed">
+                      Geospatial data may be modified slightly during the analysis in Google Earth Engine, especially notable for very small polygons. We return the modified output for transparency in what was analysed, but if you require your input data to be returned you can select this option and it will add an extra column called &lsquo;geo_original&rsquo;.
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex items-center h-9">
+                  <Switch
+                    checked={value.geometryAuditTrail}
+                    onCheckedChange={(checked) => onChange({ ...value, geometryAuditTrail: !!checked })}
+                    disabled={disabled}
+                  />
+                </div>
               </div>
             </div>
           </div>

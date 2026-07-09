@@ -19,6 +19,8 @@ interface ResultsSearchBarProps {
   onOpenFieldPicker: () => void;
   onExportCSV?: () => void;
   onExportGeoJSON?: () => void;
+  onExportSelectedCSV?: () => void;
+  onExportSelectedGeoJSON?: () => void;
   className?: string;
 }
 
@@ -29,6 +31,8 @@ export function ResultsSearchBar({
   onOpenFieldPicker,
   onExportCSV,
   onExportGeoJSON,
+  onExportSelectedCSV,
+  onExportSelectedGeoJSON,
   className,
 }: ResultsSearchBarProps) {
   const [open, setOpen] = useState(false);
@@ -74,12 +78,12 @@ export function ResultsSearchBar({
         Select fields
       </Button>
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger render={<Button variant="secondary" size="sm" />}>
+        <DropdownMenuTrigger render={<Button variant="secondary" size="sm" className="min-w-[90px]" />}>
           <Download />
           Export
           <ChevronDown />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-[140px] bg-surface border-border">
+        <DropdownMenuContent align="end" className="min-w-[200px] bg-surface border-border">
           <DropdownMenuItem
             onClick={() => {
               onExportCSV?.();
@@ -99,6 +103,27 @@ export function ResultsSearchBar({
           >
             <FileText className="h-3 w-3" />
             GeoJSON
+          </DropdownMenuItem>
+          <div className="h-px bg-border my-1" />
+          <DropdownMenuItem
+            onClick={() => {
+              onExportSelectedCSV?.();
+              setOpen(false);
+            }}
+            className="text-xs text-text-muted gap-2 cursor-pointer focus:bg-surface-raised focus:text-text-primary"
+          >
+            <FileText className="h-3 w-3" />
+            CSV (selected fields)
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              onExportSelectedGeoJSON?.();
+              setOpen(false);
+            }}
+            className="text-xs text-text-muted gap-2 cursor-pointer focus:bg-surface-raised focus:text-text-primary"
+          >
+            <FileText className="h-3 w-3" />
+            GeoJSON (selected fields)
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

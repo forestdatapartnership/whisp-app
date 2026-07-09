@@ -14,6 +14,7 @@ class AnalysisOptionsInput(BaseModel):
     unitType: str | None = None
     nationalCodes: list[str] | None = None
     async_: bool = Field(False, alias="async")
+    geometryAuditTrail: bool = False
 
     model_config = ConfigDict(populate_by_name=True)
 

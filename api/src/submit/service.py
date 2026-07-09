@@ -57,6 +57,8 @@ def _options_payload(opts: AnalysisOptions) -> dict:
         payload["nationalCodes"] = opts.national_codes
     if opts.async_mode:
         payload["async"] = True
+    if opts.geometry_audit_trail:
+        payload["geometryAuditTrail"] = True
     return payload
 
 
