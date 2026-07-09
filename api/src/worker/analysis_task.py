@@ -5,6 +5,7 @@ from celery.exceptions import Ignore, TimeLimitExceeded
 from celery.states import SUCCESS
 from celery.worker.request import Request
 
+from src.app_logging import bind
 from src.codes import SystemCode
 from src.db import jobs as db_jobs
 from src.db.pool import run_sync
@@ -20,6 +21,12 @@ class AnalysisRequest(Request):
     def on_timeout(self, soft, timeout):
         ctx = AnalysisTask._task_context(self.args, self.kwargs)
         if ctx is not None and not self.task._already_terminal(ctx.token):
+            bind(
+                token=ctx.token,
+                user_id=ctx.user_id,
+                api_key_id=ctx.api_key_id,
+                input_metrics=ctx.input_metrics,
+            )
             error_message = SystemCode.ANALYSIS_TIMEOUT.format(ctx.timeout)
             self.task._persist_terminal(
                 ctx.token, SystemCode.ANALYSIS_TIMEOUT, error_message=error_message,

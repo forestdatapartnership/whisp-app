@@ -26,6 +26,7 @@ class AnalysisOptions:
         nc = d.get('nationalCodes')
         self.national_codes = [str(c).lower() for c in nc] if isinstance(nc, list) and nc else None
         self.async_mode = d.get('async', False)
+        self.geometry_audit_trail = d.get('geometryAuditTrail', False)
 
 def atomic_write(filename, write_handler):
     temp_filename = filename + '.tmp'
@@ -75,6 +76,7 @@ def main(file_path, legacy_mode=False):
     if opts.national_codes: df_kwargs['national_codes'] = opts.national_codes
     if opts.external_id_column: df_kwargs['external_id_column'] = opts.external_id_column
     if opts.unit_type: df_kwargs['unit_type'] = opts.unit_type
+    if opts.geometry_audit_trail: df_kwargs['geometry_audit_trail'] = True
     
     if opts.async_mode:
         df_kwargs['mode'] = 'concurrent'

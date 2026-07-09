@@ -30,7 +30,7 @@ class AnalysisTaskContext:
     timeout: int
     user_id: int | None = None
     api_key_id: int | None = None
-    feature_count: int | None = None
+    input_metrics: dict | None = None
 
     @classmethod
     def parse(cls, raw: dict) -> "AnalysisTaskContext":
@@ -39,8 +39,14 @@ class AnalysisTaskContext:
             timeout=int(raw["timeout"]),
             user_id=raw.get("user_id"),
             api_key_id=raw.get("api_key_id"),
-            feature_count=raw.get("feature_count"),
+            input_metrics=raw.get("input_metrics"),
         )
+
+    @property
+    def feature_count(self) -> int | None:
+        if self.input_metrics and isinstance(self.input_metrics.get("count"), int):
+            return self.input_metrics["count"]
+        return None
 
     @classmethod
     def from_task_message(
