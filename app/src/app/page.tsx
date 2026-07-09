@@ -2,11 +2,12 @@ import { InfoToast } from "@/components/ui/info-toast";
 import { Link } from "@/components/ui/link";
 import { DataSubmission } from "@/components/submission/data-submission";
 import { CenteredShell } from "@/components/layout/page-section";
+import { cardLayout } from "@/components/ui/styles";
 
 export default function Home() {
   return (
     <CenteredShell>
-      <div className="w-full max-w-[680px] flex flex-col gap-6">
+      <div className={`${cardLayout.lg} flex flex-col gap-6`}>
         <div className="text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
             What is in that plot?

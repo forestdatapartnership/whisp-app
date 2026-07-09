@@ -6,6 +6,7 @@ import { useConfig } from '@/lib/config/config-context';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cardLayout } from '@/components/ui/styles';
 import { Spinner } from '@/components/ui/icons';
 
 const INIT_TIMEOUT_MS = 15000;
@@ -87,7 +88,7 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
   if (!hasInitialized && hasError) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-[400px]">
+        <Card className={cardLayout.sm}>
           <CardHeader>
             <CardTitle>Something went wrong</CardTitle>
             <CardDescription>We couldn&apos;t load the application.</CardDescription>

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Alert } from "@/components/ui/alert";
 import { CenteredShell } from "@/components/layout/page-section";
+import { cardLayout } from "@/components/ui/styles";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -35,7 +36,7 @@ function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-[400px]">
+    <Card className={cardLayout.sm}>
       <CardHeader>
         <CardTitle>Welcome back</CardTitle>
         <CardDescription>Sign in to access your API key and run history.</CardDescription>

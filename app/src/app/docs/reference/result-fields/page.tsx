@@ -21,7 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Alert } from "@/components/ui/alert";
 import { CrudDataTable } from "@/components/crud/data-table";
-import { controlRounded } from "@/components/ui/styles";
+import { controlRounded, cardLayout } from "@/components/ui/styles";
 import { formatSystemMessage } from "@/types/system-codes";
 import type { ResultField, Commodity, CommodityMetadata } from "@/types/models";
 
@@ -170,7 +170,7 @@ function ResultFieldsPage() {
 
       {mode !== "list" ? (
         <div className="flex flex-1 items-start justify-center overflow-auto p-8">
-        <Card className="w-full max-w-[960px]">
+        <Card className={cardLayout.xl}>
           <CardHeader>
             <CardTitle>
               {mode === "create" ? "New Result Field" : readonly ? `Result Field: ${editingId}` : `Edit ${editingId}`}

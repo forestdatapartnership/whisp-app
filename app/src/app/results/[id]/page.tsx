@@ -16,6 +16,7 @@ import { useJobStatus } from "@/lib/submission/useJobStatus";
 import { readSyncResult } from "@/lib/submission/sync-result";
 import { downloadCsv, downloadGeoJson, timestampFilename } from "@/lib/utils/export";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/icons";
 import { getResultFields } from "@/app/docs/reference/result-fields/actions";
 import type { ResultField } from "@/types/models";
 import type { FeatureCollection } from "geojson";
@@ -127,15 +128,8 @@ export default function ResultsPage() {
   const { response, isLoading, error } = useJobStatus({ token: id, onCompleted: handleCompleted });
 
   const code = response?.code;
-  const isProcessing = isLoading || code === 'analysis_processing' || code === 'analysis_queued';
+  const isProcessing = code === 'analysis_processing' || code === 'analysis_queued';
   const isError = !!error || (code && code !== 'analysis_completed' && code !== 'analysis_processing' && code !== 'analysis_queued');
-
-  const columns = useMemo(() => {
-    return allColumns.map((c) => ({
-      ...c,
-      hidden: !visibleCols.includes(c.key),
-    }));
-  }, [allColumns, visibleCols]);
 
   const filteredData = useMemo(() => {
     if (!search.trim()) return tableData;
@@ -203,29 +197,31 @@ export default function ResultsPage() {
     );
   }, [id, tableData.length, config?.api.url]);
 
-  const handleExport = (format: string) => {
+  const handleExportCsv = useCallback(() => {
     if (!geoJsonData) return;
     const cols = allColumns.map((c) => c.key);
-    if (format === "csv") {
-      const rows = tableData.map((row) => {
-        const out: Record<string, unknown> = {};
-        for (const c of cols) out[c] = row[c];
-        return out;
-      });
-      downloadCsv(cols, rows, timestampFilename("csv"));
-    } else if (format === "geojson") {
-      const filtered: FeatureCollection = {
-        type: "FeatureCollection",
-        features: geoJsonData.features.map((f) => ({
-          ...f,
-          properties: Object.fromEntries(
-            cols.map((c) => [c, f.properties?.[c]]).filter(([, v]) => v !== undefined)
-          ),
-        })),
-      };
-      downloadGeoJson(filtered, timestampFilename("geojson"));
-    }
-  };
+    const rows = tableData.map((row) => {
+      const out: Record<string, unknown> = {};
+      for (const c of cols) out[c] = row[c];
+      return out;
+    });
+    downloadCsv(cols, rows, timestampFilename("csv"));
+  }, [geoJsonData, allColumns, tableData]);
+
+  const handleExportGeoJson = useCallback(() => {
+    if (!geoJsonData) return;
+    const cols = allColumns.map((c) => c.key);
+    const filtered: FeatureCollection = {
+      type: "FeatureCollection",
+      features: geoJsonData.features.map((f) => ({
+        ...f,
+        properties: Object.fromEntries(
+          cols.map((c) => [c, f.properties?.[c]]).filter(([, v]) => v !== undefined)
+        ),
+      })),
+    };
+    downloadGeoJson(filtered, timestampFilename("geojson"));
+  }, [geoJsonData, allColumns]);
 
   const selectedFeatureIndex = useMemo(() => {
     if (!selectedRow || !geoJsonData) return undefined;
@@ -241,16 +237,27 @@ export default function ResultsPage() {
     [geoJsonData, filteredData]
   );
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <Spinner className="size-10 text-accent-green" />
+      </div>
+    );
+  }
+
   if (isProcessing) {
     const featureCount = response?.data?.featureCount as number | undefined;
     const percent = response?.data?.percent as number | undefined;
-    const processStatusMessages = response?.data?.processStatusMessages as string[] | undefined;
+    const messages = response?.data?.processStatusMessages as string[] | undefined;
+    const asyncMode = response?.data?.asyncMode as boolean | undefined;
     return (
       <AnalysisProgress
         token={id}
+        code={code}
         featureCount={featureCount}
         percent={percent}
-        messages={processStatusMessages}
+        messages={messages}
+        asyncMode={asyncMode}
         onCancelled={() => router.push('/')}
       />
     );
@@ -300,12 +307,12 @@ export default function ResultsPage() {
               onSearchChange={handleSearchChange}
               fieldPickerOpen={fieldPickerOpen}
               onOpenFieldPicker={() => setFieldPickerOpen(true)}
-              onExportCSV={() => handleExport("csv")}
-              onExportGeoJSON={() => handleExport("geojson")}
-              onExportExcel={() => handleExport("xlsx")}
+              onExportCSV={handleExportCsv}
+              onExportGeoJSON={handleExportGeoJson}
             />
             <ResultsTable
-              columns={columns}
+              columns={allColumns}
+              visibleCols={visibleCols}
               data={pageData}
               selectedRowId={selectedRow ? String(selectedRow.plotId) : null}
               onSelectRow={setSelectedRow}

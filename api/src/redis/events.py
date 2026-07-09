@@ -54,6 +54,15 @@ def publish_sync(job_id: str, data: dict[str, Any]) -> None:
         logger.exception("redis publish failed for job %s", job_id)
 
 
+def get_sync(job_id: str) -> dict[str, Any] | None:
+    try:
+        raw = _sync_redis().get(_state_key(job_id))
+        return _parse(raw) if raw is not None else None
+    except Exception:
+        logger.exception("redis get failed for job %s", job_id)
+        return None
+
+
 async def init_redis() -> None:
     global _async_redis
     if _async_redis is not None:

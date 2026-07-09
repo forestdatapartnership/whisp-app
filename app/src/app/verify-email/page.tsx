@@ -6,6 +6,7 @@ import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { verifyEmail } from "@/lib/auth/actions";
 import { formatSystemMessage } from "@/types/system-codes";
 import { CenteredShell } from "@/components/layout/page-section";
+import { cardLayout } from "@/components/ui/styles";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
@@ -34,7 +35,7 @@ function VerifyContent() {
   }, [params]);
 
   return (
-    <Card className="w-full max-w-[400px]">
+    <Card className={cardLayout.sm}>
       <CardHeader>
         <CardTitle>Email verification</CardTitle>
         <CardDescription>

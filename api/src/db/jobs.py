@@ -6,6 +6,15 @@ from src.codes import RUNNING_STATUSES, SystemCode
 from src.db.pool import acquire_pool
 from src.exceptions import AppError
 
+
+def _queued_condition(is_async: bool) -> str:
+    return (
+        "analysis_options->>'async' = 'true'"
+        if is_async
+        else "(analysis_options IS NULL OR analysis_options->>'async' IS DISTINCT FROM 'true')"
+    )
+
+
 async def create_analysis_job(
     *,
     job_id: str,
@@ -19,11 +28,12 @@ async def create_analysis_job(
     analysis_options: dict | None,
     timeout_seconds: int | None = None,
     status: SystemCode,
+    is_async: bool = False,
     openforis_whisp_version: str | None = None,
     earthengine_api_version: str | None = None,
     max_concurrent_analyses: int | None = None,
     input_metrics: dict | None = None,
-) -> None:
+) -> int:
     pool = await acquire_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
@@ -62,6 +72,13 @@ async def create_analysis_job(
                 json.dumps(input_metrics) if input_metrics is not None else None,
             )
 
+            row = await conn.fetchrow(
+                f"SELECT COUNT(*)::int AS pos FROM analysis_jobs "
+                f"WHERE status = $1 AND {_queued_condition(is_async)}",
+                SystemCode.ANALYSIS_QUEUED.value,
+            )
+            return row["pos"] if row else 1
+
 
 _FIELD_TO_COLUMN: dict[str, str] = {
     "status": "status",
@@ -99,6 +116,16 @@ async def update_analysis_job(job_id: str, **updates: Any) -> None:
         job_id,
         *values,
     )
+
+
+async def list_queued_jobs(is_async: bool) -> list[dict]:
+    pool = await acquire_pool()
+    rows = await pool.fetch(
+        f"SELECT id, feature_count FROM analysis_jobs "
+        f"WHERE status = $1 AND {_queued_condition(is_async)} ORDER BY created_at ASC",
+        SystemCode.ANALYSIS_QUEUED.value,
+    )
+    return [dict(r) for r in rows]
 
 
 async def get_job(job_id: str) -> dict | None:

@@ -8,8 +8,8 @@ from celery.worker.request import Request
 from src.codes import SystemCode
 from src.db import jobs as db_jobs
 from src.db.pool import run_sync
-from src.redis import publish_sync
-from src.job_progress import JobProgress
+from src.redis import get_sync, publish_sync
+from src.job_progress import JobProgress, timestamped
 from src.submit.schemas import AnalysisTaskContext
 
 logger = logging.getLogger(__name__)
@@ -77,6 +77,20 @@ class AnalysisTask(Task):
             status=SystemCode.ANALYSIS_PROCESSING,
             started_at=db_jobs.utc_now(),
         )
+
+        opts_dict = args[1] if len(args) > 1 and isinstance(args[1], dict) else {}
+        is_async = bool(opts_dict.get("async_mode"))
+        for position, job in enumerate(run_sync(db_jobs.list_queued_jobs, is_async), start=1):
+            state = get_sync(job["id"]) or {}
+            publish_sync(
+                job["id"],
+                JobProgress.of(
+                    SystemCode.ANALYSIS_QUEUED,
+                    feature_count=job.get("feature_count"),
+                    async_mode=is_async,
+                    messages=[*(state.get("messages") or []), timestamped(f"Position {position} in queue")],
+                ).to_redis(),
+            )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         ctx = self._task_context(args, kwargs)

@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { cardLayout } from '@/components/ui/styles';
 
 export function PageSection({
   title,
@@ -42,7 +43,7 @@ export function ContentShell({
       {...props}
       className={cn(
         'flex min-h-0 w-full flex-1 flex-col',
-        wide ? 'max-w-none' : 'mx-auto max-w-[680px]',
+        wide ? 'max-w-none' : `mx-auto ${cardLayout.lg}`,
         className
       )}
     >

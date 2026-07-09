@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
 import { Alert } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cardLayout } from "@/components/ui/styles";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -63,7 +64,7 @@ export default function RegisterPage() {
   if (success) {
     return (
       <CenteredShell>
-        <Card className="w-full max-w-[400px]">
+        <Card className={cardLayout.sm}>
           <CardHeader>
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
@@ -82,7 +83,7 @@ export default function RegisterPage() {
 
   return (
     <CenteredShell>
-      <Card className="w-full max-w-[400px]">
+      <Card className={cardLayout.sm}>
         <CardHeader>
           <CardTitle>Create your account</CardTitle>
           <CardDescription>Free access to forest risk assessments via the Whisp API.</CardDescription>

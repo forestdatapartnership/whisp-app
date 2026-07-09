@@ -61,6 +61,8 @@ def progress_api_data(job: JobProgress, *, token: str | None = None) -> dict:
         data["featureCount"] = job.feature_count
     if job.percent is not None:
         data["percent"] = job.percent
+    if job.async_mode is not None:
+        data["asyncMode"] = job.async_mode
     if job.messages:
         data["processStatusMessages"] = job.messages
     return data
@@ -90,5 +92,4 @@ def terminal_sse(token: str, job: JobProgress, settings: Settings | None) -> byt
 
 
 def progress_sse(job: JobProgress, *, token: str | None = None) -> bytes:
-    code = job.status.value if token is not None else SystemCode.ANALYSIS_PROCESSING.value
-    return sse_bytes({"code": code, "data": progress_api_data(job, token=token)})
+    return sse_bytes({"code": job.status.value, "data": progress_api_data(job, token=token)})

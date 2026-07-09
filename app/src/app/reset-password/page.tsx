@@ -7,6 +7,7 @@ import { resetPassword } from "@/lib/auth/actions";
 import { formatSystemMessage } from "@/types/system-codes";
 import { isValidPassword, getPasswordErrors, PASSWORD_RULES } from "@/lib/shared/field-validation";
 import { CenteredShell } from "@/components/layout/page-section";
+import { cardLayout } from "@/components/ui/styles";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +48,7 @@ function ResetContent() {
 
   if (!token) {
     return (
-      <Card className="w-full max-w-[400px]">
+      <Card className={cardLayout.sm}>
         <CardHeader>
           <CardTitle>Reset password</CardTitle>
           <CardDescription>Invalid or missing reset link.</CardDescription>
@@ -62,7 +63,7 @@ function ResetContent() {
   }
 
   return (
-    <Card className="w-full max-w-[400px]">
+    <Card className={cardLayout.sm}>
       <CardHeader>
         <CardTitle>Set new password</CardTitle>
         <CardDescription>

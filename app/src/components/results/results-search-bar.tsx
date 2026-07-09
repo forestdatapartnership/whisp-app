@@ -19,7 +19,6 @@ interface ResultsSearchBarProps {
   onOpenFieldPicker: () => void;
   onExportCSV?: () => void;
   onExportGeoJSON?: () => void;
-  onExportExcel?: () => void;
   className?: string;
 }
 
@@ -30,7 +29,6 @@ export function ResultsSearchBar({
   onOpenFieldPicker,
   onExportCSV,
   onExportGeoJSON,
-  onExportExcel,
   className,
 }: ResultsSearchBarProps) {
   const [open, setOpen] = useState(false);

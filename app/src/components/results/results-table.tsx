@@ -19,7 +19,6 @@ export interface ColumnDef {
   key: string;
   header: string;
   type?: string;
-  hidden?: boolean;
   category?: string;
   commodityMetadata?: CommodityMetadataMap;
   excludeFromResults?: boolean;
@@ -31,6 +30,7 @@ export interface ResultRow {
 
 interface ResultsTableProps {
   columns: ColumnDef[];
+  visibleCols: string[];
   data: ResultRow[];
   selectedRowId?: string | null;
   onSelectRow?: (row: ResultRow | null) => void;
@@ -121,6 +121,7 @@ function renderCell(value: unknown, type?: string, key?: string) {
 
 export function ResultsTable({
   columns,
+  visibleCols,
   data,
   selectedRowId,
   onSelectRow,
@@ -132,7 +133,7 @@ export function ResultsTable({
   const visibleColumns = useMemo(
     () =>
       columns.filter((c) => {
-        if (c.hidden) return false;
+        if (!visibleCols.includes(c.key)) return false;
         if (c.key === "external_id") {
           const hasValue = data.some((row) => {
             const v = row[c.key];
@@ -142,7 +143,7 @@ export function ResultsTable({
         }
         return true;
       }),
-    [columns, data]
+    [columns, visibleCols, data]
   );
   const idKey = "plotId";
   return (

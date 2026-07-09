@@ -9,8 +9,8 @@ import pandas as pd
 from src.codes import SystemCode
 from src.config import get_settings
 from src.app_logging import resolve_level
-from src.redis import publish_sync
-from src.job_progress import JobProgress
+from src.redis import get_sync, publish_sync
+from src.job_progress import JobProgress, timestamped
 from src.io import files
 from src.submit.schemas import AnalysisOptions, AnalysisTaskContext
 from src.worker.celery_app import app
@@ -25,18 +25,20 @@ _PROGRESS_RE = re.compile(r"Progress: [\d,]+/[\d,]+ batches \((\d+)%\)")
 
 
 class _ProgressHandler(logging.Handler):
-    def __init__(self, token: str, messages: list[str]):
+    def __init__(self, token: str, messages: list[str], feature_count: int | None = None, async_mode: bool | None = None):
         super().__init__(level=resolve_level(get_settings().log_level))
         self.token = token
         self._messages = messages
         self._last_percent = 0
+        self._feature_count = feature_count
+        self._async_mode = async_mode
 
     def emit(self, record: logging.LogRecord):
         message = record.getMessage().strip()
         if message.startswith(_SKIP_MESSAGE_PREFIX) or _SKIP_MESSAGE_CONTAINS in message:
             return
 
-        self._messages.append(message)
+        self._messages.append(timestamped(message))
 
         pm = _PROGRESS_RE.search(message)
         if pm:
@@ -47,12 +49,14 @@ class _ProgressHandler(logging.Handler):
             JobProgress.of(
                 SystemCode.ANALYSIS_PROCESSING,
                 percent=self._last_percent,
+                feature_count=self._feature_count,
+                async_mode=self._async_mode,
                 messages=self._messages,
             ).to_redis(),
         )
 
 
-def _run_whisp_blocking(token: str, opts: AnalysisOptions) -> None:
+def _run_whisp_blocking(token: str, opts: AnalysisOptions, feature_count: int | None = None) -> None:
     import openforis_whisp as whisp
 
     df_kwargs: dict[str, Any] = {
@@ -65,17 +69,20 @@ def _run_whisp_blocking(token: str, opts: AnalysisOptions) -> None:
     if opts.unit_type:
         df_kwargs["unit_type"] = opts.unit_type
 
-    messages = ["Starting analysis"]
+    state = get_sync(token) or {}
+    messages = [*(state.get("messages") or []), timestamped("Starting analysis")]
     publish_sync(
         token,
         JobProgress.of(
             SystemCode.ANALYSIS_PROCESSING,
             percent=0,
+            feature_count=feature_count,
+            async_mode=opts.async_mode,
             messages=messages,
         ).to_redis(),
     )
 
-    handler = _ProgressHandler(token, messages)
+    handler = _ProgressHandler(token, messages, feature_count=feature_count, async_mode=opts.async_mode)
     whisp_logger = logging.getLogger("whisp")
     removed = [h for h in whisp_logger.handlers if isinstance(h, logging.StreamHandler)]
     for h in removed:
@@ -110,4 +117,4 @@ def _run_whisp_blocking(token: str, opts: AnalysisOptions) -> None:
 def run_analysis(self: AnalysisTask, context: dict, opts_dict: dict) -> None:
     ctx = AnalysisTaskContext.parse(context)
     opts = AnalysisOptions(**opts_dict)
-    _run_whisp_blocking(ctx.token, opts)
+    _run_whisp_blocking(ctx.token, opts, feature_count=ctx.feature_count)

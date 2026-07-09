@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, ArrowLeft } from "lucide-react";
-import { controlRounded } from "@/components/ui/styles";
+import { cardLayout, controlRounded } from "@/components/ui/styles";
 import { Card } from "@/components/ui/card";
 import { CenteredShell } from "@/components/layout/page-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,7 +18,7 @@ export function AnalysisError({
 }) {
   return (
     <CenteredShell className="px-4">
-      <Card className="w-full max-w-[560px] gap-6">
+      <Card className={cardLayout.md}>
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex size-12 items-center justify-center rounded-full bg-red-500/10">
             <AlertTriangle className="size-6 text-red-400" />

@@ -7,7 +7,7 @@ from src.config import Settings
 from src.db import jobs as db_jobs
 from src.exceptions import AppError
 from src.io import files
-from src.job_progress import JobProgress
+from src.job_progress import JobProgress, timestamped
 from src.redis import publish, wait_for
 from src.submit.schemas import AnalysisOptions, AnalysisTaskContext, JobContext, SubmitResult
 from src.submit.validators import get_common_property_names, validate_external_id_column
@@ -115,7 +115,7 @@ async def submit(
     timeout = settings.analysis_timeout_seconds(async_mode=opts.async_mode)
     options_payload = _options_payload(opts)
 
-    await db_jobs.create_analysis_job(
+    queue_position = await db_jobs.create_analysis_job(
         job_id=token,
         api_key_id=ctx.api_key_id,
         user_id=ctx.user_id,
@@ -127,17 +127,22 @@ async def submit(
         analysis_options=options_payload or None,
         timeout_seconds=timeout,
         status=SystemCode.ANALYSIS_QUEUED,
+        is_async=opts.async_mode,
         openforis_whisp_version=settings.openforis_whisp_version,
         earthengine_api_version=settings.earthengine_api_version,
         max_concurrent_analyses=ctx.max_concurrent_analyses,
         input_metrics=input_metrics,
     )
 
+    queue_msg = f"Position {queue_position} in queue"
+
     await publish(
         token,
         JobProgress.of(
             SystemCode.ANALYSIS_QUEUED,
             feature_count=feature_count,
+            async_mode=opts.async_mode,
+            messages=[timestamped(queue_msg)],
         ).to_redis(),
     )
 
@@ -169,6 +174,7 @@ async def submit(
                 "token": token,
                 "statusUrl": f"/api/status/{token}",
                 "featureCount": feature_count,
+                "processStatusMessages": [timestamped(queue_msg)],
             },
         )
 

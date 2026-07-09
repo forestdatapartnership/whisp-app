@@ -10,6 +10,7 @@ import { forgotPassword } from "@/lib/auth/actions";
 import { formatSystemMessage } from "@/types/system-codes";
 import { Alert } from "@/components/ui/alert";
 import { CenteredShell } from "@/components/layout/page-section";
+import { cardLayout } from "@/components/ui/styles";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -29,7 +30,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <CenteredShell>
-    <Card className="w-full max-w-[400px]">
+    <Card className={cardLayout.sm}>
       <CardHeader>
         <CardTitle>Reset password</CardTitle>
         <CardDescription>

@@ -2,6 +2,15 @@ export const controlRounded = "rounded-sm"
 export const cardRounded = "rounded-sm"
 export const cardBase = `${cardRounded} border border-border bg-surface`
 
+export const cardLayout = {
+  sm: "w-full max-w-[400px]",
+  md: "w-full max-w-[560px]",
+  lg: "w-full max-w-[680px]",
+  xl: "w-full max-w-[960px]",
+} as const
+
+export const logHeight = "h-44"
+
 export const controlFocus =
   `${controlRounded} outline-none transition-shadow ` +
   "focus-visible:border-accent-green focus-visible:ring-3 focus-visible:ring-ring/50 " +
