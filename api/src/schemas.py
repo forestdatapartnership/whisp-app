@@ -45,7 +45,8 @@ class SubmitGeoJsonRequest(BaseModel):
                 "analysisOptions": {
                     "nationalCodes": ["co", "ci", "br"],
                     "unitType": "ha",
-                    "async": True
+                    "async": True,
+                    "geometryAuditTrail": False
                 }
             }
         }
@@ -62,7 +63,8 @@ class SubmitWktRequest(BaseModel):
                 "analysisOptions": {
                     "nationalCodes": ["co", "ci", "br"],
                     "unitType": "ha",
-                    "async": True
+                    "async": True,
+                    "geometryAuditTrail": False
                 }
             }
         }
@@ -79,7 +81,8 @@ class SubmitGeoIdsRequest(BaseModel):
                 "geoIds": ["1b17337e-83dc-43df-8fc1-a7415d5c0890","d5d6af39-8e7c-4130-b220-1bf3c1373b79"],
                 "analysisOptions": {
                     "unitType": "ha",
-                    "async": True
+                    "async": True,
+                    "geometryAuditTrail": False
                 }
             }
         }

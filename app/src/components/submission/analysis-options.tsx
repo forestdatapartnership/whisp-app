@@ -121,7 +121,7 @@ export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisO
                         </button>
                       )}
                     />
-                    <TooltipContent className="max-w-xs text-left leading-relaxed">
+                    <TooltipContent className="max-w-xs text-justify leading-relaxed">
                       Geospatial data may be modified slightly during the analysis in Google Earth Engine, especially notable for very small polygons. We return the modified output for transparency in what was analysed, but if you require your input data to be returned you can select this option and it will add an extra column called &lsquo;geo_original&rsquo;.
                     </TooltipContent>
                   </Tooltip>
