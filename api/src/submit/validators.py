@@ -134,11 +134,10 @@ def _extract_features(node: Any, out: list[dict], props: dict | None = None) -> 
         for pt in node.get("coordinates", []) or []:
             out.append({"type": "Feature", "properties": {**p}, "geometry": {"type": "Point", "coordinates": pt[:2]}})
     elif t == "MultiPolygon":
-        for poly in node.get("coordinates", []) or []:
-            out.append({"type": "Feature", "properties": {**p}, "geometry": {
-                "type": "Polygon",
-                "coordinates": [[c[:2] for c in ring] for ring in poly],
-            }})
+        out.append({"type": "Feature", "properties": {**p}, "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [[[c[:2] for c in ring] for ring in poly] for poly in node.get("coordinates", [])],
+        }})
     elif t == "GeometryCollection":
         for sub in node.get("geometries", []) or []:
             _extract_features(sub, out, p)
@@ -147,6 +146,19 @@ def _extract_features(node: Any, out: list[dict], props: dict | None = None) -> 
     elif t == "FeatureCollection":
         for feat in node.get("features", []) or []:
             _extract_features(feat, out)
+
+
+def count_individual_polygons(fc: dict) -> int:
+    total = 0
+    for feat in (fc.get("features") or []):
+        if not isinstance(feat, dict):
+            continue
+        geom = feat.get("geometry") or {}
+        if geom.get("type") == "MultiPolygon":
+            total += len(geom.get("coordinates") or [])
+        else:
+            total += 1
+    return total
 
 
 def to_feature_collection(geojson: Any) -> dict:

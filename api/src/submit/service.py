@@ -10,7 +10,7 @@ from src.io import files
 from src.job_progress import JobProgress, timestamped
 from src.redis import publish, wait_for
 from src.submit.schemas import AnalysisOptions, AnalysisTaskContext, JobContext, SubmitResult
-from src.submit.validators import get_common_property_names, validate_external_id_column
+from src.submit.validators import count_individual_polygons, get_common_property_names, validate_external_id_column
 from src.worker.celery_app import app as celery_app
 from src.worker.analysis_task import AnalysisTask
 
@@ -25,12 +25,14 @@ def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Setti
     import openforis_whisp as whisp
 
     features = fc.get("features") or []
-    count = len(features)
-    if count < 1:
+    if not features:
         raise AppError(SystemCode.VALIDATION_MISSING_REQUEST_BODY)
 
+    # whisp.analyze_geojson counts features, not individual polygons inside multipolygons.
+    # TODO: align this in the whisp library so we can use its count directly.
+    polygon_count = count_individual_polygons(fc)
     limit = settings.geometry_limit_async if opts.async_mode else settings.geometry_limit_sync
-    if count > limit:
+    if polygon_count > limit:
         raise AppError(SystemCode.VALIDATION_TOO_MANY_GEOMETRIES, [limit])
 
     if opts.external_id_column and not validate_external_id_column(fc, opts.external_id_column):
@@ -43,7 +45,7 @@ def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Setti
         metrics = whisp.analyze_geojson(fc)
     except Exception as e:
         logger.warning("analyze_geojson failed, falling back to count-only metrics: %s", e)
-        metrics = {"count": count}
+        metrics = {"count": polygon_count}
     return metrics
 
 
