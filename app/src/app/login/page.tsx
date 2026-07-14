@@ -11,6 +11,14 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { Alert } from "@/components/ui/alert";
 import { CenteredShell } from "@/components/layout/page-section";
 import { cardLayout } from "@/components/ui/styles";
+import { SystemCode } from "@/types/system-codes";
+
+function ssoLoginUrl(next: string, loginHint?: string) {
+  const url = new URL("/auth/sso/login", window.location.origin);
+  url.searchParams.set("next", next.startsWith("/") ? next : "/");
+  if (loginHint) url.searchParams.set("login_hint", loginHint);
+  return url.toString();
+}
 
 function LoginForm() {
   const params = useSearchParams();
@@ -30,8 +38,15 @@ function LoginForm() {
     e.preventDefault();
     clearError();
     setIsLoading(true);
-    const ok = await login(email, password);
-    if (ok) window.location.assign(next.startsWith("/") ? next : "/");
+    const result = await login(email, password);
+    if (result.ok) {
+      window.location.assign(next.startsWith("/") ? next : "/");
+      return;
+    }
+    if (result.code === SystemCode.AUTH_SSO_REQUIRED) {
+      window.location.assign(ssoLoginUrl(next, email));
+      return;
+    }
     setIsLoading(false);
   };
 
@@ -43,6 +58,19 @@ function LoginForm() {
       </CardHeader>
       <CardContent>
         {error && <Alert type="error" message={error} onClose={clearError} className="mb-4" />}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full mb-4"
+          onClick={() => window.location.assign(ssoLoginUrl(next))}
+        >
+          Sign in with SSO
+        </Button>
+        <div className="flex items-center gap-3 mb-4 text-[11px] uppercase text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          or
+          <span className="h-px flex-1 bg-border" />
+        </div>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">Email</Label>

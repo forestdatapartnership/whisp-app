@@ -82,6 +82,23 @@ export const config = {
     },
   },
 
+  keycloak: {
+    get issuer() {
+      return env('KEYCLOAK_ISSUER');
+    },
+    get clientId() {
+      return env('KEYCLOAK_CLIENT_ID');
+    },
+    clientSecret: envOptional('KEYCLOAK_CLIENT_SECRET'),
+    get redirectUri() {
+      return env('KEYCLOAK_REDIRECT_URI');
+    },
+    scope: envOptional('KEYCLOAK_SCOPE') ?? 'openid email profile',
+    get enabled() {
+      return Boolean(envOptional('KEYCLOAK_ISSUER') && envOptional('KEYCLOAK_CLIENT_ID'));
+    },
+  },
+
   email: {
     service: envOptional('EMAIL_SERVICE'),
     user: envOptional('EMAIL_USER'),

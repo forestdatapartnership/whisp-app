@@ -23,9 +23,11 @@ def _check_geo_id(geo_id: str) -> None:
         raise AppError(SystemCode.VALIDATION_INVALID_GEO_ID, args=[geo_id])
 
 
-async def _request(client: httpx.AsyncClient, url: str, geo_id: str) -> dict[str, Any] | None:
+async def _request(client: httpx.AsyncClient, url: str, geo_id: str, token: str | None = None) -> dict[str, Any] | None:
     cause: str | None = None
     headers = {"Accept": "application/geo+json, application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     for attempt in range(_MAX_ATTEMPTS):
         if attempt > 0:
             await asyncio.sleep(_RETRY_DELAY_S)
@@ -46,7 +48,7 @@ async def _request(client: httpx.AsyncClient, url: str, geo_id: str) -> dict[str
     raise AppError(SystemCode.SERVICE_GEOID_UNAVAILABLE, cause=f"Operation failed: {cause}")
 
 
-async def resolve_geo_ids(geo_ids: list[str], settings: Settings) -> list[dict | None]:
+async def resolve_geo_ids(geo_ids: list[str], settings: Settings, token: str | None = None) -> list[dict | None]:
     if not settings.geoid_base_url:
         raise AppError(SystemCode.SERVICE_GEOID_NOT_CONFIGURED)
 
@@ -59,7 +61,7 @@ async def resolve_geo_ids(geo_ids: list[str], settings: Settings) -> list[dict |
             _check_geo_id(geo_id)
             url = f"{base}/{geo_id}"
             async with sem:
-                data = await _request(client, url, geo_id)
+                data = await _request(client, url, geo_id, token)
             if isinstance(data, dict) and data.get("type") == "Feature" and data.get("geometry"):
                 results[i] = {**data, "properties": {**(data.get("properties") or {}), "geoid": geo_id}}
 

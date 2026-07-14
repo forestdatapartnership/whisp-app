@@ -95,6 +95,44 @@ export async function getAuthUserWithRefresh(): Promise<AuthUser | null> {
   return refreshUser;
 }
 
+const KC_REFRESH_COOKIE_OPTIONS = { ...COOKIE_BASE, maxAge: 2592000 };
+
+export async function setKcRefreshToken(refreshToken: string): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set('kc_refresh_token', refreshToken, KC_REFRESH_COOKIE_OPTIONS);
+}
+
+export async function getKcRefreshToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+  return cookieStore.get('kc_refresh_token')?.value ?? null;
+}
+
+export async function clearKcRefreshToken(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set('kc_refresh_token', '', { ...COOKIE_BASE, maxAge: 0 });
+}
+
+const SSO_STATE_COOKIE_OPTIONS = { ...COOKIE_BASE, maxAge: 300 };
+
+export type SsoState = { state: string; codeVerifier: string; next: string };
+
+export async function setSsoState(data: SsoState): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set('sso_state', JSON.stringify(data), SSO_STATE_COOKIE_OPTIONS);
+}
+
+export async function getAndClearSsoState(): Promise<SsoState | null> {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get('sso_state')?.value;
+  cookieStore.set('sso_state', '', { ...COOKIE_BASE, maxAge: 0 });
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as SsoState;
+  } catch {
+    return null;
+  }
+}
+
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getAuthUser();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);

@@ -7,6 +7,8 @@ export enum SystemCode {
   AUTH_INVALID_TOKEN = 'auth_invalid_token',
   AUTH_RATE_LIMIT_EXCEEDED = 'auth_rate_limit_exceeded',
   AUTH_ADMIN_REQUIRED = 'auth_admin_required',
+  AUTH_SSO_REQUIRED = 'auth_sso_required',
+  AUTH_SSO_FAILED = 'auth_sso_failed',
 
   USER_WEAK_PASSWORD = 'user_weak_password',
   USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists',
@@ -38,6 +40,8 @@ export const SYSTEM_MESSAGES: Record<SystemCode, string> = {
   [SystemCode.AUTH_INVALID_TOKEN]: 'Invalid or expired token.',
   [SystemCode.AUTH_RATE_LIMIT_EXCEEDED]: 'Rate limit exceeded. Try again in {0} seconds.',
   [SystemCode.AUTH_ADMIN_REQUIRED]: 'Administrator access required',
+  [SystemCode.AUTH_SSO_REQUIRED]: 'This account signs in via SSO. Redirecting you to the login provider...',
+  [SystemCode.AUTH_SSO_FAILED]: 'SSO sign-in failed. Please try again.',
 
   [SystemCode.USER_WEAK_PASSWORD]: 'Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.',
   [SystemCode.USER_EMAIL_ALREADY_EXISTS]: 'An account with this email already exists.',

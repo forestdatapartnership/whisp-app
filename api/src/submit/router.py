@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse
 
 from src.auth.api_key import ApiKey, api_key_dependency
@@ -183,6 +183,7 @@ async def submit_geo_ids(
     body: SubmitGeoIdsRequest,
     settings: SettingsDep,
     api_key: ApiKey = Depends(api_key_dependency),
+    x_geoid_token: str | None = Header(default=None, alias="x-geoid-token"),
 ) -> JSONResponse:
     _check_request_size(request, settings)
 
@@ -190,7 +191,7 @@ async def submit_geo_ids(
     raw_options.setdefault("externalIdColumn", "geoid")
     opts = AnalysisOptions.parse(raw_options)
 
-    resolved = await geoid.resolve_geo_ids(body.geoIds, settings)
+    resolved = await geoid.resolve_geo_ids(body.geoIds, settings, token=x_geoid_token)
 
     missing = [gid for gid, feat in zip(body.geoIds, resolved) if feat is None]
     if missing:

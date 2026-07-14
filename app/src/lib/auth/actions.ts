@@ -16,6 +16,7 @@ import {
   createPasswordResetToken,
   resetPasswordWithToken,
   verifyEmailByToken,
+  isSsoLinkedEmail,
 } from '@/lib/db/users-service';
 import { subscribeNotifications as dalSubscribeNotifications } from '@/lib/db/notifications-service';
 import type { UserProfile } from '@/types/user';
@@ -23,6 +24,11 @@ import type { UserProfile } from '@/types/user';
 export const loginUser = action(async (email: string, password: string): Promise<UserProfile> => {
   validateRequiredFields({ email, password }, ['email', 'password']);
   const normalized = normalizeEmail(email);
+
+  if (await isSsoLinkedEmail(normalized)) {
+    throw new SystemError(SystemCode.AUTH_SSO_REQUIRED);
+  }
+
   const profile = await dalLoginUser(normalized, password);
   if (!profile) throw new SystemError(SystemCode.AUTH_INVALID_CREDENTIALS);
   if (!profile.email_verified) throw new SystemError(SystemCode.AUTH_EMAIL_NOT_VERIFIED);

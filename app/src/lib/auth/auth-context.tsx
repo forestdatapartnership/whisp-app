@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { fetchUserProfile } from '@/lib/auth/user-actions';
 import { loginUser, logoutUser } from '@/lib/auth/actions';
-import { formatSystemMessage } from '@/types/system-codes';
+import { formatSystemMessage, type SystemCode } from '@/types/system-codes';
 import type { UserProfile } from '@/types/user';
 
 type AuthContextType = {
@@ -12,7 +12,7 @@ type AuthContextType = {
   isAdmin: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ ok: boolean; code?: SystemCode }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   clearError: () => void;
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setError(null);
-    window.location.href = '/';
+    window.location.href = '/auth/sso/logout';
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -54,10 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const result = await loginUser(email, password);
     if (!result.ok) {
       setError(formatSystemMessage(result.code, result.args));
-      return false;
+      return { ok: false, code: result.code };
     }
     setUser(result.data);
-    return true;
+    return { ok: true };
   }, []);
 
   const clearError = useCallback(() => setError(null), []);

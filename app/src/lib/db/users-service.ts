@@ -94,6 +94,31 @@ export async function verifyEmailByToken(token: string): Promise<string> {
   return result.rows[0].message;
 }
 
+export type SsoProfile = {
+  keycloakSub: string;
+  email: string;
+  name: string;
+  lastName: string;
+};
+
+export async function findOrCreateSsoUser(profile: SsoProfile): Promise<UserProfile> {
+  const pool = getPool();
+  const result = await pool.query(
+    `SELECT ${PROFILE_COLUMNS} FROM find_or_create_sso_user($1, $2, $3, $4)`,
+    [profile.keycloakSub, profile.email, profile.name, profile.lastName]
+  );
+  return result.rows[0];
+}
+
+export async function isSsoLinkedEmail(email: string): Promise<boolean> {
+  const pool = getPool();
+  const result = await pool.query(
+    'SELECT keycloak_sub IS NOT NULL AS linked FROM users WHERE email = $1',
+    [email]
+  );
+  return result.rows[0]?.linked === true;
+}
+
 export async function deleteUser(uuid: string): Promise<void> {
   const pool = getPool();
   await pool.query(

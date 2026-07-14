@@ -1,6 +1,7 @@
 import 'server-only';
-import { getAuthUser } from '@/lib/auth/session';
+import { getAuthUser, getKcRefreshToken, setKcRefreshToken } from '@/lib/auth/session';
 import { getCacheableApiKeyByUser, getTempApiKey, type CacheableApiKey } from '@/lib/db/api-keys-service';
+import { refreshTokens } from '@/lib/auth/keycloak';
 import { config } from '@/lib/server/env';
 
 const CACHE_SAFEGUARD_MS = 60_000;
@@ -13,6 +14,11 @@ function cacheUntil(expiresAt: string) {
 export function invalidateApiKeyCache(userId?: string) {
   if (userId) cache.delete(`user:${userId}`);
   cache.delete('temp');
+}
+
+export function invalidateGeoidTokenCache(userId?: string) {
+  if (userId) tokenCache.delete(`user:${userId}`);
+  else tokenCache.clear();
 }
 
 async function cachedApiKey(
@@ -43,13 +49,40 @@ async function resolveApiKey(): Promise<string> {
   return tempKey;
 }
 
+const TOKEN_CACHE_SAFEGUARD_MS = 30_000;
+const tokenCache = new Map<string, { token: string; validUntil: number }>();
+
+async function resolveGeoidToken(): Promise<string | null> {
+  if (!config.keycloak.enabled) return null;
+
+  const user = await getAuthUser();
+  if (!user) return null;
+
+  const kcRefreshToken = await getKcRefreshToken();
+  if (!kcRefreshToken) return null;
+
+  const cacheKey = `user:${user.id}`;
+  const hit = tokenCache.get(cacheKey);
+  if (hit && Date.now() < hit.validUntil) return hit.token;
+
+  const tokens = await refreshTokens(kcRefreshToken);
+  if (tokens.refresh_token) {
+    await setKcRefreshToken(tokens.refresh_token);
+  }
+  const validUntil = Date.now() + tokens.expires_in * 1000 - TOKEN_CACHE_SAFEGUARD_MS;
+  tokenCache.set(cacheKey, { token: tokens.access_token, validUntil });
+  return tokens.access_token;
+}
+
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  const [apiKey, geoidToken] = await Promise.all([resolveApiKey(), resolveGeoidToken()]);
   return fetch(`${config.api.url}${path}`, {
     ...init,
     cache: 'no-store',
     headers: {
-      'X-API-KEY': await resolveApiKey(),
+      'X-API-KEY': apiKey,
       'X-Whisp-Agent': 'ui',
+      ...(geoidToken ? { 'X-Geoid-Token': geoidToken } : {}),
       ...init?.headers,
     },
   });
