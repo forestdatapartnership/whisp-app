@@ -112,7 +112,7 @@ export async function clearKcRefreshToken(): Promise<void> {
   cookieStore.set('kc_refresh_token', '', { ...COOKIE_BASE, maxAge: 0 });
 }
 
-const SSO_STATE_COOKIE_OPTIONS = { ...COOKIE_BASE, maxAge: 300 };
+const SSO_STATE_COOKIE_OPTIONS = { ...COOKIE_BASE, sameSite: 'lax' as const, maxAge: 300 };
 
 export type SsoState = { state: string; codeVerifier: string; next: string };
 
