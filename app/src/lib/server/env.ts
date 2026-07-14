@@ -91,7 +91,7 @@ export const config = {
     },
     clientSecret: envOptional('KEYCLOAK_CLIENT_SECRET'),
     get redirectUri() {
-      return env('KEYCLOAK_REDIRECT_URI');
+      return `${config.hostUrl}/auth/sso/callback`;
     },
     scope: envOptional('KEYCLOAK_SCOPE') ?? 'openid email profile',
     get enabled() {
@@ -104,7 +104,6 @@ export const config = {
     user: envOptional('EMAIL_USER'),
     pass: envOptional('EMAIL_PASS'),
     from: envOptional('EMAIL_FROM') || '"Whisp" <whisp.openforis@gmail.com>',
-    hostUrl: (process.env.HOST_URL?.trim() || '').replace(/\/+$/, ''),
   },
 
   api: {
@@ -130,13 +129,15 @@ export const config = {
     version: readAppVersion(),
     openforisWhispVersion: envOptional('OPENFORIS_WHISP_VERSION') ?? ''
   },
+
+  hostUrl: (process.env.HOST_URL?.trim() || '').replace(/\/+$/, ''),
 };
 
 export async function getClientConfig() {
   await loadRemote();
   return {
     api: { url: config.api.publicUrl },
-    hostUrl: config.email.hostUrl,
+    hostUrl: config.hostUrl,
     app: config.app,
     submission: config.submission,
   };

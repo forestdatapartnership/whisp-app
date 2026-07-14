@@ -12,9 +12,9 @@ export async function GET(req: NextRequest) {
   invalidateGeoidTokenCache();
 
   if (hadKcSession && config.keycloak.enabled) {
-    const endSessionUrl = await getEndSessionUrl(`${req.nextUrl.origin}/`);
+    const endSessionUrl = await getEndSessionUrl(`${config.hostUrl}/`);
     return NextResponse.redirect(endSessionUrl);
   }
 
-  return NextResponse.redirect(new URL('/', req.url));
+  return NextResponse.redirect(new URL('/', config.hostUrl));
 }

@@ -3,11 +3,12 @@ import { exchangeCodeForTokens, verifyIdToken } from '@/lib/auth/keycloak';
 import { createTokens, setAuthCookies, setKcRefreshToken, getAndClearSsoState } from '@/lib/auth/session';
 import { findOrCreateSsoUser } from '@/lib/db/users-service';
 import { getCacheableApiKeyByUser, createApiKeyForUser } from '@/lib/db/api-keys-service';
+import { config } from '@/lib/server/env';
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
   const state = req.nextUrl.searchParams.get('state');
-  const loginUrl = new URL('/login', req.url);
+  const loginUrl = new URL('/login', config.hostUrl);
 
   const saved = await getAndClearSsoState();
   if (!code || !state || !saved || saved.state !== state) {
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
     const existingKey = await getCacheableApiKeyByUser(profile.uuid);
     if (!existingKey) await createApiKeyForUser(profile.uuid);
 
-    const redirectTo = new URL(saved.next, req.url);
+    const redirectTo = new URL(saved.next, config.hostUrl);
     return NextResponse.redirect(redirectTo);
   } catch (err) {
     console.error('[sso callback]', err);

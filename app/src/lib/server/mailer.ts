@@ -25,7 +25,7 @@ const getLogoAttachment = () => ({
 });
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const verificationUrl = `${config.email.hostUrl}/verify-email?token=${encodeURIComponent(token)}`;
+  const verificationUrl = `${config.hostUrl}/verify-email?token=${encodeURIComponent(token)}`;
 
   await getTransport().sendMail({
     from: config.email.from,
@@ -84,7 +84,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${config.email.hostUrl}/reset-password?token=${encodeURIComponent(token)}`;
+  const resetUrl = `${config.hostUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
   await getTransport().sendMail({
     from: config.email.from,
