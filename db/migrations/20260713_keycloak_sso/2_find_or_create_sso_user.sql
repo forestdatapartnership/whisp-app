@@ -40,7 +40,7 @@ BEGIN
     RETURN QUERY
     SELECT existing_by_email.uuid, existing_by_email.name, existing_by_email.last_name,
            existing_by_email.organization, existing_by_email.email,
-           existing_by_email.email_verified, TRUE, existing_by_email.is_admin;
+           TRUE, existing_by_email.is_admin;
     RETURN;
   END IF;
 
