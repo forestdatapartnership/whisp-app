@@ -38,6 +38,18 @@ export function generateState(): string {
   return randomBytes(16).toString('base64url');
 }
 
+function baseAuthParams(params: { state: string; codeChallenge: string }): URLSearchParams {
+  const search = new URLSearchParams();
+  search.set('client_id', config.keycloak.clientId);
+  search.set('redirect_uri', config.keycloak.redirectUri);
+  search.set('response_type', 'code');
+  search.set('scope', config.keycloak.scope);
+  search.set('state', params.state);
+  search.set('code_challenge', params.codeChallenge);
+  search.set('code_challenge_method', 'S256');
+  return search;
+}
+
 export async function buildAuthorizationUrl(params: {
   state: string;
   codeChallenge: string;
@@ -45,14 +57,18 @@ export async function buildAuthorizationUrl(params: {
 }): Promise<string> {
   const oidc = await getOidcConfig();
   const url = new URL(oidc.authorization_endpoint);
-  url.searchParams.set('client_id', config.keycloak.clientId);
-  url.searchParams.set('redirect_uri', config.keycloak.redirectUri);
-  url.searchParams.set('response_type', 'code');
-  url.searchParams.set('scope', config.keycloak.scope);
-  url.searchParams.set('state', params.state);
-  url.searchParams.set('code_challenge', params.codeChallenge);
-  url.searchParams.set('code_challenge_method', 'S256');
+  url.search = baseAuthParams(params).toString();
   if (params.loginHint) url.searchParams.set('login_hint', params.loginHint);
+  return url.toString();
+}
+
+export async function buildRegistrationUrl(params: {
+  state: string;
+  codeChallenge: string;
+}): Promise<string> {
+  const oidc = await getOidcConfig();
+  const url = new URL(oidc.authorization_endpoint.replace(/\/auth$/, '/registrations'));
+  url.search = baseAuthParams(params).toString();
   return url.toString();
 }
 

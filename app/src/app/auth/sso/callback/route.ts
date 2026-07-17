@@ -3,6 +3,7 @@ import { exchangeCodeForTokens, verifyIdToken } from '@/lib/auth/keycloak';
 import { createTokens, setAuthCookies, setKcRefreshToken, getAndClearSsoState } from '@/lib/auth/session';
 import { findOrCreateSsoUser } from '@/lib/db/users-service';
 import { getCacheableApiKeyByUser, createApiKeyForUser } from '@/lib/db/api-keys-service';
+import { normalizeEmail } from '@/lib/shared/email-format';
 import { config } from '@/lib/server/env';
 
 export async function GET(req: NextRequest) {
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
 
     const profile = await findOrCreateSsoUser({
       keycloakSub: claims.sub,
-      email: claims.email,
+      email: normalizeEmail(claims.email),
       name: claims.given_name || claims.email,
       lastName: claims.family_name || '',
     });

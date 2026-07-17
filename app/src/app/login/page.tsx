@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Link } from "@/components/ui/link";
+import { Link, linkVariants } from "@/components/ui/link";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,7 +107,7 @@ function LoginForm() {
           </Button>
         </form>
         <p className="mt-5 text-center text-[13px] text-muted-foreground">
-          No account yet? <Link href="/register">Register free</Link>
+          No account yet? <a href="/auth/sso/register" className={cn("transition-colors", linkVariants.accent)}>Register free</a>
         </p>
       </CardContent>
     </Card>

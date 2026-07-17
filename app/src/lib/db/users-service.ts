@@ -3,6 +3,7 @@ import { getPool } from '@/lib/db/pool';
 import type { UserProfile } from '@/types/user';
 
 const PROFILE_COLUMNS = 'uuid, name, last_name, organization, email, email_verified, is_admin';
+const PROFILE_COLUMNS_WITH_SSO = `${PROFILE_COLUMNS}, keycloak_sub IS NOT NULL AS is_sso`;
 
 export async function loginUser(email: string, password: string): Promise<UserProfile | null> {
   const pool = getPool();
@@ -10,7 +11,8 @@ export async function loginUser(email: string, password: string): Promise<UserPr
     `SELECT ${PROFILE_COLUMNS} FROM login_user($1, $2)`,
     [email, password]
   );
-  return result.rows[0] ?? null;
+  const row = result.rows[0];
+  return row ? { ...row, is_sso: false } : null;
 }
 
 export async function registerUser(
@@ -31,7 +33,7 @@ export async function registerUser(
 export async function getUserByUuid(uuid: string): Promise<UserProfile | null> {
   const pool = getPool();
   const result = await pool.query(
-    `SELECT ${PROFILE_COLUMNS} FROM users WHERE uuid = $1`,
+    `SELECT ${PROFILE_COLUMNS_WITH_SSO} FROM users WHERE uuid = $1`,
     [uuid]
   );
   return result.rows[0] ?? null;
@@ -45,7 +47,7 @@ export async function updateUserProfile(
   const result = await pool.query(
     `UPDATE users SET name = $1, last_name = $2, organization = $3
      WHERE uuid = $4
-     RETURNING ${PROFILE_COLUMNS}`,
+     RETURNING ${PROFILE_COLUMNS_WITH_SSO}`,
     [data.name, data.lastName, data.organization ?? null, uuid]
   );
   return result.rows[0] ?? null;
@@ -107,7 +109,7 @@ export async function findOrCreateSsoUser(profile: SsoProfile): Promise<UserProf
     `SELECT ${PROFILE_COLUMNS} FROM find_or_create_sso_user($1, $2, $3, $4)`,
     [profile.keycloakSub, profile.email, profile.name, profile.lastName]
   );
-  return result.rows[0];
+  return { ...result.rows[0], is_sso: true };
 }
 
 export async function isSsoLinkedEmail(email: string): Promise<boolean> {

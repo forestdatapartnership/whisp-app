@@ -3,13 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { Moon, Sun, User, Settings, BriefcaseBusiness, LogOut } from "lucide-react";
+import { Moon, Sun, User, Settings, BriefcaseBusiness, KeyRound, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/layout/theme-provider";
 import { useAuth } from "@/lib/auth/auth-context";
 
 const ACCOUNT_LINKS = [
   { icon: Settings, href: "/account", label: "Account" },
+  { icon: KeyRound, href: "/account/api-keys", label: "API Keys" },
   { icon: BriefcaseBusiness, href: "/account/jobs", label: "Analysis Jobs" },
 ];
 
@@ -109,7 +110,7 @@ export function Navbar() {
           <Button variant="ghost" size="sm" className="rounded-none border-0" nativeButton={false} render={<Link href="/login" />}>
             Sign in
           </Button>
-          <Button variant="ghost" size="sm" className="rounded-none border-0 border-l border-border hover:text-accent-green" nativeButton={false} render={<Link href="/register" />}>
+          <Button variant="ghost" size="sm" className="rounded-none border-0 border-l border-border hover:text-accent-green" nativeButton={false} render={<a href="/auth/sso/register" />}>
             Register
           </Button>
         </div>

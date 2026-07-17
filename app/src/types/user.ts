@@ -6,4 +6,5 @@ export type UserProfile = {
   email: string;
   email_verified: boolean;
   is_admin: boolean;
+  is_sso: boolean;
 };
