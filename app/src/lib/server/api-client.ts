@@ -1,5 +1,5 @@
 import 'server-only';
-import { getAuthUser, getKcRefreshToken, setKcRefreshToken } from '@/lib/auth/session';
+import { getAuthUser, getKcRefreshToken, setKcRefreshToken, clearKcRefreshToken } from '@/lib/auth/session';
 import { getCacheableApiKeyByUser, getTempApiKey, type CacheableApiKey } from '@/lib/db/api-keys-service';
 import { refreshTokens } from '@/lib/auth/keycloak';
 import { config } from '@/lib/server/env';
@@ -65,17 +65,31 @@ async function resolveGeoidToken(): Promise<string | null> {
   const hit = tokenCache.get(cacheKey);
   if (hit && Date.now() < hit.validUntil) return hit.token;
 
-  const tokens = await refreshTokens(kcRefreshToken);
-  if (tokens.refresh_token) {
-    await setKcRefreshToken(tokens.refresh_token);
+  try {
+    const tokens = await refreshTokens(kcRefreshToken);
+    if (tokens.refresh_token) {
+      await setKcRefreshToken(tokens.refresh_token);
+    }
+    const validUntil = Date.now() + tokens.expires_in * 1000 - TOKEN_CACHE_SAFEGUARD_MS;
+    tokenCache.set(cacheKey, { token: tokens.access_token, validUntil });
+    return tokens.access_token;
+  } catch (err) {
+    console.error('Failed to refresh Keycloak geoid token; clearing stale token', err);
+    tokenCache.delete(cacheKey);
+    await clearKcRefreshToken();
+    return null;
   }
-  const validUntil = Date.now() + tokens.expires_in * 1000 - TOKEN_CACHE_SAFEGUARD_MS;
-  tokenCache.set(cacheKey, { token: tokens.access_token, validUntil });
-  return tokens.access_token;
+}
+
+function isGeoidRoute(path: string) {
+  return path.startsWith('/submit/geo-ids');
 }
 
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
-  const [apiKey, geoidToken] = await Promise.all([resolveApiKey(), resolveGeoidToken()]);
+  const [apiKey, geoidToken] = await Promise.all([
+    resolveApiKey(),
+    isGeoidRoute(path) ? resolveGeoidToken() : Promise.resolve(null),
+  ]);
   return fetch(`${config.api.url}${path}`, {
     ...init,
     cache: 'no-store',
