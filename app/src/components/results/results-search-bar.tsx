@@ -72,7 +72,7 @@ export function ResultsSearchBar({
           type="button"
           onClick={onClearFilter}
           className={cn(
-            "inline-flex h-[30px] items-center gap-1.5 border border-border bg-accent-green/[0.08] px-2.5 text-[11px] font-medium text-accent-green",
+            "inline-flex h-[30px] cursor-pointer items-center gap-1.5 border border-border bg-accent-green/[0.08] px-2.5 text-[11px] font-medium text-accent-green",
             controlRounded
           )}
         >

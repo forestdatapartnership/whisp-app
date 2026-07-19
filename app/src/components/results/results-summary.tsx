@@ -157,7 +157,7 @@ export function ResultsSummary({
                 type="button"
                 onClick={() => onCommodityChange(o.key)}
                 className={cn(
-                  "bg-surface px-3 py-1.5 text-xs whitespace-nowrap transition-colors",
+                  "cursor-pointer bg-surface px-3 py-1.5 text-xs whitespace-nowrap transition-colors",
                   commodity === o.key
                     ? "bg-surface-raised font-medium text-text-primary"
                     : "text-text-muted hover:bg-surface-raised hover:text-text-primary"
@@ -181,7 +181,7 @@ export function ResultsSummary({
                 type="button"
                 onClick={() => setRisk(r.tone)}
                 className={cn(
-                  "border-r border-border px-[18px] py-3.5 text-left last:border-r-0 transition-colors",
+                  "cursor-pointer border-r border-border px-[18px] py-3.5 text-left last:border-r-0 transition-colors",
                   active ? "bg-accent-green/[0.08]" : "hover:bg-surface-raised"
                 )}
               >
