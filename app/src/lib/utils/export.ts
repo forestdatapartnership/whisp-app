@@ -21,17 +21,6 @@ export function rowsToCsv(columns: string[], rows: Record<string, unknown>[]): s
   return [header, ...body].join('\n');
 }
 
-export function geoJsonToCsv(fc: FeatureCollection, columns?: string[]): string {
-  const keys =
-    columns ??
-    [...new Set(fc.features.flatMap((f) => Object.keys(f.properties ?? {})))];
-  const rows = fc.features.map((f) => {
-    const props = f.properties ?? {};
-    return Object.fromEntries(keys.map((k) => [k, props[k]]));
-  });
-  return rowsToCsv(keys, rows);
-}
-
 export function downloadCsv(columns: string[], rows: Record<string, unknown>[], filename: string) {
   downloadBlob(new Blob([rowsToCsv(columns, rows)], { type: 'text/csv;charset=utf-8' }), filename);
 }

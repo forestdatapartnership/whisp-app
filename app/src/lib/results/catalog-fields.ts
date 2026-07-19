@@ -22,14 +22,10 @@ export interface RiskFilter {
   value: RiskValue;
 }
 
-export function isUsedForRisk(commodityMetadata?: CommodityMetadataMap): boolean {
-  return Object.values(commodityMetadata ?? {}).some((m) => m?.usedForRisk === true);
-}
-
 export function isRiskColumn(col: CatalogColumn): boolean {
   return (
     (col.category != null && RISK_PICKER_CATEGORIES.has(col.category)) ||
-    isUsedForRisk(col.commodityMetadata)
+    Object.values(col.commodityMetadata ?? {}).some((m) => m?.usedForRisk === true)
   );
 }
 
@@ -38,14 +34,6 @@ export function fieldLabel(col: CatalogColumn): string {
   if (col.key.startsWith("risk_") && col.description) return col.description;
   if (col.key.startsWith("Ind_")) return col.key.replace(/^Ind_\d+_/, "").replace(/_/g, " ");
   return col.description || col.key.replace(/_/g, " ");
-}
-
-export function shortRiskLabel(col: CatalogColumn): string {
-  const key = col.key.replace(/^risk_/, "");
-  if (key === "pcrop") return "Perennial";
-  if (key === "acrop") return "Annual";
-  if (key === "timber") return "Timber";
-  return fieldLabel(col);
 }
 
 export function riskToneToValue(tone: RiskTone): RiskValue {
@@ -77,7 +65,6 @@ export interface RiskMix {
   low: number;
   medium: number;
   high: number;
-  unknown: number;
   total: number;
 }
 
@@ -85,11 +72,10 @@ export function computeRiskMix(
   rows: Array<Record<string, unknown>>,
   field: string
 ): RiskMix {
-  const mix: RiskMix = { low: 0, medium: 0, high: 0, unknown: 0, total: rows.length };
+  const mix: RiskMix = { low: 0, medium: 0, high: 0, total: rows.length };
   for (const row of rows) {
     const tone = riskValueToTone(String(row[field] ?? ""));
     if (tone) mix[tone]++;
-    else mix.unknown++;
   }
   return mix;
 }

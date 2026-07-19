@@ -8,7 +8,6 @@ import "./leaflet-dark.css";
 import { useTheme } from "@/components/layout/theme-provider";
 import { FeatureCollection, Feature, Geometry, GeoJsonProperties } from "geojson";
 import { riskFromValue } from "@/components/results/risk-badge";
-import { riskValueToTone } from "@/lib/results/catalog-fields";
 import { COMMODITY_OPTIONS } from "@/lib/results/risk-trees";
 
 const OSM =
@@ -61,8 +60,7 @@ function popupHtml(props: Record<string, unknown>) {
 
 function riskColor(props: GeoJsonProperties | null | undefined, riskField?: string) {
   if (!riskField || !props) return RISK_FILL.info;
-  const tone = riskValueToTone(String(props[riskField] ?? "")) ?? "info";
-  return RISK_FILL[tone];
+  return RISK_FILL[riskFromValue(props[riskField]).level];
 }
 
 interface PlotMapViewProps {

@@ -15,7 +15,6 @@ import {
   isTruthyCell,
   riskToneToValue,
   type RiskFilter,
-  type RiskMix,
   type RiskTone,
 } from "@/lib/results/catalog-fields";
 import {
@@ -40,10 +39,10 @@ export interface ResultsSummaryProps {
   className?: string;
 }
 
-const RISK_ROWS: Array<{ key: keyof RiskMix; label: string; tone: RiskTone }> = [
-  { key: "low", label: "Low risk", tone: "low" },
-  { key: "medium", label: "More info needed", tone: "medium" },
-  { key: "high", label: "High risk", tone: "high" },
+const RISK_ROWS: Array<{ label: string; tone: RiskTone }> = [
+  { label: "Low risk", tone: "low" },
+  { label: "More info needed", tone: "medium" },
+  { label: "High risk", tone: "high" },
 ];
 
 const RISK_TEXT: Record<RiskTone, string> = {
@@ -177,7 +176,7 @@ export function ResultsSummary({
             const active = riskFilter?.field === riskField && riskFilter.value === value;
             return (
               <button
-                key={r.key}
+                key={r.tone}
                 type="button"
                 onClick={() => setRisk(r.tone)}
                 className={cn(
@@ -190,7 +189,7 @@ export function ResultsSummary({
                   {r.label}
                 </p>
                 <p className={cn("text-xl font-semibold tabular-nums tracking-tight", RISK_TEXT[r.tone])}>
-                  {mix[r.key]}
+                  {mix[r.tone]}
                 </p>
               </button>
             );

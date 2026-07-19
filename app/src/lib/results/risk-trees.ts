@@ -1,4 +1,4 @@
-import { isTruthyCell, riskValueToTone, type RiskValue } from "./catalog-fields";
+import { computeRiskMix, isTruthyCell, type RiskValue } from "./catalog-fields";
 
 export type CommodityKey = "pcrop" | "acrop" | "timber";
 export type TreeOutcome = RiskValue | "continue";
@@ -7,12 +7,14 @@ export const COMMODITY_OPTIONS: Array<{
   key: CommodityKey;
   riskField: string;
   label: string;
+  shortLabel: string;
   indicators: string[];
 }> = [
   {
     key: "pcrop",
     riskField: "risk_pcrop",
     label: "Perennial crop",
+    shortLabel: "Perennial",
     indicators: [
       "Ind_01_treecover",
       "Ind_02_commodities",
@@ -24,12 +26,14 @@ export const COMMODITY_OPTIONS: Array<{
     key: "acrop",
     riskField: "risk_acrop",
     label: "Annual crop",
+    shortLabel: "Annual",
     indicators: ["Ind_01_treecover", "Ind_02_commodities", "Ind_04_disturbance_after_2020"],
   },
   {
     key: "timber",
     riskField: "risk_timber",
     label: "Timber",
+    shortLabel: "Timber",
     indicators: [
       "Ind_02_commodities",
       "Ind_05_primary_2020",
@@ -190,16 +194,17 @@ export function countryRiskBreakdown(
   rows: Array<Record<string, unknown>>,
   riskField: string
 ) {
-  const map = new Map<string, { low: number; medium: number; high: number; count: number }>();
+  const map = new Map<string, Array<Record<string, unknown>>>();
   for (const row of rows) {
     const country = String(row.Country ?? "").trim() || "Unknown";
-    const entry = map.get(country) ?? { low: 0, medium: 0, high: 0, count: 0 };
-    entry.count++;
-    const tone = riskValueToTone(String(row[riskField] ?? ""));
-    if (tone) entry[tone]++;
-    map.set(country, entry);
+    const list = map.get(country);
+    if (list) list.push(row);
+    else map.set(country, [row]);
   }
   return [...map.entries()]
-    .map(([country, e]) => ({ country, ...e }))
+    .map(([country, rs]) => {
+      const mix = computeRiskMix(rs, riskField);
+      return { country, count: mix.total, low: mix.low, medium: mix.medium, high: mix.high };
+    })
     .sort((a, b) => b.count - a.count);
 }

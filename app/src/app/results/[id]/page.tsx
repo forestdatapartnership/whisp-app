@@ -19,11 +19,7 @@ import { downloadCsv, downloadGeoJson, timestampFilename } from "@/lib/utils/exp
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/icons";
 import { getResultFields } from "@/app/docs/reference/result-fields/actions";
-import {
-  riskValueLabel,
-  shortRiskLabel,
-  type RiskFilter,
-} from "@/lib/results/catalog-fields";
+import { riskValueLabel, type RiskFilter } from "@/lib/results/catalog-fields";
 import { COMMODITY_OPTIONS, type CommodityKey } from "@/lib/results/risk-trees";
 import type { ResultField } from "@/types/models";
 import type { FeatureCollection } from "geojson";
@@ -117,8 +113,7 @@ export default function ResultsPage() {
   const [tableData, setTableData] = useState<ResultRow[]>([]);
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
 
-  const riskField =
-    COMMODITY_OPTIONS.find((o) => o.key === commodity)?.riskField ?? "risk_pcrop";
+  const riskField = COMMODITY_OPTIONS.find((o) => o.key === commodity)!.riskField;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -172,20 +167,19 @@ export default function ResultsPage() {
       code !== "analysis_processing" &&
       code !== "analysis_queued");
 
+  const searchedData = useMemo(() => {
+    if (!search.trim()) return tableData;
+    const q = search.toLowerCase();
+    const keys = ["plotId", "external_id", "Country", "Admin_Level_1"] as const;
+    return tableData.filter((row) =>
+      keys.some((key) => String(row[key] ?? "").toLowerCase().includes(q))
+    );
+  }, [tableData, search]);
+
   const filteredData = useMemo(() => {
-    let rows = tableData;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      const keys = ["plotId", "external_id", "Country", "Admin_Level_1"] as const;
-      rows = rows.filter((row) =>
-        keys.some((key) => String(row[key] ?? "").toLowerCase().includes(q))
-      );
-    }
-    if (riskFilter) {
-      rows = rows.filter((row) => row[riskFilter.field] === riskFilter.value);
-    }
-    return rows;
-  }, [tableData, search, riskFilter]);
+    if (!riskFilter) return searchedData;
+    return searchedData.filter((row) => row[riskFilter.field] === riskFilter.value);
+  }, [searchedData, riskFilter]);
 
   const sortedData = useMemo(() => {
     if (!sortColumn) return filteredData;
@@ -216,10 +210,11 @@ export default function ResultsPage() {
 
   const riskFilterLabel = useMemo(() => {
     if (!riskFilter) return null;
-    const col = allColumns.find((c) => c.key === riskFilter.field);
-    const name = col ? shortRiskLabel(col) : riskFilter.field.replace(/^risk_/, "");
+    const name =
+      COMMODITY_OPTIONS.find((o) => o.riskField === riskFilter.field)?.shortLabel ??
+      riskFilter.field.replace(/^risk_/, "");
     return `${name} · ${riskValueLabel(riskFilter.value)}`;
-  }, [riskFilter, allColumns]);
+  }, [riskFilter]);
 
   const handleCommodityChange = useCallback(
     (key: CommodityKey) => {
@@ -391,7 +386,7 @@ export default function ResultsPage() {
         onCloseSummary={() => setSummaryOpen(false)}
         onBack={() => router.push("/")}
         onOpenWhispMap={handleOpenWhispMap}
-        whispMapDisabled={tableData.length === 0 || !config?.api.url}
+        whispMapDisabled={!config?.api.url}
       />
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row lg:overflow-hidden">
         <div
@@ -444,7 +439,7 @@ export default function ResultsPage() {
             />
             <ResultsSummary
               open={summaryOpen}
-              rows={filteredData}
+              rows={searchedData}
               columns={allColumns}
               commodity={commodity}
               onCommodityChange={handleCommodityChange}
