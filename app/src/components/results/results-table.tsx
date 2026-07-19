@@ -11,7 +11,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RiskBadge } from "./risk-badge";
+import { RiskBadge, riskFromValue } from "./risk-badge";
 
 import type { CommodityMetadataMap } from "@/types/models";
 
@@ -20,6 +20,7 @@ export interface ColumnDef {
   header: string;
   type?: string;
   category?: string;
+  description?: string;
   commodityMetadata?: CommodityMetadataMap;
   excludeFromResults?: boolean;
 }
@@ -32,6 +33,7 @@ interface ResultsTableProps {
   columns: ColumnDef[];
   visibleCols: string[];
   data: ResultRow[];
+  presenceRows?: ResultRow[];
   selectedRowId?: string | null;
   onSelectRow?: (row: ResultRow | null) => void;
   sortColumn?: string | null;
@@ -107,13 +109,8 @@ function renderCell(value: unknown, type?: string, key?: string) {
   }
 
   if (key?.startsWith("risk_")) {
-    const map: Record<string, { level: "low" | "medium" | "high" | "info"; label: string }> = {
-      low: { level: "low", label: "Low" },
-      high: { level: "high", label: "High" },
-      more_info_needed: { level: "medium", label: "More info needed" },
-    };
-    const m = map[String(value)] || { level: "info", label: String(value) };
-    return <RiskBadge level={m.level} label={m.label} />;
+    const { level, label } = riskFromValue(value);
+    return <RiskBadge level={level} label={label} />;
   }
 
   return renderText(String(value));
@@ -123,6 +120,7 @@ export function ResultsTable({
   columns,
   visibleCols,
   data,
+  presenceRows,
   selectedRowId,
   onSelectRow,
   sortColumn,
@@ -130,20 +128,20 @@ export function ResultsTable({
   onSort,
   className,
 }: ResultsTableProps) {
+  const presence = presenceRows ?? data;
   const visibleColumns = useMemo(
     () =>
       columns.filter((c) => {
         if (!visibleCols.includes(c.key)) return false;
         if (c.key === "external_id") {
-          const hasValue = data.some((row) => {
+          return presence.some((row) => {
             const v = row[c.key];
             return v !== null && v !== undefined && String(v).trim() !== "";
           });
-          if (!hasValue) return false;
         }
         return true;
       }),
-    [columns, visibleCols, data]
+    [columns, visibleCols, presence]
   );
   const idKey = "plotId";
   return (

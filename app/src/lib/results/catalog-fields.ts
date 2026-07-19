@@ -1,0 +1,101 @@
+import type { CommodityMetadataMap } from "@/types/models";
+
+export const RISK_PICKER_CATEGORIES = new Set([
+  "Context and metadata",
+  "Analysis results",
+  "Plot location",
+]);
+
+export type RiskValue = "low" | "more_info_needed" | "high";
+export type RiskTone = "low" | "medium" | "high";
+
+export interface CatalogColumn {
+  key: string;
+  header: string;
+  category?: string;
+  description?: string;
+  commodityMetadata?: CommodityMetadataMap;
+}
+
+export interface RiskFilter {
+  field: string;
+  value: RiskValue;
+}
+
+export function isUsedForRisk(commodityMetadata?: CommodityMetadataMap): boolean {
+  return Object.values(commodityMetadata ?? {}).some((m) => m?.usedForRisk === true);
+}
+
+export function isRiskColumn(col: CatalogColumn): boolean {
+  return (
+    (col.category != null && RISK_PICKER_CATEGORIES.has(col.category)) ||
+    isUsedForRisk(col.commodityMetadata)
+  );
+}
+
+export function fieldLabel(col: CatalogColumn): string {
+  if (col.header && col.header !== col.key) return col.header;
+  if (col.key.startsWith("risk_") && col.description) return col.description;
+  if (col.key.startsWith("Ind_")) return col.key.replace(/^Ind_\d+_/, "").replace(/_/g, " ");
+  return col.description || col.key.replace(/_/g, " ");
+}
+
+export function shortRiskLabel(col: CatalogColumn): string {
+  const key = col.key.replace(/^risk_/, "");
+  if (key === "pcrop") return "Perennial";
+  if (key === "acrop") return "Annual";
+  if (key === "timber") return "Timber";
+  return fieldLabel(col);
+}
+
+export function riskToneToValue(tone: RiskTone): RiskValue {
+  return tone === "medium" ? "more_info_needed" : tone;
+}
+
+export function riskValueToTone(value: string): RiskTone | null {
+  if (value === "low" || value === "high") return value;
+  if (value === "more_info_needed") return "medium";
+  return null;
+}
+
+export function riskValueLabel(value: RiskValue): string {
+  if (value === "more_info_needed") return "More info needed";
+  if (value === "high") return "High risk";
+  return "Low risk";
+}
+
+export function isTruthyCell(value: unknown): boolean {
+  if (value === true) return true;
+  if (typeof value === "string") {
+    const v = value.toLowerCase();
+    return v === "yes" || v === "true";
+  }
+  return false;
+}
+
+export interface RiskMix {
+  low: number;
+  medium: number;
+  high: number;
+  unknown: number;
+  total: number;
+}
+
+export function computeRiskMix(
+  rows: Array<Record<string, unknown>>,
+  field: string
+): RiskMix {
+  const mix: RiskMix = { low: 0, medium: 0, high: 0, unknown: 0, total: rows.length };
+  for (const row of rows) {
+    const tone = riskValueToTone(String(row[field] ?? ""));
+    if (tone) mix[tone]++;
+    else mix.unknown++;
+  }
+  return mix;
+}
+
+export function countTruthy(rows: Array<Record<string, unknown>>, field: string): number {
+  let n = 0;
+  for (const row of rows) if (isTruthyCell(row[field])) n++;
+  return n;
+}

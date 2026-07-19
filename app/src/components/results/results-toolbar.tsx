@@ -3,15 +3,16 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Map } from "lucide-react";
+import { ArrowLeft, ChartColumn, Map, Table2 } from "lucide-react";
 
 interface ResultsToolbarProps {
   title?: string;
   plotCount?: number;
-  currentPage?: number;
-  totalPages?: number;
   mapVisible?: boolean;
   onToggleMap?: (visible: boolean) => void;
+  summaryOpen?: boolean;
+  onOpenSummary?: () => void;
+  onCloseSummary?: () => void;
   onBack?: () => void;
   onOpenWhispMap?: () => void;
   whispMapDisabled?: boolean;
@@ -21,10 +22,11 @@ interface ResultsToolbarProps {
 export function ResultsToolbar({
   title = "Results",
   plotCount = 0,
-  currentPage = 1,
-  totalPages = 1,
   mapVisible = false,
   onToggleMap,
+  summaryOpen = false,
+  onOpenSummary,
+  onCloseSummary,
   onBack,
   onOpenWhispMap,
   whispMapDisabled = false,
@@ -44,9 +46,26 @@ export function ResultsToolbar({
         </svg>
         {plotCount} plot{plotCount !== 1 ? "s" : ""}
       </span>
-      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-raised px-[9px] py-[2px] text-[11px] text-text-muted">
-        Page {currentPage} of {totalPages}
-      </span>
+      {onOpenSummary && onCloseSummary && (
+        <>
+          <Button
+            size="sm"
+            variant={!summaryOpen ? "secondary" : "outline"}
+            onClick={onCloseSummary}
+          >
+            <Table2 />
+            Table
+          </Button>
+          <Button
+            size="sm"
+            variant={summaryOpen ? "secondary" : "outline"}
+            onClick={onOpenSummary}
+          >
+            <ChartColumn />
+            Risk overview
+          </Button>
+        </>
+      )}
       <div className="flex-1" />
       <Button variant="outline" size="sm" onClick={onBack}>
         <ArrowLeft />
@@ -59,7 +78,7 @@ export function ResultsToolbar({
         disabled={whispMapDisabled}
       >
         <Map />
-        View in Whisp Map
+        Open in Whisp Map
       </Button>
       <div className="flex items-center gap-[7px] text-xs text-text-muted">
         <Switch

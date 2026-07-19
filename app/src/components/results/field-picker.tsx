@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, CloseButton } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { controlRounded } from "@/components/ui/styles";
+import { isRiskColumn } from "@/lib/results/catalog-fields";
+import { ResultsOverlayHeader } from "./results-overlay-header";
 import type { CommodityMetadataMap } from "@/types/models";
 
 export interface ColumnGroup {
@@ -19,20 +21,6 @@ export interface FieldPickerColumn {
   type?: string;
   category?: string;
   commodityMetadata?: CommodityMetadataMap;
-}
-
-const RISK_CATEGORIES = new Set([
-  "Context and metadata",
-  "Analysis results",
-  "Plot location",
-]);
-
-function isRiskColumn(col: FieldPickerColumn): boolean {
-  const categoryMatch = col.category != null && RISK_CATEGORIES.has(col.category);
-  const usedForRisk = Object.values(col.commodityMetadata ?? {}).some(
-    (m) => m?.usedForRisk === true
-  );
-  return categoryMatch || usedForRisk;
 }
 
 function matchesQuery(col: FieldPickerColumn, query: string): boolean {
@@ -151,42 +139,37 @@ export function FieldPicker({
 
   return (
     <div className="absolute inset-0 z-50 flex flex-col overflow-hidden bg-bg">
-      <div
-        role="search"
-        className="flex shrink-0 items-center gap-2 border-b border-border bg-surface px-[14px] py-2"
-      >
-        <div className="relative shrink-0">
-          <svg
-            className="pointer-events-none absolute left-[9px] top-1/2 -translate-y-1/2 text-text-muted"
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search fields…"
-            aria-label="Search fields"
-            className={`h-[30px] w-[180px] ${controlRounded} border border-border bg-bg pl-[30px] pr-[10px] text-xs text-text-primary outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent-green`}
-          />
-        </div>
-        <div className="flex-1" />
-        <span className="shrink-0 text-xs leading-none text-text-muted">
-          {visible.length} selected
-        </span>
-        <div className="flex-1" />
-        <CloseButton type="button" onClick={handleClose} />
-      </div>
+      <ResultsOverlayHeader
+        onClose={handleClose}
+        meta={`${visible.length} selected`}
+        leading={
+          <div className="relative shrink-0" role="search">
+            <svg
+              className="pointer-events-none absolute left-[9px] top-1/2 -translate-y-1/2 text-text-muted"
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search fields…"
+              aria-label="Search fields"
+              className={`h-[30px] w-[180px] ${controlRounded} border border-border bg-bg pl-[30px] pr-[10px] text-xs text-text-primary outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent-green`}
+            />
+          </div>
+        }
+      />
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full min-h-0 w-[240px] shrink-0 border-r border-border">
           <div className="py-2">

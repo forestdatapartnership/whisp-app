@@ -25,6 +25,9 @@
   --btn-primary-text: #ffffff;
   --text-dim: #5c6d53;
   --toast-bg: #edfcd4;
+  --risk-high: #e05a5a;
+  --risk-medium: #e09a1a;
+  --risk-low: var(--accent-green);
 
   --background: var(--bg);
   --foreground: var(--text-primary);
@@ -62,6 +65,9 @@
   --btn-primary-text: #ffffff;
   --text-dim: #718fa0;
   --toast-bg: #0d1f10;
+  --risk-high: #f87171;
+  --risk-medium: #e09a1a;
+  --risk-low: var(--accent-green);
 
   --destructive: #f87171;
 }
@@ -83,6 +89,9 @@
   --color-btn-primary-hover: var(--btn-primary-bg-hover);
   --color-btn-primary-text: var(--btn-primary-text);
   --color-toast-bg: var(--toast-bg);
+  --color-risk-high: var(--risk-high);
+  --color-risk-medium: var(--risk-medium);
+  --color-risk-low: var(--risk-low);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

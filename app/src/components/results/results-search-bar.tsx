@@ -10,17 +10,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ListFilter, Download, ChevronDown, FileText } from "lucide-react";
+import { ListFilter, Download, ChevronDown, FileText, X } from "lucide-react";
 
 interface ResultsSearchBarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   fieldPickerOpen?: boolean;
   onOpenFieldPicker: () => void;
-  onExportCSV?: () => void;
-  onExportGeoJSON?: () => void;
-  onExportSelectedCSV?: () => void;
-  onExportSelectedGeoJSON?: () => void;
+  onExportCsv?: () => void;
+  onExportGeoJson?: () => void;
+  filterLabel?: string | null;
+  onClearFilter?: () => void;
   className?: string;
 }
 
@@ -29,10 +29,10 @@ export function ResultsSearchBar({
   onSearchChange,
   fieldPickerOpen,
   onOpenFieldPicker,
-  onExportCSV,
-  onExportGeoJSON,
-  onExportSelectedCSV,
-  onExportSelectedGeoJSON,
+  onExportCsv,
+  onExportGeoJson,
+  filterLabel,
+  onClearFilter,
   className,
 }: ResultsSearchBarProps) {
   const [open, setOpen] = useState(false);
@@ -40,7 +40,7 @@ export function ResultsSearchBar({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 border-b border-border bg-surface px-[14px] py-2 shrink-0",
+        "flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-surface px-[14px] py-2",
         className
       )}
     >
@@ -67,6 +67,19 @@ export function ResultsSearchBar({
           className={`h-[30px] w-[180px] ${controlRounded} border border-border bg-bg pl-[30px] pr-[10px] text-xs text-text-primary outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent-green`}
         />
       </div>
+      {filterLabel && onClearFilter && (
+        <button
+          type="button"
+          onClick={onClearFilter}
+          className={cn(
+            "inline-flex h-[30px] items-center gap-1.5 border border-border bg-accent-green/[0.08] px-2.5 text-[11px] font-medium text-accent-green",
+            controlRounded
+          )}
+        >
+          {filterLabel}
+          <X className="size-3" />
+        </button>
+      )}
       <div className="flex-1" />
       <Button
         variant="outline"
@@ -83,47 +96,26 @@ export function ResultsSearchBar({
           Export
           <ChevronDown />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-[200px] bg-surface border-border">
+        <DropdownMenuContent align="end" className="min-w-[160px] border-border bg-surface">
           <DropdownMenuItem
             onClick={() => {
-              onExportCSV?.();
+              onExportCsv?.();
               setOpen(false);
             }}
-            className="text-xs text-text-muted gap-2 cursor-pointer focus:bg-surface-raised focus:text-text-primary"
+            className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
           >
             <FileText className="h-3 w-3" />
             CSV
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              onExportGeoJSON?.();
+              onExportGeoJson?.();
               setOpen(false);
             }}
-            className="text-xs text-text-muted gap-2 cursor-pointer focus:bg-surface-raised focus:text-text-primary"
+            className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
           >
             <FileText className="h-3 w-3" />
             GeoJSON
-          </DropdownMenuItem>
-          <div className="h-px bg-border my-1" />
-          <DropdownMenuItem
-            onClick={() => {
-              onExportSelectedCSV?.();
-              setOpen(false);
-            }}
-            className="text-xs text-text-muted gap-2 cursor-pointer focus:bg-surface-raised focus:text-text-primary"
-          >
-            <FileText className="h-3 w-3" />
-            CSV (selected fields)
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              onExportSelectedGeoJSON?.();
-              setOpen(false);
-            }}
-            className="text-xs text-text-muted gap-2 cursor-pointer focus:bg-surface-raised focus:text-text-primary"
-          >
-            <FileText className="h-3 w-3" />
-            GeoJSON (selected fields)
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

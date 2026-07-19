@@ -8,6 +8,7 @@ import { AnalysisError } from "@/components/results/analysis-error";
 import { ResultsToolbar } from "@/components/results/results-toolbar";
 import { ResultsSearchBar } from "@/components/results/results-search-bar";
 import { ResultsTable, type ColumnDef, type ResultRow } from "@/components/results/results-table";
+import { ResultsSummary } from "@/components/results/results-summary";
 import { ResultsPagination } from "@/components/results/results-pagination";
 import { MapPane } from "@/components/results/map-pane";
 import { FieldPicker, type ColumnGroup } from "@/components/results/field-picker";
@@ -18,13 +19,17 @@ import { downloadCsv, downloadGeoJson, timestampFilename } from "@/lib/utils/exp
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/icons";
 import { getResultFields } from "@/app/docs/reference/result-fields/actions";
+import {
+  riskValueLabel,
+  shortRiskLabel,
+  type RiskFilter,
+} from "@/lib/results/catalog-fields";
+import { COMMODITY_OPTIONS, type CommodityKey } from "@/lib/results/risk-trees";
 import type { ResultField } from "@/types/models";
 import type { FeatureCollection } from "geojson";
 
 function buildFromFields(fields: ResultField[]) {
-  const eligible = fields.filter(
-    (f) => f.analysisMetadata?.excludeFromOutput !== true
-  );
+  const eligible = fields.filter((f) => f.analysisMetadata?.excludeFromOutput !== true);
   const sorted = [...eligible].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
 
   const allColumns: ColumnDef[] = sorted.map((f) => ({
@@ -32,6 +37,7 @@ function buildFromFields(fields: ResultField[]) {
     header: f.displayMetadata?.displayName ?? f.id,
     type: f.type,
     category: f.category,
+    description: f.description,
     commodityMetadata: f.commodityMetadata,
     excludeFromResults: f.displayMetadata?.excludeFromResults === true,
   }));
@@ -42,10 +48,17 @@ function buildFromFields(fields: ResultField[]) {
     if (!categoryMap.has(cat)) categoryMap.set(cat, []);
     categoryMap.get(cat)!.push(f.id);
   }
-  const columnGroups: ColumnGroup[] = [...categoryMap.entries()].map(([name, columns]) => ({ name, columns }));
+  const columnGroups: ColumnGroup[] = [...categoryMap.entries()].map(([name, columns]) => ({
+    name,
+    columns,
+  }));
 
   const defaultVisible = sorted
-    .filter((f) => f.displayMetadata?.excludeFromResults !== true && f.displayMetadata?.visibleByDefault !== false)
+    .filter(
+      (f) =>
+        f.displayMetadata?.excludeFromResults !== true &&
+        f.displayMetadata?.visibleByDefault !== false
+    )
     .map((f) => f.id);
 
   return { allColumns, columnGroups, defaultVisible };
@@ -88,18 +101,41 @@ export default function ResultsPage() {
 
   const [mapVisible, setMapVisible] = useState(true);
   const [search, setSearch] = useState("");
+  const [riskFilter, setRiskFilter] = useState<RiskFilter | null>(null);
+  const [commodity, setCommodity] = useState<CommodityKey>("pcrop");
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedRow, setSelectedRow] = useState<ResultRow | null>(null);
   const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [allColumns, setAllColumns] = useState<ColumnDef[]>([]);
   const [columnGroups, setColumnGroups] = useState<ColumnGroup[]>([]);
   const [visibleCols, setVisibleCols] = useState<string[]>([]);
   const [defaultVisibleCols, setDefaultVisibleCols] = useState<string[]>([]);
   const [tableData, setTableData] = useState<ResultRow[]>([]);
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
+
+  const riskField =
+    COMMODITY_OPTIONS.find((o) => o.key === commodity)?.riskField ?? "risk_pcrop";
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (summaryOpen) {
+        setSummaryOpen(false);
+        return;
+      }
+      if (fieldPickerOpen) {
+        setFieldPickerOpen(false);
+        return;
+      }
+      if (selectedRow) setSelectedRow(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [summaryOpen, fieldPickerOpen, selectedRow]);
 
   useEffect(() => {
     getResultFields().then((result) => {
@@ -128,63 +164,115 @@ export default function ResultsPage() {
   const { response, isLoading, error } = useJobStatus({ token: id, onCompleted: handleCompleted });
 
   const code = response?.code;
-  const isProcessing = code === 'analysis_processing' || code === 'analysis_queued';
-  const isError = !!error || (code && code !== 'analysis_completed' && code !== 'analysis_processing' && code !== 'analysis_queued');
+  const isProcessing = code === "analysis_processing" || code === "analysis_queued";
+  const isError =
+    !!error ||
+    (!!code &&
+      code !== "analysis_completed" &&
+      code !== "analysis_processing" &&
+      code !== "analysis_queued");
 
   const filteredData = useMemo(() => {
-    if (!search.trim()) return tableData;
-    const q = search.toLowerCase();
-    const searchKeys = ["plotId", "external_id", "Country", "Admin_Level_1"] as const;
-    return tableData.filter((row) =>
-      searchKeys.some((key) =>
-        String(row[key] ?? "").toLowerCase().includes(q)
-      )
-    );
-  }, [search, tableData]);
+    let rows = tableData;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const keys = ["plotId", "external_id", "Country", "Admin_Level_1"] as const;
+      rows = rows.filter((row) =>
+        keys.some((key) => String(row[key] ?? "").toLowerCase().includes(q))
+      );
+    }
+    if (riskFilter) {
+      rows = rows.filter((row) => row[riskFilter.field] === riskFilter.value);
+    }
+    return rows;
+  }, [tableData, search, riskFilter]);
 
   const sortedData = useMemo(() => {
     if (!sortColumn) return filteredData;
     const columnType = allColumns.find((c) => c.key === sortColumn)?.type;
     return [...filteredData].sort((a, b) => {
-      const cmp = compareResultValues(
-        a[sortColumn],
-        b[sortColumn],
-        sortColumn,
-        columnType
-      );
+      const cmp = compareResultValues(a[sortColumn], b[sortColumn], sortColumn, columnType);
       return sortAsc ? cmp : -cmp;
     });
   }, [filteredData, sortColumn, sortAsc, allColumns]);
 
+  const filteredGeoJson = useMemo(() => {
+    if (!geoJsonData) return null;
+    const ids = new Set(filteredData.map((r) => String(r.plotId)));
+    return {
+      type: "FeatureCollection" as const,
+      features: geoJsonData.features.filter((f) =>
+        ids.has(String(f.properties?.plotId ?? ""))
+      ),
+    };
+  }, [geoJsonData, filteredData]);
+
+  useEffect(() => {
+    if (!selectedRow) return;
+    if (!filteredData.some((r) => r.plotId === selectedRow.plotId)) {
+      setSelectedRow(null);
+    }
+  }, [filteredData, selectedRow]);
+
+  const riskFilterLabel = useMemo(() => {
+    if (!riskFilter) return null;
+    const col = allColumns.find((c) => c.key === riskFilter.field);
+    const name = col ? shortRiskLabel(col) : riskFilter.field.replace(/^risk_/, "");
+    return `${name} · ${riskValueLabel(riskFilter.value)}`;
+  }, [riskFilter, allColumns]);
+
+  const handleCommodityChange = useCallback(
+    (key: CommodityKey) => {
+      setCommodity(key);
+      const nextField = COMMODITY_OPTIONS.find((o) => o.key === key)!.riskField;
+      if (riskFilter && riskFilter.field !== nextField) {
+        setRiskFilter(null);
+        setCurrentPage(1);
+      }
+    },
+    [riskFilter]
+  );
+
+  const handleRiskFilter = useCallback((filter: RiskFilter | null) => {
+    setRiskFilter(filter);
+    setCurrentPage(1);
+    if (filter) {
+      const match = COMMODITY_OPTIONS.find((o) => o.riskField === filter.field);
+      if (match) setCommodity(match.key);
+    }
+  }, []);
+
+  const handleOpenSummary = useCallback(() => {
+    setFieldPickerOpen(false);
+    setSummaryOpen(true);
+  }, []);
+
+  const handleOpenFieldPicker = useCallback(() => {
+    setSummaryOpen(false);
+    setFieldPickerOpen(true);
+  }, []);
+
   const totalPages = Math.max(1, Math.ceil(sortedData.length / rowsPerPage));
   const safePage = Math.min(currentPage, totalPages);
-
   const pageData = useMemo(() => {
     const start = (safePage - 1) * rowsPerPage;
     return sortedData.slice(start, start + rowsPerPage);
   }, [sortedData, safePage, rowsPerPage]);
 
-  const handleSort = useCallback((key: string) => {
-    setCurrentPage(1);
-    if (sortColumn === key) {
-      setSortAsc((asc) => !asc);
-    } else {
-      setSortColumn(key);
-      setSortAsc(true);
-    }
-  }, [sortColumn]);
+  const handleSort = useCallback(
+    (key: string) => {
+      setCurrentPage(1);
+      if (sortColumn === key) setSortAsc((asc) => !asc);
+      else {
+        setSortColumn(key);
+        setSortAsc(true);
+      }
+    },
+    [sortColumn]
+  );
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    setCurrentPage(1);
-  }, []);
-
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-  }, []);
-
-  const handleRowsPerPageChange = useCallback((rows: number) => {
-    setRowsPerPage(rows);
     setCurrentPage(1);
   }, []);
 
@@ -198,69 +286,40 @@ export default function ResultsPage() {
   }, [id, tableData.length, config?.api.url]);
 
   const handleExportCsv = useCallback(() => {
-    if (!geoJsonData) return;
     const cols = allColumns.map((c) => c.key);
-    const rows = tableData.map((row) => {
-      const out: Record<string, unknown> = {};
-      for (const c of cols) out[c] = row[c];
-      return out;
-    });
-    downloadCsv(cols, rows, timestampFilename("csv"));
-  }, [geoJsonData, allColumns, tableData]);
+    downloadCsv(
+      cols,
+      tableData.map((row) => Object.fromEntries(cols.map((c) => [c, row[c]]))),
+      timestampFilename("csv")
+    );
+  }, [allColumns, tableData]);
 
   const handleExportGeoJson = useCallback(() => {
     if (!geoJsonData) return;
-    const cols = allColumns.map((c) => c.key);
-    const filtered: FeatureCollection = {
-      type: "FeatureCollection",
-      features: geoJsonData.features.map((f) => ({
-        ...f,
-        properties: Object.fromEntries(
-          cols.map((c) => [c, f.properties?.[c]]).filter(([, v]) => v !== undefined)
-        ),
-      })),
-    };
-    downloadGeoJson(filtered, timestampFilename("geojson"));
-  }, [geoJsonData, allColumns]);
-
-  const handleExportSelectedCsv = useCallback(() => {
-    if (!geoJsonData) return;
-    const cols = visibleCols.length > 0 ? visibleCols : allColumns.map((c) => c.key);
-    const rows = tableData.map((row) => {
-      const out: Record<string, unknown> = {};
-      for (const c of cols) out[c] = row[c];
-      return out;
-    });
-    downloadCsv(cols, rows, timestampFilename("csv", "selected"));
-  }, [geoJsonData, visibleCols, allColumns, tableData]);
-
-  const handleExportSelectedGeoJson = useCallback(() => {
-    if (!geoJsonData) return;
-    const cols = visibleCols.length > 0 ? visibleCols : allColumns.map((c) => c.key);
-    const filtered: FeatureCollection = {
-      type: "FeatureCollection",
-      features: geoJsonData.features.map((f) => ({
-        ...f,
-        properties: Object.fromEntries(
-          cols.map((c) => [c, f.properties?.[c]]).filter(([, v]) => v !== undefined)
-        ),
-      })),
-    };
-    downloadGeoJson(filtered, timestampFilename("geojson", "selected"));
-  }, [geoJsonData, visibleCols, allColumns]);
+    downloadGeoJson(geoJsonData, timestampFilename("geojson"));
+  }, [geoJsonData]);
 
   const selectedFeatureIndex = useMemo(() => {
-    if (!selectedRow || !geoJsonData) return undefined;
-    return geoJsonData.features.findIndex((f) => f.properties?.plotId === selectedRow.plotId);
-  }, [selectedRow, geoJsonData]);
+    if (!selectedRow || !filteredGeoJson) return undefined;
+    const i = filteredGeoJson.features.findIndex(
+      (f) => f.properties?.plotId === selectedRow.plotId
+    );
+    return i >= 0 ? i : undefined;
+  }, [selectedRow, filteredGeoJson]);
 
   const handleFeatureClick = useCallback(
     (featureIndex: number) => {
-      if (!geoJsonData) return;
-      const plotId = geoJsonData.features[featureIndex]?.properties?.plotId;
-      if (plotId) setSelectedRow(filteredData.find((r) => r.plotId === plotId) || null);
+      if (!filteredGeoJson) return;
+      const plotId = String(
+        filteredGeoJson.features[featureIndex]?.properties?.plotId ?? ""
+      );
+      if (!plotId) return;
+      const rowIndex = sortedData.findIndex((r) => String(r.plotId) === plotId);
+      if (rowIndex === -1) return;
+      setSelectedRow(sortedData[rowIndex]);
+      setCurrentPage(Math.floor(rowIndex / rowsPerPage) + 1);
     },
-    [geoJsonData, filteredData]
+    [filteredGeoJson, sortedData, rowsPerPage]
   );
 
   if (isLoading) {
@@ -284,7 +343,7 @@ export default function ResultsPage() {
         percent={percent}
         messages={messages}
         asyncMode={asyncMode}
-        onCancelled={() => router.push('/')}
+        onCancelled={() => router.push("/")}
       />
     );
   }
@@ -292,7 +351,7 @@ export default function ResultsPage() {
   if (isError) {
     return (
       <AnalysisError
-        message={response?.message ?? error?.message ?? 'An error occurred.'}
+        message={response?.message ?? error?.message ?? "An error occurred."}
         cause={response?.cause}
         onBack={() => router.back()}
       />
@@ -312,36 +371,51 @@ export default function ResultsPage() {
     );
   }
 
+  const pickerColumns = allColumns.filter((c) => !c.excludeFromResults);
+  const pickerGroups = columnGroups.map((g) => ({
+    ...g,
+    columns: g.columns.filter(
+      (c) => !allColumns.find((col) => col.key === c)?.excludeFromResults
+    ),
+  }));
+
   return (
     <div className="-mx-6 -my-8 flex flex-1 flex-col self-stretch overflow-hidden">
       <ResultsToolbar
         title="Results"
         plotCount={sortedData.length}
-        currentPage={safePage}
-        totalPages={totalPages}
         mapVisible={mapVisible}
         onToggleMap={setMapVisible}
+        summaryOpen={summaryOpen}
+        onOpenSummary={handleOpenSummary}
+        onCloseSummary={() => setSummaryOpen(false)}
         onBack={() => router.push("/")}
         onOpenWhispMap={handleOpenWhispMap}
         whispMapDisabled={tableData.length === 0 || !config?.api.url}
       />
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row lg:overflow-hidden">
-        <div className={`flex min-w-0 flex-col overflow-hidden ${mapVisible ? "flex-1 lg:flex-[0_0_56%]" : "flex-1"}`}>
+        <div
+          className={`flex min-w-0 flex-col overflow-hidden ${mapVisible ? "flex-1 lg:flex-[0_0_56%]" : "flex-1"}`}
+        >
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
             <ResultsSearchBar
               searchValue={search}
               onSearchChange={handleSearchChange}
               fieldPickerOpen={fieldPickerOpen}
-              onOpenFieldPicker={() => setFieldPickerOpen(true)}
-              onExportCSV={handleExportCsv}
-              onExportGeoJSON={handleExportGeoJson}
-              onExportSelectedCSV={handleExportSelectedCsv}
-              onExportSelectedGeoJSON={handleExportSelectedGeoJson}
+              onOpenFieldPicker={handleOpenFieldPicker}
+              onExportCsv={handleExportCsv}
+              onExportGeoJson={handleExportGeoJson}
+              filterLabel={riskFilterLabel}
+              onClearFilter={() => {
+                setRiskFilter(null);
+                setCurrentPage(1);
+              }}
             />
             <ResultsTable
               columns={allColumns}
               visibleCols={visibleCols}
               data={pageData}
+              presenceRows={tableData}
               selectedRowId={selectedRow ? String(selectedRow.plotId) : null}
               onSelectRow={setSelectedRow}
               sortColumn={sortColumn}
@@ -353,25 +427,39 @@ export default function ResultsPage() {
               totalPages={totalPages}
               totalRows={sortedData.length}
               rowsPerPage={rowsPerPage}
-              onPageChange={handlePageChange}
-              onRowsPerPageChange={handleRowsPerPageChange}
+              onPageChange={setCurrentPage}
+              onRowsPerPageChange={(rows) => {
+                setRowsPerPage(rows);
+                setCurrentPage(1);
+              }}
             />
             <FieldPicker
               open={fieldPickerOpen}
-              columns={allColumns.filter((c) => !c.excludeFromResults)}
-              groups={columnGroups.map((g) => ({ ...g, columns: g.columns.filter((c) => !allColumns.find((col) => col.key === c)?.excludeFromResults) }))}
+              columns={pickerColumns}
+              groups={pickerGroups}
               visible={visibleCols}
               defaultVisible={defaultVisibleCols}
               onChange={setVisibleCols}
               onClose={() => setFieldPickerOpen(false)}
             />
+            <ResultsSummary
+              open={summaryOpen}
+              rows={filteredData}
+              columns={allColumns}
+              commodity={commodity}
+              onCommodityChange={handleCommodityChange}
+              selectedRow={selectedRow}
+              onClearSelection={() => setSelectedRow(null)}
+              riskFilter={riskFilter}
+              onRiskFilter={handleRiskFilter}
+            />
           </div>
         </div>
         <MapPane
-          key={mapVisible ? rowsPerPage : 0}
           visible={mapVisible}
-          geoJsonData={geoJsonData}
+          geoJsonData={filteredGeoJson}
           selectedFeatureIndex={selectedFeatureIndex}
+          riskField={riskField}
           onFeatureClick={handleFeatureClick}
         />
       </div>

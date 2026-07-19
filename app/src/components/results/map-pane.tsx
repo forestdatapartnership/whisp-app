@@ -20,6 +20,7 @@ interface MapPaneProps {
   visible: boolean;
   geoJsonData?: FeatureCollection | null;
   selectedFeatureIndex?: number;
+  riskField?: string;
   onFeatureClick?: (featureIndex: number) => void;
   className?: string;
 }
@@ -28,6 +29,7 @@ export function MapPane({
   visible,
   geoJsonData,
   selectedFeatureIndex,
+  riskField,
   onFeatureClick,
   className,
 }: MapPaneProps) {
@@ -36,8 +38,7 @@ export function MapPane({
   return (
     <div
       className={cn(
-        "flex flex-col border-t border-border bg-[#0d1214] h-[300px] lg:h-auto lg:border-l lg:border-t-0 lg:flex-[0_0_44%]",
-        visible ? "flex" : "hidden",
+        "flex h-[300px] flex-col border-t border-border bg-[#0d1214] lg:h-auto lg:flex-[0_0_44%] lg:border-l lg:border-t-0",
         className
       )}
     >
@@ -46,21 +47,12 @@ export function MapPane({
           <PlotMapView
             geoJsonData={geoJsonData}
             selectedFeatureIndex={selectedFeatureIndex}
+            riskField={riskField}
             onFeatureClick={onFeatureClick}
           />
         ) : (
           <div className="relative flex flex-1 items-center justify-center overflow-hidden">
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)",
-                backgroundSize: "40px 40px",
-              }}
-            />
-            <span className="relative z-10 text-[11px] tracking-[0.04em] text-text-dim">
-              No map data
-            </span>
+            <span className="text-[11px] tracking-[0.04em] text-text-dim">No map data</span>
           </div>
         )}
       </div>

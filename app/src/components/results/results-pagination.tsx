@@ -36,7 +36,7 @@ export function ResultsPagination({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 border-t border-border bg-surface px-[14px] py-2 shrink-0 text-xs text-text-muted",
+        "grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 border-t border-border bg-surface px-[14px] py-2 text-xs text-text-muted",
         className
       )}
     >
@@ -56,44 +56,48 @@ export function ResultsPagination({
           </SelectContent>
         </Select>
       </div>
-      <div className="flex-1" />
-      <span className="whitespace-nowrap text-xs text-text-muted">
-        {startRow}–{endRow} of {totalRows}
+      <span className="whitespace-nowrap">
+        Page {currentPage} of {totalPages}
       </span>
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => onPageChange(1)}
-        disabled={currentPage <= 1}
-        title="First"
-      >
-        <ChevronsLeft />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage <= 1}
-      >
-        <ChevronLeft />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage >= totalPages}
-      >
-        <ChevronRight />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => onPageChange(totalPages)}
-        disabled={currentPage >= totalPages}
-        title="Last"
-      >
-        <ChevronsRight />
-      </Button>
+      <div className="flex items-center justify-end gap-2">
+        <span className="whitespace-nowrap">
+          {startRow}–{endRow} of {totalRows}
+        </span>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          onClick={() => onPageChange(1)}
+          disabled={currentPage <= 1}
+          title="First"
+        >
+          <ChevronsLeft />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+        >
+          <ChevronLeft />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+        >
+          <ChevronRight />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage >= totalPages}
+          title="Last"
+        >
+          <ChevronsRight />
+        </Button>
+      </div>
     </div>
   );
 }
