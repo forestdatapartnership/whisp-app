@@ -1,14 +1,25 @@
-import { computeRiskMix, isTruthyCell, type RiskValue } from "./catalog-fields";
+import {
+  computeRiskMix,
+  isTruthyCell,
+  type RiskTone,
+  type RiskValue,
+} from "./catalog-fields";
 
 export type CommodityKey = "pcrop" | "acrop" | "timber";
 export type TreeOutcome = RiskValue | "continue";
+
+export type IndicatorDef = {
+  key: string;
+  label: string;
+  yesTone: RiskTone | null;
+};
 
 export const COMMODITY_OPTIONS: Array<{
   key: CommodityKey;
   riskField: string;
   label: string;
   shortLabel: string;
-  indicators: string[];
+  indicators: IndicatorDef[];
 }> = [
   {
     key: "pcrop",
@@ -16,10 +27,10 @@ export const COMMODITY_OPTIONS: Array<{
     label: "Perennial crop",
     shortLabel: "Perennial",
     indicators: [
-      "Ind_01_treecover",
-      "Ind_02_commodities",
-      "Ind_03_disturbance_before_2020",
-      "Ind_04_disturbance_after_2020",
+      { key: "Ind_01_treecover", label: "Tree cover in 2020", yesTone: null },
+      { key: "Ind_02_commodities", label: "Commodity present pre-2020", yesTone: "low" },
+      { key: "Ind_03_disturbance_before_2020", label: "Disturbance before 2020", yesTone: "low" },
+      { key: "Ind_04_disturbance_after_2020", label: "Disturbance after 2020", yesTone: "high" },
     ],
   },
   {
@@ -27,7 +38,11 @@ export const COMMODITY_OPTIONS: Array<{
     riskField: "risk_acrop",
     label: "Annual crop",
     shortLabel: "Annual",
-    indicators: ["Ind_01_treecover", "Ind_02_commodities", "Ind_04_disturbance_after_2020"],
+    indicators: [
+      { key: "Ind_01_treecover", label: "Tree cover in 2020", yesTone: null },
+      { key: "Ind_02_commodities", label: "Commodity present pre-2020", yesTone: "low" },
+      { key: "Ind_04_disturbance_after_2020", label: "Disturbance after 2020", yesTone: "high" },
+    ],
   },
   {
     key: "timber",
@@ -35,14 +50,14 @@ export const COMMODITY_OPTIONS: Array<{
     label: "Timber",
     shortLabel: "Timber",
     indicators: [
-      "Ind_02_commodities",
-      "Ind_05_primary_2020",
-      "Ind_06_nat_reg_forest_2020",
-      "Ind_07_planted_plantations_2020",
-      "Ind_08_planted_plantations_after_2020",
-      "Ind_09_treecover_after_2020",
-      "Ind_10_agri_after_2020",
-      "Ind_11_logging_concession_before_2020",
+      { key: "Ind_02_commodities", label: "Commodity present pre-2020", yesTone: "low" },
+      { key: "Ind_05_primary_2020", label: "Primary forest in 2020", yesTone: null },
+      { key: "Ind_06_nat_reg_forest_2020", label: "Naturally regenerating forest in 2020", yesTone: null },
+      { key: "Ind_07_planted_plantations_2020", label: "Plantation in 2020", yesTone: null },
+      { key: "Ind_08_planted_plantations_after_2020", label: "Plantation after 2020", yesTone: "high" },
+      { key: "Ind_09_treecover_after_2020", label: "Tree cover after 2020", yesTone: "low" },
+      { key: "Ind_10_agri_after_2020", label: "Agriculture after 2020", yesTone: "high" },
+      { key: "Ind_11_logging_concession_before_2020", label: "Logging concession before 2020", yesTone: "low" },
     ],
   },
 ];

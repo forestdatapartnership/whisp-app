@@ -1,9 +1,11 @@
 import { cn } from "@/lib/utils";
+import { riskValueToTone, type RiskTone } from "@/lib/results/catalog-fields";
 import {
   stepBranches,
   type TreeOutcome,
   type TreeStepView,
 } from "@/lib/results/risk-trees";
+import { riskLevelStyles } from "./risk-badge";
 
 const OUTCOME_LABEL: Record<Exclude<TreeOutcome, "continue">, string> = {
   low: "Low",
@@ -11,11 +13,21 @@ const OUTCOME_LABEL: Record<Exclude<TreeOutcome, "continue">, string> = {
   more_info_needed: "More info",
 };
 
-const OUTCOME_CLASS: Record<Exclude<TreeOutcome, "continue">, string> = {
-  low: "text-risk-low",
-  high: "text-risk-high",
-  more_info_needed: "text-risk-medium",
+const RISK_BORDER: Record<RiskTone, string> = {
+  low: "border-risk-low",
+  medium: "border-risk-medium",
+  high: "border-risk-high",
 };
+
+const RISK_TEXT: Record<RiskTone, string> = {
+  low: "text-risk-low",
+  medium: "text-risk-medium",
+  high: "text-risk-high",
+};
+
+function outcomeTone(outcome: TreeOutcome): RiskTone | null {
+  return outcome === "continue" ? null : riskValueToTone(outcome);
+}
 
 function Outcome({
   outcome,
@@ -24,11 +36,12 @@ function Outcome({
   outcome: Exclude<TreeOutcome, "continue">;
   active?: boolean;
 }) {
+  const tone = riskValueToTone(outcome)!;
   return (
     <span
       className={cn(
         "font-semibold",
-        OUTCOME_CLASS[outcome],
+        RISK_TEXT[tone],
         active && "underline decoration-accent-green underline-offset-2"
       )}
     >
@@ -48,14 +61,29 @@ function Step({
 }) {
   const { down, right } = stepBranches(step);
   const active = Boolean(step.selectedSide) && !step.disabled;
+  const selectedOutcome =
+    step.selectedSide === "yes"
+      ? step.yesOutcome
+      : step.selectedSide === "no"
+        ? step.noOutcome
+        : null;
+  const stopTone = active ? outcomeTone(selectedOutcome ?? "continue") : null;
+  const rightOn = right.selected && !step.disabled;
+  const downOn = down.selected && !step.disabled;
+  const rightOff = active && !right.selected;
+  const downOff = active && !down.selected;
 
   return (
     <div className={cn(step.disabled && "pointer-events-none opacity-35")}>
       <div className="flex items-center gap-3">
         <div
           className={cn(
-            "min-w-0 flex-1 rounded-sm border px-3 py-2 text-xs font-medium text-text-primary",
-            active ? "border-accent-green bg-accent-green/[0.06]" : "border-border bg-surface"
+            "min-w-0 flex-1 rounded-sm border px-3 py-2 text-xs font-medium",
+            stopTone
+              ? cn(riskLevelStyles[stopTone], RISK_BORDER[stopTone])
+              : active
+                ? "border-accent-green bg-accent-green/[0.06] text-text-primary"
+                : "border-border bg-surface text-text-primary"
           )}
         >
           {step.question}
@@ -64,28 +92,33 @@ function Step({
           <div
             className={cn(
               "flex shrink-0 items-center gap-1.5 text-[11px]",
-              right.selected && !step.disabled ? "text-text-primary" : "text-text-muted"
+              rightOn ? "text-text-primary" : "text-text-muted",
+              rightOff && "opacity-35"
             )}
           >
             <span className="uppercase tracking-wide opacity-70">{right.side}</span>
             <span className="text-text-dim">→</span>
-            <Outcome outcome={right.outcome} active={right.selected && !step.disabled} />
+            <Outcome outcome={right.outcome} active={rightOn} />
             {showCounts && <span className="tabular-nums text-text-muted">{right.count}</span>}
           </div>
         )}
       </div>
       {(!isLast || down.outcome !== "continue") && (
-        <div className="flex items-center gap-1.5 py-1.5 pl-3 text-[11px]">
+        <div className={cn("flex items-center gap-1.5 py-1.5 pl-3 text-[11px]", downOff && "opacity-35")}>
           <div
             className={cn(
               "h-4 w-px border-l border-dashed",
-              down.selected && !step.disabled ? "border-accent-green" : "border-border"
+              downOn
+                ? stopTone && down.outcome !== "continue"
+                  ? RISK_BORDER[stopTone]
+                  : "border-accent-green"
+                : "border-border"
             )}
           />
           <span
             className={cn(
               "inline-flex items-center gap-1.5",
-              down.selected && !step.disabled ? "text-text-primary" : "text-text-muted"
+              downOn ? "text-text-primary" : "text-text-muted"
             )}
           >
             <span className="uppercase tracking-wide opacity-70">{down.side}</span>
@@ -93,7 +126,7 @@ function Step({
             {down.outcome === "continue" ? (
               <span>continue</span>
             ) : (
-              <Outcome outcome={down.outcome} active={down.selected && !step.disabled} />
+              <Outcome outcome={down.outcome} active={downOn} />
             )}
             {showCounts && <span className="tabular-nums text-text-muted">{down.count}</span>}
           </span>

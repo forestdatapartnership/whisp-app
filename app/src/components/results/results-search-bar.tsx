@@ -10,7 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ListFilter, Download, ChevronDown, FileText, X } from "lucide-react";
+import { ListFilter, Download, ChevronDown, FileText } from "lucide-react";
+import { ResultsFilterChip } from "./results-filter-chip";
 
 interface ResultsSearchBarProps {
   searchValue: string;
@@ -68,17 +69,7 @@ export function ResultsSearchBar({
         />
       </div>
       {filterLabel && onClearFilter && (
-        <button
-          type="button"
-          onClick={onClearFilter}
-          className={cn(
-            "inline-flex h-[30px] cursor-pointer items-center gap-1.5 border border-border bg-accent-green/[0.08] px-2.5 text-[11px] font-medium text-accent-green",
-            controlRounded
-          )}
-        >
-          {filterLabel}
-          <X className="size-3" />
-        </button>
+        <ResultsFilterChip label={filterLabel} onClear={onClearFilter} />
       )}
       <div className="flex-1" />
       <Button

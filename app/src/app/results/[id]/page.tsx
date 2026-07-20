@@ -19,7 +19,7 @@ import { downloadCsv, downloadGeoJson, timestampFilename } from "@/lib/utils/exp
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/icons";
 import { getResultFields } from "@/app/docs/reference/result-fields/actions";
-import { riskValueLabel, type RiskFilter } from "@/lib/results/catalog-fields";
+import { riskValueLabel, isTruthyCell, type RiskFilter } from "@/lib/results/catalog-fields";
 import { COMMODITY_OPTIONS, type CommodityKey } from "@/lib/results/risk-trees";
 import type { ResultField } from "@/types/models";
 import type { FeatureCollection } from "geojson";
@@ -98,6 +98,7 @@ export default function ResultsPage() {
   const [mapVisible, setMapVisible] = useState(true);
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState<RiskFilter | null>(null);
+  const [indicatorFilter, setIndicatorFilter] = useState<string | null>(null);
   const [commodity, setCommodity] = useState<CommodityKey>("pcrop");
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
@@ -177,9 +178,15 @@ export default function ResultsPage() {
   }, [tableData, search]);
 
   const filteredData = useMemo(() => {
-    if (!riskFilter) return searchedData;
-    return searchedData.filter((row) => row[riskFilter.field] === riskFilter.value);
-  }, [searchedData, riskFilter]);
+    let rows = searchedData;
+    if (riskFilter) {
+      rows = rows.filter((row) => row[riskFilter.field] === riskFilter.value);
+    }
+    if (indicatorFilter) {
+      rows = rows.filter((row) => isTruthyCell(row[indicatorFilter]));
+    }
+    return rows;
+  }, [searchedData, riskFilter, indicatorFilter]);
 
   const sortedData = useMemo(() => {
     if (!sortColumn) return filteredData;
@@ -208,33 +215,58 @@ export default function ResultsPage() {
     }
   }, [filteredData, selectedRow]);
 
-  const riskFilterLabel = useMemo(() => {
-    if (!riskFilter) return null;
-    const name =
-      COMMODITY_OPTIONS.find((o) => o.riskField === riskFilter.field)?.shortLabel ??
-      riskFilter.field.replace(/^risk_/, "");
-    return `${name} · ${riskValueLabel(riskFilter.value)}`;
-  }, [riskFilter]);
+  const filterLabel = useMemo(() => {
+    if (riskFilter) {
+      const name =
+        COMMODITY_OPTIONS.find((o) => o.riskField === riskFilter.field)?.shortLabel ??
+        riskFilter.field.replace(/^risk_/, "");
+      return `${name} · ${riskValueLabel(riskFilter.value)}`;
+    }
+    if (indicatorFilter) {
+      const ind = COMMODITY_OPTIONS.flatMap((o) => o.indicators).find(
+        (i) => i.key === indicatorFilter
+      );
+      return `${ind?.label ?? indicatorFilter} · yes`;
+    }
+    return null;
+  }, [riskFilter, indicatorFilter]);
 
   const handleCommodityChange = useCallback(
     (key: CommodityKey) => {
       setCommodity(key);
-      const nextField = COMMODITY_OPTIONS.find((o) => o.key === key)!.riskField;
-      if (riskFilter && riskFilter.field !== nextField) {
+      const next = COMMODITY_OPTIONS.find((o) => o.key === key)!;
+      if (riskFilter && riskFilter.field !== next.riskField) {
         setRiskFilter(null);
         setCurrentPage(1);
       }
+      if (indicatorFilter && !next.indicators.some((i) => i.key === indicatorFilter)) {
+        setIndicatorFilter(null);
+        setCurrentPage(1);
+      }
     },
-    [riskFilter]
+    [riskFilter, indicatorFilter]
   );
 
   const handleRiskFilter = useCallback((filter: RiskFilter | null) => {
     setRiskFilter(filter);
+    if (filter) setIndicatorFilter(null);
     setCurrentPage(1);
     if (filter) {
       const match = COMMODITY_OPTIONS.find((o) => o.riskField === filter.field);
       if (match) setCommodity(match.key);
     }
+  }, []);
+
+  const handleIndicatorFilter = useCallback((field: string | null) => {
+    setIndicatorFilter(field);
+    if (field) setRiskFilter(null);
+    setCurrentPage(1);
+  }, []);
+
+  const handleClearFilter = useCallback(() => {
+    setRiskFilter(null);
+    setIndicatorFilter(null);
+    setCurrentPage(1);
   }, []);
 
   const handleOpenSummary = useCallback(() => {
@@ -400,11 +432,8 @@ export default function ResultsPage() {
               onOpenFieldPicker={handleOpenFieldPicker}
               onExportCsv={handleExportCsv}
               onExportGeoJson={handleExportGeoJson}
-              filterLabel={riskFilterLabel}
-              onClearFilter={() => {
-                setRiskFilter(null);
-                setCurrentPage(1);
-              }}
+              filterLabel={filterLabel}
+              onClearFilter={handleClearFilter}
             />
             <ResultsTable
               columns={allColumns}
@@ -440,6 +469,7 @@ export default function ResultsPage() {
             <ResultsSummary
               open={summaryOpen}
               rows={searchedData}
+              filteredCount={filteredData.length}
               columns={allColumns}
               commodity={commodity}
               onCommodityChange={handleCommodityChange}
@@ -447,6 +477,10 @@ export default function ResultsPage() {
               onClearSelection={() => setSelectedRow(null)}
               riskFilter={riskFilter}
               onRiskFilter={handleRiskFilter}
+              indicatorFilter={indicatorFilter}
+              onIndicatorFilter={handleIndicatorFilter}
+              filterLabel={filterLabel}
+              onClearFilter={handleClearFilter}
             />
           </div>
         </div>
