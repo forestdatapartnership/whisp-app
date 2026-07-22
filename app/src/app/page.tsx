@@ -29,7 +29,7 @@ export default function Home() {
         </Link>
         , powered by our{" "}
         <Link
-          href="https://github.com/openforis/whisp"
+          href="https://github.com/forestdatapartnership/whisp"
           target="_blank"
           rel="noopener noreferrer"
         >

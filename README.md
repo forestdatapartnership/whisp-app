@@ -177,7 +177,7 @@ Geometry limits for the web app and API are runtime-configurable and exposed via
 ### Quick Start (local dev)
 
 ```bash
-git clone https://github.com/openforis/whisp-app.git
+git clone https://github.com/forestdatapartnership/whisp-app.git
 cd whisp-app
 
 # Install app + API dependencies
