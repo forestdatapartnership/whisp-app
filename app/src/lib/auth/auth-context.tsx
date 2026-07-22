@@ -26,10 +26,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const loadUserProfile = useCallback(async () => {
-    const result = await fetchUserProfile();
-    const profile = result.ok ? result.data : null;
-    setUser(profile);
-    return profile;
+    let result = await fetchUserProfile();
+    for (let attempt = 0; !result.ok && attempt < 2; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+      result = await fetchUserProfile();
+    }
+
+    if (!result.ok) {
+      // Not "unauthenticated" (that's ok:true, data:null) - a real failure, so don't log the user out.
+      setError(formatSystemMessage(result.code, result.args));
+      return null;
+    }
+
+    setError(null);
+    setUser(result.data);
+    return result.data;
   }, []);
 
   const refreshUser = useCallback(async () => {

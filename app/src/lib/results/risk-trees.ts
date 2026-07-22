@@ -1,12 +1,17 @@
 import {
   computeRiskMix,
   isTruthyCell,
+  riskValueLabel,
+  type RiskFilter,
   type RiskTone,
   type RiskValue,
 } from "./catalog-fields";
 
 export type CommodityKey = "pcrop" | "acrop" | "timber";
 export type TreeOutcome = RiskValue | "continue";
+
+export const WATERBODY_FIELD = "In_waterbody";
+export const WATERBODY_LABEL = "In waterbody";
 
 export type IndicatorDef = {
   key: string;
@@ -62,6 +67,134 @@ export const COMMODITY_OPTIONS: Array<{
   },
 ];
 
+type TreePred =
+  | { op: "yn"; field: string }
+  | { op: "not"; field: string }
+  | { op: "and"; of: TreePred[] }
+  | { op: "or"; of: TreePred[] };
+
+type TreeNodeDef = {
+  question: string;
+  test: TreePred;
+  yes: TreeOutcome;
+  no: TreeOutcome;
+};
+
+const TREE_DEFS: Record<CommodityKey, TreeNodeDef[]> = {
+  pcrop: [
+    { question: "Tree cover in 2020?", test: { op: "yn", field: "Ind_01_treecover" }, yes: "continue", no: "low" },
+    { question: "Commodity present pre-2020?", test: { op: "yn", field: "Ind_02_commodities" }, yes: "low", no: "continue" },
+    { question: "Disturbance before 2020?", test: { op: "yn", field: "Ind_03_disturbance_before_2020" }, yes: "low", no: "continue" },
+    { question: "Disturbance after 2020?", test: { op: "yn", field: "Ind_04_disturbance_after_2020" }, yes: "high", no: "more_info_needed" },
+  ],
+  acrop: [
+    { question: "Tree cover in 2020?", test: { op: "yn", field: "Ind_01_treecover" }, yes: "continue", no: "low" },
+    { question: "Commodity present pre-2020?", test: { op: "yn", field: "Ind_02_commodities" }, yes: "low", no: "continue" },
+    { question: "Disturbance after 2020?", test: { op: "yn", field: "Ind_04_disturbance_after_2020" }, yes: "high", no: "more_info_needed" },
+  ],
+  timber: [
+    { question: "Commodity present pre-2020?", test: { op: "yn", field: "Ind_02_commodities" }, yes: "low", no: "continue" },
+    {
+      question: "Plantation in 2020 and no agriculture after 2020?",
+      test: {
+        op: "and",
+        of: [
+          { op: "yn", field: "Ind_07_planted_plantations_2020" },
+          { op: "not", field: "Ind_10_agri_after_2020" },
+        ],
+      },
+      yes: "low",
+      no: "continue",
+    },
+    {
+      question: "Forest in 2020 and agriculture after 2020?",
+      test: {
+        op: "and",
+        of: [
+          {
+            op: "or",
+            of: [
+              { op: "yn", field: "Ind_05_primary_2020" },
+              { op: "yn", field: "Ind_06_nat_reg_forest_2020" },
+              { op: "yn", field: "Ind_07_planted_plantations_2020" },
+            ],
+          },
+          { op: "yn", field: "Ind_10_agri_after_2020" },
+        ],
+      },
+      yes: "high",
+      no: "continue",
+    },
+    {
+      question: "Natural forest in 2020 and plantation after 2020?",
+      test: {
+        op: "and",
+        of: [
+          {
+            op: "or",
+            of: [
+              { op: "yn", field: "Ind_05_primary_2020" },
+              { op: "yn", field: "Ind_06_nat_reg_forest_2020" },
+            ],
+          },
+          { op: "yn", field: "Ind_08_planted_plantations_after_2020" },
+        ],
+      },
+      yes: "high",
+      no: "continue",
+    },
+    {
+      question: "Natural forest with post-2020 tree cover or logging concession?",
+      test: {
+        op: "and",
+        of: [
+          {
+            op: "or",
+            of: [
+              { op: "yn", field: "Ind_05_primary_2020" },
+              { op: "yn", field: "Ind_06_nat_reg_forest_2020" },
+            ],
+          },
+          {
+            op: "or",
+            of: [
+              { op: "yn", field: "Ind_09_treecover_after_2020" },
+              { op: "yn", field: "Ind_11_logging_concession_before_2020" },
+            ],
+          },
+        ],
+      },
+      yes: "low",
+      no: "continue",
+    },
+    {
+      question: "Primary or naturally regenerating forest in 2020?",
+      test: {
+        op: "or",
+        of: [
+          { op: "yn", field: "Ind_05_primary_2020" },
+          { op: "yn", field: "Ind_06_nat_reg_forest_2020" },
+        ],
+      },
+      yes: "more_info_needed",
+      no: "low",
+    },
+  ],
+};
+
+function compilePred(pred: TreePred): (row: Record<string, unknown>) => boolean {
+  switch (pred.op) {
+    case "yn":
+      return (row) => isTruthyCell(row[pred.field]);
+    case "not":
+      return (row) => !isTruthyCell(row[pred.field]);
+    case "and":
+      return (row) => pred.of.every((p) => compilePred(p)(row));
+    case "or":
+      return (row) => pred.of.some((p) => compilePred(p)(row));
+  }
+}
+
 type Node = {
   question: string;
   test: (row: Record<string, unknown>) => boolean;
@@ -69,70 +202,10 @@ type Node = {
   no: TreeOutcome;
 };
 
-const yn = (field: string) => (row: Record<string, unknown>) => isTruthyCell(row[field]);
-const and =
-  (...ts: Array<(r: Record<string, unknown>) => boolean>) =>
-  (r: Record<string, unknown>) =>
-    ts.every((t) => t(r));
-const or =
-  (...ts: Array<(r: Record<string, unknown>) => boolean>) =>
-  (r: Record<string, unknown>) =>
-    ts.some((t) => t(r));
-
 const TREES: Record<CommodityKey, Node[]> = {
-  pcrop: [
-    { question: "Tree cover in 2020?", test: yn("Ind_01_treecover"), yes: "continue", no: "low" },
-    { question: "Commodity present pre-2020?", test: yn("Ind_02_commodities"), yes: "low", no: "continue" },
-    { question: "Disturbance before 2020?", test: yn("Ind_03_disturbance_before_2020"), yes: "low", no: "continue" },
-    { question: "Disturbance after 2020?", test: yn("Ind_04_disturbance_after_2020"), yes: "high", no: "more_info_needed" },
-  ],
-  acrop: [
-    { question: "Tree cover in 2020?", test: yn("Ind_01_treecover"), yes: "continue", no: "low" },
-    { question: "Commodity present pre-2020?", test: yn("Ind_02_commodities"), yes: "low", no: "continue" },
-    { question: "Disturbance after 2020?", test: yn("Ind_04_disturbance_after_2020"), yes: "high", no: "more_info_needed" },
-  ],
-  timber: [
-    { question: "Commodity present pre-2020?", test: yn("Ind_02_commodities"), yes: "low", no: "continue" },
-    {
-      question: "Plantation in 2020 and no agriculture after 2020?",
-      test: and(yn("Ind_07_planted_plantations_2020"), (r) => !isTruthyCell(r.Ind_10_agri_after_2020)),
-      yes: "low",
-      no: "continue",
-    },
-    {
-      question: "Forest in 2020 and agriculture after 2020?",
-      test: and(
-        or(yn("Ind_05_primary_2020"), yn("Ind_06_nat_reg_forest_2020"), yn("Ind_07_planted_plantations_2020")),
-        yn("Ind_10_agri_after_2020")
-      ),
-      yes: "high",
-      no: "continue",
-    },
-    {
-      question: "Natural forest in 2020 and plantation after 2020?",
-      test: and(
-        or(yn("Ind_05_primary_2020"), yn("Ind_06_nat_reg_forest_2020")),
-        yn("Ind_08_planted_plantations_after_2020")
-      ),
-      yes: "high",
-      no: "continue",
-    },
-    {
-      question: "Natural forest with post-2020 tree cover or logging concession?",
-      test: and(
-        or(yn("Ind_05_primary_2020"), yn("Ind_06_nat_reg_forest_2020")),
-        or(yn("Ind_09_treecover_after_2020"), yn("Ind_11_logging_concession_before_2020"))
-      ),
-      yes: "low",
-      no: "continue",
-    },
-    {
-      question: "Primary or naturally regenerating forest in 2020?",
-      test: or(yn("Ind_05_primary_2020"), yn("Ind_06_nat_reg_forest_2020")),
-      yes: "more_info_needed",
-      no: "low",
-    },
-  ],
+  pcrop: TREE_DEFS.pcrop.map((n) => ({ ...n, test: compilePred(n.test) })),
+  acrop: TREE_DEFS.acrop.map((n) => ({ ...n, test: compilePred(n.test) })),
+  timber: TREE_DEFS.timber.map((n) => ({ ...n, test: compilePred(n.test) })),
 };
 
 export interface TreeStepView {
@@ -217,9 +290,41 @@ export function countryRiskBreakdown(
     else map.set(country, [row]);
   }
   return [...map.entries()]
-    .map(([country, rs]) => {
-      const mix = computeRiskMix(rs, riskField);
-      return { country, count: mix.total, low: mix.low, medium: mix.medium, high: mix.high };
-    })
-    .sort((a, b) => b.count - a.count);
+    .map(([country, rs]) => ({ country, ...computeRiskMix(rs, riskField) }))
+    .sort((a, b) => b.total - a.total);
+}
+
+export function getCommodity(key: CommodityKey) {
+  return COMMODITY_OPTIONS.find((o) => o.key === key)!;
+}
+
+export function getCommodityByRiskField(field: string) {
+  return COMMODITY_OPTIONS.find((o) => o.riskField === field);
+}
+
+export function findIndicator(key: string) {
+  if (key === WATERBODY_FIELD) {
+    return { key: WATERBODY_FIELD, label: WATERBODY_LABEL, yesTone: null };
+  }
+  for (const o of COMMODITY_OPTIONS) {
+    const ind = o.indicators.find((i) => i.key === key);
+    if (ind) return ind;
+  }
+  return undefined;
+}
+
+export function formatResultsFilterLabel(
+  riskFilter?: RiskFilter | null,
+  indicatorFilter?: string | null
+): string | null {
+  if (riskFilter) {
+    const name =
+      getCommodityByRiskField(riskFilter.field)?.shortLabel ??
+      riskFilter.field.replace(/^risk_/, "");
+    return `${name} · ${riskValueLabel(riskFilter.value)}`;
+  }
+  if (indicatorFilter) {
+    return `${findIndicator(indicatorFilter)?.label ?? indicatorFilter} · yes`;
+  }
+  return null;
 }

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { riskValueToTone } from "@/lib/results/catalog-fields";
+import { riskValueToTone, type RiskTone } from "@/lib/results/catalog-fields";
 
 export type RiskLevel = "low" | "medium" | "high" | "info";
 
@@ -23,7 +23,19 @@ export const riskDotClass: Record<RiskLevel, string> = {
   info: "bg-text-muted",
 };
 
-const SHORT_LABEL: Record<"low" | "medium" | "high", string> = {
+export const riskTextClass: Record<RiskTone, string> = {
+  low: "text-risk-low",
+  medium: "text-risk-medium",
+  high: "text-risk-high",
+};
+
+export const riskBorderClass: Record<RiskTone, string> = {
+  low: "border-risk-low",
+  medium: "border-risk-medium",
+  high: "border-risk-high",
+};
+
+const SHORT_LABEL: Record<RiskTone, string> = {
   low: "Low",
   high: "High",
   medium: "More info needed",

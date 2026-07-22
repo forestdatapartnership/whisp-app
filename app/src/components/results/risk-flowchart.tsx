@@ -5,24 +5,12 @@ import {
   type TreeOutcome,
   type TreeStepView,
 } from "@/lib/results/risk-trees";
-import { riskLevelStyles } from "./risk-badge";
+import { riskBorderClass, riskLevelStyles, riskTextClass } from "./risk-badge";
 
 const OUTCOME_LABEL: Record<Exclude<TreeOutcome, "continue">, string> = {
   low: "Low",
   high: "High",
   more_info_needed: "More info",
-};
-
-const RISK_BORDER: Record<RiskTone, string> = {
-  low: "border-risk-low",
-  medium: "border-risk-medium",
-  high: "border-risk-high",
-};
-
-const RISK_TEXT: Record<RiskTone, string> = {
-  low: "text-risk-low",
-  medium: "text-risk-medium",
-  high: "text-risk-high",
 };
 
 function outcomeTone(outcome: TreeOutcome): RiskTone | null {
@@ -41,7 +29,7 @@ function Outcome({
     <span
       className={cn(
         "font-semibold",
-        RISK_TEXT[tone],
+        riskTextClass[tone],
         active && "underline decoration-accent-green underline-offset-2"
       )}
     >
@@ -80,7 +68,7 @@ function Step({
           className={cn(
             "min-w-0 flex-1 rounded-sm border px-3 py-2 text-xs font-medium",
             stopTone
-              ? cn(riskLevelStyles[stopTone], RISK_BORDER[stopTone])
+              ? cn(riskLevelStyles[stopTone], riskBorderClass[stopTone])
               : active
                 ? "border-accent-green bg-accent-green/[0.06] text-text-primary"
                 : "border-border bg-surface text-text-primary"
@@ -110,7 +98,7 @@ function Step({
               "h-4 w-px border-l border-dashed",
               downOn
                 ? stopTone && down.outcome !== "continue"
-                  ? RISK_BORDER[stopTone]
+                  ? riskBorderClass[stopTone]
                   : "border-accent-green"
                 : "border-border"
             )}

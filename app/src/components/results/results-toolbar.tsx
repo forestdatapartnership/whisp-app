@@ -1,9 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, ChartColumn, Map, Table2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Map, Table2 } from "lucide-react";
 
 interface ResultsToolbarProps {
   title?: string;
@@ -14,6 +21,9 @@ interface ResultsToolbarProps {
   onOpenSummary?: () => void;
   onCloseSummary?: () => void;
   onBack?: () => void;
+  onExportCsv?: () => void;
+  onExportGeoJson?: () => void;
+  onExportHtml?: () => void;
   onOpenWhispMap?: () => void;
   whispMapDisabled?: boolean;
   className?: string;
@@ -28,10 +38,15 @@ export function ResultsToolbar({
   onOpenSummary,
   onCloseSummary,
   onBack,
+  onExportCsv,
+  onExportGeoJson,
+  onExportHtml,
   onOpenWhispMap,
   whispMapDisabled = false,
   className,
 }: ResultsToolbarProps) {
+  const [exportOpen, setExportOpen] = useState(false);
+
   return (
     <div
       className={cn(
@@ -71,6 +86,45 @@ export function ResultsToolbar({
         <ArrowLeft />
         New analysis
       </Button>
+      <DropdownMenu open={exportOpen} onOpenChange={setExportOpen}>
+        <DropdownMenuTrigger render={<Button variant="secondary" size="sm" className="min-w-[90px]" />}>
+          <Download />
+          Download
+          <ChevronDown />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-[160px] border-border bg-surface">
+          <DropdownMenuItem
+            onClick={() => {
+              onExportCsv?.();
+              setExportOpen(false);
+            }}
+            className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
+          >
+            <FileText className="h-3 w-3" />
+            CSV
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              onExportGeoJson?.();
+              setExportOpen(false);
+            }}
+            className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
+          >
+            <FileText className="h-3 w-3" />
+            GeoJSON
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              onExportHtml?.();
+              setExportOpen(false);
+            }}
+            className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
+          >
+            <FileText className="h-3 w-3" />
+            HTML Report
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Button
         variant="default"
         size="sm"

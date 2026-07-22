@@ -29,6 +29,10 @@ export function downloadGeoJson(fc: FeatureCollection, filename: string) {
   downloadBlob(new Blob([JSON.stringify(fc, null, 2)], { type: 'application/geo+json' }), filename);
 }
 
+export function downloadHtml(html: string, filename: string) {
+  downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), filename);
+}
+
 export function timestampFilename(ext: string, suffix?: string) {
   const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   return `whisp-${suffix ? `${suffix}-` : ''}${ts}.${ext}`;

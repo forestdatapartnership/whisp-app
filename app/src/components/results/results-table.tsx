@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RiskBadge, riskFromValue } from "./risk-badge";
+import { isTruthyCell, isYesNoCell } from "@/lib/results/catalog-fields";
 
 import type { CommodityMetadataMap } from "@/types/models";
 
@@ -45,6 +46,7 @@ interface ResultsTableProps {
 const TRUNCATE_THRESHOLD = 30;
 const TRUNCATE_LIMIT = 20;
 const STICKY_KEY = "plotId";
+const SELECTED_ROW = "bg-accent-green/[0.06]";
 
 function isCoordinateColumn(key: string): boolean {
   const col = key.toLowerCase();
@@ -60,17 +62,8 @@ function formatNumber(key: string, value: number): string {
   }).format(value);
 }
 
-function isYesNo(value: unknown): value is string {
-  if (typeof value !== "string") return false;
-  const v = value.toLowerCase();
-  return v === "yes" || v === "no";
-}
-
 function renderYesNo(value: unknown) {
-  const yes =
-    value === true ||
-    (typeof value === "string" && value.toLowerCase() === "yes");
-  return yes ? (
+  return isTruthyCell(value) ? (
     <span className="text-[11px] text-accent-green">yes</span>
   ) : (
     <span className="text-[11px] text-[#3d4e56]">no</span>
@@ -95,7 +88,7 @@ function renderCell(value: unknown, type?: string, key?: string) {
     return <span className="text-text-muted">—</span>;
   }
 
-  if (type === "bool" || isYesNo(value)) {
+  if (type === "bool" || isYesNoCell(value)) {
     return renderYesNo(value);
   }
 
@@ -143,13 +136,13 @@ export function ResultsTable({
       }),
     [columns, visibleCols, presence]
   );
-  const idKey = "plotId";
+  const idKey = STICKY_KEY;
   return (
     <ScrollArea horizontal className={cn("min-h-0 flex-1", className)}>
       <Table scrollable={false} className="w-max min-w-full border-separate border-spacing-0 text-xs">
         <TableHeader>
           <TableRow className="bg-surface">
-            {visibleColumns.map((col, cidx) => (
+            {visibleColumns.map((col) => (
               <TableHead
                 key={col.key}
                 onClick={() => onSort?.(col.key)}
@@ -195,17 +188,17 @@ export function ResultsTable({
                 onClick={() => onSelectRow?.(isSelected ? null : row)}
                 className={cn(
                   "cursor-pointer border-b border-border transition-colors hover:bg-surface",
-                  isSelected && "bg-[rgba(125,192,13,0.06)]"
+                  isSelected && SELECTED_ROW
                 )}
               >
-                {visibleColumns.map((col, cidx) => (
+                {visibleColumns.map((col) => (
                   <TableCell
                     key={col.key}
                     className={cn(
                       "px-[14px] py-[7px] whitespace-nowrap border-b border-border border-r border-white/[0.03] last:border-r-0",
                       col.key === STICKY_KEY && "sticky left-0 z-10 bg-surface",
-                      col.key === STICKY_KEY && isSelected && "bg-[rgba(125,192,13,0.06)]",
-                      col.key === idKey && isSelected && "border-l-2 border-l-accent-green"
+                      col.key === STICKY_KEY && isSelected && SELECTED_ROW,
+                      col.key === STICKY_KEY && isSelected && "border-l-2 border-l-accent-green"
                     )}
                   >
                     {renderCell(row[col.key], col.type, col.key)}

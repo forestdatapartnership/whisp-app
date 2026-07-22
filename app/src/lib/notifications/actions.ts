@@ -1,6 +1,6 @@
 'use server';
 
-import { getAuthUser } from '@/lib/auth/session';
+import { getAuthUserWithRefresh } from '@/lib/auth/session';
 import { SystemError } from '@/types/system-error';
 import { SystemCode } from '@/types/system-codes';
 import { action } from '@/lib/server/action';
@@ -12,7 +12,7 @@ import {
 import { getUserByUuid } from '@/lib/db/users-service';
 
 export const fetchNotificationStatus = action(async (): Promise<boolean> => {
-  const user = await getAuthUser();
+  const user = await getAuthUserWithRefresh();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
   const profile = await getUserByUuid(user.id);
   if (!profile) throw new SystemError(SystemCode.USER_NOT_FOUND);
@@ -20,7 +20,7 @@ export const fetchNotificationStatus = action(async (): Promise<boolean> => {
 });
 
 export const setNotificationSubscription = action(async (subscribed: boolean): Promise<void> => {
-  const user = await getAuthUser();
+  const user = await getAuthUserWithRefresh();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
   const profile = await getUserByUuid(user.id);
   if (!profile) throw new SystemError(SystemCode.USER_NOT_FOUND);

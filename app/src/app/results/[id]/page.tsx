@@ -16,11 +16,19 @@ import { useConfig } from "@/lib/config/config-context";
 import { useJobStatus } from "@/lib/submission/useJobStatus";
 import { readSyncResult } from "@/lib/submission/sync-result";
 import { downloadCsv, downloadGeoJson, timestampFilename } from "@/lib/utils/export";
+import { downloadOfflineReport } from "@/lib/results/offline-report";
+import { useTheme } from "@/components/layout/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/icons";
 import { getResultFields } from "@/app/docs/reference/result-fields/actions";
-import { riskValueLabel, isTruthyCell, type RiskFilter } from "@/lib/results/catalog-fields";
-import { COMMODITY_OPTIONS, type CommodityKey } from "@/lib/results/risk-trees";
+import { isTruthyCell, type RiskFilter } from "@/lib/results/catalog-fields";
+import {
+  formatResultsFilterLabel,
+  getCommodity,
+  getCommodityByRiskField,
+  WATERBODY_FIELD,
+  type CommodityKey,
+} from "@/lib/results/risk-trees";
 import type { ResultField } from "@/types/models";
 import type { FeatureCollection } from "geojson";
 
@@ -53,7 +61,8 @@ function buildFromFields(fields: ResultField[]) {
     .filter(
       (f) =>
         f.displayMetadata?.excludeFromResults !== true &&
-        f.displayMetadata?.visibleByDefault !== false
+        f.displayMetadata?.visibleByDefault !== false &&
+        !(f.id.startsWith("Ind_") && f.displayMetadata?.visibleByDefault !== true)
     )
     .map((f) => f.id);
 
@@ -94,6 +103,7 @@ export default function ResultsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { config } = useConfig();
+  const { theme } = useTheme();
 
   const [mapVisible, setMapVisible] = useState(true);
   const [search, setSearch] = useState("");
@@ -114,7 +124,7 @@ export default function ResultsPage() {
   const [tableData, setTableData] = useState<ResultRow[]>([]);
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
 
-  const riskField = COMMODITY_OPTIONS.find((o) => o.key === commodity)!.riskField;
+  const riskField = getCommodity(commodity).riskField;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -215,51 +225,44 @@ export default function ResultsPage() {
     }
   }, [filteredData, selectedRow]);
 
-  const filterLabel = useMemo(() => {
-    if (riskFilter) {
-      const name =
-        COMMODITY_OPTIONS.find((o) => o.riskField === riskFilter.field)?.shortLabel ??
-        riskFilter.field.replace(/^risk_/, "");
-      return `${name} · ${riskValueLabel(riskFilter.value)}`;
-    }
-    if (indicatorFilter) {
-      const ind = COMMODITY_OPTIONS.flatMap((o) => o.indicators).find(
-        (i) => i.key === indicatorFilter
-      );
-      return `${ind?.label ?? indicatorFilter} · yes`;
-    }
-    return null;
-  }, [riskFilter, indicatorFilter]);
+  const filterLabel = useMemo(
+    () => formatResultsFilterLabel(riskFilter, indicatorFilter),
+    [riskFilter, indicatorFilter]
+  );
 
   const handleCommodityChange = useCallback(
     (key: CommodityKey) => {
       setCommodity(key);
-      const next = COMMODITY_OPTIONS.find((o) => o.key === key)!;
+      const next = getCommodity(key);
+      let cleared = false;
       if (riskFilter && riskFilter.field !== next.riskField) {
         setRiskFilter(null);
-        setCurrentPage(1);
+        cleared = true;
       }
-      if (indicatorFilter && !next.indicators.some((i) => i.key === indicatorFilter)) {
+      if (
+        indicatorFilter &&
+        indicatorFilter !== WATERBODY_FIELD &&
+        !next.indicators.some((i) => i.key === indicatorFilter)
+      ) {
         setIndicatorFilter(null);
-        setCurrentPage(1);
+        cleared = true;
       }
+      if (cleared) setCurrentPage(1);
     },
     [riskFilter, indicatorFilter]
   );
 
   const handleRiskFilter = useCallback((filter: RiskFilter | null) => {
     setRiskFilter(filter);
-    if (filter) setIndicatorFilter(null);
+    setIndicatorFilter(null);
     setCurrentPage(1);
-    if (filter) {
-      const match = COMMODITY_OPTIONS.find((o) => o.riskField === filter.field);
-      if (match) setCommodity(match.key);
-    }
+    const match = filter ? getCommodityByRiskField(filter.field) : null;
+    if (match) setCommodity(match.key);
   }, []);
 
   const handleIndicatorFilter = useCallback((field: string | null) => {
     setIndicatorFilter(field);
-    if (field) setRiskFilter(null);
+    setRiskFilter(null);
     setCurrentPage(1);
   }, []);
 
@@ -325,6 +328,15 @@ export default function ResultsPage() {
     if (!geoJsonData) return;
     downloadGeoJson(geoJsonData, timestampFilename("geojson"));
   }, [geoJsonData]);
+
+  const handleExportHtml = useCallback(() => {
+    downloadOfflineReport({
+      rows: tableData,
+      columns: allColumns,
+      title: `WHISP risk report · ${id}`,
+      theme,
+    });
+  }, [tableData, allColumns, id, theme]);
 
   const selectedFeatureIndex = useMemo(() => {
     if (!selectedRow || !filteredGeoJson) return undefined;
@@ -417,6 +429,9 @@ export default function ResultsPage() {
         onOpenSummary={handleOpenSummary}
         onCloseSummary={() => setSummaryOpen(false)}
         onBack={() => router.push("/")}
+        onExportCsv={handleExportCsv}
+        onExportGeoJson={handleExportGeoJson}
+        onExportHtml={handleExportHtml}
         onOpenWhispMap={handleOpenWhispMap}
         whispMapDisabled={!config?.api.url}
       />
@@ -430,8 +445,6 @@ export default function ResultsPage() {
               onSearchChange={handleSearchChange}
               fieldPickerOpen={fieldPickerOpen}
               onOpenFieldPicker={handleOpenFieldPicker}
-              onExportCsv={handleExportCsv}
-              onExportGeoJson={handleExportGeoJson}
               filterLabel={filterLabel}
               onClearFilter={handleClearFilter}
             />
@@ -479,8 +492,12 @@ export default function ResultsPage() {
               onRiskFilter={handleRiskFilter}
               indicatorFilter={indicatorFilter}
               onIndicatorFilter={handleIndicatorFilter}
-              filterLabel={filterLabel}
               onClearFilter={handleClearFilter}
+              onCountryFilter={(country) => {
+                setSearch(country);
+                setCurrentPage(1);
+                setSummaryOpen(false);
+              }}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use server';
 
-import { getAuthUser, getAuthUserWithRefresh } from '@/lib/auth/session';
+import { getAuthUserWithRefresh } from '@/lib/auth/session';
 import { SystemError } from '@/types/system-error';
 import { SystemCode } from '@/types/system-codes';
 import { action } from '@/lib/server/action';
@@ -25,7 +25,7 @@ export const updateUserProfile = action(async (data: {
   lastName: string;
   organization?: string | null;
 }): Promise<UserProfile> => {
-  const user = await getAuthUser();
+  const user = await getAuthUserWithRefresh();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
   if (!data.name || !data.lastName) throw new SystemError(SystemCode.VALIDATION_MISSING_REQUIRED_FIELDS);
 
@@ -35,7 +35,7 @@ export const updateUserProfile = action(async (data: {
 });
 
 export const deleteUserAccount = action(async (password: string): Promise<void> => {
-  const user = await getAuthUser();
+  const user = await getAuthUserWithRefresh();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
   if (!password) throw new SystemError(SystemCode.USER_PASSWORD_CONFIRMATION_REQUIRED);
 
@@ -46,7 +46,7 @@ export const deleteUserAccount = action(async (password: string): Promise<void> 
 });
 
 export const changePassword = action(async (currentPassword: string, newPassword: string): Promise<void> => {
-  const user = await getAuthUser();
+  const user = await getAuthUserWithRefresh();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
   validateRequiredFields({ currentPassword, newPassword }, ['currentPassword', 'newPassword']);
   if (!isValidPassword(newPassword)) throw new SystemError(SystemCode.USER_WEAK_PASSWORD);

@@ -29,13 +29,6 @@ export function isRiskColumn(col: CatalogColumn): boolean {
   );
 }
 
-export function fieldLabel(col: CatalogColumn): string {
-  if (col.header && col.header !== col.key) return col.header;
-  if (col.key.startsWith("risk_") && col.description) return col.description;
-  if (col.key.startsWith("Ind_")) return col.key.replace(/^Ind_\d+_/, "").replace(/_/g, " ");
-  return col.description || col.key.replace(/_/g, " ");
-}
-
 export function riskToneToValue(tone: RiskTone): RiskValue {
   return tone === "medium" ? "more_info_needed" : tone;
 }
@@ -59,6 +52,13 @@ export function isTruthyCell(value: unknown): boolean {
     return v === "yes" || v === "true";
   }
   return false;
+}
+
+export function isYesNoCell(value: unknown): boolean {
+  if (typeof value === "boolean") return true;
+  if (typeof value !== "string") return false;
+  const v = value.toLowerCase();
+  return v === "yes" || v === "no" || v === "true" || v === "false";
 }
 
 export interface RiskMix {
