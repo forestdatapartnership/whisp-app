@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Download, Trash2, Play, Loader2, AlertTriangle } from 'lucide-react'
 import { parseGeometryFile } from '@/lib/utils/file-parser'
 import type { GeoPayload } from '@/lib/submission/useSubmitAnalysis'
@@ -14,6 +14,7 @@ interface SubmitGeometryProps {
   geometryLimit?: number
   asyncThreshold?: number
   onError: (msg: string) => void
+  initialFile?: File | null
 }
 
 export function SubmitGeometry({
@@ -21,11 +22,14 @@ export function SubmitGeometry({
   geometryLimit,
   asyncThreshold = 50,
   onError,
+  initialFile,
 }: SubmitGeometryProps) {
   const [fileName, setFileName] = useState('')
   const [featureCount, setFeatureCount] = useState(0)
   const [payload, setPayload] = useState<GeoPayload | null>(null)
   const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS)
+
+  const appliedFileRef = useRef<File | null>(null)
 
   const { submit, isLoading, error: submitError } = useSubmitAnalysis({
     analysisOptions,
@@ -48,7 +52,7 @@ export function SubmitGeometry({
     onError('')
   }
 
-  const handleFile = async (file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     onError('')
     if (maxFileSize && file.size > maxFileSize) {
       onError(`File too large. Maximum is ${maxFileSize / 1024} KB.`)
@@ -72,7 +76,13 @@ export function SubmitGeometry({
     setFileName(file.name)
     setFeatureCount(result.featureCount)
     setPayload('wkt' in result ? { type: 'wkt', wkt: result.wkt } : { type: 'json', geojson: result.json })
-  }
+  }, [maxFileSize, geometryLimit, onError])
+
+  useEffect(() => {
+    if (!initialFile || appliedFileRef.current === initialFile) return
+    appliedFileRef.current = initialFile
+    void handleFile(initialFile)
+  }, [initialFile, handleFile])
 
   const handleAnalyze = () => {
     if (!payload) {

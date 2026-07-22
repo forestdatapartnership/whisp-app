@@ -1,7 +1,9 @@
 import type { FeatureCollection } from 'geojson';
 
 function escapeCsv(value: unknown): string {
-  const s = value == null ? '' : String(value);
+  if (value == null) return '';
+  const s =
+    typeof value === 'object' ? JSON.stringify(value) : String(value);
   if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }

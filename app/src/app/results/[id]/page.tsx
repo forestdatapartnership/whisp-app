@@ -17,6 +17,11 @@ import { useJobStatus } from "@/lib/submission/useJobStatus";
 import { readSyncResult } from "@/lib/submission/sync-result";
 import { downloadCsv, downloadGeoJson, timestampFilename } from "@/lib/utils/export";
 import { downloadOfflineReport } from "@/lib/results/offline-report";
+import {
+  clearLocalResults,
+  readLocalResults,
+} from "@/lib/results/local-results";
+import { versionsMatch } from "@/lib/results/parse-results-file";
 import { useTheme } from "@/components/layout/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/icons";
@@ -104,6 +109,7 @@ export default function ResultsPage() {
   const router = useRouter();
   const { config } = useConfig();
   const { theme } = useTheme();
+  const isLocal = id === "local";
 
   const [mapVisible, setMapVisible] = useState(true);
   const [search, setSearch] = useState("");
@@ -123,6 +129,7 @@ export default function ResultsPage() {
   const [defaultVisibleCols, setDefaultVisibleCols] = useState<string[]>([]);
   const [tableData, setTableData] = useState<ResultRow[]>([]);
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
+  const [localMissing, setLocalMissing] = useState(false);
 
   const riskField = getCommodity(commodity).riskField;
 
@@ -159,24 +166,45 @@ export default function ResultsPage() {
     if (fc?.type === "FeatureCollection" && Array.isArray(fc.features)) {
       setTableData(featuresToRows(fc));
       setGeoJsonData(fc);
+      const hasGeometry = fc.features.some((f) => f.geometry != null);
+      if (!hasGeometry) setMapVisible(false);
     }
   }, []);
 
   useEffect(() => {
+    if (!isLocal) return;
+    const current = config?.app.openforisWhispVersion?.trim() || "";
+    if (!current) return;
+
+    const stored = readLocalResults();
+    if (!stored || !versionsMatch(stored.whispVersion, current)) {
+      clearLocalResults();
+      setLocalMissing(true);
+      return;
+    }
+    handleCompleted(stored.featureCollection);
+  }, [isLocal, handleCompleted, config?.app.openforisWhispVersion]);
+
+  useEffect(() => {
+    if (isLocal) return;
     const sync = readSyncResult(id);
     if (sync) handleCompleted(sync);
-  }, [id, handleCompleted]);
+  }, [id, isLocal, handleCompleted]);
 
-  const { response, isLoading, error } = useJobStatus({ token: id, onCompleted: handleCompleted });
+  const { response, isLoading, error } = useJobStatus({
+    token: isLocal ? null : id,
+    onCompleted: handleCompleted,
+  });
 
   const code = response?.code;
-  const isProcessing = code === "analysis_processing" || code === "analysis_queued";
+  const isProcessing = !isLocal && (code === "analysis_processing" || code === "analysis_queued");
   const isError =
-    !!error ||
-    (!!code &&
-      code !== "analysis_completed" &&
-      code !== "analysis_processing" &&
-      code !== "analysis_queued");
+    !isLocal &&
+    (!!error ||
+      (!!code &&
+        code !== "analysis_completed" &&
+        code !== "analysis_processing" &&
+        code !== "analysis_queued"));
 
   const searchedData = useMemo(() => {
     if (!search.trim()) return tableData;
@@ -306,14 +334,19 @@ export default function ResultsPage() {
     setCurrentPage(1);
   }, []);
 
+  const leaveToHome = useCallback(() => {
+    if (isLocal) clearLocalResults();
+    router.push("/");
+  }, [isLocal, router]);
+
   const handleOpenWhispMap = useCallback(() => {
-    if (tableData.length === 0 || !config?.api.url) return;
+    if (isLocal || tableData.length === 0 || !config?.api.url) return;
     const downloadUrl = `${config.api.url}/generate-geojson/${id}`;
     window.open(
       `https://whisp.earthmap.org/?aoi=WHISP&fetchJson=${encodeURIComponent(downloadUrl)}`,
       "_blank"
     );
-  }, [id, tableData.length, config?.api.url]);
+  }, [id, isLocal, tableData.length, config?.api.url]);
 
   const handleExportCsv = useCallback(() => {
     const cols = allColumns.map((c) => c.key);
@@ -333,10 +366,10 @@ export default function ResultsPage() {
     downloadOfflineReport({
       rows: tableData,
       columns: allColumns,
-      title: `WHISP risk report · ${id}`,
+      title: isLocal ? "WHISP risk report · GeoJSON" : `WHISP risk report · ${id}`,
       theme,
     });
-  }, [tableData, allColumns, id, theme]);
+  }, [tableData, allColumns, id, isLocal, theme]);
 
   const selectedFeatureIndex = useMemo(() => {
     if (!selectedRow || !filteredGeoJson) return undefined;
@@ -361,7 +394,7 @@ export default function ResultsPage() {
     [filteredGeoJson, sortedData, rowsPerPage]
   );
 
-  if (isLoading) {
+  if (!isLocal && isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <Spinner className="size-10 text-accent-green" />
@@ -397,12 +430,25 @@ export default function ResultsPage() {
     );
   }
 
+  if (isLocal && localMissing) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-text-muted">
+          <p className="text-sm">No GeoJSON results loaded. Open a matching export from the home page.</p>
+          <Button variant="outline" size="sm" onClick={leaveToHome}>
+            <ArrowLeft className="size-3.5" /> Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (tableData.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-text-muted">
           <p className="text-sm">No results to display.</p>
-          <Button variant="outline" size="sm" onClick={() => router.back()}>
+          <Button variant="outline" size="sm" onClick={leaveToHome}>
             <ArrowLeft className="size-3.5" /> Go Back
           </Button>
         </div>
@@ -421,19 +467,19 @@ export default function ResultsPage() {
   return (
     <div className="-mx-6 -my-8 flex flex-1 flex-col self-stretch overflow-hidden">
       <ResultsToolbar
-        title="Results"
+        title={isLocal ? "GeoJSON Results" : "Results"}
         plotCount={sortedData.length}
         mapVisible={mapVisible}
         onToggleMap={setMapVisible}
         summaryOpen={summaryOpen}
         onOpenSummary={handleOpenSummary}
         onCloseSummary={() => setSummaryOpen(false)}
-        onBack={() => router.push("/")}
+        onBack={leaveToHome}
         onExportCsv={handleExportCsv}
         onExportGeoJson={handleExportGeoJson}
         onExportHtml={handleExportHtml}
         onOpenWhispMap={handleOpenWhispMap}
-        whispMapDisabled={!config?.api.url}
+        whispMapDisabled={isLocal || !config?.api.url}
       />
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row lg:overflow-hidden">
         <div
