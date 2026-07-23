@@ -87,7 +87,11 @@ function Step({
             <span className="uppercase tracking-wide opacity-70">{right.side}</span>
             <span className="text-text-dim">→</span>
             <Outcome outcome={right.outcome} active={rightOn} />
-            {showCounts && <span className="tabular-nums text-text-muted">{right.count}</span>}
+            {showCounts && (
+              <span className="tabular-nums text-text-muted">
+                ({right.count} plot{right.count !== 1 ? "s" : ""})
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -116,7 +120,11 @@ function Step({
             ) : (
               <Outcome outcome={down.outcome} active={downOn} />
             )}
-            {showCounts && <span className="tabular-nums text-text-muted">{down.count}</span>}
+            {showCounts && (
+              <span className="tabular-nums text-text-muted">
+                ({down.count} plot{down.count !== 1 ? "s" : ""})
+              </span>
+            )}
           </span>
         </div>
       )}
