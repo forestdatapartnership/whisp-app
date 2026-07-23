@@ -21,7 +21,6 @@ import {
   riskToneToValue,
   riskValueLabel,
   type RiskFilter,
-  type RiskMix,
   type RiskTone,
 } from "@/lib/results/catalog-fields";
 import {
@@ -29,7 +28,6 @@ import {
   WATERBODY_FIELD,
   WATERBODY_LABEL,
   buildTreeSteps,
-  countryRiskBreakdown,
   formatResultsFilterLabel,
   getCommodity,
   type CommodityKey,
@@ -53,31 +51,7 @@ export interface ResultsSummaryProps {
   indicatorFilter?: string | null;
   onIndicatorFilter?: (field: string | null) => void;
   onClearFilter?: () => void;
-  onCountryFilter?: (country: string) => void;
   className?: string;
-}
-
-function MixBar({ mix }: { mix: RiskMix }) {
-  const total = mix.total || 1;
-  return (
-    <div className="flex h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-surface-raised">
-      {(
-        [
-          [mix.low, "low"],
-          [mix.medium, "medium"],
-          [mix.high, "high"],
-        ] as const
-      )
-        .filter(([n]) => n > 0)
-        .map(([n, tone]) => (
-          <div
-            key={tone}
-            className={cn("h-full", riskDotClass[tone])}
-            style={{ width: `${(n / total) * 100}%` }}
-          />
-        ))}
-    </div>
-  );
 }
 
 type IndicatorItem = {
@@ -203,7 +177,6 @@ export function ResultsSummary({
   indicatorFilter,
   onIndicatorFilter,
   onClearFilter,
-  onCountryFilter,
   className,
 }: ResultsSummaryProps) {
   const plotMode = Boolean(selectedRow);
@@ -212,7 +185,6 @@ export function ResultsSummary({
   const filterLabel = formatResultsFilterLabel(riskFilter, indicatorFilter);
 
   const mix = useMemo(() => computeRiskMix(rows, riskField), [rows, riskField]);
-  const countries = useMemo(() => countryRiskBreakdown(rows, riskField), [rows, riskField]);
   const treeSteps = useMemo(
     () => buildTreeSteps(commodity, rows, selectedRow ?? null),
     [commodity, rows, selectedRow]
@@ -367,39 +339,6 @@ export function ResultsSummary({
             )}
             <RiskFlowchart steps={treeSteps} showCounts={!plotMode} />
           </section>
-
-          {!plotMode && countries.length > 1 && (
-            <section>
-              <div className="mb-3 flex items-end justify-between gap-3">
-                <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
-                  By country
-                </h2>
-                {onCountryFilter && (
-                  <span className="text-[10px] text-text-muted">Click to filter</span>
-                )}
-              </div>
-              <div className="flex flex-col gap-1">
-                {countries.slice(0, 8).map((c) => (
-                  <button
-                    key={c.country}
-                    type="button"
-                    disabled={!onCountryFilter}
-                    onClick={() => onCountryFilter?.(c.country)}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-sm px-2 py-1.5 text-left transition-colors",
-                      onCountryFilter && "cursor-pointer hover:bg-surface-raised"
-                    )}
-                  >
-                    <span className="w-16 shrink-0 truncate text-xs text-text-muted">{c.country}</span>
-                    <MixBar mix={c} />
-                    <span className="w-8 shrink-0 text-right text-xs tabular-nums text-text-primary">
-                      {c.total}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
       </ScrollArea>
     </div>

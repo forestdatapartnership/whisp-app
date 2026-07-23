@@ -1,5 +1,4 @@
 import {
-  computeRiskMix,
   isTruthyCell,
   riskValueLabel,
   type RiskFilter,
@@ -276,22 +275,6 @@ export function buildTreeSteps(
   }
 
   return steps;
-}
-
-export function countryRiskBreakdown(
-  rows: Array<Record<string, unknown>>,
-  riskField: string
-) {
-  const map = new Map<string, Array<Record<string, unknown>>>();
-  for (const row of rows) {
-    const country = String(row.Country ?? "").trim() || "Unknown";
-    const list = map.get(country);
-    if (list) list.push(row);
-    else map.set(country, [row]);
-  }
-  return [...map.entries()]
-    .map(([country, rs]) => ({ country, ...computeRiskMix(rs, riskField) }))
-    .sort((a, b) => b.total - a.total);
 }
 
 export function getCommodity(key: CommodityKey) {

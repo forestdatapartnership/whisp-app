@@ -539,11 +539,6 @@ export default function ResultsPage() {
               indicatorFilter={indicatorFilter}
               onIndicatorFilter={handleIndicatorFilter}
               onClearFilter={handleClearFilter}
-              onCountryFilter={(country) => {
-                setSearch(country);
-                setCurrentPage(1);
-                setSummaryOpen(false);
-              }}
             />
           </div>
         </div>
