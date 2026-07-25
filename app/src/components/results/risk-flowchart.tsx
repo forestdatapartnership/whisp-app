@@ -1,17 +1,13 @@
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { riskValueToTone, type RiskTone } from "@/lib/results/catalog-fields";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { riskValueToTone, RISK_TONE_SHORT, type RiskTone } from "@/lib/results/catalog-fields";
 import {
   stepBranches,
   type TreeOutcome,
   type TreeStepView,
 } from "@/lib/results/risk-trees";
 import { riskBorderClass, riskLevelStyles, riskTextClass } from "./risk-badge";
-
-const OUTCOME_LABEL: Record<Exclude<TreeOutcome, "continue">, string> = {
-  low: "Low",
-  high: "High",
-  more_info_needed: "More info",
-};
 
 function outcomeTone(outcome: TreeOutcome): RiskTone | null {
   return outcome === "continue" ? null : riskValueToTone(outcome);
@@ -33,7 +29,7 @@ function Outcome({
         active && "underline decoration-accent-green underline-offset-2"
       )}
     >
-      {OUTCOME_LABEL[outcome]}
+      {RISK_TONE_SHORT[tone]}
     </span>
   );
 }
@@ -61,12 +57,14 @@ function Step({
   const rightOff = active && !right.selected;
   const downOff = active && !down.selected;
 
+  const totalAtStep = step.yesCount + step.noCount;
+
   return (
     <div className={cn(step.disabled && "pointer-events-none opacity-35")}>
       <div className="flex items-center gap-3">
         <div
           className={cn(
-            "min-w-0 flex-1 rounded-sm border px-3 py-2 text-xs font-medium",
+            "group min-w-0 flex-1 rounded-sm border px-3 py-2 text-left text-xs font-medium",
             stopTone
               ? cn(riskLevelStyles[stopTone], riskBorderClass[stopTone])
               : active
@@ -75,6 +73,16 @@ function Step({
           )}
         >
           {step.question}
+          <Tooltip>
+            <TooltipTrigger className="ml-1 inline-block shrink-0 align-middle opacity-0 transition-opacity group-hover:opacity-100">
+              <Info className="size-3 text-text-dim hover:text-text-muted" />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="start">
+              Tests: {step.predicateDescription}
+              <br />
+              {totalAtStep} plot{totalAtStep !== 1 ? "s" : ""} reached this step
+            </TooltipContent>
+          </Tooltip>
         </div>
         {right.outcome !== "continue" && (
           <div

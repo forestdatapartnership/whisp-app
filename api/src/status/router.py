@@ -59,11 +59,9 @@ async def get_status(
     "/{token}/cancel",
     response_model=None,
     responses=route_responses(
-        SystemCode.ANALYSIS_COMPLETED,
         SystemCode.ANALYSIS_CANCELLED,
+        SystemCode.ANALYSIS_CANCEL_INVALID,
         SystemCode.ANALYSIS_JOB_NOT_FOUND,
-        SystemCode.ANALYSIS_ERROR,
-        SystemCode.ANALYSIS_TIMEOUT,
         *AUTH_ERRORS,
     ),
 )
@@ -76,7 +74,10 @@ async def cancel_status(
         return api_response(SystemCode.ANALYSIS_JOB_NOT_FOUND)
 
     if job.status in TERMINAL_STATUSES:
-        return await service.terminal_api_response(token, job)
+        return api_response(
+            SystemCode.ANALYSIS_CANCEL_INVALID,
+            context={"token": token, "status": job.status.value},
+        )
 
     message = "Cancelled by user"
     await service.terminate_analysis(token, message)

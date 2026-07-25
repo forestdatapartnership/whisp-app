@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { riskValueToTone, type RiskTone } from "@/lib/results/catalog-fields";
+import { riskValueToTone, RISK_TONE_SHORT, type RiskTone } from "@/lib/results/catalog-fields";
 
 export type RiskLevel = "low" | "medium" | "high" | "info";
 
@@ -35,16 +35,10 @@ export const riskBorderClass: Record<RiskTone, string> = {
   high: "border-risk-high",
 };
 
-const SHORT_LABEL: Record<RiskTone, string> = {
-  low: "Low",
-  high: "High",
-  medium: "More info needed",
-};
-
 export function riskFromValue(value: unknown): { level: RiskLevel; label: string } {
   const tone = riskValueToTone(String(value ?? ""));
   if (!tone) return { level: "info", label: String(value ?? "") };
-  return { level: tone, label: SHORT_LABEL[tone] };
+  return { level: tone, label: RISK_TONE_SHORT[tone] };
 }
 
 export function RiskBadge({ level, label, className }: RiskBadgeProps) {

@@ -181,6 +181,31 @@ const TREE_DEFS: Record<CommodityKey, TreeNodeDef[]> = {
   ],
 };
 
+function extractFields(pred: TreePred): string[] {
+  switch (pred.op) {
+    case "yn":
+    case "not":
+      return [pred.field];
+    case "and":
+    case "or":
+      return pred.of.flatMap(extractFields);
+  }
+}
+
+function describePred(pred: TreePred): string {
+  const label = (field: string) => findIndicator(field)?.label ?? field;
+  switch (pred.op) {
+    case "yn":
+      return label(pred.field);
+    case "not":
+      return `no ${label(pred.field)}`;
+    case "and":
+      return pred.of.map(describePred).join(" and ");
+    case "or":
+      return pred.of.map(describePred).join(" or ");
+  }
+}
+
 function compilePred(pred: TreePred): (row: Record<string, unknown>) => boolean {
   switch (pred.op) {
     case "yn":
@@ -209,6 +234,8 @@ const TREES: Record<CommodityKey, Node[]> = {
 
 export interface TreeStepView {
   question: string;
+  fields: string[];
+  predicateDescription: string;
   yesCount: number;
   noCount: number;
   yesOutcome: TreeOutcome;
@@ -259,8 +286,11 @@ export function buildTreeSteps(
       }
     }
 
+    const nodeDef = TREE_DEFS[commodity][steps.length];
     steps.push({
       question: node.question,
+      fields: extractFields(nodeDef.test),
+      predicateDescription: describePred(nodeDef.test),
       yesCount: yesRows.length,
       noCount: noRows.length,
       yesOutcome: node.yes,

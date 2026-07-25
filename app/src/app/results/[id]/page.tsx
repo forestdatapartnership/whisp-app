@@ -9,6 +9,7 @@ import { ResultsToolbar } from "@/components/results/results-toolbar";
 import { ResultsSearchBar } from "@/components/results/results-search-bar";
 import { ResultsTable, type ColumnDef, type ResultRow } from "@/components/results/results-table";
 import { ResultsSummary } from "@/components/results/results-summary";
+import { ResultsStatsStrip } from "@/components/results/results-stats-strip";
 import { ResultsPagination } from "@/components/results/results-pagination";
 import { MapPane } from "@/components/results/map-pane";
 import { FieldPicker, type ColumnGroup } from "@/components/results/field-picker";
@@ -72,6 +73,36 @@ function buildFromFields(fields: ResultField[]) {
     .map((f) => f.id);
 
   return { allColumns, columnGroups, defaultVisible };
+}
+
+function mergeUnknownColumns(
+  existing: ColumnDef[],
+  groups: ColumnGroup[],
+  visible: string[],
+  defaultVisible: string[],
+  row: ResultRow | undefined
+) {
+  if (!row) return { allColumns: existing, columnGroups: groups, visibleCols: visible, defaultVisibleCols: defaultVisible };
+  const known = new Set(existing.map((c) => c.key));
+  const unknown = Object.keys(row).filter((k) => k !== "geo" && !known.has(k));
+  if (unknown.length === 0) return { allColumns: existing, columnGroups: groups, visibleCols: visible, defaultVisibleCols: defaultVisible };
+
+  const fallbacks: ColumnDef[] = unknown.map((key) => ({
+    key,
+    header: key,
+    type: typeof row[key] === "number" ? "numeric" : "text",
+    category: "Other",
+  }));
+
+  return {
+    allColumns: [...existing, ...fallbacks],
+    columnGroups: [
+      ...groups.filter((g) => g.name !== "Other"),
+      { name: "Other", columns: [...(groups.find((g) => g.name === "Other")?.columns ?? []), ...unknown] },
+    ],
+    visibleCols: visible,
+    defaultVisibleCols: [...defaultVisible, ...unknown],
+  };
 }
 
 function featuresToRows(fc: FeatureCollection): ResultRow[] {
@@ -161,6 +192,17 @@ export default function ResultsPage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (tableData.length === 0) return;
+    const merged = mergeUnknownColumns(allColumns, columnGroups, visibleCols, defaultVisibleCols, tableData[0]);
+    if (merged.allColumns !== allColumns) {
+      setAllColumns(merged.allColumns);
+      setColumnGroups(merged.columnGroups);
+      setVisibleCols(merged.visibleCols);
+      setDefaultVisibleCols(merged.defaultVisibleCols);
+    }
+  }, [tableData, allColumns, columnGroups, visibleCols, defaultVisibleCols]);
+
   const handleCompleted = useCallback((data: unknown) => {
     const fc = data as FeatureCollection;
     if (fc?.type === "FeatureCollection" && Array.isArray(fc.features)) {
@@ -205,6 +247,7 @@ export default function ResultsPage() {
         code !== "analysis_completed" &&
         code !== "analysis_processing" &&
         code !== "analysis_queued"));
+
 
   const searchedData = useMemo(() => {
     if (!search.trim()) return tableData;
@@ -456,6 +499,36 @@ export default function ResultsPage() {
     );
   }
 
+  if (filteredData.length === 0) {
+    return (
+      <>
+        <ResultsToolbar
+          title={isLocal ? "GeoJSON Results" : "Results"}
+          plotCount={sortedData.length}
+          mapVisible={mapVisible}
+          onToggleMap={setMapVisible}
+          summaryOpen={summaryOpen}
+          onOpenSummary={handleOpenSummary}
+          onCloseSummary={() => setSummaryOpen(false)}
+          onBack={leaveToHome}
+          onExportCsv={handleExportCsv}
+          onExportGeoJson={handleExportGeoJson}
+          onExportHtml={handleExportHtml}
+          onOpenWhispMap={handleOpenWhispMap}
+          whispMapDisabled={isLocal || !config?.api.url}
+        />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-text-muted">
+            <p className="text-sm">No plots match your current filters.</p>
+            <Button variant="outline" size="sm" onClick={handleClearFilter}>
+              Clear filters
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   const pickerColumns = allColumns.filter((c) => !c.excludeFromResults);
   const pickerGroups = columnGroups.map((g) => ({
     ...g,
@@ -493,6 +566,12 @@ export default function ResultsPage() {
               onOpenFieldPicker={handleOpenFieldPicker}
               filterLabel={filterLabel}
               onClearFilter={handleClearFilter}
+            />
+            <ResultsStatsStrip
+              rows={searchedData}
+              commodity={commodity}
+              riskFilter={riskFilter}
+              onRiskFilter={handleRiskFilter}
             />
             <ResultsTable
               columns={allColumns}
