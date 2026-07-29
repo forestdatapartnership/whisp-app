@@ -1,6 +1,7 @@
 import { InfoToast } from "@/components/ui/info-toast";
 import { Link } from "@/components/ui/link";
 import { DataSubmission } from "@/components/submission/data-submission";
+import { PublicStats } from "@/components/landing/public-stats";
 import { CenteredShell } from "@/components/layout/page-section";
 import { cardLayout } from "@/components/ui/styles";
 
@@ -18,6 +19,7 @@ export default function Home() {
           </p>
         </div>
         <DataSubmission />
+        <PublicStats />
       </div>
 
       <InfoToast storageKey="whisp-intro-dismissed" title="New here?">

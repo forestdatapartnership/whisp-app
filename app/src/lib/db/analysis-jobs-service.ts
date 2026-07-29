@@ -1,4 +1,5 @@
 import 'server-only';
+import { unstable_cache } from 'next/cache';
 import { getPool } from '@/lib/db/pool';
 import { SystemCode } from '@/types/system-codes';
 import type { AnalysisJob } from '@/types/models/analysis-job';
@@ -117,6 +118,99 @@ class AnalysisJobsService extends BaseCrudService<AnalysisJob, typeof analysisJo
     }
   }
 }
+
+export type PublicStats = {
+  totalFeatures: number;
+  featuresLast7d: number;
+  featuresThisMonth: number;
+  featuresLastMonth: number;
+};
+
+async function _getPublicStats(): Promise<PublicStats> {
+  const pool = getPool();
+  const { rows: [row] } = await pool.query(
+    `SELECT
+       COALESCE(SUM(feature_count) FILTER (WHERE status = $1), 0) AS total_features,
+       COALESCE(SUM(feature_count) FILTER (WHERE status = $1 AND completed_at >= now() - interval '7 days'), 0) AS features_last_7d,
+       COALESCE(SUM(feature_count) FILTER (WHERE status = $1 AND completed_at >= date_trunc('month', now())), 0) AS features_this_month,
+       COALESCE(SUM(feature_count) FILTER (WHERE status = $1 AND completed_at >= date_trunc('month', now()) - interval '1 month' AND completed_at < date_trunc('month', now())), 0) AS features_last_month
+     FROM analysis_jobs`,
+    [SystemCode.ANALYSIS_COMPLETED]
+  );
+
+  return {
+    totalFeatures:     toIntOrDefault(row.total_features),
+    featuresLast7d:    toIntOrDefault(row.features_last_7d),
+    featuresThisMonth: toIntOrDefault(row.features_this_month),
+    featuresLastMonth: toIntOrDefault(row.features_last_month),
+  };
+}
+
+export const getPublicStats = unstable_cache(_getPublicStats, ['public-stats'], {
+  revalidate: 300,
+});
+
+export type MonthlyFeatures = { month: string; count: number };
+
+export type DetailedPublicStats = {
+  activeApiKeys: number;
+  uiFeatures: number;
+  apiFeatures: number;
+  monthly: MonthlyFeatures[];
+};
+
+async function _getDetailedPublicStats(): Promise<DetailedPublicStats> {
+  const pool = getPool();
+
+  const [apiKeysResult, agentResult, monthlyResult] = await Promise.all([
+    pool.query(
+      `SELECT COUNT(*)::int AS count
+       FROM api_keys ak
+       JOIN users u ON ak.user_id = u.id
+       WHERE ak.revoked = false
+         AND (ak.expires_at IS NULL OR ak.expires_at > now())`
+    ),
+    pool.query(
+      `SELECT
+         COALESCE(SUM(feature_count) FILTER (WHERE agent = 'ui'), 0) AS ui_features,
+         COALESCE(SUM(feature_count) FILTER (WHERE agent = 'api'), 0) AS api_features
+       FROM analysis_jobs
+       WHERE status = $1`,
+      [SystemCode.ANALYSIS_COMPLETED]
+    ),
+    pool.query(
+      `SELECT
+         to_char(m, 'Mon YYYY') AS month,
+         COALESCE(SUM(feature_count), 0)::int AS count
+       FROM generate_series(
+         date_trunc('month', now()) - interval '3 months',
+         date_trunc('month', now()) - interval '1 day',
+         interval '1 month'
+       ) AS m
+       LEFT JOIN analysis_jobs ON
+         status = $1
+         AND completed_at >= m
+         AND completed_at < m + interval '1 month'
+       GROUP BY m
+       ORDER BY m DESC`,
+      [SystemCode.ANALYSIS_COMPLETED]
+    ),
+  ]);
+
+  return {
+    activeApiKeys: toIntOrDefault(apiKeysResult.rows[0]?.count),
+    uiFeatures:   toIntOrDefault(agentResult.rows[0]?.ui_features),
+    apiFeatures:   toIntOrDefault(agentResult.rows[0]?.api_features),
+    monthly:       monthlyResult.rows.map((r: { month: string; count: number }) => ({
+      month: r.month,
+      count: toIntOrDefault(r.count),
+    })),
+  };
+}
+
+export const getDetailedPublicStats = unstable_cache(_getDetailedPublicStats, ['detailed-public-stats'], {
+  revalidate: 300,
+});
 
 const service = new AnalysisJobsService();
 
