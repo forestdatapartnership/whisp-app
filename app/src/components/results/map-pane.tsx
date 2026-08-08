@@ -38,7 +38,7 @@ export function MapPane({
   return (
     <div
       className={cn(
-        "flex h-[300px] flex-col border-t border-border bg-[#0d1214] lg:h-auto lg:flex-[0_0_44%] lg:border-l lg:border-t-0",
+        "flex h-[300px] flex-col border-t border-border bg-bg lg:h-auto lg:flex-[0_0_44%] lg:border-l lg:border-t-0",
         className
       )}
     >

@@ -19,14 +19,7 @@ const BASE_TILES = {
   light: { url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", attribution: CARTO },
 } as const;
 
-const RISK_FILL: Record<string, string> = {
-  low: "#4c7e0b",
-  medium: "#e09a1a",
-  high: "#e05a5a",
-  info: "#6b7280",
-};
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => string })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
@@ -59,8 +52,9 @@ function popupHtml(props: Record<string, unknown>) {
 }
 
 function riskColor(props: GeoJsonProperties | null | undefined, riskField?: string) {
-  if (!riskField || !props) return RISK_FILL.info;
-  return RISK_FILL[riskFromValue(props[riskField]).level];
+  if (!riskField || !props) return "var(--text-muted)";
+  const level = riskFromValue(props[riskField]).level;
+  return level === "info" ? "var(--text-muted)" : `var(--risk-${level})`;
 }
 
 interface PlotMapViewProps {
@@ -170,10 +164,10 @@ export function PlotMapView({
             const fill = riskColor(feature?.properties, riskField);
             return {
               fillColor: fill,
-              color: selected ? "#ffffff" : fill,
-              weight: selected ? 3 : 1.5,
+              color: selected ? "var(--text-primary)" : fill,
+              weight: selected ? 4 : 2,
               opacity: 1,
-              fillOpacity: selected ? 0.85 : 0.55,
+              fillOpacity: selected ? 0.82 : 0.62,
             };
           }}
           onEachFeature={onEachFeature}
