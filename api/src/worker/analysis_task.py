@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from celery import Task
 from celery.exceptions import Ignore, TimeLimitExceeded
@@ -20,19 +21,14 @@ class AnalysisRequest(Request):
     # TODO remove, this is temp workaround until Celery 5.7
     def on_timeout(self, soft, timeout):
         ctx = AnalysisTask._task_context(self.args, self.kwargs)
-        if ctx is not None and not self.task._already_terminal(ctx.token):
-            bind(
-                token=ctx.token,
-                user_id=ctx.user_id,
-                api_key_id=ctx.api_key_id,
-                input_metrics=ctx.input_metrics,
-            )
-            error_message = SystemCode.ANALYSIS_TIMEOUT.format(ctx.timeout)
-            self.task._persist_terminal(
-                ctx.token, SystemCode.ANALYSIS_TIMEOUT, error_message=error_message,
-            )
-            logger.warning("analysis timed out: %s", error_message)
         super().on_timeout(soft, timeout)
+        if ctx is not None:
+            threading.Thread(
+                target=self.task._persist_timeout,
+                args=(ctx,),
+                name=f"analysis-timeout-{ctx.token}",
+                daemon=True,
+            ).start()
 
 
 class AnalysisTask(Task):
@@ -68,6 +64,24 @@ class AnalysisTask(Task):
             SystemCode.ANALYSIS_TIMEOUT.value,
             SystemCode.ANALYSIS_ERROR.value,
         }
+
+    def _persist_timeout(self, ctx: AnalysisTaskContext) -> None:
+        try:
+            if self._already_terminal(ctx.token):
+                return
+            bind(
+                token=ctx.token,
+                user_id=ctx.user_id,
+                api_key_id=ctx.api_key_id,
+                input_metrics=ctx.input_metrics,
+            )
+            error_message = SystemCode.ANALYSIS_TIMEOUT.format(ctx.timeout)
+            self._persist_terminal(
+                ctx.token, SystemCode.ANALYSIS_TIMEOUT, error_message=error_message,
+            )
+            logger.warning("analysis timed out: %s", error_message)
+        except Exception:
+            logger.exception("failed to persist analysis timeout for %s", ctx.token)
 
     def before_start(self, task_id, args, kwargs):
         self._outcome: SystemCode | None = None
