@@ -4,11 +4,12 @@
 1. [Overview](#overview)
 2. [System Architecture](#system-architecture)
 3. [Access Methods](#access-methods)
-4. [Technology Stack](#technology-stack)
-5. [Setup and Installation](#setup-and-installation)
-6. [API Reference](#api-reference)
-7. [Python Integration](#python-integration)
-8. [License](#license)
+4. [Authentication and User Registration](#authentication-and-user-registration)
+5. [Technology Stack](#technology-stack)
+6. [Setup and Installation](#setup-and-installation)
+7. [API Reference](#api-reference)
+8. [Python Integration](#python-integration)
+9. [License](#license)
 
 ## Overview
 
@@ -22,7 +23,7 @@ The application is split into independently deployable services:
 
 | Component | Path | Role |
 |-----------|------|------|
-| **App** | `app/` | Next.js web UI — auth, account management, geometry submission, results viewer |
+| **App** | `app/` | Next.js web UI — Keycloak SSO, account management, geometry submission, results viewer |
 | **API** | `api/` | FastAPI service — submit, status, GeoJSON/CSV export |
 | **Workers** | `api/` (Celery) | Background analysis — runs `openforis-whisp` against Google Earth Engine |
 | **Database** | `db/` | PostgreSQL schema and migrations |
@@ -145,6 +146,98 @@ WHISP offers multiple access methods to accommodate different user needs:
 
 Geometry limits for the web app and API are runtime-configurable and exposed via `GET /config`.
 
+## Authentication and User Registration
+
+There are two independent mechanisms, and they do not overlap:
+
+- **Keycloak SSO** authenticates people in the browser and creates the app session.
+- **Whisp-issued API keys** authenticate programmatic calls to the API. Users generate their own key inside the app after signing in.
+
+Sign-in uses the OIDC authorization code flow with PKCE. The Next.js app is the OIDC client; Keycloak owns credentials, email verification, and password resets. Local password login still exists for legacy accounts but is deprecated — any account linked to Keycloak is redirected to SSO instead.
+
+### SSO routes (`app/src/app/auth/sso/`)
+
+| Route | Purpose |
+|-------|---------|
+| `GET /auth/sso/login` | Starts sign-in. Generates PKCE verifier + `state`, stores them in a short-lived `sso_state` cookie, redirects to Keycloak's `authorization_endpoint`. Accepts `next` (post-login path) and `login_hint` (prefills the email). |
+| `GET /auth/sso/register` | Same as login, but redirects to Keycloak's `/registrations` page so the user self-registers. |
+| `GET /auth/sso/callback` | Keycloak redirect target. Validates `state`, exchanges the code for tokens, verifies the ID token, provisions the user, sets session cookies. |
+| `GET /auth/sso/logout` | Clears app cookies and redirects to Keycloak's `end_session_endpoint` (RP-initiated logout) so the IdP session ends too. |
+| `GET /auth/sso/account` | Redirects to the Keycloak account console for profile/password/MFA management. |
+
+All SSO routes return `501` when Keycloak is not configured.
+
+### Sign-in flow
+
+```mermaid
+sequenceDiagram
+    participant U as Browser
+    participant APP as Next.js App
+    participant KC as Keycloak
+    participant DB as PostgreSQL
+
+    U->>APP: GET /auth/sso/login?next=/
+    APP->>APP: Generate PKCE + state → sso_state cookie
+    APP-->>U: 302 to Keycloak /auth (or /registrations)
+    U->>KC: Sign in or self-register
+    KC-->>U: 302 to /auth/sso/callback?code&state
+    U->>APP: GET /auth/sso/callback
+    APP->>APP: Verify state matches sso_state cookie
+    APP->>KC: POST token_endpoint (code + code_verifier)
+    KC-->>APP: access / refresh / id tokens
+    APP->>KC: Fetch JWKS, verify ID token (issuer + audience)
+    APP->>DB: find_or_create_sso_user(sub, email, given_name, family_name)
+    DB-->>APP: User profile
+    APP->>DB: Create API key if the user has none
+    APP-->>U: Set session cookies, redirect to `next`
+```
+
+### Registering new users
+
+There is no local sign-up form. `/register` and the navbar "Register" button both redirect to `/auth/sso/register`, which sends the user to Keycloak's self-registration page. Accounts are created in the Whisp database lazily, on the first successful callback — the `find_or_create_sso_user` SQL function (`db/migrations/20260713_keycloak_sso/`) resolves the user in three cases:
+
+1. **Known `keycloak_sub`** → return the existing profile.
+2. **Known email, no `keycloak_sub`** → link the legacy local account to Keycloak and mark the email verified. (If the email is already linked to a *different* `sub`, the function raises and sign-in fails.)
+3. **Unknown email** → insert a new user with `password_hash = NULL`, `email_verified = TRUE`, and the Keycloak `sub`.
+
+Because Keycloak has already verified the address, SSO users skip Whisp's email-verification step.
+
+### API keys
+
+**Keycloak tokens never reach the API.** SSO only establishes the browser session with the Next.js app; API access uses a separate Whisp-issued API key that the user generates in the app. Keycloak has no part in issuing, validating, or revoking it.
+
+Keys are plain UUIDs stored in the `api_keys` table, minted by `createApiKeyForUser` (`app/src/lib/db/api-keys-service.ts`) and valid for **365 days**. A user has at most **one active key** — `create_or_replace_api_key` replaces any existing one, so regenerating immediately invalidates the old key.
+
+Users manage their key from the **account page**, backed by the server actions in `app/src/lib/auth/api-key-actions.ts`:
+
+| Action | Server action | Effect |
+|--------|---------------|--------|
+| Generate | `createUserApiKey` | Creates a key when none is active. Shown once, in full. |
+| Regenerate | `createUserApiKey` | Replaces the current key; existing integrations break immediately. |
+| Revoke | `deleteUserApiKey` | Leaves the account with no active key; all API calls fail until a new one is generated. |
+
+Two conveniences worth knowing:
+
+- On the first SSO callback, the app generates a key automatically if the user has none, so a newly registered account can call the API without a manual step.
+- Submissions made through the web UI are gated on having an active key (`hasApiKey`); the app's `/internal/submit/*` and `/internal/status/*` proxies attach the session user's key server-side, so it is never embedded in client-side code.
+
+Direct API calls pass the key as an `X-API-KEY` header — see [API Reference](#api-reference). Rate limits and concurrency caps are attached to the key record, not to the SSO identity.
+
+### Session and cookies
+
+| Cookie | Contents | Lifetime |
+|--------|----------|----------|
+| `token` | App JWT (HS256, signed with `JWT_SECRET`) | 30 min |
+| `refreshToken` | App refresh JWT — silently mints a new access token | 7 days |
+| `kc_refresh_token` | Keycloak refresh token, used for RP-initiated logout | 30 days |
+| `sso_state` | `state` + PKCE verifier + `next` path, during the redirect only | 5 min |
+
+All are `httpOnly`, `secure` in production, and `sameSite=strict` (`sso_state` uses `lax` so it survives the redirect back from Keycloak).
+
+### Configuration
+
+SSO activates only when both `KEYCLOAK_ISSUER` and `KEYCLOAK_CLIENT_ID` are set. The redirect URI is derived from `HOST_URL` as `{HOST_URL}/auth/sso/callback` — register exactly that value as a valid redirect URI on the Keycloak client, and `{HOST_URL}/` as a valid post-logout redirect URI. See [Environment Configuration](#environment-configuration) for the variables.
+
 ## Technology Stack
 
 ### App (`app/`)
@@ -153,7 +246,7 @@ Geometry limits for the web app and API are runtime-configurable and exposed via
 - **Styling**: Tailwind CSS 4
 - **Mapping**: Leaflet with react-leaflet
 - **Database**: PostgreSQL via `pg`
-- **Authentication**: JWT (jose), server actions
+- **Authentication**: Keycloak OIDC SSO (authorization code + PKCE), app session JWTs via `jose`, server actions
 
 ### API & Workers (`api/`)
 - **Framework**: FastAPI with Uvicorn
@@ -210,7 +303,17 @@ DB_NAME=whisp_db
 DB_USER=
 DB_PASSWORD=
 HOST_URL=http://localhost:3001
+
+# Keycloak SSO — set both to enable; omit to disable SSO routes
+KEYCLOAK_ISSUER=https://<keycloak-host>/realms/<realm>
+KEYCLOAK_CLIENT_ID=
+KEYCLOAK_CLIENT_SECRET=      # optional — omit for a public PKCE client
+KEYCLOAK_SCOPE=              # optional — defaults to "openid email profile"
 ```
+
+`HOST_URL` drives the OIDC redirect URI (`{HOST_URL}/auth/sso/callback`), so it
+must match the public origin of the app and be registered on the Keycloak
+client. See [Authentication and User Registration](#authentication-and-user-registration).
 
 `API_URL` is the server-to-server API base used by server code only (it never
 reaches the browser). Browser-facing URLs (quick-start cURL, footer API docs
@@ -241,7 +344,7 @@ GEOID_COLLECTION=
 
 The Whisp API is a FastAPI service. Interactive documentation is available at `/api/docs` (Swagger) and `/api/redoc`.
 
-All analysis endpoints require an `X-API-KEY` header.
+All analysis endpoints require an `X-API-KEY` header. The key is issued by the Whisp app, not by the SSO provider — sign in and generate one from your account page (see [API keys](#api-keys)). Keycloak access tokens are not accepted by the API.
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
