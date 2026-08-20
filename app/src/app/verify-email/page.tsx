@@ -47,7 +47,7 @@ function VerifyContent() {
       <CardContent className="flex flex-col items-center gap-4">
         {status === "loading" && <Loader2 className="size-8 animate-spin text-text-muted" />}
         {status === "success" && <CheckCircle2 className="size-10 text-accent-green" />}
-        {status === "error" && <XCircle className="size-10 text-red-400" />}
+        {status === "error" && <XCircle className="size-10 text-risk-high" />}
         {message && <p className="text-sm text-text-muted text-center">{message}</p>}
         {status !== "loading" && (
           <Button nativeButton={false} render={<Link href="/login" />} className="w-full">

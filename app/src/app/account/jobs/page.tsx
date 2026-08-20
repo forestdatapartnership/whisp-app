@@ -52,10 +52,10 @@ const FILTER_OPTIONS = [
 
 const BADGE_CLASS: Record<string, string> = {
   [SystemCode.ANALYSIS_COMPLETED]: "bg-accent-green/12 text-accent-green [&_.badge-dot]:bg-accent-green",
-  [SystemCode.ANALYSIS_TIMEOUT]: "bg-[#e09a1a]/12 text-[#e09a1a] [&_.badge-dot]:bg-[#e09a1a]",
-  [SystemCode.ANALYSIS_ERROR]: "bg-[#e05a5a]/12 text-[#e05a5a] [&_.badge-dot]:bg-[#e05a5a]",
-  [SystemCode.ANALYSIS_QUEUED]: "bg-violet-500/12 text-violet-400 [&_.badge-dot]:bg-violet-400",
-  [SystemCode.ANALYSIS_PROCESSING]: "bg-[#5ea4e4]/12 text-[#5ea4e4] [&_.badge-dot]:bg-[#5ea4e4]",
+  [SystemCode.ANALYSIS_TIMEOUT]: "bg-risk-medium/12 text-risk-medium [&_.badge-dot]:bg-risk-medium",
+  [SystemCode.ANALYSIS_ERROR]: "bg-risk-high/12 text-risk-high [&_.badge-dot]:bg-risk-high",
+  [SystemCode.ANALYSIS_QUEUED]: "bg-accent-violet/12 text-accent-violet [&_.badge-dot]:bg-accent-violet",
+  [SystemCode.ANALYSIS_PROCESSING]: "bg-accent-blue/12 text-accent-blue [&_.badge-dot]:bg-accent-blue",
   [SystemCode.ANALYSIS_CANCELLED]: "bg-text-muted/12 text-text-muted [&_.badge-dot]:bg-text-muted",
 };
 
@@ -235,18 +235,18 @@ function JobsContent() {
         {
           label: "Queued",
           value: stats.statusCounts.queued,
-          className: "text-violet-400",
+          className: "text-accent-violet",
         },
         {
           label: "Completed",
           value: stats.statusCounts.completed,
           className: "text-accent-green",
         },
-        { label: "Errors", value: stats.statusCounts.error, className: "text-[#e05a5a]" },
+        { label: "Errors", value: stats.statusCounts.error, className: "text-risk-high" },
         {
           label: "Timeouts",
           value: stats.statusCounts.timeout,
-          className: "text-[#e09a1a]",
+          className: "text-risk-medium",
         },
         {
           label: "Avg runtime",

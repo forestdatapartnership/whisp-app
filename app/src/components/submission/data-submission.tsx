@@ -65,7 +65,7 @@ export function DataSubmission() {
         />
       ) : needsApiKey ? (
         <Card className="text-center">
-          <Key className="mx-auto mb-4 size-12 text-amber-400" strokeWidth={1.5} />
+          <Key className="mx-auto mb-4 size-12 text-risk-medium" strokeWidth={1.5} />
           <h2 className="mb-2 text-lg font-semibold text-text-primary">API Key Required</h2>
           <p className="mb-6 text-sm text-text-muted">
             You need to create an API key to submit analysis requests. Go to your account to create one.

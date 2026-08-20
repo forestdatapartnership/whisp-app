@@ -51,7 +51,7 @@ function FooterDropdown({ label, items }: {
                 target={item.target}
                 onClick={() => setOpen(false)}
                 variant="subtle"
-                className="block rounded-md px-3 py-1.5 text-[13px] hover:bg-white/[0.04] hover:text-text-primary"
+                className="block rounded-md px-3 py-1.5 text-[13px] hover:bg-surface-raised hover:text-text-primary"
               >
                 {item.label}
               </Link>

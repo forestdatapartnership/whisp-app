@@ -17,7 +17,7 @@ const config: Record<AlertType, { icon: typeof XCircle; className: string }> = {
   },
   warning: {
     icon: AlertTriangle,
-    className: "border-amber-400/40 bg-amber-400/10 text-amber-600 dark:text-amber-400",
+    className: "border-risk-medium/40 bg-risk-medium/10 text-risk-medium",
   },
 };
 

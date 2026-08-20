@@ -105,7 +105,7 @@ export function SubmitGeoIds({
       </div>
 
       <div className="flex items-start gap-2 text-[12px] text-text-muted leading-relaxed">
-        <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-yellow-500" />
+        <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-risk-medium" />
         IDs must correspond to registered plot geometries in the system.
       </div>
 

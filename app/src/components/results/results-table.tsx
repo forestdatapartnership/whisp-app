@@ -66,7 +66,7 @@ function renderYesNo(value: unknown) {
   return isTruthyCell(value) ? (
     <span className="text-[11px] text-accent-green">yes</span>
   ) : (
-    <span className="text-[11px] text-[#3d4e56]">no</span>
+    <span className="text-[11px] text-text-dim">no</span>
   );
 }
 

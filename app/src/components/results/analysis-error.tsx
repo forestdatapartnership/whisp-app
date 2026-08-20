@@ -20,8 +20,8 @@ export function AnalysisError({
     <CenteredShell className="px-4">
       <Card className={cardLayout.md}>
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-red-500/10">
-            <AlertTriangle className="size-6 text-red-400" />
+          <div className="flex size-12 items-center justify-center rounded-full bg-risk-high/10">
+            <AlertTriangle className="size-6 text-risk-high" />
           </div>
           <div className="flex flex-col gap-1.5">
             <h1 className="text-lg font-semibold text-text-primary">Analysis failed</h1>

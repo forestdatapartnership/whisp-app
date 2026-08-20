@@ -74,7 +74,7 @@ export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
         formats=".geojson · .json"
       />
       <div className="flex items-start gap-2 text-[12px] text-text-muted leading-relaxed">
-        <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-yellow-500" />
+        <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-risk-medium" />
         Use a GeoJSON you downloaded from WHISP. Only exports matching the current openforis-whisp version can be opened.
       </div>
       {needsRerun && (
