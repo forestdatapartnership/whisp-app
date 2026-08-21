@@ -1,0 +1,95 @@
+name: Forum Watch
+
+# Step 1 of 3. Never calls Claude -- pure RSS parsing, so the common case
+# (nothing new) costs nothing.
+#
+#   forum-watch -> forum-triage -> (issue opened) -> code-review
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      max_age_days:
+        description: 'Only consider questions newer than this many days'
+        required: false
+        default: '7'
+      dry_run:
+        description: 'Find questions but do not record them or trigger triage'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: forum-watch
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  STATE_FILE: .github/forum-seen.json
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Find unseen whisp questions
+        id: find
+        env:
+          MAX_AGE_DAYS: ${{ inputs.max_age_days || '7' }}
+          MAX_NEW_PER_RUN: '3'
+        run: |
+          set -euo pipefail
+          [ -f "$STATE_FILE" ] || echo '{"seen":[]}' > "$STATE_FILE"
+
+          FORUM_SEEN_IDS="$(jq -r '.seen | join(",")' "$STATE_FILE")" \
+            python .github/scripts/forum_watch.py > candidates.json
+
+          echo "count=$(jq length candidates.json)" >> "$GITHUB_OUTPUT"
+          jq -r '.[] | "  \(.id)  \(.title)"' candidates.json
+
+      - name: Record and hand off to triage
+        if: steps.find.outputs.count != '0' && !inputs.dry_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # Recorded before triage runs, so an hourly tick cannot dispatch the
+          # same question twice while triage is still working. A failed triage
+          # is visible in Actions and re-runnable by hand with the question id.
+          jq -r '.[].id' candidates.json | while read -r id; do
+            gh workflow run forum-triage.yml \
+              --repo "$REPO" \
+              --field question_id="$id"
+            echo "Dispatched triage for forum#${id}"
+          done
+
+          jq --argjson new "$(jq '[.[].id]' candidates.json)" \
+             '.seen = (.seen + $new | unique)' "$STATE_FILE" > state.tmp
+          mv state.tmp "$STATE_FILE"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$STATE_FILE"
+          git commit -m "chore(forum): record $(jq -r '[.[].id] | join(", ")' candidates.json) [skip ci]"
+          git push
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Forum Watch"
+            echo ""
+            echo "Unseen questions: **${{ steps.find.outputs.count || '0' }}**"
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              echo ""
+              echo "_Dry run -- nothing recorded, no triage dispatched._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

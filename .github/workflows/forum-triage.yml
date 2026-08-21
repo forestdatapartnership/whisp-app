@@ -1,0 +1,146 @@
+name: Forum Triage
+
+# Step 2 of 3. Classifies ONE forum question. It does not read the codebase
+# and does not propose fixes -- that is Code Review's job. whisp-library and
+# whisp-map belong to other repositories and teams, so they stop at the run
+# summary; only whisp-app questions become issues.
+
+on:
+  workflow_dispatch:
+    inputs:
+      question_id:
+        description: 'Forum question id (the number in /questions/<id>/...)'
+        required: true
+
+concurrency:
+  group: forum-triage-${{ inputs.question_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  actions: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Read the question
+        id: question
+        env:
+          FORUM_ONLY_ID: ${{ inputs.question_id }}
+        run: |
+          set -euo pipefail
+          python .github/scripts/forum_watch.py > question.json
+          if [ "$(jq length question.json)" = "0" ]; then
+            echo "::error::forum#${{ inputs.question_id }} is not a whisp-tagged question in the feed"
+            exit 1
+          fi
+          jq -r '.[0].title' question.json
+          jq -r '.[0].issue_body' question.json > issue_body.md
+          {
+            echo "title=$(jq -r '.[0].title' question.json)"
+            echo "url=$(jq -r '.[0].url' question.json)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Classify
+        id: classify
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Set exactly one of these: an API key does not expire, the OAuth
+          # token does. Precedence when both are set is not defined.
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model claude-sonnet-5
+            --max-turns 4
+            --json-schema {"type":"object","properties":{"classification":{"type":"string","enum":["whisp-app","whisp-library","whisp-map","unclear"]},"reason":{"type":"string"}},"required":["classification","reason"],"additionalProperties":false}
+          prompt: |
+            Read `question.json` in the working directory. It holds one
+            question posted on the Open Foris support forum.
+
+            Classify it. Do not read the rest of the codebase, do not search
+            for the cause, and do not propose a fix -- another workflow does
+            that. Your entire job is the classification.
+
+            - **whisp-app** -- about the website, the HTTP API surface,
+              geometry submission or upload, authentication or API keys,
+              results display, export or download, or anything else served by
+              the whisp-app repository (Next.js UI, FastAPI service, Celery
+              workers, PostgreSQL).
+            - **whisp-library** -- about which Earth Engine datasets exist,
+              adding or changing a dataset or map layer, how a risk indicator
+              is computed, or the analysis algorithm itself. These belong to
+              the separate `openforis-whisp` Python library.
+            - **whisp-map** -- about the Whisp Map viewer at
+              whisp.earthmap.org: the map itself failing to open or load, what
+              it draws, its basemaps, layers, legend, zoom or styling, or
+              anything the person describes while looking at that map rather
+              than at a results table. It is a separate Earth Map application.
+              The only part of it this repository owns is the button that
+              opens it -- a broken or missing button is whisp-app.
+            - **unclear** -- genuinely not determinable from the text.
+
+            Be decisive. "Please add dataset X" is whisp-library even when the
+            person says "to the Whisp app". "The endpoint returns an error" is
+            whisp-app even when the error mentions data. "My plots do not show
+            up on the map" is whisp-map, but "the Open in Whisp Map button
+            does nothing" is whisp-app.
+
+            Return the classification and a one-sentence reason.
+
+      - name: Open an issue for whisp-app questions
+        id: open
+        if: fromJSON(steps.classify.outputs.structured_output).classification == 'whisp-app'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          REASON: ${{ fromJSON(steps.classify.outputs.structured_output).reason }}
+        run: |
+          set -euo pipefail
+
+          gh label create forum      --repo "$REPO" --color 0E8A16 \
+            --description "Raised on the Open Foris support forum" 2>/dev/null || true
+          gh label create whisp-app  --repo "$REPO" --color 1D76DB \
+            --description "Belongs to this repository" 2>/dev/null || true
+
+          printf '\n\n---\n\n**Triage:** whisp-app -- %s\n' "$REASON" >> issue_body.md
+
+          issue_url=$(gh issue create --repo "$REPO" \
+            --title "[forum] ${{ steps.question.outputs.title }}" \
+            --body-file issue_body.md \
+            --label forum --label whisp-app)
+          echo "Opened $issue_url"
+          echo "issue_url=$issue_url" >> "$GITHUB_OUTPUT"
+
+          # Dispatched rather than left to `on: issues`, which GITHUB_TOKEN
+          # cannot fire. Same hand-off forum-watch uses to reach this workflow.
+          gh workflow run code-review.yml             --repo "$REPO"             --field issue_number="${issue_url##*/}"             --field mode=report
+          echo "Dispatched code review for ${issue_url##*/}"
+
+      - name: Summary
+        if: always()
+        env:
+          RESULT: ${{ steps.classify.outputs.structured_output }}
+        run: |
+          {
+            echo "### Forum Triage -- forum#${{ inputs.question_id }}"
+            echo ""
+            echo "[${{ steps.question.outputs.title }}](${{ steps.question.outputs.url }})"
+            echo ""
+            echo '```json'
+            echo "${RESULT:-<no result>}"
+            echo '```'
+            if [ -n "${{ steps.open.outputs.issue_url }}" ]; then
+              echo ""
+              echo "Issue: ${{ steps.open.outputs.issue_url }}"
+            else
+              echo ""
+              kind=$(printf '%s' "${RESULT:-}" | jq -r '.classification? // "no result"' 2>/dev/null || echo "no result")
+              echo "_Not whisp-app (\`${kind}\`) -- no issue opened, code review not triggered._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
