@@ -2,9 +2,9 @@ name: Code Review
 
 # Step 3 of 3, and usable on its own: answers a question about this codebase.
 #
-# Forum Triage dispatches this directly. To point it at anything else, either
-# run it by hand, or put the `code-review` label on an issue -- labelling is
-# the opt-in, so issues filed by hand are left alone until you ask.
+# Forum Triage dispatches this directly. Otherwise run it by hand, or label
+# an issue `code-review` -- the label is the opt-in, so issues filed by hand
+# are left alone until you ask.
 
 on:
   issues:
@@ -40,8 +40,7 @@ env:
 
 jobs:
   review:
-    # Every route in is someone asking on purpose -- a dispatch, or that one
-    # label. Any other label on any issue is ignored.
+    # Every route in is someone asking on purpose.
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'code-review'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -128,6 +127,9 @@ jobs:
       - name: Investigate
         uses: anthropics/claude-code-action@v1
         with:
+          # Dispatched runs are actored by a bot, which the action rejects
+          # unless named. Not '*' -- on a public repo that admits any App.
+          allowed_bots: github-actions,github-actions[bot]
           # Set exactly one of these: an API key does not expire, the OAuth
           # token does. Precedence when both are set is not defined.
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}

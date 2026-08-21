@@ -50,6 +50,9 @@ jobs:
         id: classify
         uses: anthropics/claude-code-action@v1
         with:
+          # Dispatched runs are actored by a bot, which the action rejects
+          # unless named. Not '*' -- on a public repo that admits any App.
+          allowed_bots: github-actions,github-actions[bot]
           # Set exactly one of these: an API key does not expire, the OAuth
           # token does. Precedence when both are set is not defined.
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -93,13 +96,35 @@ jobs:
 
             Return the classification and a one-sentence reason.
 
+      - name: Read the classification
+        id: result
+        if: always()
+        env:
+          RESULT: ${{ steps.classify.outputs.structured_output }}
+        run: |
+          set -euo pipefail
+
+          # Parsed here, not in a step `if:`. A failed Classify leaves this
+          # empty, and fromJSON('') is a template error that kills the job.
+          kind=$(printf '%s' "${RESULT:-}"   | jq -r '.classification? // empty' 2>/dev/null || true)
+          reason=$(printf '%s' "${RESULT:-}" | jq -r '.reason?         // empty' 2>/dev/null || true)
+
+          {
+            echo "classification=${kind:-none}"
+            echo "reason<<__EOR__"
+            printf '%s\n' "${reason:-}"
+            echo "__EOR__"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "classification: ${kind:-none}"
+
       - name: Open an issue for whisp-app questions
         id: open
-        if: fromJSON(steps.classify.outputs.structured_output).classification == 'whisp-app'
+        if: steps.result.outputs.classification == 'whisp-app'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          REASON: ${{ fromJSON(steps.classify.outputs.structured_output).reason }}
+          REASON: ${{ steps.result.outputs.reason }}
         run: |
           set -euo pipefail
 
@@ -117,9 +142,11 @@ jobs:
           echo "Opened $issue_url"
           echo "issue_url=$issue_url" >> "$GITHUB_OUTPUT"
 
-          # Dispatched rather than left to `on: issues`, which GITHUB_TOKEN
-          # cannot fire. Same hand-off forum-watch uses to reach this workflow.
-          gh workflow run code-review.yml             --repo "$REPO"             --field issue_number="${issue_url##*/}"             --field mode=report
+          # Dispatched because GITHUB_TOKEN cannot fire `on: issues`.
+          gh workflow run code-review.yml \
+            --repo "$REPO" \
+            --field issue_number="${issue_url##*/}" \
+            --field mode=report
           echo "Dispatched code review for ${issue_url##*/}"
 
       - name: Summary
@@ -140,7 +167,6 @@ jobs:
               echo "Issue: ${{ steps.open.outputs.issue_url }}"
             else
               echo ""
-              kind=$(printf '%s' "${RESULT:-}" | jq -r '.classification? // "no result"' 2>/dev/null || echo "no result")
-              echo "_Not whisp-app (\`${kind}\`) -- no issue opened, code review not triggered._"
+              echo "_Not whisp-app (\`${{ steps.result.outputs.classification }}\`) -- no issue opened, code review not triggered._"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
