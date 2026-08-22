@@ -52,7 +52,7 @@ jobs:
         with:
           # Dispatched runs are actored by a bot, which the action rejects
           # unless named. Not '*' -- on a public repo that admits any App.
-          allowed_bots: github-actions,github-actions[bot]
+          allowed_bots: github-actions[bot]
           # Set exactly one of these: an API key does not expire, the OAuth
           # token does. Precedence when both are set is not defined.
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -61,7 +61,6 @@ jobs:
           claude_args: |
             --model claude-sonnet-5
             --max-turns 4
-            --json-schema '{"type":"object","properties":{"classification":{"type":"string","enum":["whisp-app","whisp-library","whisp-map","unclear"]},"reason":{"type":"string"}},"required":["classification","reason"],"additionalProperties":false}'
           prompt: |
             Read `question.json` in the working directory. It holds one
             question posted on the Open Foris support forum.
@@ -84,8 +83,6 @@ jobs:
               it draws, its basemaps, layers, legend, zoom or styling, or
               anything the person describes while looking at that map rather
               than at a results table. It is a separate Earth Map application.
-              The only part of it this repository owns is the button that
-              opens it -- a broken or missing button is whisp-app.
             - **unclear** -- genuinely not determinable from the text.
 
             Be decisive. "Please add dataset X" is whisp-library even when the
@@ -94,29 +91,27 @@ jobs:
             up on the map" is whisp-map, but "the Open in Whisp Map button
             does nothing" is whisp-app.
 
-            Return the classification and a one-sentence reason.
+            Write the result to `classification.json` in the working
+            directory and nothing else. Exactly this shape, raw JSON with no
+            markdown fence around it:
+
+                {"classification": "whisp-app", "reason": "one sentence"}
+
+            `classification` must be exactly one of `whisp-app`,
+            `whisp-library`, `whisp-map` or `unclear`.
 
       - name: Read the classification
         id: result
         if: always()
-        env:
-          RESULT: ${{ steps.classify.outputs.structured_output }}
         run: |
           set -euo pipefail
 
-          # Parsed here, not in a step `if:`. A failed Classify leaves this
-          # empty, and fromJSON('') is a template error that kills the job.
-          kind=$(printf '%s' "${RESULT:-}"   | jq -r '.classification? // empty' 2>/dev/null || true)
-          reason=$(printf '%s' "${RESULT:-}" | jq -r '.reason?         // empty' 2>/dev/null || true)
+          # Read here, not in a step `if:` -- a failed Classify writes no file,
+          # and fromJSON('') is a template error that kills the job.
+          kind=$(jq -r '.classification? // empty' classification.json 2>/dev/null || true)
+          echo "classification=${kind:-none}" >> "$GITHUB_OUTPUT"
 
-          {
-            echo "classification=${kind:-none}"
-            echo "reason<<__EOR__"
-            printf '%s\n' "${reason:-}"
-            echo "__EOR__"
-          } >> "$GITHUB_OUTPUT"
-
-          echo "classification: ${kind:-none}"
+          cat classification.json 2>/dev/null || echo "(no classification.json written)"
 
       - name: Open an issue for whisp-app questions
         id: open
@@ -124,7 +119,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          REASON: ${{ steps.result.outputs.reason }}
         run: |
           set -euo pipefail
 
@@ -133,7 +127,8 @@ jobs:
           gh label create whisp-app  --repo "$REPO" --color 1D76DB \
             --description "Belongs to this repository" 2>/dev/null || true
 
-          printf '\n\n---\n\n**Triage:** whisp-app -- %s\n' "$REASON" >> issue_body.md
+          printf '\n\n---\n\n**Triage:** whisp-app -- %s\n' \
+            "$(jq -r '.reason // ""' classification.json)" >> issue_body.md
 
           issue_url=$(gh issue create --repo "$REPO" \
             --title "[forum] ${{ steps.question.outputs.title }}" \
@@ -151,8 +146,6 @@ jobs:
 
       - name: Summary
         if: always()
-        env:
-          RESULT: ${{ steps.classify.outputs.structured_output }}
         run: |
           {
             echo "### Forum Triage -- forum#${{ inputs.question_id }}"
@@ -160,7 +153,7 @@ jobs:
             echo "[${{ steps.question.outputs.title }}](${{ steps.question.outputs.url }})"
             echo ""
             echo '```json'
-            echo "${RESULT:-<no result>}"
+            cat classification.json 2>/dev/null || echo "<no result>"
             echo '```'
             if [ -n "${{ steps.open.outputs.issue_url }}" ]; then
               echo ""
