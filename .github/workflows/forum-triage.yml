@@ -1,9 +1,8 @@
 name: Forum Triage
 
-# Step 2 of 3. Classifies ONE forum question. It does not read the codebase
-# and does not propose fixes -- that is Code Review's job. whisp-library and
-# whisp-map belong to other repositories and teams, so they stop at the run
-# summary; only whisp-app questions become issues.
+# Step 2 of 3. Classifies ONE forum question. whisp-library and whisp-map
+# belong to other repositories and teams, so they stop at the run summary;
+# only whisp-app questions become issues and reach Code Review.
 
 on:
   workflow_dispatch:
@@ -24,7 +23,7 @@ permissions:
 jobs:
   triage:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
 
@@ -47,80 +46,77 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Classify
-        id: classify
-        uses: anthropics/claude-code-action@v1
-        with:
-          # Dispatched runs are actored by a bot, which the action rejects
-          # unless named. Not '*' -- on a public repo that admits any App.
-          allowed_bots: github-actions[bot]
-          # Do not add anthropic_api_key alongside this: an empty-but-set
-          # ANTHROPIC_API_KEY outranks it and auth fails before any model call.
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: |
-            --model claude-sonnet-5
-            --max-turns 4
-          prompt: |
-            Read `question.json` in the working directory. It holds one
-            question posted on the Open Foris support forum.
-
-            Classify it. Do not read the rest of the codebase, do not search
-            for the cause, and do not propose a fix -- another workflow does
-            that. Your entire job is the classification.
-
-            - **whisp-app** -- about the website, the HTTP API surface,
-              geometry submission or upload, authentication or API keys,
-              results display, export or download, or anything else served by
-              the whisp-app repository (Next.js UI, FastAPI service, Celery
-              workers, PostgreSQL).
-            - **whisp-library** -- about which Earth Engine datasets exist,
-              adding or changing a dataset or map layer, how a risk indicator
-              is computed, or the analysis algorithm itself. These belong to
-              the separate `openforis-whisp` Python library.
-            - **whisp-map** -- about the Whisp Map viewer at
-              whisp.earthmap.org: the map itself failing to open or load, what
-              it draws, its basemaps, layers, legend, zoom or styling, or
-              anything the person describes while looking at that map rather
-              than at a results table. It is a separate Earth Map application.
-            - **unclear** -- genuinely not determinable from the text.
-
-            Be decisive. "Please add dataset X" is whisp-library even when the
-            person says "to the Whisp app". "The endpoint returns an error" is
-            whisp-app even when the error mentions data. "My plots do not show
-            up on the map" is whisp-map, but "the Open in Whisp Map button
-            does nothing" is whisp-app.
-
-            Write the result to `classification.json` in the working
-            directory and nothing else. Exactly this shape, raw JSON with no
-            markdown fence around it:
-
-                {"classification": "whisp-app", "reason": "one sentence"}
-
-            `classification` must be exactly one of `whisp-app`,
-            `whisp-library`, `whisp-map` or `unclear`.
-
-      - name: Why Claude failed
-        if: failure()
+        env:
+          TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
-          # The action hides Claude's output, so a failure otherwise reports
-          # only is_error:true with no reason.
-          f="$RUNNER_TEMP/claude-execution-output.json"
-          [ -f "$f" ] || { echo "no execution log at $f"; exit 0; }
-          head -c 4000 "$f"
-          echo
+          set -euo pipefail
+
+          cat > rules.txt <<'RULES'
+          You classify one question from the Open Foris support forum. Reply
+          with raw JSON and nothing else -- no prose, no markdown fence:
+
+              {"classification": "whisp-app", "reason": "one sentence"}
+
+          classification must be exactly one of:
+
+          - whisp-app -- the website, the HTTP API surface, geometry
+            submission or upload, authentication or API keys, results display,
+            export or download. The Next.js UI, FastAPI service, Celery
+            workers and PostgreSQL behind them.
+          - whisp-library -- which Earth Engine datasets exist, adding or
+            changing a dataset or map layer, how a risk indicator is computed,
+            or the analysis algorithm itself. These belong to the separate
+            openforis-whisp Python library.
+          - whisp-map -- the Whisp Map viewer at whisp.earthmap.org: the map
+            failing to open or load, what it draws, its basemaps, layers,
+            legend, zoom or styling. A separate Earth Map application.
+          - unclear -- genuinely not determinable from the text.
+
+          Be decisive. "Please add dataset X" is whisp-library even when the
+          person says "to the Whisp app". "The endpoint returns an error" is
+          whisp-app even when the error mentions data. "My plots do not show up
+          on the map" is whisp-map, but "the Open in Whisp Map button does
+          nothing" is whisp-app.
+          RULES
+
+          content=$(printf 'Title: %s\n\n%s' \
+            "$(jq -r '.[0].title' question.json)" \
+            "$(jq -r '.[0].body'  question.json)")
+
+          jq -n --rawfile rules rules.txt --arg content "$content" \
+            '{model: "claude-sonnet-5",
+              max_tokens: 300,
+              system: $rules,
+              messages: [{role: "user", content: $content}]}' > request.json
+
+          # OAuth tokens go on Authorization: Bearer with the oauth beta
+          # header. x-api-key is for API keys and 401s with this one.
+          code=$(curl -sS -o response.json -w '%{http_code}' \
+            https://api.anthropic.com/v1/messages \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "anthropic-beta: oauth-2025-04-20" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            --data @request.json)
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Anthropic API returned HTTP $code"
+            jq -r '.error.message? // .error.type? // "no error body"' response.json 2>/dev/null \
+              || head -c 500 response.json
+            exit 1
+          fi
+
+          jq -r '.content[] | select(.type == "text") | .text' response.json \
+            > classification.json
+          cat classification.json
 
       - name: Read the classification
         id: result
         if: always()
         run: |
           set -euo pipefail
-
-          # Read here, not in a step `if:` -- a failed Classify writes no file,
-          # and fromJSON('') is a template error that kills the job.
           kind=$(jq -r '.classification? // empty' classification.json 2>/dev/null || true)
           echo "classification=${kind:-none}" >> "$GITHUB_OUTPUT"
-
-          cat classification.json 2>/dev/null || echo "(no classification.json written)"
 
       - name: Open an issue for whisp-app questions
         id: open
@@ -169,6 +165,6 @@ jobs:
               echo "Issue: ${{ steps.open.outputs.issue_url }}"
             else
               echo ""
-              echo "_Not whisp-app (\`${{ steps.result.outputs.classification }}\`) -- no issue opened, code review not triggered._"
+              echo "_Not whisp-app (\`${{ steps.result.outputs.classification }}\`) -- no issue opened._"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
