@@ -53,9 +53,8 @@ jobs:
           # Dispatched runs are actored by a bot, which the action rejects
           # unless named. Not '*' -- on a public repo that admits any App.
           allowed_bots: github-actions[bot]
-          # Set exactly one of these: an API key does not expire, the OAuth
-          # token does. Precedence when both are set is not defined.
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Do not add anthropic_api_key alongside this: an empty-but-set
+          # ANTHROPIC_API_KEY outranks it and auth fails before any model call.
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: |
@@ -99,6 +98,16 @@ jobs:
 
             `classification` must be exactly one of `whisp-app`,
             `whisp-library`, `whisp-map` or `unclear`.
+
+      - name: Why Claude failed
+        if: failure()
+        run: |
+          # The action hides Claude's output, so a failure otherwise reports
+          # only is_error:true with no reason.
+          f="$RUNNER_TEMP/claude-execution-output.json"
+          [ -f "$f" ] || { echo "no execution log at $f"; exit 0; }
+          head -c 4000 "$f"
+          echo
 
       - name: Read the classification
         id: result

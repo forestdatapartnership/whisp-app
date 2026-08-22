@@ -129,10 +129,9 @@ jobs:
         with:
           # Dispatched runs are actored by a bot, which the action rejects
           # unless named. Not '*' -- on a public repo that admits any App.
-          allowed_bots: github-actions,github-actions[bot]
-          # Set exactly one of these: an API key does not expire, the OAuth
-          # token does. Precedence when both are set is not defined.
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          allowed_bots: github-actions[bot]
+          # Do not add anthropic_api_key alongside this: an empty-but-set
+          # ANTHROPIC_API_KEY outranks it and auth fails before any model call.
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: |
@@ -147,13 +146,9 @@ jobs:
             bug report, but it may equally be "how does X work", "where is Y
             done", or "is Z safe to change".
 
-            This repository is **whisp-app**: the Next.js web UI (`app/`), the
-            FastAPI service and Celery workers (`api/`), the PostgreSQL schema
-            (`db/`), and GKE manifests (`infra/k8s/`). The Earth Engine
-            datasets and the analysis algorithms live in a separate
-            `openforis-whisp` Python library, and the map viewer at
-            whisp.earthmap.org is a separate Earth Map application. Neither is
-            yours to change.
+            Read `AGENTS.md` at the repository root first. It says what this
+            repository owns, what belongs to other projects, how to verify a
+            change, and the constraints you work under. Follow it.
 
             ## Investigate
 
@@ -213,13 +208,8 @@ jobs:
             write a description stating the root cause and exactly what
             changed. Title it `fix: <short description>`, ending in
             ` (#${{ env.ISSUE }})` when that issue number is not blank. Do not
-            merge it. Mention the PR in `answer.md`.
-
-            ## Constraints
-
-            - Never edit anything under `.github/`.
-            - Never touch secrets, credentials, or `infra/`.
-            - Run the checks before opening a PR: `cd app && npx tsc --noEmit`.
+            merge it. Mention the PR in `answer.md`, and run the checks
+            `AGENTS.md` lists before you open it.
 
       - name: Verify report mode changed nothing
         if: steps.guard.outputs.mode == 'report'
