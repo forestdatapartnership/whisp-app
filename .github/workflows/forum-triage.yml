@@ -58,6 +58,7 @@ jobs:
           claude_args: |
             --model claude-sonnet-5
             --max-turns 4
+            --allowedTools Read,Write
           prompt: |
             Read `question.json` in the working directory. It holds one
             question posted on the Open Foris support forum.
