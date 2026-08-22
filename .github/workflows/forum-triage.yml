@@ -45,70 +45,52 @@ jobs:
             echo "url=$(jq -r '.[0].url' question.json)"
           } >> "$GITHUB_OUTPUT"
 
+      # Calling /v1/messages directly returns 429: a subscription token is
+      # throttled on the raw API. This action is the supported path for one.
       - name: Classify
-        env:
-          TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        run: |
-          set -euo pipefail
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Forum Watch dispatches this run, so its actor is a bot, which the
+          # action rejects unless named. Not '*' -- the repo is public.
+          allowed_bots: github-actions[bot]
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model claude-sonnet-5
+            --max-turns 4
+          prompt: |
+            Read `question.json` in the working directory. It holds one
+            question posted on the Open Foris support forum.
 
-          cat > rules.txt <<'RULES'
-          You classify one question from the Open Foris support forum. Reply
-          with raw JSON and nothing else -- no prose, no markdown fence:
+            Classify it into exactly one of these. Do not read the rest of the
+            codebase, do not look for the cause, do not propose a fix --
+            another workflow does that.
 
-              {"classification": "whisp-app", "reason": "one sentence"}
+            - **whisp-app** -- the website, the HTTP API surface, geometry
+              submission or upload, authentication or API keys, results
+              display, export or download. The Next.js UI, FastAPI service,
+              Celery workers and PostgreSQL behind them.
+            - **whisp-library** -- which Earth Engine datasets exist, adding or
+              changing a dataset or map layer, how a risk indicator is
+              computed, or the analysis algorithm itself. These belong to the
+              separate `openforis-whisp` Python library.
+            - **whisp-map** -- the Whisp Map viewer at whisp.earthmap.org: the
+              map failing to open or load, what it draws, its basemaps,
+              layers, legend, zoom or styling. A separate Earth Map
+              application.
+            - **unclear** -- genuinely not determinable from the text.
 
-          classification must be exactly one of:
+            Be decisive. "Please add dataset X" is whisp-library even when the
+            person says "to the Whisp app". "The endpoint returns an error" is
+            whisp-app even when the error mentions data. "My plots do not show
+            up on the map" is whisp-map, but "the Open in Whisp Map button
+            does nothing" is whisp-app.
 
-          - whisp-app -- the website, the HTTP API surface, geometry
-            submission or upload, authentication or API keys, results display,
-            export or download. The Next.js UI, FastAPI service, Celery
-            workers and PostgreSQL behind them.
-          - whisp-library -- which Earth Engine datasets exist, adding or
-            changing a dataset or map layer, how a risk indicator is computed,
-            or the analysis algorithm itself. These belong to the separate
-            openforis-whisp Python library.
-          - whisp-map -- the Whisp Map viewer at whisp.earthmap.org: the map
-            failing to open or load, what it draws, its basemaps, layers,
-            legend, zoom or styling. A separate Earth Map application.
-          - unclear -- genuinely not determinable from the text.
+            Then write `classification.json` in the working directory. That
+            file is your entire output -- raw JSON, no markdown fence, nothing
+            else:
 
-          Be decisive. "Please add dataset X" is whisp-library even when the
-          person says "to the Whisp app". "The endpoint returns an error" is
-          whisp-app even when the error mentions data. "My plots do not show up
-          on the map" is whisp-map, but "the Open in Whisp Map button does
-          nothing" is whisp-app.
-          RULES
-
-          content=$(printf 'Title: %s\n\n%s' \
-            "$(jq -r '.[0].title' question.json)" \
-            "$(jq -r '.[0].body'  question.json)")
-
-          jq -n --rawfile rules rules.txt --arg content "$content" \
-            '{model: "claude-sonnet-5",
-              max_tokens: 300,
-              system: $rules,
-              messages: [{role: "user", content: $content}]}' > request.json
-
-          # OAuth tokens go on Authorization: Bearer with the oauth beta
-          # header. x-api-key is for API keys and 401s with this one.
-          code=$(curl -sS -o response.json -w '%{http_code}' \
-            https://api.anthropic.com/v1/messages \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "anthropic-beta: oauth-2025-04-20" \
-            -H "anthropic-version: 2023-06-01" \
-            -H "content-type: application/json" \
-            --data @request.json)
-
-          if [ "$code" != "200" ]; then
-            echo "::error::Anthropic API returned HTTP $code"
-            jq -r '.error.message? // .error.type? // "no error body"' response.json 2>/dev/null \
-              || head -c 500 response.json
-            exit 1
-          fi
-
-          jq -r '.content[] | select(.type == "text") | .text' response.json \
-            > classification.json
-          cat classification.json
+                {"classification": "whisp-library", "reason": "one sentence"}
 
       - name: Read the classification
         id: result
@@ -117,6 +99,7 @@ jobs:
           set -euo pipefail
           kind=$(jq -r '.classification? // empty' classification.json 2>/dev/null || true)
           echo "classification=${kind:-none}" >> "$GITHUB_OUTPUT"
+          cat classification.json 2>/dev/null || echo "(no classification.json written)"
 
       - name: Open an issue for whisp-app questions
         id: open
