@@ -2,8 +2,8 @@ name: First Look
 
 # Step 3 of 3, and usable on its own. Takes an issue or a question and says
 # whether it is real and where in the codebase it lives -- enough to save the
-# first twenty minutes when someone picks it up. It is not a review and never
-# changes code; the job fails if a tracked file moves.
+# first twenty minutes when someone picks it up. It cannot change code: the
+# job's token is read-only.
 #
 # Forum Triage dispatches this directly. Otherwise run it by hand, or label an
 # issue `first-look` -- the label is the opt-in, so issues filed by hand are
@@ -56,9 +56,6 @@ jobs:
             exit 1
           fi
 
-          # Scratch files must never show up as a repository change.
-          printf '%s\n' answer.md task.md issue.json >> .git/info/exclude
-
           : > task.md
 
           if [ -n "${ISSUE:-}" ]; then
@@ -100,7 +97,7 @@ jobs:
           # There is no Grep or Glob tool here, so searching is Bash.
           claude_args: |
             --model claude-sonnet-5
-            --max-turns 15
+            --max-turns 25
             --allowedTools Read,Write,Bash
           prompt: |
             Read `task.md` in the working directory -- a GitHub issue, a
@@ -130,19 +127,6 @@ jobs:
             Short. No filler, no praise, no restating the question, no summary
             of what you searched. Describe a fix if you see one, but do not
             apply it -- you are reading, not changing.
-
-      - name: Verify nothing changed
-        if: always()
-        run: |
-          set -euo pipefail
-          changed=$(git status --porcelain --untracked-files=no)
-          if [ -n "$changed" ]; then
-            echo "::error::the run modified tracked files:"
-            echo "$changed"
-            git checkout -- .
-            exit 1
-          fi
-          echo "Working tree clean."
 
       - name: Publish the answer
         if: ${{ !cancelled() }}
