@@ -3,7 +3,7 @@ name: Forum Watch
 # Step 1 of 3. Never calls Claude -- pure RSS parsing, so the common case
 # (nothing new) costs nothing.
 #
-#   forum-watch -> forum-triage -> (issue opened) -> code-review
+#   forum-watch -> forum-triage -> (issue opened) -> first-look
 
 on:
   schedule:

@@ -1,0 +1,176 @@
+name: First Look
+
+# Step 3 of 3, and usable on its own. Takes an issue or a question and says
+# whether it is real and where in the codebase it lives -- enough to save the
+# first twenty minutes when someone picks it up. It is not a review and never
+# changes code; the job fails if a tracked file moves.
+#
+# Forum Triage dispatches this directly. Otherwise run it by hand, or label an
+# issue `first-look` -- the label is the opt-in, so issues filed by hand are
+# left alone until you ask.
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      question:
+        description: 'Question about the code. Leave blank to just use the issue.'
+        required: false
+      issue_number:
+        description: 'Issue to read and comment on. Blank = answer in the run summary.'
+        required: false
+
+concurrency:
+  group: first-look-${{ inputs.issue_number || github.event.issue.number || github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  ISSUE: ${{ inputs.issue_number || github.event.issue.number }}
+
+jobs:
+  look:
+    # Every route in is someone asking on purpose.
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'first-look'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Assemble the task
+        id: task
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Passed through the environment, never interpolated into the
+          # script, so a question containing quotes or $(...) stays text.
+          QUESTION: ${{ inputs.question }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${QUESTION//[[:space:]]/}" ] && [ -z "${ISSUE:-}" ]; then
+            echo "::error::give a question, an issue number, or both"
+            exit 1
+          fi
+
+          # Scratch files must never show up as a repository change.
+          printf '%s\n' answer.md task.md issue.json >> .git/info/exclude
+
+          : > task.md
+
+          if [ -n "${ISSUE:-}" ]; then
+            gh issue view "$ISSUE" \
+              --repo "${{ github.repository }}" \
+              --json number,title,body,url \
+              > issue.json
+            {
+              echo "## Issue #$(jq -r .number issue.json): $(jq -r .title issue.json)"
+              echo ""
+              jq -r '.body' issue.json
+            } >> task.md
+            {
+              echo "title=$(jq -r .title issue.json)"
+              echo "url=$(jq -r .url issue.json)"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ -n "${QUESTION//[[:space:]]/}" ]; then
+            {
+              if [ -n "${ISSUE:-}" ]; then printf '\n---\n\n'; fi
+              echo "## Question"
+              echo ""
+              printf '%s\n' "$QUESTION"
+            } >> task.md
+          fi
+
+          cat task.md
+
+      - name: Look
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Forum Triage dispatches this run, so its actor is a bot, which the
+          # action rejects unless named. Not '*' -- the repo is public.
+          allowed_bots: github-actions[bot]
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Default permission mode denies Bash and Write, which stalls the run.
+          # There is no Grep or Glob tool here, so searching is Bash.
+          claude_args: |
+            --model claude-sonnet-5
+            --max-turns 15
+            --allowedTools Read,Write,Bash
+          prompt: |
+            Read `task.md` in the working directory -- a GitHub issue, a
+            question, or both. Read `AGENTS.md` at the repository root, which
+            says what this repository owns and what belongs to other projects.
+
+            Give a first look, not a full investigation. Someone does the real
+            work afterwards; your job is to save them the first twenty minutes.
+            Spend your turns locating things, not exhausting the question.
+
+            1. Find the code that governs what was asked about. Search the
+               repo -- never guess at file names.
+            2. Say which this is: a real defect, a configuration problem,
+               expected behaviour the reporter misunderstood, or something not
+               reproducible from what they wrote.
+            3. If it belongs to `openforis-whisp` or the map viewer rather
+               than this repo, say so and stop. That is the most useful answer
+               you can give, because it means nobody here needs to look.
+
+            Write `answer.md` in the working directory -- the only thing that
+            gets published, and the only file you write:
+
+            - where it lives, as `path/to/file.ts:42`
+            - what you think is happening
+            - what you are unsure about, stated plainly
+
+            Short. No filler, no praise, no restating the question, no summary
+            of what you searched. Describe a fix if you see one, but do not
+            apply it -- you are reading, not changing.
+
+      - name: Verify nothing changed
+        if: always()
+        run: |
+          set -euo pipefail
+          changed=$(git status --porcelain --untracked-files=no)
+          if [ -n "$changed" ]; then
+            echo "::error::the run modified tracked files:"
+            echo "$changed"
+            git checkout -- .
+            exit 1
+          fi
+          echo "Working tree clean."
+
+      - name: Publish the answer
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ ! -s answer.md ]; then
+            echo "::warning::no answer.md was written"
+            echo "_First Look produced no answer -- check the Look step._" \
+              >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ -n "${ISSUE:-}" ]; then
+            gh issue comment "$ISSUE" \
+              --repo "${{ github.repository }}" \
+              --body-file answer.md
+            echo "Commented on #${ISSUE}"
+          fi
+
+          {
+            echo "### First Look"
+            echo ""
+            if [ -n "${ISSUE:-}" ]; then
+              echo "[#${ISSUE} ${{ steps.task.outputs.title }}](${{ steps.task.outputs.url }})"
+              echo ""
+            fi
+            cat answer.md
+          } >> "$GITHUB_STEP_SUMMARY"

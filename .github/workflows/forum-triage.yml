@@ -2,7 +2,7 @@ name: Forum Triage
 
 # Step 2 of 3. Classifies ONE forum question. whisp-library and whisp-map
 # belong to other repositories and teams, so they stop at the run summary;
-# only whisp-app questions become issues and reach Code Review.
+# only whisp-app questions become issues and reach First Look.
 
 on:
   workflow_dispatch:
@@ -127,11 +127,10 @@ jobs:
           echo "issue_url=$issue_url" >> "$GITHUB_OUTPUT"
 
           # Dispatched because GITHUB_TOKEN cannot fire `on: issues`.
-          gh workflow run code-review.yml \
+          gh workflow run first-look.yml \
             --repo "$REPO" \
-            --field issue_number="${issue_url##*/}" \
-            --field mode=report
-          echo "Dispatched code review for ${issue_url##*/}"
+            --field issue_number="${issue_url##*/}"
+          echo "Dispatched first look for ${issue_url##*/}"
 
       - name: Summary
         if: always()
