@@ -63,7 +63,7 @@ function FooterDropdown({ label, items }: {
   );
 }
 
-const Sep = () => <span className="px-2 text-xs text-border select-none">·</span>;
+const Sep = () => <span className="px-2 text-xs text-text-dim select-none">·</span>;
 
 export function Footer() {
   const { config } = useConfig();
