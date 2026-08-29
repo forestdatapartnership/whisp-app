@@ -6,6 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./leaflet-dark.css";
 import { useTheme } from "@/components/layout/theme-provider";
+import { useConfig } from "@/lib/config/config-context";
 import { FeatureCollection, Feature, Geometry, GeoJsonProperties } from "geojson";
 import { riskFromValue } from "@/components/results/risk-badge";
 import { COMMODITY_OPTIONS } from "@/lib/results/risk-trees";
@@ -18,6 +19,11 @@ const BASE_TILES = {
   dark: { url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attribution: CARTO },
   light: { url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", attribution: CARTO },
 } as const;
+
+// Domain-locked and sent in browser tile requests, so the key is public by design.
+function withKey(url: string, key?: string) {
+  return key ? `${url}?key=${encodeURIComponent(key)}` : url;
+}
 
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => string })._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -109,6 +115,8 @@ export function PlotMapView({
   onFeatureClick,
 }: PlotMapViewProps) {
   const { theme } = useTheme();
+  const { config } = useConfig();
+  const cartoKey = config?.map.cartoKey;
   const baseTile = BASE_TILES[theme];
   const selectedPlotId =
     selectedFeatureIndex != null && selectedFeatureIndex >= 0
@@ -138,9 +146,9 @@ export function PlotMapView({
         scrollWheelZoom
       >
         <MapController geoJsonData={geoJsonData} selectedFeatureIndex={selectedFeatureIndex} />
-        <LayersControl key={theme} position="topright">
+        <LayersControl key={`${theme}-${cartoKey ? "keyed" : "unkeyed"}`} position="topright">
           <LayersControl.BaseLayer checked name={theme === "dark" ? "Dark Map" : "Light Map"}>
-            <TileLayer url={baseTile.url} attribution={baseTile.attribution} />
+            <TileLayer url={withKey(baseTile.url, cartoKey)} attribution={baseTile.attribution} />
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Satellite">
             <TileLayer

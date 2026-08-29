@@ -125,6 +125,10 @@ export const config = {
     maxRequestBodySizeKb: envOptionalInt('MAX_REQUEST_BODY_SIZE_KB')
   },
 
+  map: {
+    cartoKey: envOptional('CARTO_BASEMAP_KEY'),
+  },
+
   app: {
     version: readAppVersion(),
     openforisWhispVersion: envOptional('OPENFORIS_WHISP_VERSION') ?? ''
@@ -140,6 +144,7 @@ export async function getClientConfig() {
     hostUrl: config.hostUrl,
     app: config.app,
     submission: config.submission,
+    map: config.map,
   };
 }
 
