@@ -47,7 +47,7 @@ export function ResultsStatsStrip({
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center gap-4 border-b border-border bg-surface px-[14px] py-1.5 overflow-x-auto",
+        "flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-border bg-surface px-[14px] py-1.5",
         className
       )}
     >

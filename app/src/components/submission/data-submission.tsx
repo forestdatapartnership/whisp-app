@@ -45,10 +45,10 @@ export function DataSubmission() {
   return (
     <div className="flex flex-col gap-4">
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="w-full">
-          <TabsTrigger value="geometry" className="flex-1">Submit Geometry</TabsTrigger>
-          <TabsTrigger value="geoids" className="flex-1">Submit Geo IDs</TabsTrigger>
-          <TabsTrigger value="open" className="flex-1">Open GeoJSON Results</TabsTrigger>
+        <TabsList className="w-full gap-0.5 p-1">
+          <TabsTrigger value="geometry" className="flex-1 px-1.5 sm:px-3">Submit Geometry</TabsTrigger>
+          <TabsTrigger value="geoids" className="flex-1 px-1.5 sm:px-3">Submit Geo IDs</TabsTrigger>
+          <TabsTrigger value="open" className="flex-1 px-1.5 sm:px-3">Open GeoJSON Results</TabsTrigger>
         </TabsList>
       </Tabs>
 

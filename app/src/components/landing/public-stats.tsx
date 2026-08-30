@@ -29,23 +29,23 @@ export function PublicStats() {
 
   return (
     <>
-      <div className="flex items-center justify-between border-t border-border pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border pt-4">
         <BarChart3 className="size-3.5 shrink-0 text-text-dim" />
         {STATS.map(({ key, label }) => (
-          <div key={key} className="flex items-baseline gap-1.5">
+          <div key={key} className="flex items-baseline gap-1.5 whitespace-nowrap">
             <span className="text-[11px] text-text-dim">{label}</span>
             <span className={cn(
               'text-xs font-medium tabular-nums text-text-muted',
               !stats && 'animate-pulse'
             )}>
-              {stats ? formatCount(stats[key]) : '\u2014'}
+              {stats ? formatCount(stats[key]) : '—'}
             </span>
           </div>
         ))}
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className={cn('cursor-pointer text-[11px]', linkVariants.subtle)}
+          className={cn('cursor-pointer text-[11px] whitespace-nowrap', linkVariants.subtle)}
         >
           More stats →
         </button>
