@@ -12,10 +12,6 @@ on:
           - major
           - minor
           - patch
-      whats-new:
-        description: 'What''s New section content (bullet points, one per line)'
-        required: false
-        type: string
 
 jobs:
   release:
@@ -90,36 +86,109 @@ jobs:
           git tag -a "$TAG" -m "Update release $TAG"
           git push origin "$TAG"
 
-      - id: notes
+      - name: Gather release context
+        id: context
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          WHATS_NEW="${{ github.event.inputs.whats-new }}"
-          
+          set -euo pipefail
+
+          if ! gh issue list --state closed --milestone "$TAG" \
+                --repo "$GITHUB_REPOSITORY" \
+                --limit 200 \
+                --json number,title,body > issues.json; then
+            echo "::warning::no milestone $TAG, or the issue list failed"
+            echo '[]' > issues.json
+          fi
+
+          jq -r '.[] | "- " + .title + " (#" + (.number|tostring) + ")"' \
+            issues.json > issues.md
+          echo "issue_count=$(jq length issues.json)" >> "$GITHUB_OUTPUT"
+
+          # In update mode this tag already has a release; skip it.
+          : > previous.md
+          shown=0
+          for t in $(gh release list --repo "$GITHUB_REPOSITORY" --limit 10 \
+                      --json tagName --jq '.[].tagName'); do
+            [ "$t" = "$TAG" ] && continue
+            [ "$shown" -ge 3 ] && break
+            {
+              echo "### $t"
+              echo
+              gh release view "$t" --repo "$GITHUB_REPOSITORY" --json body --jq .body
+              echo
+            } >> previous.md
+            shown=$((shown + 1))
+          done
+
+          {
+            echo "# Release $TAG"
+            echo
+            echo "## Issues closed in this milestone"
+            echo
+            jq -r '.[] | "### #\(.number) \(.title)", "",
+                       ((.body // "") | .[0:1500]), ""' issues.json
+            echo
+            echo "## The last releases, for tone"
+            echo
+            cat previous.md
+          } > context.md
+
+          cat context.md
+
+      - name: Draft the What's New section
+        if: ${{ steps.context.outputs.issue_count != '0' }}
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model claude-sonnet-5
+            --max-turns 6
+            --allowedTools Read,Write
+          prompt: |
+            Read `context.md` in the working directory: the issues closed in
+            this release's milestone, followed by the notes of the last few
+            releases.
+
+            Write the What's New section for this release into `whats_new.md`.
+            That file is your entire output, and bullets are all it contains --
+            no heading, no preamble, no closing summary.
+
+            - One bullet per user-visible change. Fold related issues into one
+              bullet, and drop what nobody outside the team would notice:
+              refactors, dependency bumps, CI and build work.
+            - Say what someone can now do, not which issue was closed. The
+              issues are listed further down the notes, so do not repeat their
+              numbers or titles.
+            - Match the previous releases: same voice, same bullet shape, same
+              level of detail, same use or avoidance of emoji and bold.
+
+      - id: notes
+        run: |
+          set -euo pipefail
+
           {
             echo "## 🚀 What's New"
             echo
-            if [ -n "$WHATS_NEW" ]; then
-              echo "$WHATS_NEW"
+            if [ -s whats_new.md ]; then
+              cat whats_new.md
+              echo
             fi
-            echo
-          } > RELEASE_NOTES.md
-          
-          BODY=$(gh issue list --state closed --milestone "$TAG" \
-                  --repo "$GITHUB_REPOSITORY" \
-                  --json title,number \
-                  --jq '.[] | "- " + .title + " (#" + (.number|tostring) + ")"' || true)
-          if [ -z "$BODY" ]; then
-            BODY="No closed issues in this milestone."
-          fi
-          {
             echo "---"
-            echo 
+            echo
             echo "## 🔧 Issues Resolved in This Release"
             echo
-            echo "$BODY"
-          } >> RELEASE_NOTES.md
+            if [ -s issues.md ]; then
+              cat issues.md
+            else
+              echo "No closed issues in this milestone."
+            fi
+          } > RELEASE_NOTES.md
+
           echo "NOTES_PATH=RELEASE_NOTES.md" >> $GITHUB_ENV
+          cat RELEASE_NOTES.md
 
       - name: Publish GitHub release
         env:
