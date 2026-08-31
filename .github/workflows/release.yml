@@ -115,7 +115,8 @@ jobs:
             {
               echo "### $t"
               echo
-              gh release view "$t" --repo "$GITHUB_REPOSITORY" --json body --jq .body
+              gh release view "$t" --repo "$GITHUB_REPOSITORY" --json body --jq .body \
+                | awk '/^---$/{exit} {print}'
               echo
             } >> previous.md
             shown=$((shown + 1))
@@ -149,21 +150,21 @@ jobs:
             --allowedTools Read,Write
           prompt: |
             Read `context.md` in the working directory: the issues closed in
-            this release's milestone, followed by the notes of the last few
-            releases.
+            this release's milestone, followed by the What's New section of
+            each of the last releases.
 
-            Write the What's New section for this release into `whats_new.md`.
-            That file is your entire output, and bullets are all it contains --
-            no heading, no preamble, no closing summary.
+            Write this release's What's New section into `whats_new.md`. That
+            file is your entire output: no heading, no preamble, nothing else.
 
-            - One bullet per user-visible change. Fold related issues into one
-              bullet, and drop what nobody outside the team would notice:
-              refactors, dependency bumps, CI and build work.
-            - Say what someone can now do, not which issue was closed. The
-              issues are listed further down the notes, so do not repeat their
-              numbers or titles.
-            - Match the previous releases: same voice, same bullet shape, same
-              level of detail, same use or avoidance of emoji and bold.
+            Match the last releases. Their length, their voice and their shape
+            are the specification -- read them and write what fits alongside
+            them, rather than imposing a shape of your own.
+
+            The closed issues are listed under this section in the published
+            notes, so do not enumerate them or repeat their titles and
+            numbers. Say what the release amounts to for someone using Whisp,
+            and leave out what nobody outside the team would notice:
+            refactors, dependency bumps, CI and build work.
 
       - id: notes
         run: |
