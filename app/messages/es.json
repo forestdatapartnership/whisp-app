@@ -60,7 +60,7 @@
     "title": "¿Qué hay en esa parcela?",
     "subtitle": "Suba los límites de sus parcelas y obtenga una evaluación del riesgo forestal basada en evidencia de múltiples conjuntos de datos públicos, con la tecnología de Google Earth Engine.",
     "introTitle": "¿Es nuevo aquí?",
-    "intro": "WHISP («¿Qué hay en esa parcela?») le ayuda a verificar que los productos básicos de su cadena de suministro provienen de tierras sin deforestación reciente, un requisito central del EUDR. Suba los límites de sus parcelas y obtenga una evaluación de riesgo a partir de <layers>capas de datos e indicadores</layers>, con nuestra <library>biblioteca de código abierto</library> sobre Google Earth Engine."
+    "intro": "WHISP («What is in that plot?», ¿qué hay en esa parcela?) le ayuda a verificar que los productos básicos de su cadena de suministro provienen de tierras sin deforestación reciente, un requisito central del EUDR. Suba los límites de sus parcelas y obtenga una evaluación de riesgo a partir de <layers>capas de datos e indicadores</layers>, con nuestra <library>biblioteca de código abierto</library> sobre Google Earth Engine."
   },
   "Stats": {
     "totalFeatures": "Parcelas analizadas en total",

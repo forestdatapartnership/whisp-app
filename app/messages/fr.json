@@ -60,7 +60,7 @@
     "title": "Qu'y a-t-il dans cette parcelle ?",
     "subtitle": "Importez les limites de vos parcelles et obtenez une évaluation du risque forestier fondée sur des preuves, à partir de plusieurs jeux de données publics, grâce à Google Earth Engine.",
     "introTitle": "Nouveau ici ?",
-    "intro": "WHISP (« Qu'y a-t-il dans cette parcelle ? ») vous aide à vérifier que les produits de base de votre chaîne d'approvisionnement proviennent de terres exemptes de déforestation récente, une exigence centrale du RDUE. Importez les limites de vos parcelles et obtenez une évaluation du risque à partir de <layers>couches de données et d'indicateurs</layers>, grâce à notre <library>bibliothèque open source</library> sur Google Earth Engine."
+    "intro": "WHISP (« What is in that plot? », qu'y a-t-il dans cette parcelle ?) vous aide à vérifier que les produits de base de votre chaîne d'approvisionnement proviennent de terres exemptes de déforestation récente, une exigence centrale du RDUE. Importez les limites de vos parcelles et obtenez une évaluation du risque à partir de <layers>couches de données et d'indicateurs</layers>, grâce à notre <library>bibliothèque open source</library> sur Google Earth Engine."
   },
   "Stats": {
     "totalFeatures": "Parcelles analysées au total",

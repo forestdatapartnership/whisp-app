@@ -4,17 +4,19 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSlug from 'rehype-slug';
+import { getLocale } from 'next-intl/server';
 import { CenteredShell } from '@/components/layout/page-section';
 import { REPO_ROOT } from '@/lib/server/repo-root';
 
-export function MarkdownPage({
+export async function MarkdownPage({
   fileName,
   baseDir = 'docs',
 }: {
   fileName: string;
   baseDir?: string;
 }) {
-  const fullPath = path.join(REPO_ROOT, baseDir, fileName);
+  const localized = path.join(REPO_ROOT, baseDir, await getLocale(), fileName);
+  const fullPath = fs.existsSync(localized) ? localized : path.join(REPO_ROOT, baseDir, fileName);
   const content = fs.readFileSync(fullPath, 'utf-8');
 
   return (

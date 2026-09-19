@@ -60,7 +60,7 @@
     "title": "O que há nesse talhão?",
     "subtitle": "Envie os limites dos seus talhões e obtenha uma avaliação do risco florestal baseada em evidências de vários conjuntos de dados públicos, com a tecnologia do Google Earth Engine.",
     "introTitle": "Novo por aqui?",
-    "intro": "O WHISP (\"O que há nesse talhão?\") ajuda você a verificar se as commodities da sua cadeia de suprimentos vêm de terras sem desmatamento recente, uma exigência central do EUDR. Envie os limites dos seus talhões e obtenha uma avaliação de risco a partir de <layers>camadas de dados e indicadores</layers>, com a nossa <library>biblioteca de código aberto</library> sobre o Google Earth Engine."
+    "intro": "O WHISP (\"What is in that plot?\", o que há nesse talhão?) ajuda você a verificar se as commodities da sua cadeia de suprimentos vêm de terras sem desmatamento recente, uma exigência central do EUDR. Envie os limites dos seus talhões e obtenha uma avaliação de risco a partir de <layers>camadas de dados e indicadores</layers>, com a nossa <library>biblioteca de código aberto</library> sobre o Google Earth Engine."
   },
   "Stats": {
     "totalFeatures": "Total de talhões analisados",
