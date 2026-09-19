@@ -23,11 +23,15 @@ export default function Home() {
       </div>
 
       <InfoToast storageKey="whisp-intro-dismissed" title="New here?">
-        WHISP ("What is in that plot?") helps you verify supply chain commodities come
+        WHISP (&quot;What is in that plot?&quot;) helps you verify supply chain commodities come
         from land free of recent deforestation — a core EUDR requirement. Upload plot
         boundaries and get a risk assessment across{" "}
-        <Link href="/docs/reference/result-fields">
-          result fields &amp; indicators
+        <Link
+          href="https://github.com/forestdatapartnership/whisp/blob/main/layers_description.md"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          data layers &amp; indicators
         </Link>
         , powered by our{" "}
         <Link

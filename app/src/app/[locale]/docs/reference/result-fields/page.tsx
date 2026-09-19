@@ -8,10 +8,8 @@ import {
   createResultField,
   updateResultField,
   deleteResultField,
-} from "./actions";
-import {
-  getCommodities,
-} from "../commodities/actions";
+} from "@/lib/docs/result-fields-actions";
+import { getCommodities } from "@/lib/docs/commodities-actions";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

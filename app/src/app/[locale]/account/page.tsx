@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { CenteredShell, PageSection } from '@/components/layout/page-section';
 import { Card, CardContent } from '@/components/ui/card';
+import { Link } from '@/components/ui/link';
 import { cardLayout } from '@/components/ui/styles';
 import { AccountField, AccountInput } from '@/components/account/account-field';
 import { Alert } from '@/components/ui/alert';
@@ -52,7 +53,7 @@ function LocalAccountSettings() {
           type="warning"
           message={
             <>
-              Local sign-in is deprecated. <a href="/auth/sso/login" className="font-medium underline underline-offset-2">Sign in with SSO</a> using
+              Local sign-in is deprecated. <Link href="/auth/sso/login" unlocalized className="font-medium">Sign in with SSO</Link> using
               this same email address to switch — your account and API keys carry over automatically, nothing is lost.
             </>
           }

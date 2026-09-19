@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import { Key } from 'lucide-react'
 import { useConfig } from '@/lib/config/config-context'
 import { Card } from '@/components/ui/card'

@@ -1,4 +1,4 @@
-import NextLink from "next/link";
+import { Link as IntlLink } from "@/i18n/navigation";
 import { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
@@ -10,13 +10,16 @@ export const linkVariants: Record<Variant, string> = {
   subtle: "text-muted-foreground no-underline hover:text-accent-green",
 };
 
-type LinkProps = ComponentProps<typeof NextLink> & {
+type LinkProps = Omit<ComponentProps<typeof IntlLink>, "href"> & {
+  href: string;
   variant?: Variant;
+  unlocalized?: boolean;
 };
 
-export function Link({ variant = "accent", className, ...props }: LinkProps) {
+export function Link({ variant = "accent", unlocalized = false, className, ...props }: LinkProps) {
+  const Component = unlocalized ? "a" : IntlLink;
   return (
-    <NextLink
+    <Component
       className={cn("transition-colors", linkVariants[variant], className)}
       {...props}
     />

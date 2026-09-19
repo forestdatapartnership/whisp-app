@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { clearAuthCookies, clearKcRefreshToken, getKcRefreshToken } from '@/lib/auth/session';
 import { getEndSessionUrl } from '@/lib/auth/keycloak';
 import { invalidateGeoidTokenCache } from '@/lib/server/api-client';
 import { config } from '@/lib/server/env';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const hadKcSession = Boolean(await getKcRefreshToken());
 
   await clearAuthCookies();

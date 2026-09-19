@@ -22,7 +22,6 @@ export function useJobStatus({
   onCompleted?: (data: unknown) => void
 }) {
   const [response, setResponse] = useState<JobStatus | null>(null)
-  const [error, setError] = useState<Error | null>(null)
   const [fallback, setFallback] = useState(false)
   const completedRef = useRef(false)
 
@@ -84,7 +83,6 @@ export function useJobStatus({
 
   useEffect(() => {
     if (!token || !fallback) return
-    let timer: ReturnType<typeof setInterval>
 
     const poll = async () => {
       try {
@@ -100,11 +98,11 @@ export function useJobStatus({
       } catch { /* retry next interval */ }
     }
 
+    const timer = setInterval(poll, POLL_INTERVAL)
     poll()
-    timer = setInterval(poll, POLL_INTERVAL)
     return () => clearInterval(timer)
   }, [token, fallback, handleCompleted])
 
-  const isLoading = !!token && !response && !error
-  return { response, isLoading, error } as const
+  const isLoading = !!token && !response
+  return { response, isLoading } as const
 }

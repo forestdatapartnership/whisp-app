@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
@@ -15,24 +15,29 @@ export function useTheme() {
 
 function readTheme(): Theme {
   if (typeof window === "undefined") return "dark";
-  return localStorage.getItem("whisp-theme") === "light" ? "light" : "dark";
+  try {
+    const saved = localStorage.getItem("whisp-theme");
+    if (saved === "light" || saved === "dark") return saved;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "dark";
+  }
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(readTheme);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    try {
       localStorage.setItem("whisp-theme", next);
-      if (next === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-      return next;
-    });
-  }, []);
+    } catch {}
+  }, [theme]);
 
   return (
     <ThemeContext value={{ theme, toggleTheme }}>

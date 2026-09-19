@@ -1,7 +1,7 @@
 import { SystemError } from '@/types/system-error';
 import { SystemCode } from '@/types/system-codes';
 
-export function validateRequiredFields(body: any, requiredFields: string[]): void {
+export function validateRequiredFields(body: Record<string, unknown>, requiredFields: string[]): void {
   const missingFields: string[] = [];
 
   for (const field of requiredFields) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/navigation'
 import { storeSyncResult } from '@/lib/submission/sync-result'
 import type { AnalysisOptionsValue } from '@/components/submission/analysis-options'
 

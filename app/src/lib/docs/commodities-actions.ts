@@ -11,7 +11,7 @@ import {
 import { action } from '@/lib/server/action';
 import type { Commodity } from '@/types/models';
 
-const REVALIDATE_PATHS = ['/docs/reference/commodities', '/docs/reference/result-fields'];
+const REVALIDATE_PATHS = ['/[locale]/docs/reference/commodities', '/[locale]/docs/reference/result-fields'];
 
 export const getCommodities = action(async () => {
   return getAllCommodities();
@@ -20,19 +20,19 @@ export const getCommodities = action(async () => {
 export const createCommodity = action(async (data: Omit<Commodity, 'createdAt' | 'createdBy' | 'updatedAt' | 'updatedBy'>) => {
   const user = await requireAdmin();
   const result = await dalCreate({ ...data, createdBy: user.email });
-  REVALIDATE_PATHS.forEach((p) => revalidatePath(p));
+  REVALIDATE_PATHS.forEach((p) => revalidatePath(p, 'page'));
   return result;
 });
 
 export const updateCommodity = action(async (id: string, updates: Partial<Commodity>) => {
   const user = await requireAdmin();
   const result = await dalUpdate(id, { ...updates, updatedBy: user.email });
-  REVALIDATE_PATHS.forEach((p) => revalidatePath(p));
+  REVALIDATE_PATHS.forEach((p) => revalidatePath(p, 'page'));
   return result;
 });
 
 export const deleteCommodity = action(async (id: string) => {
   await requireAdmin();
   await dalDelete(id);
-  REVALIDATE_PATHS.forEach((p) => revalidatePath(p));
+  REVALIDATE_PATHS.forEach((p) => revalidatePath(p, 'page'));
 });

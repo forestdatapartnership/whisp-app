@@ -11,7 +11,7 @@ import {
 import { action } from '@/lib/server/action';
 import type { ResultField } from '@/types/models';
 
-const REVALIDATE_PATHS = ['/docs/reference/result-fields'];
+const REVALIDATE_PATHS = ['/[locale]/docs/reference/result-fields'];
 
 export const getResultFields = action(async () => {
   return getAllResultFields();
@@ -22,19 +22,19 @@ export const createResultField = action(async (
 ) => {
   const user = await requireAdmin();
   const result = await dalCreate({ ...data, createdBy: user.email });
-  REVALIDATE_PATHS.forEach((p) => revalidatePath(p));
+  REVALIDATE_PATHS.forEach((p) => revalidatePath(p, 'page'));
   return result;
 });
 
 export const updateResultField = action(async (id: string, updates: Partial<ResultField>) => {
   const user = await requireAdmin();
   const result = await dalUpdate(id, { ...updates, updatedBy: user.email });
-  REVALIDATE_PATHS.forEach((p) => revalidatePath(p));
+  REVALIDATE_PATHS.forEach((p) => revalidatePath(p, 'page'));
   return result;
 });
 
 export const deleteResultField = action(async (id: string) => {
   await requireAdmin();
   await dalDelete(id);
-  REVALIDATE_PATHS.forEach((p) => revalidatePath(p));
+  REVALIDATE_PATHS.forEach((p) => revalidatePath(p, 'page'));
 });

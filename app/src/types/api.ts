@@ -1,11 +1,11 @@
 import { SystemCode } from '@/types/system-codes';
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code?: SystemCode;     
   message?: string;     
   cause?: string;
   data?: T;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 export interface ApiKey {

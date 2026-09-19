@@ -8,7 +8,7 @@ import {
   createCommodity,
   updateCommodity,
   deleteCommodity,
-} from "./actions";
+} from "@/lib/docs/commodities-actions";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { cardLayout } from "@/components/ui/styles";
 import { Button } from "@/components/ui/button";

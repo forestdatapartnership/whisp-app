@@ -9,7 +9,7 @@ export interface AnalysisJob extends BaseModel {
   apiKeyId?: number; // TODO: placeholders for mappings for now, find a way to use the actual nested properties in the mapping without having to add them to the model
   userId?: number;
   featureCount?: number;
-  analysisOptions?: any;
+  analysisOptions?: Record<string, unknown> | null;
   status?: SystemCode;
   startedAt?: Date;
   completedAt?: Date;

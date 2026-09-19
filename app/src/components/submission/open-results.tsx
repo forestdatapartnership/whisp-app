@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/navigation'
 import { FolderOpen, Trash2, AlertTriangle } from 'lucide-react'
 import { parseResultsFile, versionsMatch } from '@/lib/results/parse-results-file'
 import { storeLocalResults } from '@/lib/results/local-results'

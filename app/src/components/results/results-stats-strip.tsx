@@ -12,17 +12,13 @@ import {
   type RiskFilter,
   type RiskTone,
 } from "@/lib/results/catalog-fields";
-import {
-  COMMODITY_OPTIONS,
-  type CommodityKey,
-} from "@/lib/results/risk-trees";
+import { COMMODITY_OPTIONS } from "@/lib/results/risk-trees";
 import type { ResultRow } from "./results-table";
 
 const RISK_TONES: RiskTone[] = ["low", "medium", "high"];
 
 interface ResultsStatsStripProps {
   rows: ResultRow[];
-  commodity: CommodityKey;
   riskFilter: RiskFilter | null;
   onRiskFilter: (filter: RiskFilter | null) => void;
   className?: string;
@@ -30,7 +26,6 @@ interface ResultsStatsStripProps {
 
 export function ResultsStatsStrip({
   rows,
-  commodity,
   riskFilter,
   onRiskFilter,
   className,

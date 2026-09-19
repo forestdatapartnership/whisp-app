@@ -69,8 +69,7 @@ export function Footer() {
   const { config } = useConfig();
   const docsLinks = [
     { href: `${config?.api.url ?? "/api"}/docs`, label: "API", target: "_blank" },
-    { href: "/docs/reference/result-fields", label: "Reference Fields" },
-    { href: "/docs/reference/commodities", label: "Commodities" },
+    { href: "https://github.com/forestdatapartnership/whisp/blob/main/layers_description.md", label: "Layer Descriptions", target: "_blank" },
   ];
   return (
     <footer className="flex flex-wrap items-center gap-y-1 border-t border-border px-8 py-4 text-xs text-text-dim">

@@ -1,10 +1,11 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
+import { getPathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { Link, linkVariants } from "@/components/ui/link";
-import { cn } from "@/lib/utils";
+import { Link } from "@/components/ui/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +23,12 @@ function ssoLoginUrl(next: string, loginHint?: string) {
 }
 
 function LoginForm() {
+  const locale = useLocale();
   const params = useSearchParams();
-  const next = params.get("next") || "/";
+  const router = useRouter();
+  const requestedPath = params.get("next");
+  const nextPath = requestedPath?.startsWith("/") ? requestedPath : "/";
+  const localizedNextPath = getPathname({ href: nextPath, locale });
   const { login, error, clearError, isAuthenticated, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,9 +36,9 @@ function LoginForm() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      window.location.assign(next.startsWith("/") ? next : "/");
+      router.replace(nextPath);
     }
-  }, [isAuthenticated, authLoading, next]);
+  }, [isAuthenticated, authLoading, nextPath, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +46,11 @@ function LoginForm() {
     setIsLoading(true);
     const result = await login(email, password);
     if (result.ok) {
-      window.location.assign(next.startsWith("/") ? next : "/");
+      router.replace(nextPath);
       return;
     }
     if (result.code === SystemCode.AUTH_SSO_REQUIRED) {
-      window.location.assign(ssoLoginUrl(next, email));
+      window.location.assign(ssoLoginUrl(localizedNextPath, email));
       return;
     }
     setIsLoading(false);
@@ -63,7 +68,7 @@ function LoginForm() {
           type="button"
           variant="outline"
           className="w-full mb-4"
-          onClick={() => window.location.assign(ssoLoginUrl(next))}
+          onClick={() => window.location.assign(ssoLoginUrl(localizedNextPath))}
         >
           Sign in with SSO
         </Button>
@@ -107,7 +112,7 @@ function LoginForm() {
           </Button>
         </form>
         <p className="mt-5 text-center text-[13px] text-muted-foreground">
-          No account yet? <a href="/auth/sso/register" className={cn("transition-colors", linkVariants.accent)}>Register free</a>
+          No account yet? <Link href="/auth/sso/register" unlocalized>Register free</Link>
         </p>
       </CardContent>
     </Card>

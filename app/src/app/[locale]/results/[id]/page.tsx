@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AnalysisProgress } from "@/components/results/analysis-progress";
 import { AnalysisError } from "@/components/results/analysis-error";
@@ -26,7 +27,7 @@ import { versionsMatch } from "@/lib/results/parse-results-file";
 import { useTheme } from "@/components/layout/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/icons";
-import { getResultFields } from "@/app/docs/reference/result-fields/actions";
+import { getResultFields } from "@/lib/docs/result-fields-actions";
 import { isTruthyCell, type RiskFilter } from "@/lib/results/catalog-fields";
 import {
   formatResultsFilterLabel,
@@ -233,7 +234,7 @@ export default function ResultsPage() {
     if (sync) handleCompleted(sync);
   }, [id, isLocal, handleCompleted]);
 
-  const { response, isLoading, error } = useJobStatus({
+  const { response, isLoading } = useJobStatus({
     token: isLocal ? null : id,
     onCompleted: handleCompleted,
   });
@@ -242,11 +243,10 @@ export default function ResultsPage() {
   const isProcessing = !isLocal && (code === "analysis_processing" || code === "analysis_queued");
   const isError =
     !isLocal &&
-    (!!error ||
-      (!!code &&
-        code !== "analysis_completed" &&
-        code !== "analysis_processing" &&
-        code !== "analysis_queued"));
+    !!code &&
+    code !== "analysis_completed" &&
+    code !== "analysis_processing" &&
+    code !== "analysis_queued";
 
 
   const searchedData = useMemo(() => {
@@ -389,7 +389,7 @@ export default function ResultsPage() {
       `https://whisp.earthmap.org/?aoi=WHISP&fetchJson=${encodeURIComponent(downloadUrl)}`,
       "_blank"
     );
-  }, [id, isLocal, tableData.length, config?.api.url]);
+  }, [id, isLocal, tableData.length, config]);
 
   const handleExportCsv = useCallback(() => {
     const cols = allColumns.map((c) => c.key);
@@ -466,7 +466,7 @@ export default function ResultsPage() {
   if (isError) {
     return (
       <AnalysisError
-        message={response?.message ?? error?.message ?? "An error occurred."}
+        message={response?.message ?? "An error occurred."}
         cause={response?.cause}
         onBack={() => router.back()}
       />
@@ -569,7 +569,6 @@ export default function ResultsPage() {
             />
             <ResultsStatsStrip
               rows={searchedData}
-              commodity={commodity}
               riskFilter={riskFilter}
               onRiskFilter={handleRiskFilter}
             />
