@@ -15,16 +15,18 @@ export function validateRequiredFields(body: Record<string, unknown>, requiredFi
   }
 }
 
-export const PASSWORD_RULES: { test: (p: string) => boolean; message: string }[] = [
-  { test: (p) => p.length >= 8, message: 'At least 8 characters long' },
-  { test: (p) => /[A-Z]/.test(p), message: 'Include at least one uppercase letter (A-Z)' },
-  { test: (p) => /[a-z]/.test(p), message: 'Include at least one lowercase letter (a-z)' },
-  { test: (p) => /[0-9]/.test(p), message: 'Include at least one number (0-9)' },
-  { test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p), message: 'Include at least one special character' },
+type PasswordRule = 'minLength' | 'uppercase' | 'lowercase' | 'number' | 'special';
+
+export const PASSWORD_RULES: { rule: PasswordRule; test: (p: string) => boolean }[] = [
+  { rule: 'minLength', test: (p) => p.length >= 8 },
+  { rule: 'uppercase', test: (p) => /[A-Z]/.test(p) },
+  { rule: 'lowercase', test: (p) => /[a-z]/.test(p) },
+  { rule: 'number', test: (p) => /[0-9]/.test(p) },
+  { rule: 'special', test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
 ];
 
-export function getPasswordErrors(password: string): string[] {
-  return PASSWORD_RULES.filter((r) => !r.test(password)).map((r) => r.message);
+export function getPasswordErrors(password: string): PasswordRule[] {
+  return PASSWORD_RULES.filter((r) => !r.test(password)).map((r) => r.rule);
 }
 
 export function isValidPassword(password: string): boolean {

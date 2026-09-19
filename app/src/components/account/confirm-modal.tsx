@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cardLayout } from '@/components/ui/styles';
@@ -25,6 +26,7 @@ export function ConfirmModal({
   onConfirm: () => void;
   children?: React.ReactNode;
 }) {
+  const t = useTranslations('Common');
   if (!open) return null;
 
   return (
@@ -38,7 +40,7 @@ export function ConfirmModal({
         {children}
         <div className="flex justify-end gap-2 mt-5">
           <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             type="button"

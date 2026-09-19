@@ -1,16 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import { Link } from "@/components/ui/link";
 import { VersionLink } from "@/components/layout/version-link";
 import { useConfig } from "@/lib/config/config-context";
-
-const legalLinks = [
-  { href: "/legal/privacy-policy", label: "Privacy Policy" },
-  { href: "/legal/terms-of-service", label: "Terms of Use" },
-  { href: "/legal/gee-data-separation", label: "GEE Data Separation" },
-];
 
 function FooterDropdown({ label, items }: {
   label: string;
@@ -66,10 +61,16 @@ function FooterDropdown({ label, items }: {
 const Sep = () => <span className="px-2 text-xs text-text-dim select-none">·</span>;
 
 export function Footer() {
+  const t = useTranslations("Footer");
   const { config } = useConfig();
   const docsLinks = [
-    { href: `${config?.api.url ?? "/api"}/docs`, label: "API", target: "_blank" },
-    { href: "https://github.com/forestdatapartnership/whisp/blob/main/layers_description.md", label: "Layer Descriptions", target: "_blank" },
+    { href: `${config?.api.url ?? "/api"}/docs`, label: t("api"), target: "_blank" },
+    { href: "https://github.com/forestdatapartnership/whisp/blob/main/layers_description.md", label: t("layerDescriptions"), target: "_blank" },
+  ];
+  const legalLinks = [
+    { href: "/legal/privacy-policy", label: t("privacyPolicy") },
+    { href: "/legal/terms-of-service", label: t("termsOfUse") },
+    { href: "/legal/gee-data-separation", label: t("geeDataSeparation") },
   ];
   return (
     <footer className="flex flex-wrap items-center gap-y-1 border-t border-border px-8 py-4 text-xs text-text-dim">
@@ -87,16 +88,16 @@ export function Footer() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        About
+        {t("about")}
       </Link>
       <Sep />
       <Link href="/legal/license" variant="muted" className="whitespace-nowrap">
-        MIT License
+        {t("license")}
       </Link>
       <Sep />
-      <FooterDropdown label="Docs" items={docsLinks} />
+      <FooterDropdown label={t("docs")} items={docsLinks} />
       <Sep />
-      <FooterDropdown label="Legal" items={legalLinks} />
+      <FooterDropdown label={t("legal")} items={legalLinks} />
       <div className="ml-auto flex items-center">
         <VersionLink />
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { Key } from 'lucide-react'
 import { useConfig } from '@/lib/config/config-context'
@@ -21,6 +22,8 @@ import { OpenResults } from './open-results'
 type Tab = 'geometry' | 'geoids' | 'open'
 
 export function DataSubmission() {
+  const t = useTranslations('Submission')
+  const tCommon = useTranslations('Common')
   const [activeTab, setActiveTab] = useState<Tab>('geometry')
   const [error, setError] = useState('')
   const [geometryFile, setGeometryFile] = useState<File | null>(null)
@@ -39,16 +42,16 @@ export function DataSubmission() {
   }
 
   if (authLoading || (isAuthenticated && apiKeyLoading)) {
-    return <p className="py-8 text-center text-sm text-text-muted">Loading…</p>
+    return <p className="py-8 text-center text-sm text-text-muted">{tCommon('loading')}</p>
   }
 
   return (
     <div className="flex flex-col gap-4">
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="w-full gap-0.5 p-1">
-          <TabsTrigger value="geometry" className="flex-1 px-1.5 sm:px-3">Submit Geometry</TabsTrigger>
-          <TabsTrigger value="geoids" className="flex-1 px-1.5 sm:px-3">Submit Geo IDs</TabsTrigger>
-          <TabsTrigger value="open" className="flex-1 px-1.5 sm:px-3">Open GeoJSON Results</TabsTrigger>
+          <TabsTrigger value="geometry" className="flex-1 px-1.5 sm:px-3">{t('tabGeometry')}</TabsTrigger>
+          <TabsTrigger value="geoids" className="flex-1 px-1.5 sm:px-3">{t('tabGeoIds')}</TabsTrigger>
+          <TabsTrigger value="open" className="flex-1 px-1.5 sm:px-3">{t('openResults')}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -66,12 +69,10 @@ export function DataSubmission() {
       ) : needsApiKey ? (
         <Card className="text-center">
           <Key className="mx-auto mb-4 size-12 text-risk-medium" strokeWidth={1.5} />
-          <h2 className="mb-2 text-lg font-semibold text-text-primary">API Key Required</h2>
-          <p className="mb-6 text-sm text-text-muted">
-            You need to create an API key to submit analysis requests. Go to your account to create one.
-          </p>
+          <h2 className="mb-2 text-lg font-semibold text-text-primary">{t('apiKeyRequiredTitle')}</h2>
+          <p className="mb-6 text-sm text-text-muted">{t('apiKeyRequiredBody')}</p>
           <Button nativeButton={false} render={<Link href="/account" />}>
-            Go to Account
+            {t('goToAccount')}
           </Button>
         </Card>
       ) : activeTab === 'geometry' ? (

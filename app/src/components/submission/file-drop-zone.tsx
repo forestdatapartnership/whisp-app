@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { UploadCloud } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { controlRounded } from '@/components/ui/styles'
@@ -22,6 +23,7 @@ export function FileDropZone({
   compact = false,
   disabled,
 }: FileDropZoneProps) {
+  const t = useTranslations('Submission')
   const [isDrag, setIsDrag] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -68,9 +70,7 @@ export function FileDropZone({
       ) : (
         <>
           <span className={cn('font-medium text-text-primary text-center', compact ? 'text-[13px]' : 'text-[14px]')}>
-            <span className="text-accent-green">Click to upload</span>
-            {" "}
-            or drag &amp; drop
+            {t.rich('dropZone', { accent: (chunks) => <span className="text-accent-green">{chunks}</span> })}
           </span>
           {formats && <span className="text-[12px] text-text-muted">{formats}</span>}
         </>

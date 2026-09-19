@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { CenteredShell, PageSection } from '@/components/layout/page-section';
@@ -41,6 +42,8 @@ function SsoRedirect() {
 }
 
 function LocalAccountSettings() {
+  const t = useTranslations('Account');
+  const tPassword = useTranslations('Password');
   const profile = useProfile();
   const password = usePassword();
   const notifications = useNotifications();
@@ -52,14 +55,13 @@ function LocalAccountSettings() {
         <Alert
           type="warning"
           message={
-            <>
-              Local sign-in is deprecated. <Link href="/auth/sso/login" unlocalized className="font-medium">Sign in with SSO</Link> using
-              this same email address to switch — your account and API keys carry over automatically, nothing is lost.
-            </>
+            t.rich('ssoDeprecation', {
+              link: (chunks) => <Link href="/auth/sso/login" unlocalized className="font-medium">{chunks}</Link>,
+            })
           }
         />
 
-        <PageSection title="Profile">
+        <PageSection title={t('profile')}>
           <Card>
             <CardContent className="flex flex-col gap-4">
               <ProfileErrorAlert
@@ -67,7 +69,7 @@ function LocalAccountSettings() {
                 onClose={() => profile.clearError()}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <AccountField label="First name" htmlFor="name">
+                <AccountField label={t('firstName')} htmlFor="name">
                   <AccountInput
                     id="name"
                     value={profile.name}
@@ -78,7 +80,7 @@ function LocalAccountSettings() {
                     }}
                   />
                 </AccountField>
-                <AccountField label="Last name" htmlFor="lastName">
+                <AccountField label={t('lastName')} htmlFor="lastName">
                   <AccountInput
                     id="lastName"
                     value={profile.lastName}
@@ -89,10 +91,10 @@ function LocalAccountSettings() {
                     }}
                   />
                 </AccountField>
-                <AccountField label="Email" className="sm:col-span-2" hint="Cannot be changed">
+                <AccountField label={t('email')} className="sm:col-span-2" hint={t('emailHint')}>
                   <AccountInput value={profile.user?.email ?? ''} disabled />
                 </AccountField>
-                <AccountField label="Organization" htmlFor="org" className="sm:col-span-2">
+                <AccountField label={t('organization')} htmlFor="org" className="sm:col-span-2">
                   <AccountInput
                     id="org"
                     value={profile.organization}
@@ -101,7 +103,7 @@ function LocalAccountSettings() {
                       profile.clearError();
                       profile.clearSaved();
                     }}
-                    placeholder="Optional"
+                    placeholder={t('optional')}
                   />
                 </AccountField>
               </div>
@@ -117,15 +119,13 @@ function LocalAccountSettings() {
           </Card>
         </PageSection>
 
-        <PageSection title="Password">
+        <PageSection title={tPassword('section')}>
           <Card>
             <CardContent className="flex flex-col gap-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Change password</p>
-                  <p className="text-sm text-muted-foreground">
-                    Use a strong password you don&apos;t use elsewhere
-                  </p>
+                  <p className="text-sm font-medium text-foreground">{tPassword('changeTitle')}</p>
+                  <p className="text-sm text-muted-foreground">{tPassword('changeHint')}</p>
                 </div>
                 <PasswordChangeToggle open={password.open} onToggle={password.toggleOpen} />
               </div>
@@ -138,7 +138,7 @@ function LocalAccountSettings() {
                       onClose={() => password.clearError('general')}
                     />
                   )}
-                  <AccountField label="Current password" error={password.errors.current}>
+                  <AccountField label={tPassword('current')} error={password.errors.current}>
                     <AccountInput
                       type="password"
                       value={password.currentPw}
@@ -149,7 +149,7 @@ function LocalAccountSettings() {
                     />
                   </AccountField>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <AccountField label="New password" error={password.errors.new}>
+                    <AccountField label={tPassword('new')} error={password.errors.new}>
                       <AccountInput
                         type="password"
                         value={password.newPw}
@@ -159,7 +159,7 @@ function LocalAccountSettings() {
                         }}
                       />
                     </AccountField>
-                    <AccountField label="Confirm password" error={password.errors.confirm}>
+                    <AccountField label={tPassword('confirm')} error={password.errors.confirm}>
                       <AccountInput
                         type="password"
                         value={password.confirmPw}
@@ -180,15 +180,13 @@ function LocalAccountSettings() {
           </Card>
         </PageSection>
 
-        <PageSection title="Notifications">
+        <PageSection title={t('notifications')}>
           <Card>
             <CardContent>
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Service notifications</p>
-                  <p className="text-sm text-muted-foreground">
-                    Email when the Whisp service has important updates
-                  </p>
+                  <p className="text-sm font-medium text-foreground">{t('serviceNotifications')}</p>
+                  <p className="text-sm text-muted-foreground">{t('serviceNotificationsHint')}</p>
                 </div>
                 <NotificationToggle
                   enabled={notifications.enabled}
@@ -199,15 +197,13 @@ function LocalAccountSettings() {
           </Card>
         </PageSection>
 
-        <PageSection title="Danger zone" titleClassName="text-destructive">
+        <PageSection title={t('dangerZone')} titleClassName="text-destructive">
           <Card>
             <CardContent>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[10px] border border-destructive/20 bg-destructive/5 px-5 py-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Delete account</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Permanently removes your account and associated data. Cannot be undone.
-                  </p>
+                  <p className="text-sm font-medium text-foreground">{t('deleteAccount')}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{t('deleteAccountHint')}</p>
                 </div>
                 <DeleteAccountTrigger onClick={() => deleteAccount.setOpen(true)} />
               </div>

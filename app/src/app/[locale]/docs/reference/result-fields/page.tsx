@@ -20,7 +20,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Alert } from "@/components/ui/alert";
 import { CrudDataTable } from "@/components/crud/data-table";
 import { controlRounded, cardLayout } from "@/components/ui/styles";
-import { formatSystemMessage } from "@/types/system-codes";
+import { useSystemMessage } from "@/lib/shared/use-system-message";
 import type { ResultField, Commodity, CommodityMetadata } from "@/types/models";
 
 type Mode = "list" | "edit" | "create";
@@ -37,6 +37,7 @@ function ResultFieldsPage() {
   const [mode, setMode] = useState<Mode>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<ResultField>>({});
+  const systemMessage = useSystemMessage();
   const [readonly, setReadonly] = useState(false);
   const [message, setMessage] = useState<MessageType>(null);
   const [loading, setLoading] = useState(false);
@@ -44,9 +45,9 @@ function ResultFieldsPage() {
   const load = useCallback(async () => {
     const [fRes, cRes] = await Promise.all([getResultFields(), getCommodities()]);
     if (fRes.ok) setFields(fRes.data);
-    else setMessage({ type: "error", text: formatSystemMessage(fRes.code, fRes.args) });
+    else setMessage({ type: "error", text: systemMessage(fRes.code, fRes.args) });
     if (cRes.ok) setCommodities(cRes.data);
-  }, []);
+  }, [systemMessage]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -89,7 +90,7 @@ function ResultFieldsPage() {
           analysisMetadata: form.analysisMetadata,
         };
         const res = await createResultField(payload);
-        if (!res.ok) throw new Error(formatSystemMessage(res.code, res.args));
+        if (!res.ok) throw new Error(systemMessage(res.code, res.args));
         setMessage({ type: "success", text: "Result field created" });
       } else {
         const updates: Partial<ResultField> = {
@@ -108,7 +109,7 @@ function ResultFieldsPage() {
           analysisMetadata: form.analysisMetadata,
         };
         const res = await updateResultField(editingId!, updates);
-        if (!res.ok) throw new Error(formatSystemMessage(res.code, res.args));
+        if (!res.ok) throw new Error(systemMessage(res.code, res.args));
         setMessage({ type: "success", text: "Result field updated" });
       }
       await load();
@@ -117,7 +118,7 @@ function ResultFieldsPage() {
     } catch (e) {
       setMessage({ type: "error", text: e instanceof Error ? e.message : "Error" });
     } finally { setLoading(false); }
-  }, [mode, form, editingId, load, reset, router]);
+  }, [mode, form, editingId, load, reset, router, systemMessage]);
 
   const afterDelete = useCallback(async () => {
     await load();

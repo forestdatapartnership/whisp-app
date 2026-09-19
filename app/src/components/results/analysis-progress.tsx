@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { cardLayout, controlRounded, logHeight } from "@/components/ui/styles";
@@ -27,6 +28,7 @@ export function AnalysisProgress({
   asyncMode?: boolean;
   onCancelled?: () => void;
 }) {
+  const t = useTranslations("AnalysisProgress");
   const [cancelling, setCancelling] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const latestIndex = (messages?.length ?? 0) - 1;
@@ -36,13 +38,13 @@ export function AnalysisProgress({
   }, [messages?.length]);
 
   const isQueued = code === 'analysis_queued';
-  const queueMode = asyncMode ? 'Concurrent' : 'Sequential';
-  const title = isQueued ? 'Analysis Queued' : 'Analysis in Progress';
+  const queueMode = asyncMode ? t('concurrent') : t('sequential');
+  const title = isQueued ? t('queuedTitle') : t('progressTitle');
   const subtitle = isQueued
-    ? `Waiting for an available worker · ${queueMode} Mode`
+    ? t('queuedSubtitle', { mode: queueMode })
     : featureCount
-      ? `Processing ${featureCount} features in ${queueMode} Mode`
-      : `Processing in ${queueMode} Mode`;
+      ? t('processingCount', { count: featureCount, mode: queueMode })
+      : t('processing', { mode: queueMode });
 
   return (
     <CenteredShell className="px-4">
@@ -60,7 +62,7 @@ export function AnalysisProgress({
         {typeof percent === "number" && percent > 0 && (
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-text-muted">
-              <span>Progress</span>
+              <span>{t('progress')}</span>
               <span>{percent}%</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-border">
@@ -74,7 +76,7 @@ export function AnalysisProgress({
 
         <div className="flex flex-col gap-2">
           <span className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
-            Status
+            {t('status')}
           </span>
           <ScrollArea className={`${logHeight} ${controlRounded} border border-border bg-bg`}>
             <div className="space-y-0.5 p-3">
@@ -92,7 +94,7 @@ export function AnalysisProgress({
                 ))
               ) : (
                 <p className="font-mono text-xs leading-snug text-text-dim">
-                  {isQueued ? 'Waiting in queue…' : 'Starting…'}
+                  {isQueued ? t('waiting') : t('starting')}
                 </p>
               )}
               <div ref={bottomRef} />
@@ -116,7 +118,7 @@ export function AnalysisProgress({
           }}
         >
           <XCircle className="size-3.5" />
-          {cancelling ? 'Cancelling…' : 'Cancel analysis'}
+          {cancelling ? t('cancelling') : t('cancel')}
         </Button>
       </Card>
     </CenteredShell>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -30,6 +31,7 @@ export function ResultsStatsStrip({
   onRiskFilter,
   className,
 }: ResultsStatsStripProps) {
+  const t = useTranslations("Results");
   const mixes = useMemo(
     () =>
       COMMODITY_OPTIONS.map((opt) => ({
@@ -48,12 +50,11 @@ export function ResultsStatsStrip({
     >
       <Tooltip>
         <TooltipTrigger className="flex shrink-0 cursor-default items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-text-muted">
-          Risk breakdown
+          {t('riskBreakdown')}
           <Info className="size-3 text-text-dim" />
         </TooltipTrigger>
         <TooltipContent side="bottom" align="start">
-          Risk distribution across all commodities.
-          Click a count to filter the table.
+          {t('riskBreakdownHelp')}
         </TooltipContent>
       </Tooltip>
       {mixes.map(({ key, shortLabel, riskField, mix }) => (
@@ -92,7 +93,7 @@ export function ResultsStatsStrip({
                     {n}
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {shortLabel} · {RISK_TONE_LABEL[tone]}: {n} plot{n !== 1 ? "s" : ""}
+                    {shortLabel} · {RISK_TONE_LABEL[tone]}: {t('plotCount', { count: n })}
                   </TooltipContent>
                 </Tooltip>
               );

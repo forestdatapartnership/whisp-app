@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { cardLayout, controlRounded } from "@/components/ui/styles";
 import { Card } from "@/components/ui/card";
@@ -16,6 +17,8 @@ export function AnalysisError({
   cause?: string;
   onBack: () => void;
 }) {
+  const t = useTranslations("AnalysisError");
+  const tCommon = useTranslations("Common");
   return (
     <CenteredShell className="px-4">
       <Card className={cardLayout.md}>
@@ -24,7 +27,7 @@ export function AnalysisError({
             <AlertTriangle className="size-6 text-risk-high" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <h1 className="text-lg font-semibold text-text-primary">Analysis failed</h1>
+            <h1 className="text-lg font-semibold text-text-primary">{t('title')}</h1>
             {message && (
               <p className="text-[13px] leading-relaxed text-text-muted">{message}</p>
             )}
@@ -34,7 +37,7 @@ export function AnalysisError({
         {cause && (
           <div className="flex flex-col gap-2">
             <span className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
-              Error details
+              {t('details')}
             </span>
             <ScrollArea className={`h-44 ${controlRounded} border border-border bg-bg`}>
               <div className="p-3">
@@ -45,7 +48,7 @@ export function AnalysisError({
         )}
 
         <Button variant="outline" size="sm" className="self-start" onClick={onBack}>
-          <ArrowLeft className="size-3.5" /> Go Back
+          <ArrowLeft className="size-3.5" /> {tCommon('back')}
         </Button>
       </Card>
     </CenteredShell>

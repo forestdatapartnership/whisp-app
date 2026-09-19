@@ -7,10 +7,11 @@ import {
   fetchNotificationStatus,
   setNotificationSubscription,
 } from '@/lib/notifications/actions';
-import { formatSystemMessage } from '@/types/system-codes';
+import { useSystemMessage } from '@/lib/shared/use-system-message';
 
 export function useNotifications() {
   const [enabled, setEnabled] = useState(false);
+  const systemMessage = useSystemMessage();
 
   useEffect(() => {
     fetchNotificationStatus().then((r) => {
@@ -23,7 +24,7 @@ export function useNotifications() {
     const result = await setNotificationSubscription(on);
     if (!result.ok) {
       setEnabled(!on);
-      toast.error(formatSystemMessage(result.code, result.args));
+      toast.error(systemMessage(result.code, result.args));
     }
   };
 

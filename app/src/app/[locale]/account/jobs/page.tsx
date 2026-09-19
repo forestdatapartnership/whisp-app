@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
   AlertTriangle,
@@ -22,32 +23,21 @@ import type { AnalysisJob } from "@/types/models/analysis-job";
 import { SystemCode } from "@/types/system-codes";
 import {
   deriveDurationMs,
-  formatDateTime,
   formatDuration,
-  formatRelative,
   truncateToken,
 } from "@/lib/utils/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-const STATUS_LABEL: Record<string, string> = {
-  [SystemCode.ANALYSIS_QUEUED]: "Queued",
-  [SystemCode.ANALYSIS_PROCESSING]: "Processing",
-  [SystemCode.ANALYSIS_COMPLETED]: "Completed",
-  [SystemCode.ANALYSIS_ERROR]: "Error",
-  [SystemCode.ANALYSIS_TIMEOUT]: "Timeout",
-  [SystemCode.ANALYSIS_CANCELLED]: "Cancelled",
-};
-
 const FILTER_OPTIONS = [
-  { key: "all", label: "All" },
-  { key: SystemCode.ANALYSIS_COMPLETED, label: "Completed" },
-  { key: SystemCode.ANALYSIS_ERROR, label: "Error" },
-  { key: SystemCode.ANALYSIS_TIMEOUT, label: "Timeout" },
-  { key: SystemCode.ANALYSIS_CANCELLED, label: "Cancelled" },
-  { key: SystemCode.ANALYSIS_QUEUED, label: "Queued" },
-  { key: SystemCode.ANALYSIS_PROCESSING, label: "Processing" },
+  "all",
+  SystemCode.ANALYSIS_COMPLETED,
+  SystemCode.ANALYSIS_ERROR,
+  SystemCode.ANALYSIS_TIMEOUT,
+  SystemCode.ANALYSIS_CANCELLED,
+  SystemCode.ANALYSIS_QUEUED,
+  SystemCode.ANALYSIS_PROCESSING,
 ] as const;
 
 const BADGE_CLASS: Record<string, string> = {
@@ -60,7 +50,8 @@ const BADGE_CLASS: Record<string, string> = {
 };
 
 function StatusBadge({ status }: { status?: string }) {
-  const label = status ? STATUS_LABEL[status] ?? status : "—";
+  const t = useTranslations("Jobs");
+  const label = status ? (t.has(`status.${status}`) ? t(`status.${status}`) : status) : "—";
   const tone = status ? BADGE_CLASS[status] : "bg-surface-raised text-text-muted [&_.badge-dot]:bg-text-muted";
   return (
     <span
@@ -76,14 +67,15 @@ function StatusBadge({ status }: { status?: string }) {
 }
 
 function JobRowActions({ job, onShowError }: { job: AnalysisJob; onShowError: (job: AnalysisJob) => void }) {
+  const t = useTranslations("Jobs");
   if (job.status === SystemCode.ANALYSIS_ERROR) {
     return (
       <button
         type="button"
         onClick={() => onShowError(job)}
         className="p-1 text-accent-green hover:text-accent-bright"
-        title="View error details"
-        aria-label="View error details"
+        title={t("viewError")}
+        aria-label={t("viewError")}
       >
         <AlertTriangle className="size-4" />
       </button>
@@ -95,8 +87,8 @@ function JobRowActions({ job, onShowError }: { job: AnalysisJob; onShowError: (j
         type="button"
         onClick={() => onShowError(job)}
         className="p-1 text-accent-green hover:text-accent-bright"
-        title="View timeout details"
-        aria-label="View timeout details"
+        title={t("viewTimeout")}
+        aria-label={t("viewTimeout")}
       >
         <Clock className="size-4" />
       </button>
@@ -110,8 +102,8 @@ function JobRowActions({ job, onShowError }: { job: AnalysisJob; onShowError: (j
       <Link
         href={`/results/${job.id}`}
         className="p-1 text-accent-green hover:text-accent-bright"
-        title="View status"
-        aria-label="View status"
+        title={t("viewStatus")}
+        aria-label={t("viewStatus")}
       >
         <Loader2 className="size-4 animate-spin" style={{ animationDuration: "1.6s" } as CSSProperties} />
       </Link>
@@ -123,15 +115,15 @@ function JobRowActions({ job, onShowError }: { job: AnalysisJob; onShowError: (j
         <Link
           href={`/results/${job.id}`}
           className="p-1 text-accent-green hover:text-accent-bright"
-          title="View results"
-          aria-label="View results"
+          title={t("viewResults")}
+          aria-label={t("viewResults")}
         >
           <FileText className="size-4" />
         </Link>
       );
     }
     return (
-      <span className="cursor-not-allowed p-1 text-text-muted" title="Results expired" aria-label="Results expired">
+      <span className="cursor-not-allowed p-1 text-text-muted" title={t("resultsExpired")} aria-label={t("resultsExpired")}>
         <FileText className="size-4" />
       </span>
     );
@@ -146,32 +138,35 @@ function JobErrorModal({
   job: AnalysisJob;
   onClose: () => void;
 }) {
+  const t = useTranslations("Jobs");
+  const tCommon = useTranslations("Common");
+  const format = useFormatter();
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-bg/70 px-0 sm:px-4">
       <div className="flex max-h-full w-full flex-col rounded-t-lg border border-border bg-surface shadow-xl sm:my-10 sm:max-w-3xl sm:rounded-lg">
         <div className="sticky top-0 flex items-center justify-between border-b border-border bg-surface p-4">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <StatusBadge status={job.status} />
-            <span className="text-sm text-text-muted">Token</span>
+            <span className="text-sm text-text-muted">{t("token")}</span>
             <span className="break-all font-mono text-xs text-text-primary">{job.id}</span>
           </div>
           <Button variant="secondary" size="sm" onClick={onClose}>
-            Close
+            {tCommon("close")}
           </Button>
         </div>
         <div className="space-y-3 overflow-y-auto p-4">
           <p className="text-sm text-text-primary">
-            <span className="text-text-muted">Created: </span>
-            {formatDateTime(job.createdAt)}
+            <span className="text-text-muted">{t("created")}: </span>
+            {job.createdAt ? format.dateTime(new Date(job.createdAt), "short") : "—"}
           </p>
           <p className="text-sm text-text-primary">
-            <span className="text-text-muted">Duration: </span>
+            <span className="text-text-muted">{t("duration")}: </span>
             {formatDuration(deriveDurationMs(job.startedAt, job.completedAt))}
           </p>
           <div>
-            <p className="mb-2 text-sm text-text-muted">Error message</p>
+            <p className="mb-2 text-sm text-text-muted">{t("errorMessage")}</p>
             <div className="max-h-80 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-bg/50 p-3 text-sm text-text-primary">
-              {job.errorMessage || "No error details recorded."}
+              {job.errorMessage || t("noErrorDetails")}
             </div>
           </div>
         </div>
@@ -189,6 +184,9 @@ export default function JobsPage() {
 }
 
 function JobsContent() {
+  const t = useTranslations("Jobs");
+  const tCommon = useTranslations("Common");
+  const format = useFormatter();
   const { isLoading: authLoading } = useAuth();
   const [stats, setStats] = useState<AnalysisJobStats | null>(null);
   const [filter, setFilter] = useState<string>("all");
@@ -230,37 +228,47 @@ function JobsContent() {
 
   const statCells = stats
     ? [
-        { label: "Total jobs", value: stats.summary.total },
-        { label: "Last 7 days", value: stats.summary.last7d },
+        { label: t("totalJobs"), value: stats.summary.total },
+        { label: t("last7d"), value: stats.summary.last7d },
         {
-          label: "Queued",
+          label: t("status.analysis_queued"),
           value: stats.statusCounts.queued,
           className: "text-accent-violet",
         },
         {
-          label: "Completed",
+          label: t("status.analysis_completed"),
           value: stats.statusCounts.completed,
           className: "text-accent-green",
         },
-        { label: "Errors", value: stats.statusCounts.error, className: "text-risk-high" },
+        { label: t("errors"), value: stats.statusCounts.error, className: "text-risk-high" },
         {
-          label: "Timeouts",
+          label: t("timeouts"),
           value: stats.statusCounts.timeout,
           className: "text-risk-medium",
         },
         {
-          label: "Avg runtime",
+          label: t("avgRuntime"),
           value: formatDuration(stats.timings.avgRunMs),
           compact: true,
         },
         {
-          label: "Avg queue",
+          label: t("avgQueue"),
           value: formatDuration(stats.timings.avgQueueMs),
           className: "text-text-muted",
           compact: true,
         },
       ]
     : [];
+
+  const relative = (value?: Date | string | null) => {
+    if (!value) return { label: "—", tooltip: "—" };
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return { label: "—", tooltip: "—" };
+    return {
+      label: format.relativeTime(date),
+      tooltip: format.dateTime(date, "short"),
+    };
+  };
 
   const handleFilter = (key: string) => {
     setFilter(key);
@@ -308,14 +316,14 @@ function JobsContent() {
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-text-muted" />
             <Input
-              placeholder="Search token…"
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-8 w-[200px] border-border bg-surface pl-8 text-xs focus-visible:border-accent-green"
             />
           </div>
           <div className="flex overflow-hidden rounded-[7px] bg-border gap-px">
-            {FILTER_OPTIONS.map(({ key, label }) => (
+            {FILTER_OPTIONS.map((key) => (
               <button
                 key={key}
                 type="button"
@@ -327,7 +335,7 @@ function JobsContent() {
                     : "text-text-muted hover:bg-surface-raised hover:text-text-primary"
                 )}
               >
-                {label}
+                {key === "all" ? t("all") : t(`status.${key}`)}
               </button>
             ))}
           </div>
@@ -338,12 +346,12 @@ function JobsContent() {
             className="size-7 shrink-0"
             onClick={refreshStats}
             disabled={loading}
-            title="Refresh"
-            aria-label="Refresh"
+            title={t("refresh")}
+            aria-label={t("refresh")}
           >
             <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
           </Button>
-          <span className="text-xs text-text-muted">Last 100 submissions</span>
+          <span className="text-xs text-text-muted">{t("recentSubmissions")}</span>
         </div>
 
         <div className="min-h-0 flex-1 overflow-auto">
@@ -351,29 +359,29 @@ function JobsContent() {
             <thead className="sticky top-0 z-10 bg-surface">
               <tr className="border-b border-border">
                 <th className="px-4 py-2.5 text-left text-[10px] font-semibold tracking-[0.08em] text-text-muted uppercase">
-                  Token
+                  {t("token")}
                 </th>
                 <th className="px-4 py-2.5 text-right text-[10px] font-semibold tracking-[0.08em] text-text-muted uppercase">
-                  Features
+                  {t("features")}
                 </th>
                 <th className="hidden px-4 py-2.5 text-left text-[10px] font-semibold tracking-[0.08em] text-text-muted uppercase sm:table-cell">
-                  Created
+                  {t("created")}
                 </th>
                 <th className="hidden px-4 py-2.5 text-left text-[10px] font-semibold tracking-[0.08em] text-text-muted uppercase sm:table-cell">
-                  Completed
+                  {t("completed")}
                 </th>
                 <th className="px-4 py-2.5 text-right text-[10px] font-semibold tracking-[0.08em] text-text-muted uppercase">
-                  Duration
+                  {t("duration")}
                 </th>
                 <th className="px-4 py-2.5 text-right text-[10px] font-semibold tracking-[0.08em] text-text-muted uppercase">
-                  Status
+                  {t("statusHeader")}
                 </th>
               </tr>
             </thead>
             <tbody>
               {pageJobs.map((job) => {
-                const created = formatRelative(job.createdAt);
-                const completed = formatRelative(job.completedAt);
+                const created = relative(job.createdAt);
+                const completed = relative(job.completedAt);
                 return (
                   <tr
                     key={job.id}
@@ -411,7 +419,7 @@ function JobsContent() {
               {!loading && pageJobs.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-text-muted">
-                    {stats?.recentJobs.length ? "No jobs found" : "No jobs yet."}
+                    {stats?.recentJobs.length ? t("noMatches") : t("empty")}
                   </td>
                 </tr>
               )}
@@ -420,7 +428,7 @@ function JobsContent() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2 border-t border-border bg-surface px-4 py-2 text-xs text-text-muted">
-          <span>Rows</span>
+          <span>{tCommon("rows")}</span>
           <select
             value={rowsPerPage}
             onChange={(e) => setRowsPerPage(Number(e.target.value))}
@@ -433,15 +441,15 @@ function JobsContent() {
           <div className="flex-1" />
           <span className="whitespace-nowrap">
             {filteredJobs.length === 0
-              ? "0 of 0"
-              : `${pageStart + 1}–${Math.min(pageStart + rowsPerPage, filteredJobs.length)} of ${filteredJobs.length}`}
+              ? tCommon("range", { from: 0, to: 0, total: 0 })
+              : tCommon("range", { from: pageStart + 1, to: Math.min(pageStart + rowsPerPage, filteredJobs.length), total: filteredJobs.length })}
           </span>
           <button
             type="button"
             className="flex size-[26px] items-center justify-center rounded-md border border-border bg-surface-raised text-text-muted transition-colors hover:border-[#4a5560] hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-30"
             disabled={currentPage <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            aria-label="Previous page"
+            aria-label={tCommon("previousPage")}
           >
             <ChevronLeft className="size-3" />
           </button>
@@ -450,7 +458,7 @@ function JobsContent() {
             className="flex size-[26px] items-center justify-center rounded-md border border-border bg-surface-raised text-text-muted transition-colors hover:border-[#4a5560] hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-30"
             disabled={currentPage >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            aria-label="Next page"
+            aria-label={tCommon("nextPage")}
           >
             <ChevronRight className="size-3" />
           </button>

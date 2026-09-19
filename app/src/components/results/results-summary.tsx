@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { linkVariants } from "@/components/ui/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -70,6 +71,7 @@ export function ResultsSummary({
   onClearFilter,
   className,
 }: ResultsSummaryProps) {
+  const t = useTranslations("Results");
   const plotMode = Boolean(selectedRow);
   const option = getCommodity(commodity);
   const { riskField } = option;
@@ -114,7 +116,7 @@ export function ResultsSummary({
         meta={
           !plotMode ? (
             <span>
-              {filteredCount} plot{filteredCount !== 1 ? "s" : ""}
+              {t('plotCount', { count: filteredCount })}
             </span>
           ) : undefined
         }
@@ -149,7 +151,7 @@ export function ResultsSummary({
           <div className="col-span-3 flex items-center justify-between px-[18px] py-3">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-text-primary">
-                Plot {String(selectedRow?.plotId ?? "—")}
+                {t('plot', { id: String(selectedRow?.plotId ?? "—") })}
               </span>
               {selectedBadge && selectedBadge.level !== "info" ? (
                 <div className="flex items-center gap-1.5">
@@ -159,11 +161,11 @@ export function ResultsSummary({
                   </span>
                 </div>
               ) : (
-                <span className="text-sm text-text-muted">No risk data</span>
+                <span className="text-sm text-text-muted">{t('noRiskData')}</span>
               )}
             </div>
             <button type="button" onClick={onClearSelection} className={cn(linkBtn)}>
-              Clear selection
+              {t('clearSelection')}
             </button>
           </div>
         ) : (
@@ -197,7 +199,7 @@ export function ResultsSummary({
       <ScrollArea className="min-h-0 flex-1">
         <div className="mx-auto flex w-full max-w-[820px] flex-col gap-8 px-5 py-6">
           <IndicatorSection
-            title="Risk indicators"
+            title={t('riskIndicators')}
             items={riskIndicators}
             plotMode={plotMode}
             total={rows.length}
@@ -207,7 +209,7 @@ export function ResultsSummary({
 
           {otherIndicators.length > 0 && (
             <IndicatorSection
-              title="Other indicators"
+              title={t('otherIndicators')}
               items={otherIndicators}
               plotMode={plotMode}
               total={rows.length}
@@ -218,11 +220,11 @@ export function ResultsSummary({
 
           <section>
             <h2 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
-              Risk path
+              {t('riskPath')}
             </h2>
             {plotMode && (
               <p className="mb-2 text-xs text-text-muted">
-                Path for plot {String(selectedRow?.plotId ?? "—")}
+                {t('pathForPlot', { id: String(selectedRow?.plotId ?? "—") })}
               </p>
             )}
             <RiskFlowchart steps={treeSteps} showCounts={!plotMode} />

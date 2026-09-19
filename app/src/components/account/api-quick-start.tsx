@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ChevronDown, Code2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function ApiQuickStart({ apiBase, className }: { apiBase: string; className?: string }) {
+  const t = useTranslations('ApiQuickStart');
+  const tCommon = useTranslations('Common');
   const [open, setOpen] = useState(false);
 
   const samples = {
@@ -41,25 +44,25 @@ export function ApiQuickStart({ apiBase, className }: { apiBase: string; classNa
         <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3.5 text-text-muted hover:text-text-primary transition-colors cursor-pointer">
           <span className="flex items-center gap-2 text-sm font-medium">
             <Code2 className="size-3.5" />
-            Quick start
+            {t('title')}
           </span>
           <ChevronDown className={cn('size-3.5 transition-transform', open && 'rotate-180')} />
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="border-t border-border p-4 flex flex-col gap-4">
             <div>
-              <Label className="mb-2 block">1 — Authenticate every request with this header</Label>
+              <Label className="mb-2 block">{t('step1')}</Label>
               <div className="flex items-center gap-2">
                 <code className="flex-1 rounded-lg border border-border bg-bg px-3 py-2 font-mono text-xs text-foreground">
                   x-api-key: <span className="text-muted-foreground">YOUR_API_KEY</span>
                 </code>
                 <Button type="button" variant="outline" onClick={() => copy('x-api-key: YOUR_API_KEY')}>
-                  Copy
+                  {tCommon('copy')}
                 </Button>
               </div>
             </div>
             <div>
-              <Label className="mb-2 block">2 — Submit your data</Label>
+              <Label className="mb-2 block">{t('step2')}</Label>
               <Tabs defaultValue="geojson">
                 <TabsList>
                   <TabsTrigger value="geojson">GeoJSON</TabsTrigger>
@@ -68,7 +71,7 @@ export function ApiQuickStart({ apiBase, className }: { apiBase: string; classNa
                 </TabsList>
                 <TabsContent value="geojson" className="relative mt-2">
                   <Button type="button" variant="outline" className="absolute top-2 right-2" onClick={() => copy(samples.geojson)}>
-                    Copy
+                    {tCommon('copy')}
                   </Button>
                   <pre className="overflow-x-auto rounded-lg border border-border bg-bg p-3 pr-16 font-mono text-xs text-muted-foreground leading-relaxed whitespace-pre">
                     {samples.geojson}
@@ -76,7 +79,7 @@ export function ApiQuickStart({ apiBase, className }: { apiBase: string; classNa
                 </TabsContent>
                 <TabsContent value="wkt" className="relative mt-2">
                   <Button type="button" variant="outline" className="absolute top-2 right-2" onClick={() => copy(samples.wkt)}>
-                    Copy
+                    {tCommon('copy')}
                   </Button>
                   <pre className="overflow-x-auto rounded-lg border border-border bg-bg p-3 pr-16 font-mono text-xs text-muted-foreground leading-relaxed whitespace-pre">
                     {samples.wkt}
@@ -84,7 +87,7 @@ export function ApiQuickStart({ apiBase, className }: { apiBase: string; classNa
                 </TabsContent>
                 <TabsContent value="geoids" className="relative mt-2">
                   <Button type="button" variant="outline" className="absolute top-2 right-2" onClick={() => copy(samples.geoids)}>
-                    Copy
+                    {tCommon('copy')}
                   </Button>
                   <pre className="overflow-x-auto rounded-lg border border-border bg-bg p-3 pr-16 font-mono text-xs text-muted-foreground leading-relaxed whitespace-pre">
                     {samples.geoids}
@@ -94,7 +97,7 @@ export function ApiQuickStart({ apiBase, className }: { apiBase: string; classNa
             </div>
             <p className="border-t border-border pt-3 text-sm">
               <Link href={`${apiBase || '/api'}/docs`} target="_blank">
-                Full API documentation →
+                {t('fullDocs')}
               </Link>
             </p>
           </div>

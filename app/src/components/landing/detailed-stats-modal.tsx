@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useFormatter, useTranslations } from 'next-intl';
 import { Monitor, Terminal } from 'lucide-react';
 import { fetchDetailedPublicStats } from '@/lib/analysis/actions';
 import type { DetailedPublicStats } from '@/lib/db/analysis-jobs-service';
@@ -8,16 +9,14 @@ import { CloseButton } from '@/components/ui/button';
 import { Link } from '@/components/ui/link';
 import { cn } from '@/lib/utils';
 
-function formatCount(n: number): string {
-  return n.toLocaleString();
-}
-
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
 export function DetailedStatsModal({ open, onClose }: Props) {
+  const t = useTranslations('Stats');
+  const format = useFormatter();
   const [stats, setStats] = useState<DetailedPublicStats | null>(null);
 
   useEffect(() => {
@@ -39,7 +38,7 @@ export function DetailedStatsModal({ open, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/70 p-4">
       <div className="flex max-h-full w-full max-w-[480px] flex-col rounded-sm border border-border bg-surface shadow-xl">
         <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-3">
-          <h2 className="text-sm font-semibold text-text-primary">Platform stats</h2>
+          <h2 className="text-sm font-semibold text-text-primary">{t('title')}</h2>
           <div className="flex-1" />
           <CloseButton onClick={onClose} />
         </div>
@@ -56,62 +55,60 @@ export function DetailedStatsModal({ open, onClose }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-sm border border-border bg-bg p-4">
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
-                    Active API keys
+                    {t('activeApiKeys')}
                   </p>
                   <p className="text-xl font-semibold tabular-nums tracking-tight text-text-primary">
-                    {formatCount(stats.activeApiKeys)}
+                    {format.number(stats.activeApiKeys)}
                   </p>
                 </div>
 
                 <div className="rounded-sm border border-border bg-bg p-4">
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
-                    Total plots analyzed
+                    {t('totalFeatures')}
                   </p>
                   <p className="text-xl font-semibold tabular-nums tracking-tight text-text-primary">
-                    {formatCount(stats.uiFeatures + stats.apiFeatures)}
+                    {format.number(stats.uiFeatures + stats.apiFeatures)}
                   </p>
                 </div>
               </div>
 
               <div>
                 <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
-                  Plots by source
+                  {t('bySource')}
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 rounded-sm border border-border bg-bg p-3">
                     <Monitor className="size-4 shrink-0 text-text-muted" />
-                    <span className="text-xs text-text-primary">Web app</span>
+                    <span className="text-xs text-text-primary">{t('webApp')}</span>
                     <div className="flex-1" />
                     <span className="text-sm font-semibold tabular-nums text-text-primary">
-                      {formatCount(stats.uiFeatures)}
+                      {format.number(stats.uiFeatures)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 rounded-sm border border-border bg-bg p-3">
                     <Terminal className="size-4 shrink-0 text-text-muted" />
-                    <span className="text-xs text-text-primary">API</span>
+                    <span className="text-xs text-text-primary">{t('api')}</span>
                     <div className="flex-1" />
                     <span className="text-sm font-semibold tabular-nums text-text-primary">
-                      {formatCount(stats.apiFeatures)}
+                      {format.number(stats.apiFeatures)}
                     </span>
                   </div>
                 </div>
               </div>
 
               <p className="text-[12px] leading-relaxed text-text-dim">
-                Need programmatic access?{' '}
-                <Link href="/register" variant="subtle">Register for free</Link>
-                {' '}to get an API key.
+                {t.rich('programmaticAccess', { link: (chunks) => <Link href="/register" variant="subtle">{chunks}</Link> })}
               </p>
 
               <div>
                 <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
-                  Last 3 months
+                  {t('lastThreeMonths')}
                 </p>
                 <div className="space-y-2">
                   {stats.monthly.map((m) => (
                     <div key={m.month} className="flex items-center gap-3">
                       <span className="w-[72px] shrink-0 text-[11px] tabular-nums text-text-muted">
-                        {m.month}
+                        {format.dateTime(new Date(m.month), { month: 'short', year: 'numeric', timeZone: 'UTC' })}
                       </span>
                       <div className="h-5 flex-1 rounded-sm bg-bg">
                         <div
@@ -123,7 +120,7 @@ export function DetailedStatsModal({ open, onClose }: Props) {
                         />
                       </div>
                       <span className="w-16 shrink-0 text-right text-[11px] font-semibold tabular-nums text-text-primary">
-                        {formatCount(m.count)}
+                        {format.number(m.count)}
                       </span>
                     </div>
                   ))}

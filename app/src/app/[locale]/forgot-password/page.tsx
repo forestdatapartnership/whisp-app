@@ -1,18 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { forgotPassword } from "@/lib/auth/actions";
-import { formatSystemMessage } from "@/types/system-codes";
+import { useSystemMessage } from "@/lib/shared/use-system-message";
 import { Alert } from "@/components/ui/alert";
 import { CenteredShell } from "@/components/layout/page-section";
 import { cardLayout } from "@/components/ui/styles";
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations("ForgotPassword");
+  const systemMessage = useSystemMessage();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +27,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     const result = await forgotPassword(email);
     if (result.ok) setSuccess(true);
-    else setError(formatSystemMessage(result.code, result.args));
+    else setError(systemMessage(result.code, result.args));
     setIsLoading(false);
   };
 
@@ -32,26 +35,24 @@ export default function ForgotPasswordPage() {
     <CenteredShell>
     <Card className={cardLayout.sm}>
       <CardHeader>
-        <CardTitle>Reset password</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
         <CardDescription>
-          {success
-            ? "Check your inbox for a reset link."
-            : "Enter your email and we'll send you a reset link."}
+          {success ? t("sentDescription") : t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {success ? (
           <div className="flex flex-col gap-4">
-            <Alert type="success" message="If that address is registered you'll receive an email shortly. Check your spam folder if it doesn't arrive." />
+            <Alert type="success" message={t("sentHint")} />
             <Button nativeButton={false} render={<Link href="/login" />} className="w-full">
-              Back to sign in
+              {t("backToSignIn")}
             </Button>
           </div>
         ) : (
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             {error && <Alert type="error" message={error} onClose={() => setError("")} />}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -63,10 +64,10 @@ export default function ForgotPasswordPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Sending…" : "Send reset link"}
+              {isLoading ? t("submitting") : t("submit")}
             </Button>
             <Link href="/login" variant="subtle" className="text-center text-xs">
-              Back to sign in
+              {t("backToSignIn")}
             </Link>
           </form>
         )}

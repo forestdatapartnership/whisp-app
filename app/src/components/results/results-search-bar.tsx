@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ListFilter } from "lucide-react";
@@ -25,6 +26,7 @@ export function ResultsSearchBar({
   onClearFilter,
   className,
 }: ResultsSearchBarProps) {
+  const t = useTranslations("Results");
   return (
     <div
       className={cn(
@@ -35,7 +37,7 @@ export function ResultsSearchBar({
       <ResultsSearchInput
         value={searchValue}
         onChange={onSearchChange}
-        placeholder="Search plot ID, external ID, country…"
+        placeholder={t('searchPlaceholder')}
       />
       {filterLabel && onClearFilter && (
         <ResultsFilterChip label={filterLabel} onClear={onClearFilter} />
@@ -48,7 +50,7 @@ export function ResultsSearchBar({
         aria-pressed={fieldPickerOpen}
       >
         <ListFilter />
-        Select fields
+        {t('selectFields')}
       </Button>
     </div>
   );

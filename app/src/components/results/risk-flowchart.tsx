@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -57,6 +58,7 @@ function Step({
   const rightOff = active && !right.selected;
   const downOff = active && !down.selected;
 
+  const t = useTranslations("Results");
   const totalAtStep = step.yesCount + step.noCount;
 
   return (
@@ -78,9 +80,9 @@ function Step({
               <Info className="size-3 text-text-dim hover:text-text-muted" />
             </TooltipTrigger>
             <TooltipContent side="bottom" align="start">
-              Tests: {step.predicateDescription}
+              {t('tests', { description: step.predicateDescription })}
               <br />
-              {totalAtStep} plot{totalAtStep !== 1 ? "s" : ""} reached this step
+              {t('reachedStep', { count: totalAtStep })}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -97,7 +99,7 @@ function Step({
             <Outcome outcome={right.outcome} active={rightOn} />
             {showCounts && (
               <span className="tabular-nums text-text-muted">
-                ({right.count} plot{right.count !== 1 ? "s" : ""})
+                ({t('plotCount', { count: right.count })})
               </span>
             )}
           </div>
@@ -130,7 +132,7 @@ function Step({
             )}
             {showCounts && (
               <span className="tabular-nums text-text-muted">
-                ({down.count} plot{down.count !== 1 ? "s" : ""})
+                ({t('plotCount', { count: down.count })})
               </span>
             )}
           </span>
@@ -147,8 +149,9 @@ export function RiskFlowchart({
   steps: TreeStepView[];
   showCounts: boolean;
 }) {
+  const t = useTranslations("Results");
   if (!steps.length) {
-    return <p className="text-sm text-text-muted">No risk path for this commodity.</p>;
+    return <p className="text-sm text-text-muted">{t('noRiskPath')}</p>;
   }
   return (
     <div className="flex flex-col">

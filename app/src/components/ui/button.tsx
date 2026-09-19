@@ -1,6 +1,7 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 import { controlFocus, controlHeight, controlSize } from "@/components/ui/styles"
@@ -66,14 +67,15 @@ function Button({
 
 function CloseButton({
   className,
-  "aria-label": ariaLabel = "Close",
+  "aria-label": ariaLabel,
   ...props
 }: ButtonPrimitive.Props) {
+  const t = useTranslations("Common")
   return (
     <Button
       variant="ghost"
       size="icon-sm"
-      aria-label={ariaLabel}
+      aria-label={ariaLabel ?? t("close")}
       className={className}
       {...props}
     >

@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { useAuth } from '@/lib/auth/auth-context';
 import { updateUserProfile } from '@/lib/auth/user-actions';
-import { formatSystemMessage } from '@/types/system-codes';
+import { useSystemMessage } from '@/lib/shared/use-system-message';
 
 export function useProfile() {
   const { user, refreshUser } = useAuth();
+  const systemMessage = useSystemMessage();
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [organization, setOrganization] = useState('');
@@ -62,7 +64,7 @@ export function useProfile() {
       await refreshUser();
       setSaved(true);
     } else {
-      setError(formatSystemMessage(result.code, result.args));
+      setError(systemMessage(result.code, result.args));
     }
     setBusy(false);
   };
@@ -107,16 +109,17 @@ export function ProfileSaveButton({
   disabled?: boolean;
   saved?: boolean;
 }) {
+  const t = useTranslations('Profile');
   return (
     <div className="flex items-center gap-3">
       {saved && (
         <span className="flex items-center gap-1.5 text-sm font-medium text-accent-green">
           <Check className="size-3.5" aria-hidden />
-          Saved
+          {t('saved')}
         </span>
       )}
       <Button type="button" onClick={onSave} disabled={busy || disabled}>
-        Save changes
+        {t('save')}
       </Button>
     </div>
   );

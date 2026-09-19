@@ -1,4 +1,4 @@
-import { formatSystemMessage, SystemCode } from '@/types/system-codes';
+import { SystemCode } from '@/types/system-codes';
 
 export type PasswordErrors = {
   current?: string;
@@ -7,12 +7,8 @@ export type PasswordErrors = {
   general?: string;
 };
 
-export function mapPasswordApiError(code: SystemCode): PasswordErrors {
-  if (code === SystemCode.USER_INVALID_PASSWORD) {
-    return { current: formatSystemMessage(code) };
-  }
-  if (code === SystemCode.USER_WEAK_PASSWORD) {
-    return { new: formatSystemMessage(code) };
-  }
-  return { general: formatSystemMessage(code) };
+export function passwordErrorField(code: SystemCode): keyof PasswordErrors {
+  if (code === SystemCode.USER_INVALID_PASSWORD) return 'current';
+  if (code === SystemCode.USER_WEAK_PASSWORD) return 'new';
+  return 'general';
 }

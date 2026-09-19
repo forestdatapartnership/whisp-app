@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -13,7 +14,7 @@ import {
 import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Map, Table2 } from "lucide-react";
 
 interface ResultsToolbarProps {
-  title?: string;
+  title: string;
   plotCount?: number;
   mapVisible?: boolean;
   onToggleMap?: (visible: boolean) => void;
@@ -30,7 +31,7 @@ interface ResultsToolbarProps {
 }
 
 export function ResultsToolbar({
-  title = "Results",
+  title,
   plotCount = 0,
   mapVisible = false,
   onToggleMap,
@@ -45,6 +46,7 @@ export function ResultsToolbar({
   whispMapDisabled = false,
   className,
 }: ResultsToolbarProps) {
+  const t = useTranslations("Results");
   const [exportOpen, setExportOpen] = useState(false);
 
   return (
@@ -59,7 +61,7 @@ export function ResultsToolbar({
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
-        {plotCount} plot{plotCount !== 1 ? "s" : ""}
+        {t('plotCount', { count: plotCount })}
       </span>
       {onOpenSummary && onCloseSummary && (
         <>
@@ -69,7 +71,7 @@ export function ResultsToolbar({
             onClick={onCloseSummary}
           >
             <Table2 />
-            Table
+            {t('table')}
           </Button>
           <Button
             size="sm"
@@ -77,19 +79,19 @@ export function ResultsToolbar({
             onClick={onOpenSummary}
           >
             <ChartColumn />
-            Risk overview
+            {t('riskOverview')}
           </Button>
         </>
       )}
       <div className="flex-1" />
       <Button variant="outline" size="sm" onClick={onBack}>
         <ArrowLeft />
-        New analysis
+        {t('newAnalysis')}
       </Button>
       <DropdownMenu open={exportOpen} onOpenChange={setExportOpen}>
         <DropdownMenuTrigger render={<Button variant="secondary" size="sm" className="min-w-[90px]" />}>
           <Download />
-          Download
+          {t('download')}
           <ChevronDown />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-[160px] border-border bg-surface">
@@ -121,7 +123,7 @@ export function ResultsToolbar({
             className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
           >
             <FileText className="h-3 w-3" />
-            HTML Report
+            {t('htmlReport')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -132,7 +134,7 @@ export function ResultsToolbar({
         disabled={whispMapDisabled}
       >
         <Map />
-        Open in Whisp Map
+        {t('openInWhispMap')}
       </Button>
       <div className="flex items-center gap-[7px] text-xs text-text-muted">
         <Switch
@@ -140,7 +142,7 @@ export function ResultsToolbar({
           onCheckedChange={onToggleMap}
           size="sm"
         />
-        Map
+        {t('map')}
       </div>
     </div>
   );

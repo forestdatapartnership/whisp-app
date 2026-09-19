@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -137,6 +138,8 @@ function compareResultValues(
 }
 
 export default function ResultsPage() {
+  const t = useTranslations("Results");
+  const tCommon = useTranslations("Common");
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { config } = useConfig();
@@ -466,7 +469,7 @@ export default function ResultsPage() {
   if (isError) {
     return (
       <AnalysisError
-        message={response?.message ?? "An error occurred."}
+        message={response?.message ?? t('genericError')}
         cause={response?.cause}
         onBack={() => router.back()}
       />
@@ -477,9 +480,9 @@ export default function ResultsPage() {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-text-muted">
-          <p className="text-sm">No GeoJSON results loaded. Open a matching export from the home page.</p>
+          <p className="text-sm">{t('noLocalResults')}</p>
           <Button variant="outline" size="sm" onClick={leaveToHome}>
-            <ArrowLeft className="size-3.5" /> Go Back
+            <ArrowLeft className="size-3.5" /> {tCommon('back')}
           </Button>
         </div>
       </div>
@@ -490,38 +493,42 @@ export default function ResultsPage() {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-text-muted">
-          <p className="text-sm">No results to display.</p>
+          <p className="text-sm">{t('noResults')}</p>
           <Button variant="outline" size="sm" onClick={leaveToHome}>
-            <ArrowLeft className="size-3.5" /> Go Back
+            <ArrowLeft className="size-3.5" /> {tCommon('back')}
           </Button>
         </div>
       </div>
     );
   }
 
+  const toolbar = (
+    <ResultsToolbar
+      title={isLocal ? t('localTitle') : t('title')}
+      plotCount={sortedData.length}
+      mapVisible={mapVisible}
+      onToggleMap={setMapVisible}
+      summaryOpen={summaryOpen}
+      onOpenSummary={handleOpenSummary}
+      onCloseSummary={() => setSummaryOpen(false)}
+      onBack={leaveToHome}
+      onExportCsv={handleExportCsv}
+      onExportGeoJson={handleExportGeoJson}
+      onExportHtml={handleExportHtml}
+      onOpenWhispMap={handleOpenWhispMap}
+      whispMapDisabled={isLocal || !config?.api.url}
+    />
+  );
+
   if (filteredData.length === 0) {
     return (
       <>
-        <ResultsToolbar
-          title={isLocal ? "GeoJSON Results" : "Results"}
-          plotCount={sortedData.length}
-          mapVisible={mapVisible}
-          onToggleMap={setMapVisible}
-          summaryOpen={summaryOpen}
-          onOpenSummary={handleOpenSummary}
-          onCloseSummary={() => setSummaryOpen(false)}
-          onBack={leaveToHome}
-          onExportCsv={handleExportCsv}
-          onExportGeoJson={handleExportGeoJson}
-          onExportHtml={handleExportHtml}
-          onOpenWhispMap={handleOpenWhispMap}
-          whispMapDisabled={isLocal || !config?.api.url}
-        />
+        {toolbar}
         <div className="flex flex-1 items-center justify-center">
           <div className="flex flex-col items-center gap-3 text-text-muted">
-            <p className="text-sm">No plots match your current filters.</p>
+            <p className="text-sm">{t('noFilterMatches')}</p>
             <Button variant="outline" size="sm" onClick={handleClearFilter}>
-              Clear filters
+              {t('clearFilters')}
             </Button>
           </div>
         </div>
@@ -540,7 +547,7 @@ export default function ResultsPage() {
   return (
     <div className="-mx-6 -my-8 flex flex-1 flex-col self-stretch overflow-hidden">
       <ResultsToolbar
-        title={isLocal ? "GeoJSON Results" : "Results"}
+        title={isLocal ? t('localTitle') : t('title')}
         plotCount={sortedData.length}
         mapVisible={mapVisible}
         onToggleMap={setMapVisible}

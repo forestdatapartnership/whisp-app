@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { storeSyncResult } from '@/lib/submission/sync-result'
 import type { AnalysisOptionsValue } from '@/components/submission/analysis-options'
@@ -30,6 +31,7 @@ export function useSubmitAnalysis({
   featureCount: number
   asyncThreshold?: number
 }) {
+  const t = useTranslations('Submission')
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -67,7 +69,7 @@ export function useSubmitAnalysis({
         const data = (await res.json()) as ApiEnvelope
         if (!res.ok) {
           const parts = [data.message, data.cause].filter(Boolean)
-          setError(parts.length > 0 ? parts.join('\n') : `Error ${res.status}`)
+          setError(parts.length > 0 ? parts.join('\n') : t('httpError', { status: res.status }))
           return
         }
         let token: string | undefined
@@ -79,12 +81,12 @@ export function useSubmitAnalysis({
         }
         if (token) router.push(`/results/${token}`)
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Submission failed')
+        setError(e instanceof Error ? e.message : t('submitFailed'))
       } finally {
         setIsLoading(false)
       }
     },
-    [analysisOptions, featureCount, asyncThreshold, router]
+    [analysisOptions, featureCount, asyncThreshold, router, t]
   )
 
   return { submit, isLoading, error, setError }

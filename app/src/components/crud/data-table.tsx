@@ -15,7 +15,7 @@ import { Alert } from "@/components/ui/alert";
 import { Pencil, Trash2, Plus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { controlRounded } from "@/components/ui/styles";
-import { formatSystemMessage } from "@/types/system-codes";
+import { useSystemMessage } from "@/lib/shared/use-system-message";
 import type { ActionResult } from "@/types/action-result";
 
 export interface ColumnDef<T> {
@@ -59,6 +59,7 @@ export function CrudDataTable<T extends { id: string }>({
   const [search, setSearch] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const systemMessage = useSystemMessage();
 
   const filtered = useMemo(() => {
     if (!search.trim()) return data;
@@ -77,7 +78,7 @@ export function CrudDataTable<T extends { id: string }>({
     setError(null);
     const result = await deleteAction(id);
     if (!result.ok) {
-      setError(formatSystemMessage(result.code, result.args));
+      setError(systemMessage(result.code, result.args));
     } else {
       onAfterDelete?.();
     }

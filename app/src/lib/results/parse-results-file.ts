@@ -1,8 +1,17 @@
 import type { Feature, FeatureCollection } from "geojson";
 
+type ResultsFileErrorKey =
+  | "readError"
+  | "empty"
+  | "invalidGeoJson"
+  | "expectedFeatureCollection"
+  | "noFeatures"
+  | "missingGeometry"
+  | "unsupportedResultsFormat";
+
 type ParseResultsResult =
   | { featureCollection: FeatureCollection; whispVersion: string | null }
-  | { error: string };
+  | { error: ResultsFileErrorKey };
 
 export function versionsMatch(
   exported: string | null | undefined,
@@ -43,7 +52,7 @@ function whispVersionFrom(fc: FeatureCollection): string | null {
 
 function asFeatureCollection(data: unknown): ParseResultsResult {
   if (!data || typeof data !== "object") {
-    return { error: "Invalid GeoJSON format." };
+    return { error: "invalidGeoJson" };
   }
 
   const obj = data as Record<string, unknown>;
@@ -54,14 +63,14 @@ function asFeatureCollection(data: unknown): ParseResultsResult {
   } else if (obj.type === "Feature") {
     featureCollection = { type: "FeatureCollection", features: [data as Feature] };
   } else {
-    return { error: "Expected a GeoJSON FeatureCollection or Feature." };
+    return { error: "expectedFeatureCollection" };
   }
 
   if (!featureCollection.features.length) {
-    return { error: "GeoJSON has no features." };
+    return { error: "noFeatures" };
   }
   if (featureCollection.features.some((f) => f.geometry == null)) {
-    return { error: "All features must include geometry." };
+    return { error: "missingGeometry" };
   }
 
   return {
@@ -74,7 +83,7 @@ export function parseResultsFile(file: File): Promise<ParseResultsResult> {
   return new Promise((resolve) => {
     const name = file.name.toLowerCase();
     if (!name.endsWith(".geojson") && !name.endsWith(".json")) {
-      resolve({ error: "Unsupported file format. Use a WHISP GeoJSON export." });
+      resolve({ error: "unsupportedResultsFormat" });
       return;
     }
 
@@ -82,20 +91,20 @@ export function parseResultsFile(file: File): Promise<ParseResultsResult> {
     reader.onload = (e) => {
       const text = e.target?.result;
       if (typeof text !== "string") {
-        resolve({ error: "Error reading the file." });
+        resolve({ error: "readError" });
         return;
       }
       if (!text.trim()) {
-        resolve({ error: "File is empty." });
+        resolve({ error: "empty" });
         return;
       }
       try {
         resolve(asFeatureCollection(JSON.parse(text)));
       } catch {
-        resolve({ error: "Invalid GeoJSON format." });
+        resolve({ error: "invalidGeoJson" });
       }
     };
-    reader.onerror = () => resolve({ error: "Error reading the file." });
+    reader.onerror = () => resolve({ error: "readError" });
     reader.readAsText(file);
   });
 }

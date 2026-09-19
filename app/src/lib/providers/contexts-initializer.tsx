@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useConfig } from '@/lib/config/config-context';
 import { Alert } from '@/components/ui/alert';
@@ -30,6 +31,8 @@ interface ContextsInitializerProps {
 }
 
 export function ContextsInitializer({ children }: ContextsInitializerProps) {
+  const t = useTranslations('App');
+  const tCommon = useTranslations('Common');
   const { isLoading: authLoading, error: authError } = useAuth();
   const { isLoading: configLoading } = useConfig();
 
@@ -40,7 +43,7 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
 
   const errors: string[] = [
     authError,
-    timedOut ? 'Initialization timed out. Please refresh the page.' : null,
+    timedOut ? t('timeout') : null,
   ].filter((e): e is string => e !== null);
 
   const hasError = errors.length > 0;
@@ -79,7 +82,7 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
         <div className="text-center">
           <Spinner className="mx-auto h-10 w-10 text-accent-green" />
-          <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
+          <p className="mt-4 text-sm text-muted-foreground">{tCommon('loading')}</p>
         </div>
       </div>
     );
@@ -90,8 +93,8 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background p-4">
         <Card className={cardLayout.sm}>
           <CardHeader>
-            <CardTitle>Something went wrong</CardTitle>
-            <CardDescription>We couldn&apos;t load the application.</CardDescription>
+            <CardTitle>{t('errorTitle')}</CardTitle>
+            <CardDescription>{t('errorDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
@@ -100,7 +103,7 @@ export function ContextsInitializer({ children }: ContextsInitializerProps) {
               ))}
             </div>
             <Button type="button" className="w-full" onClick={() => window.location.reload()}>
-              Refresh page
+              {t('refresh')}
             </Button>
           </CardContent>
         </Card>

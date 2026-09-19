@@ -1,19 +1,22 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { FeatureCollection } from "geojson";
 
+function MapLoading() {
+  const t = useTranslations("Results");
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-bg">
+      <span className="text-[11px] tracking-[0.04em] text-text-dim">{t("loadingMap")}</span>
+    </div>
+  );
+}
+
 const PlotMapView = dynamic(
   () => import("@/components/plots/plot-map-view").then((m) => m.PlotMapView),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-bg">
-        <span className="text-[11px] tracking-[0.04em] text-text-dim">Loading map…</span>
-      </div>
-    ),
-  }
+  { ssr: false, loading: MapLoading }
 );
 
 interface MapPaneProps {
@@ -33,6 +36,7 @@ export function MapPane({
   onFeatureClick,
   className,
 }: MapPaneProps) {
+  const t = useTranslations("Results");
   if (!visible) return null;
 
   return (
@@ -52,7 +56,7 @@ export function MapPane({
           />
         ) : (
           <div className="relative flex flex-1 items-center justify-center overflow-hidden">
-            <span className="text-[11px] tracking-[0.04em] text-text-dim">No map data</span>
+            <span className="text-[11px] tracking-[0.04em] text-text-dim">{t("noMapData")}</span>
           </div>
         )}
       </div>

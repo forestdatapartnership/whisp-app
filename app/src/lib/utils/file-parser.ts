@@ -1,7 +1,9 @@
+type FileErrorKey = 'readError' | 'empty' | 'invalidGeoJson' | 'unsupportedFormat' | 'noGeoIds'
+
 export type ParseResult =
   | { wkt: string; featureCount: number }
   | { json: Record<string, unknown>; featureCount: number }
-  | { error: string }
+  | { error: FileErrorKey }
 
 export function parseGeometryFile(file: File): Promise<ParseResult> {
   return new Promise((resolve) => {
@@ -9,14 +11,14 @@ export function parseGeometryFile(file: File): Promise<ParseResult> {
     reader.onload = (e) => {
       const text = e.target?.result
       if (typeof text !== 'string') {
-        resolve({ error: 'Error reading the file.' })
+        resolve({ error: 'readError' })
         return
       }
 
       if (file.name.endsWith('.txt')) {
         const trimmed = text.trim()
         if (!trimmed) {
-          resolve({ error: 'File is empty.' })
+          resolve({ error: 'empty' })
           return
         }
         const featureCount = countWktFeatures(trimmed)
@@ -30,13 +32,13 @@ export function parseGeometryFile(file: File): Promise<ParseResult> {
           }
           resolve({ json: jsonData, featureCount })
         } catch {
-          resolve({ error: 'Invalid GeoJSON format.' })
+          resolve({ error: 'invalidGeoJson' })
         }
       } else {
-        resolve({ error: 'Unsupported file format.' })
+        resolve({ error: 'unsupportedFormat' })
       }
     }
-    reader.onerror = () => resolve({ error: 'Error reading the file.' })
+    reader.onerror = () => resolve({ error: 'readError' })
     reader.readAsText(file)
   })
 }
@@ -45,17 +47,17 @@ export function parseGeoIdText(text: string): string[] {
   return text.split(/[\n,]/).map((l) => l.trim()).filter(Boolean)
 }
 
-export function parseGeoIdFile(file: File): Promise<string[] | { error: string }> {
+export function parseGeoIdFile(file: File): Promise<string[] | { error: FileErrorKey }> {
   return new Promise((resolve) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       const text = e.target?.result
-      if (typeof text !== 'string') { resolve({ error: 'Error reading the file.' }); return }
+      if (typeof text !== 'string') { resolve({ error: 'readError' }); return }
       const ids = parseGeoIdText(text)
-      if (ids.length === 0) { resolve({ error: 'File contains no valid Geo IDs.' }); return }
+      if (ids.length === 0) { resolve({ error: 'noGeoIds' }); return }
       resolve(ids)
     }
-    reader.onerror = () => resolve({ error: 'Error reading the file.' })
+    reader.onerror = () => resolve({ error: 'readError' })
     reader.readAsText(file)
   })
 }

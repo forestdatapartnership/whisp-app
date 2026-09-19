@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { FolderOpen, Trash2, AlertTriangle } from 'lucide-react'
 import { parseResultsFile, versionsMatch } from '@/lib/results/parse-results-file'
@@ -16,17 +17,9 @@ interface OpenResultsProps {
   onSubmitGeometry: (file: File) => void
 }
 
-function staleMessage(exportVersion: string, currentVersion: string) {
-  if (!exportVersion) {
-    return 'This file has no openforis-whisp version metadata, so it cannot be opened as GeoJSON results.'
-  }
-  if (!currentVersion) {
-    return 'Could not verify the app library version. Try again in a moment.'
-  }
-  return `Version mismatch. This export used openforis-whisp ${exportVersion}; the app uses ${currentVersion}. GeoJSON results from other versions cannot be opened because the results set might differ.`
-}
-
 export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
+  const t = useTranslations('Submission')
+  const tCommon = useTranslations('Common')
   const router = useRouter()
   const { config } = useConfig()
   const [file, setFile] = useState<File | null>(null)
@@ -39,6 +32,11 @@ export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
   const exportVersion = pending?.whispVersion?.trim() || ''
   const canOpen = Boolean(pending && versionsMatch(exportVersion, currentVersion))
   const needsRerun = Boolean(pending && !canOpen)
+  const staleMessage = () => {
+    if (!exportVersion) return t('noVersion')
+    if (!currentVersion) return t('unknownAppVersion')
+    return t('versionMismatch', { exportVersion, currentVersion })
+  }
 
   const reset = () => {
     setFile(null)
@@ -52,7 +50,7 @@ export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
     if ('error' in result) {
       setFile(null)
       setPending(null)
-      onError(result.error)
+      onError(t(`fileErrors.${result.error}`))
       return
     }
     setFile(next)
@@ -75,18 +73,18 @@ export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
       />
       <div className="flex items-start gap-2 text-[12px] text-text-muted leading-relaxed">
         <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-risk-medium" />
-        Use a GeoJSON you downloaded from WHISP. Only exports matching the current openforis-whisp version can be opened.
+        {t('openHint')}
       </div>
       {needsRerun && (
         <Alert
           type="warning"
-          message={`${staleMessage(exportVersion, currentVersion)} Submit it for a new analysis.`}
+          message={`${staleMessage()} ${t('resubmit')}`}
         />
       )}
       <div className="flex items-center gap-2">
         <Button type="button" variant="outline" onClick={reset}>
           <Trash2 className="size-3.5" />
-          Clear
+          {tCommon('clear')}
         </Button>
         {needsRerun ? (
           <Button
@@ -95,7 +93,7 @@ export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
             disabled={!file}
             onClick={() => file && onSubmitGeometry(file)}
           >
-            Continue to submit
+            {t('continueToSubmit')}
           </Button>
         ) : (
           <Button
@@ -105,7 +103,7 @@ export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
             onClick={handleOpen}
           >
             <FolderOpen className="size-4" />
-            Open GeoJSON Results
+            {t('openResults')}
           </Button>
         )}
       </div>

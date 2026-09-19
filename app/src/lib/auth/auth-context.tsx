@@ -3,7 +3,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { fetchUserProfile } from '@/lib/auth/user-actions';
 import { loginUser, logoutUser } from '@/lib/auth/actions';
-import { formatSystemMessage, type SystemCode } from '@/types/system-codes';
+import { useSystemMessage } from '@/lib/shared/use-system-message';
+import type { SystemCode } from '@/types/system-codes';
 import type { UserProfile } from '@/types/user';
 
 type AuthContextType = {
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const systemMessage = useSystemMessage();
 
   const loadUserProfile = useCallback(async () => {
     let result = await fetchUserProfile();
@@ -34,14 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!result.ok) {
       // Not "unauthenticated" (that's ok:true, data:null) - a real failure, so don't log the user out.
-      setError(formatSystemMessage(result.code, result.args));
+      setError(systemMessage(result.code, result.args));
       return null;
     }
 
     setError(null);
     setUser(result.data);
     return result.data;
-  }, []);
+  }, [systemMessage]);
 
   const refreshUser = useCallback(async () => {
     setIsLoading(true);
@@ -52,24 +54,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     const result = await logoutUser();
     if (!result.ok) {
-      setError(formatSystemMessage(result.code, result.args));
+      setError(systemMessage(result.code, result.args));
       return;
     }
     setUser(null);
     setError(null);
     window.location.href = '/auth/sso/logout';
-  }, []);
+  }, [systemMessage]);
 
   const login = useCallback(async (email: string, password: string) => {
     setError(null);
     const result = await loginUser(email, password);
     if (!result.ok) {
-      setError(formatSystemMessage(result.code, result.args));
+      setError(systemMessage(result.code, result.args));
       return { ok: false, code: result.code };
     }
     setUser(result.data);
     return { ok: true };
-  }, []);
+  }, [systemMessage]);
 
   const clearError = useCallback(() => setError(null), []);
 

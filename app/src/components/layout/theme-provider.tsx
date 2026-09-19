@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
@@ -31,13 +31,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
     try {
       localStorage.setItem("whisp-theme", next);
     } catch {}
-  }, [theme]);
+  };
 
   return (
     <ThemeContext value={{ theme, toggleTheme }}>

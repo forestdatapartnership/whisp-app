@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ export function ResultsPagination({
   onRowsPerPageChange,
   className,
 }: ResultsPaginationProps) {
+  const t = useTranslations("Common");
   const startRow = totalRows === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
   const endRow = Math.min(currentPage * rowsPerPage, totalRows);
 
@@ -41,7 +43,7 @@ export function ResultsPagination({
       )}
     >
       <div className="flex items-center gap-[6px]">
-        <span>Rows</span>
+        <span>{t('rows')}</span>
         <Select
           value={String(rowsPerPage)}
           onValueChange={(v) => onRowsPerPageChange(Number(v))}
@@ -57,18 +59,19 @@ export function ResultsPagination({
         </Select>
       </div>
       <span className="whitespace-nowrap">
-        Page {currentPage} of {totalPages}
+        {t('pageOf', { page: currentPage, total: totalPages })}
       </span>
       <div className="flex items-center justify-end gap-2">
         <span className="whitespace-nowrap">
-          {startRow}–{endRow} of {totalRows}
+          {t('range', { from: startRow, to: endRow, total: totalRows })}
         </span>
         <Button
           variant="outline"
           size="icon-sm"
           onClick={() => onPageChange(1)}
           disabled={currentPage <= 1}
-          title="First"
+          aria-label={t('firstPage')}
+          title={t('firstPage')}
         >
           <ChevronsLeft />
         </Button>
@@ -77,6 +80,8 @@ export function ResultsPagination({
           size="icon-sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
+          aria-label={t('previousPage')}
+          title={t('previousPage')}
         >
           <ChevronLeft />
         </Button>
@@ -85,6 +90,8 @@ export function ResultsPagination({
           size="icon-sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
+          aria-label={t('nextPage')}
+          title={t('nextPage')}
         >
           <ChevronRight />
         </Button>
@@ -93,7 +100,8 @@ export function ResultsPagination({
           size="icon-sm"
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage >= totalPages}
-          title="Last"
+          aria-label={t('lastPage')}
+          title={t('lastPage')}
         >
           <ChevronsRight />
         </Button>

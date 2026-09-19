@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { useAuth } from './auth-context';
 import { fetchUserApiKey, createUserApiKey, deleteUserApiKey } from '@/lib/auth/api-key-actions';
-import { formatSystemMessage } from '@/types/system-codes';
+import { useSystemMessage } from '@/lib/shared/use-system-message';
 
 type ApiKeyMetadata = {
   createdAt: string | null;
@@ -32,6 +32,7 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
   const [isUserKey, setIsUserKey] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const systemMessage = useSystemMessage();
 
   const clearKey = useCallback(() => {
     setApiKey(null);
@@ -51,7 +52,7 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
 
     const result = await fetchUserApiKey();
     if (!result.ok) {
-      setError(formatSystemMessage(result.code, result.args));
+      setError(systemMessage(result.code, result.args));
       clearKey();
     } else if (result.data.apiKey) {
       setApiKey(result.data.apiKey);
@@ -61,13 +62,13 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
       clearKey();
     }
     setIsLoading(false);
-  }, [isAuthenticated, clearKey]);
+  }, [isAuthenticated, clearKey, systemMessage]);
 
   const createApiKey = useCallback(async () => {
     setError(null);
     const result = await createUserApiKey();
     if (!result.ok) {
-      const message = formatSystemMessage(result.code, result.args);
+      const message = systemMessage(result.code, result.args);
       setError(message);
       return { success: false, error: message };
     }
@@ -75,18 +76,18 @@ export function ApiKeyProvider({ children }: { children: ReactNode }) {
     setIsUserKey(true);
     setApiKeyMetadata({ createdAt: result.data.createdAt, expiresAt: result.data.expiresAt });
     return { success: true, apiKey: result.data.apiKey };
-  }, []);
+  }, [systemMessage]);
 
   const deleteApiKey = useCallback(async () => {
     setError(null);
     const result = await deleteUserApiKey();
     if (!result.ok) {
-      setError(formatSystemMessage(result.code, result.args));
+      setError(systemMessage(result.code, result.args));
       return false;
     }
     clearKey();
     return true;
-  }, [clearKey]);
+  }, [clearKey, systemMessage]);
 
   const refreshApiKey = useCallback(async () => {
     await loadApiKey();

@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { AccountField, AccountInput } from '@/components/account/account-field';
 import { ConfirmModal } from '@/components/account/confirm-modal';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { useAuth } from '@/lib/auth/auth-context';
 import { deleteUserAccount } from '@/lib/auth/user-actions';
-import { formatSystemMessage, SystemCode } from '@/types/system-codes';
+import { useSystemMessage } from '@/lib/shared/use-system-message';
+import { SystemCode } from '@/types/system-codes';
 
 type DeleteErrors = {
   password?: string;
@@ -17,6 +19,8 @@ type DeleteErrors = {
 
 export function useDeleteAccount() {
   const { logout } = useAuth();
+  const t = useTranslations('DeleteAccount');
+  const systemMessage = useSystemMessage();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmText, setConfirmText] = useState('');
@@ -36,9 +40,9 @@ export function useDeleteAccount() {
 
   const confirmDelete = async () => {
     const next: DeleteErrors = {};
-    if (!password.trim()) next.password = 'Password is required';
+    if (!password.trim()) next.password = t('passwordRequired');
     if (confirmText.trim().toLowerCase() !== 'delete') {
-      next.confirm = 'Type "delete" to confirm';
+      next.confirm = t('confirmHint');
     }
     if (Object.keys(next).length > 0) {
       setErrors(next);
@@ -52,9 +56,9 @@ export function useDeleteAccount() {
       await logout();
     } else {
       if (result.code === SystemCode.USER_INVALID_PASSWORD) {
-        setErrors({ password: formatSystemMessage(result.code, result.args) });
+        setErrors({ password: systemMessage(result.code, result.args) });
       } else {
-        setErrors({ general: formatSystemMessage(result.code, result.args) });
+        setErrors({ general: systemMessage(result.code, result.args) });
       }
       setBusy(false);
     }
@@ -76,9 +80,10 @@ export function useDeleteAccount() {
 }
 
 export function DeleteAccountTrigger({ onClick }: { onClick: () => void }) {
+  const t = useTranslations('DeleteAccount');
   return (
     <Button type="button" variant="destructive" className="shrink-0" onClick={onClick}>
-      Delete account
+      {t('trigger')}
     </Button>
   );
 }
@@ -106,15 +111,16 @@ export function DeleteAccountModal({
   clearError: (key: keyof DeleteErrors) => void;
   busy: boolean;
 }) {
+  const t = useTranslations('DeleteAccount');
   const canConfirm = confirmText.trim().toLowerCase() === 'delete';
 
   return (
     <ConfirmModal
       open={open}
       onClose={onClose}
-      title="Delete your account?"
-      body="This will permanently delete your Whisp account, all saved results, and API keys."
-      confirmLabel="Delete account"
+      title={t('title')}
+      body={t('body')}
+      confirmLabel={t('trigger')}
       confirmVariant="danger"
       confirmDisabled={!canConfirm || busy}
       onConfirm={onConfirm}
@@ -127,7 +133,7 @@ export function DeleteAccountModal({
             onClose={() => clearError('general')}
           />
         )}
-        <AccountField label="Your password" error={errors.password}>
+        <AccountField label={t('passwordLabel')} error={errors.password}>
           <AccountInput
             type="password"
             value={password}
@@ -137,7 +143,7 @@ export function DeleteAccountModal({
             }}
           />
         </AccountField>
-        <AccountField label='Type "delete" to confirm' error={errors.confirm}>
+        <AccountField label={t('confirmHint')} error={errors.confirm}>
           <AccountInput
             value={confirmText}
             onChange={(e) => {

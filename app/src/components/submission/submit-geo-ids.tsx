@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Download, Trash2, Play, Loader2, AlertTriangle } from 'lucide-react'
 import { parseGeoIdText, parseGeoIdFile } from '@/lib/utils/file-parser'
 import { useSubmitAnalysis } from '@/lib/submission/useSubmitAnalysis'
@@ -22,6 +23,8 @@ export function SubmitGeoIds({
   asyncThreshold = 50,
   onError,
 }: SubmitGeoIdsProps) {
+  const t = useTranslations('Submission')
+  const tCommon = useTranslations('Common')
   const [geoIdText, setGeoIdText] = useState('')
   const [geoIdFileName, setGeoIdFileName] = useState('')
   const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS)
@@ -48,13 +51,13 @@ export function SubmitGeoIds({
   const handleGeoIdFile = async (file: File) => {
     onError('')
     if (maxFileSize && file.size > maxFileSize) {
-      onError(`File too large. Maximum is ${maxFileSize / 1024} KB.`)
+      onError(t('fileTooLarge', { maxKb: maxFileSize / 1024 }))
       setGeoIdFileName('')
       return
     }
     const result = await parseGeoIdFile(file)
     if (!Array.isArray(result)) {
-      onError(result.error)
+      onError(t(`fileErrors.${result.error}`))
       setGeoIdFileName('')
       return
     }
@@ -64,11 +67,11 @@ export function SubmitGeoIds({
 
   const handleAnalyze = () => {
     if (cleanIds.length === 0) {
-      onError('Please enter at least one Geo ID or upload a file.')
+      onError(t('geoIdsRequired'))
       return
     }
     if (geometryLimit && cleanIds.length > geometryLimit) {
-      onError(`Too many Geo IDs. Maximum allowed is ${geometryLimit}.`)
+      onError(t('tooManyGeoIds', { limit: geometryLimit }))
       return
     }
     submit({ type: 'geo-ids', geoIds: cleanIds })
@@ -88,25 +91,25 @@ export function SubmitGeoIds({
           accept=".txt"
           fileName={geoIdFileName}
           onFile={handleGeoIdFile}
-          formats=".txt file"
+          formats={t('txtFile')}
           compact
         />
 
         <div className="flex-shrink-0 w-8 flex items-center justify-center text-[11px] text-text-muted max-sm:w-full max-sm:py-1.5 max-sm:justify-center">
-          or
+          {tCommon('or')}
         </div>
 
         <Textarea
           value={geoIdText}
           onChange={(e) => { setGeoIdText(e.target.value); setGeoIdFileName('') }}
-          placeholder={"Paste Geo IDs\none per line\n\ne.g. 20230001\n     20230002"}
+          placeholder={t('geoIdsPlaceholder')}
           className="flex-1 font-mono max-sm:min-h-24"
         />
       </div>
 
       <div className="flex items-start gap-2 text-[12px] text-text-muted leading-relaxed">
         <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-risk-medium" />
-        IDs must correspond to registered plot geometries in the system.
+        {t('geoIdsHint')}
       </div>
 
       <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} />
@@ -114,11 +117,11 @@ export function SubmitGeoIds({
       <div className="flex items-center gap-2">
         <Button type="button" variant="outline" onClick={downloadExample}>
           <Download className="size-3.5" />
-          Example
+          {t('example')}
         </Button>
         <Button type="button" variant="outline" onClick={reset}>
           <Trash2 className="size-3.5" />
-          Clear
+          {tCommon('clear')}
         </Button>
         <Button
           type="button"
@@ -131,7 +134,7 @@ export function SubmitGeoIds({
           ) : (
             <Play className="size-4" />
           )}
-          {isLoading ? 'Running Analysis…' : 'Run Analysis'}
+          {isLoading ? t('running') : t('run')}
         </Button>
       </div>
     </div>

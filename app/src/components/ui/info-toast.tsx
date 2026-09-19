@@ -38,7 +38,7 @@ export function InfoToast({ storageKey, title, children }: InfoToastProps) {
           <p className="mb-1 text-[13px] font-semibold text-text-primary">{title}</p>
           <div className="text-[12px] leading-relaxed text-text-muted">{children}</div>
         </div>
-        <CloseButton onClick={dismiss} aria-label="Dismiss" className="shrink-0 self-start" />
+        <CloseButton onClick={dismiss} className="shrink-0 self-start" />
       </div>
     </div>
   );

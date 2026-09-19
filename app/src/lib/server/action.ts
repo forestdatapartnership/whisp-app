@@ -18,7 +18,7 @@ export function action<TArgs extends unknown[], T>(
     } catch (err) {
       if (isNextSentinel(err)) throw err;
       if (err instanceof SystemError) {
-        console.warn('[action]', err.systemCode, err.message, err.cause ?? '');
+        console.warn('[action]', err.systemCode, err.formatArgs ?? '', err.cause ?? '');
         return { ok: false, code: err.systemCode, args: err.formatArgs };
       }
       const e = err as Error;

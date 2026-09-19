@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { SlidersHorizontal, ChevronDown, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { controlRounded } from '@/components/ui/styles'
@@ -40,12 +41,8 @@ export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptionsValue = {
   geometryAuditTrail: false,
 }
 
-const COUNTRIES = [
-  { code: 'cm', label: 'Cameroon' },
-  { code: 'co', label: 'Colombia' },
-  { code: 'ci', label: "Côte d'Ivoire" },
-  { code: 'br', label: 'Brazil' },
-]
+const COUNTRY_CODES = ['cm', 'co', 'ci', 'br'] as const
+const UNIT_OPTIONS: UnitType[] = ['ha', 'percent']
 
 interface AnalysisOptionsProps {
   value: AnalysisOptionsValue
@@ -54,7 +51,9 @@ interface AnalysisOptionsProps {
 }
 
 export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisOptionsProps) {
+  const t = useTranslations('AnalysisOptions')
   const [open, setOpen] = useState(false)
+  const unitItems = UNIT_OPTIONS.map((unit) => ({ value: unit, label: t(`unit.${unit}`) }))
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -62,7 +61,7 @@ export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisO
         <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3.5 text-text-muted hover:text-text-primary transition-colors cursor-pointer">
           <span className="flex items-center gap-2 text-[13px] font-medium">
             <SlidersHorizontal className="size-3.5" />
-            Analysis options
+            {t('title')}
           </span>
           <ChevronDown className={cn('size-3.5 transition-transform', open && 'rotate-180')} />
         </CollapsibleTrigger>
@@ -71,20 +70,21 @@ export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisO
           <div className="border-t border-border p-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label>Additional Country Data</Label>
+                <Label>{t('countries')}</Label>
                 <MultiSelect
-                  options={COUNTRIES.map((c) => ({ value: c.code, label: c.label }))}
+                  options={COUNTRY_CODES.map((code) => ({ value: code, label: t(`country.${code}`) }))}
                   value={value.nationalCodes}
                   onChange={(codes) => onChange({ ...value, nationalCodes: codes })}
                   disabled={disabled}
-                  placeholder="No countries"
+                  placeholder={t('noCountries')}
                   className="w-full"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>Units</Label>
+                <Label>{t('units')}</Label>
                 <Select
+                  items={unitItems}
                   value={value.unitType}
                   onValueChange={(v) => onChange({ ...value, unitType: v as UnitType })}
                   disabled={disabled}
@@ -93,17 +93,18 @@ export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisO
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ha">Hectares</SelectItem>
-                    <SelectItem value="percent">Percent</SelectItem>
+                    {unitItems.map((unit) => (
+                      <SelectItem key={unit.value} value={unit.value}>{unit.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>External ID Column</Label>
+                <Label>{t('externalId')}</Label>
                 <Input
                   type="text"
-                  placeholder="Enter column name"
+                  placeholder={t('externalIdPlaceholder')}
                   value={value.externalIdColumn ?? ''}
                   onChange={(e) => onChange({ ...value, externalIdColumn: e.target.value })}
                   disabled={disabled}
@@ -112,7 +113,7 @@ export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisO
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-1.5">
-                  <Label>Geometry Audit Trail</Label>
+                  <Label>{t('auditTrail')}</Label>
                   <Tooltip>
                     <TooltipTrigger
                       render={(props) => (
@@ -122,7 +123,7 @@ export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisO
                       )}
                     />
                     <TooltipContent className="max-w-xs text-justify leading-relaxed">
-                      Geospatial data may be modified slightly during the analysis in Google Earth Engine, especially notable for very small polygons. We return the modified output for transparency in what was analysed, but if you require your input data to be returned you can select this option and it will add an extra column called &lsquo;geo_original&rsquo;.
+                      {t('auditTrailHelp')}
                     </TooltipContent>
                   </Tooltip>
                 </div>

@@ -180,7 +180,7 @@ async function _getDetailedPublicStats(): Promise<DetailedPublicStats> {
     ),
     pool.query(
       `SELECT
-         to_char(m, 'Mon YYYY') AS month,
+         to_char(m, 'YYYY-MM-DD') AS month,
          COALESCE(SUM(feature_count), 0)::int AS count
        FROM generate_series(
          date_trunc('month', now()) - interval '3 months',

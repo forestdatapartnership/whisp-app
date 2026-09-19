@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { ChevronDown } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 import { controlFocus, controlHeight, controlPadding, controlRounded } from "@/components/ui/styles"
@@ -33,12 +34,13 @@ export function MultiSelect({
   options,
   value,
   onChange,
-  placeholder = "Select...",
+  placeholder,
   className,
   align = "start",
   size = "default",
   disabled = false,
 }: MultiSelectProps) {
+  const t = useTranslations("Common")
   const toggle = (optionValue: string) => {
     onChange(
       value.includes(optionValue)
@@ -67,11 +69,11 @@ export function MultiSelect({
       >
         <span className="flex flex-1 items-center gap-1.5 overflow-hidden text-left">
           {value.length === 0 ? (
-            <span className="text-muted-foreground">{placeholder}</span>
+            <span className="text-muted-foreground">{placeholder ?? t("selectPlaceholder")}</span>
           ) : value.length <= 2 ? (
             selectedLabels.join(", ")
           ) : (
-            `${value.length} selected`
+            t("selectedCount", { count: value.length })
           )}
         </span>
         <ChevronDown className="pointer-events-none text-muted-foreground" />
@@ -83,14 +85,14 @@ export function MultiSelect({
             onClick={() => onChange([])}
             className={`inline-flex h-7 items-center ${controlRounded} border border-border bg-transparent px-2 text-xs text-text-muted transition-colors hover:border-text-muted hover:text-text-primary cursor-pointer`}
           >
-            Select None
+            {t("selectNone")}
           </button>
           <button
             type="button"
             onClick={() => onChange(options.map((o) => o.value))}
             className={`inline-flex h-7 items-center ${controlRounded} border border-border bg-transparent px-2 text-xs text-text-muted transition-colors hover:border-text-muted hover:text-text-primary cursor-pointer`}
           >
-            Select All
+            {t("selectAll")}
           </button>
         </div>
         <DropdownMenuSeparator />

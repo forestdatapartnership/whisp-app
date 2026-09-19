@@ -1,10 +1,11 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { verifyEmail } from "@/lib/auth/actions";
-import { formatSystemMessage } from "@/types/system-codes";
+import { useSystemMessage } from "@/lib/shared/use-system-message";
 import { CenteredShell } from "@/components/layout/page-section";
 import { cardLayout } from "@/components/ui/styles";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
 
 function VerifyContent() {
+  const t = useTranslations("VerifyEmail");
+  const systemMessage = useSystemMessage();
   const params = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
@@ -20,28 +23,27 @@ function VerifyContent() {
     const token = params.get("token");
     if (!token) {
       setStatus("error");
-      setMessage("Verification token is missing.");
+      setMessage(t("missingToken"));
       return;
     }
     verifyEmail(token).then((result) => {
       if (result.ok) {
         setStatus("success");
-        setMessage(result.data);
       } else {
         setStatus("error");
-        setMessage(formatSystemMessage(result.code, result.args));
+        setMessage(systemMessage(result.code, result.args));
       }
     });
-  }, [params]);
+  }, [params, t, systemMessage]);
 
   return (
     <Card className={cardLayout.sm}>
       <CardHeader>
-        <CardTitle>Email verification</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
         <CardDescription>
-          {status === "loading" && "Verifying your email address…"}
-          {status === "success" && "Your email has been verified."}
-          {status === "error" && "Verification could not be completed."}
+          {status === "loading" && t("verifying")}
+          {status === "success" && t("verified")}
+          {status === "error" && t("failed")}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
@@ -51,7 +53,7 @@ function VerifyContent() {
         {message && <p className="text-sm text-text-muted text-center">{message}</p>}
         {status !== "loading" && (
           <Button nativeButton={false} render={<Link href="/login" />} className="w-full">
-            Sign in
+            {t("signIn")}
           </Button>
         )}
       </CardContent>

@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { CrudDataTable } from "@/components/crud/data-table";
-import { formatSystemMessage } from "@/types/system-codes";
+import { useSystemMessage } from "@/lib/shared/use-system-message";
 import type { Commodity } from "@/types/models";
 
 type Mode = "list" | "edit" | "create";
@@ -25,6 +25,7 @@ type MessageType = { type: "success" | "error"; text: string } | null;
 function CommoditiesPage() {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const systemMessage = useSystemMessage();
   const [commodities, setCommodities] = useState<Commodity[]>([]);
   const [mode, setMode] = useState<Mode>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -35,8 +36,8 @@ function CommoditiesPage() {
   const load = useCallback(async () => {
     const result = await getCommodities();
     if (result.ok) setCommodities(result.data);
-    else setMessage({ type: "error", text: formatSystemMessage(result.code, result.args) });
-  }, []);
+    else setMessage({ type: "error", text: systemMessage(result.code, result.args) });
+  }, [systemMessage]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -69,11 +70,11 @@ function CommoditiesPage() {
       };
       if (mode === "create") {
         const res = await createCommodity(payload);
-        if (!res.ok) throw new Error(formatSystemMessage(res.code, res.args));
+        if (!res.ok) throw new Error(systemMessage(res.code, res.args));
         setMessage({ type: "success", text: "Commodity created" });
       } else {
         const res = await updateCommodity(editingId!, { description: payload.description });
-        if (!res.ok) throw new Error(formatSystemMessage(res.code, res.args));
+        if (!res.ok) throw new Error(systemMessage(res.code, res.args));
         setMessage({ type: "success", text: "Commodity updated" });
       }
       await load();
@@ -82,7 +83,7 @@ function CommoditiesPage() {
     } catch (e) {
       setMessage({ type: "error", text: e instanceof Error ? e.message : "Error" });
     } finally { setLoading(false); }
-  }, [mode, form, editingId, load, reset, router]);
+  }, [mode, form, editingId, load, reset, router, systemMessage]);
 
   const afterDelete = useCallback(async () => {
     await load();

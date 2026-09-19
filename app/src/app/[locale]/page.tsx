@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { InfoToast } from "@/components/ui/info-toast";
 import { Link } from "@/components/ui/link";
 import { DataSubmission } from "@/components/submission/data-submission";
@@ -6,42 +7,31 @@ import { CenteredShell } from "@/components/layout/page-section";
 import { cardLayout } from "@/components/ui/styles";
 
 export default function Home() {
+  const t = useTranslations("Home");
   return (
     <CenteredShell>
       <div className={`${cardLayout.lg} flex flex-col gap-6`}>
         <div className="text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
-            What is in that plot?
-          </h1>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-text-muted">
-            Upload plot boundaries and get an evidence-based forest risk assessment
-            across multiple public datasets — powered by Google Earth Engine.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">{t("title")}</h1>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-text-muted">{t("subtitle")}</p>
         </div>
         <DataSubmission />
         <PublicStats />
       </div>
 
-      <InfoToast storageKey="whisp-intro-dismissed" title="New here?">
-        WHISP (&quot;What is in that plot?&quot;) helps you verify supply chain commodities come
-        from land free of recent deforestation — a core EUDR requirement. Upload plot
-        boundaries and get a risk assessment across{" "}
-        <Link
-          href="https://github.com/forestdatapartnership/whisp/blob/main/layers_description.md"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          data layers &amp; indicators
-        </Link>
-        , powered by our{" "}
-        <Link
-          href="https://github.com/forestdatapartnership/whisp"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          open-source library
-        </Link>{" "}
-        via Google Earth Engine.
+      <InfoToast storageKey="whisp-intro-dismissed" title={t("introTitle")}>
+        {t.rich("intro", {
+          layers: (chunks) => (
+            <Link href="https://github.com/forestdatapartnership/whisp/blob/main/layers_description.md" target="_blank" rel="noopener noreferrer">
+              {chunks}
+            </Link>
+          ),
+          library: (chunks) => (
+            <Link href="https://github.com/forestdatapartnership/whisp" target="_blank" rel="noopener noreferrer">
+              {chunks}
+            </Link>
+          ),
+        })}
       </InfoToast>
     </CenteredShell>
   );

@@ -38,7 +38,7 @@ export function Alert({ type, message, onClose, className }: AlertProps) {
       <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
       <span className="flex-1 text-left">{message}</span>
       {onClose && (
-        <CloseButton onClick={onClose} aria-label="Dismiss" className="shrink-0" />
+        <CloseButton onClick={onClose} className="shrink-0" />
       )}
     </div>
   );

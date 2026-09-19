@@ -1,4 +1,4 @@
-import { SystemCode, formatSystemMessage } from './system-codes';
+import type { SystemCode } from './system-codes';
 
 export class SystemError extends Error {
   public readonly systemCode: SystemCode;
@@ -6,7 +6,7 @@ export class SystemError extends Error {
   public readonly cause?: string;
 
   constructor(systemCode: SystemCode, formatArgs?: (string | number)[], cause?: string) {
-    super(formatSystemMessage(systemCode, formatArgs));
+    super(systemCode);
     this.name = 'SystemError';
     this.systemCode = systemCode;
     this.formatArgs = formatArgs;

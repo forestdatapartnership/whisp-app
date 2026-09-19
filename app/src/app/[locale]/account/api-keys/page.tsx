@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { CenteredShell, PageSection } from '@/components/layout/page-section';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import {
 import { maskApiKey } from '@/lib/account/api-key-utils';
 
 export default function ApiKeysPage() {
+  const t = useTranslations('ApiKey');
   const apiKey = useAccountApiKey();
 
   const displayKey =
@@ -26,7 +28,7 @@ export default function ApiKeysPage() {
     <ProtectedRoute>
       <CenteredShell className="items-start py-10">
         <div className={`${cardLayout.lg} flex flex-col gap-6`}>
-          <PageSection title="API Key">
+          <PageSection title={t('title')}>
             <Card>
               <CardContent className="flex flex-col gap-4">
                 <ApiKeyErrorAlert message={apiKey.error ?? undefined} onClose={apiKey.clearError} />

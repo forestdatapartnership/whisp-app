@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useFormatter, useTranslations } from 'next-intl';
 import { Copy, Key, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmModal } from '@/components/account/confirm-modal';
@@ -8,9 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { useApiKey } from '@/lib/auth/api-key-context';
 import { useConfig } from '@/lib/config/config-context';
-import { formatDateTime } from '@/lib/utils/format';
 
 export function useAccountApiKey() {
+  const t = useTranslations('ApiKey');
   const apiKeyState = useApiKey();
   const { config } = useConfig();
   const [revealed, setRevealed] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export function useAccountApiKey() {
     const result = await apiKeyState.createApiKey();
     if (result.success && result.apiKey) {
       setRevealed(result.apiKey);
-      toast.success('New API key created');
+      toast.success(t('created'));
     } else if (result.error) {
       toast.error(result.error);
     }
@@ -41,7 +42,7 @@ export function useAccountApiKey() {
     const ok = await apiKeyState.deleteApiKey();
     if (ok) {
       setRevealed(null);
-      toast.success('API key revoked');
+      toast.success(t('revoked'));
     }
     setBusy(false);
   };
@@ -72,7 +73,8 @@ export function ApiKeyErrorAlert({
 }
 
 export function ApiKeyLoading() {
-  return <p className="text-sm text-muted-foreground">Loading…</p>;
+  const t = useTranslations('Common');
+  return <p className="text-sm text-muted-foreground">{t('loading')}</p>;
 }
 
 export function ApiKeyDisplay({
@@ -88,6 +90,8 @@ export function ApiKeyDisplay({
   onRegenerate: () => void;
   onRevoke: () => void;
 }) {
+  const t = useTranslations('ApiKey');
+  const format = useFormatter();
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface-raised px-3.5 py-3 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -97,7 +101,7 @@ export function ApiKeyDisplay({
         <div className="min-w-0 flex-1">
           <p className="font-mono text-sm tracking-wide text-foreground break-all">{displayKey}</p>
           {createdAt && (
-            <p className="mt-1 text-xs text-muted-foreground">Created {formatDateTime(createdAt)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('createdAt', { date: format.dateTime(new Date(createdAt), 'short') })}</p>
           )}
         </div>
       </div>
@@ -110,7 +114,7 @@ export function ApiKeyDisplay({
           onClick={onRegenerate}
         >
           <RefreshCw className="size-3" />
-          Regenerate
+          {t('regenerate')}
         </Button>
         <Button
           type="button"
@@ -120,7 +124,7 @@ export function ApiKeyDisplay({
           onClick={onRevoke}
         >
           <Trash2 className="size-3" />
-          Revoke
+          {t('revoke')}
         </Button>
       </div>
     </div>
@@ -128,11 +132,11 @@ export function ApiKeyDisplay({
 }
 
 export function ApiKeyRevealBanner({ apiKey }: { apiKey: string }) {
+  const t = useTranslations('ApiKey');
+  const tCommon = useTranslations('Common');
   return (
     <>
-      <p className="text-xs font-semibold uppercase tracking-wider text-accent-green">
-        Copy your key now — it won&apos;t be shown again
-      </p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-accent-green">{t('copyNow')}</p>
       <code className="block break-all rounded-lg border border-border bg-bg px-3 py-2 font-mono text-sm text-foreground">
         {apiKey}
       </code>
@@ -141,14 +145,14 @@ export function ApiKeyRevealBanner({ apiKey }: { apiKey: string }) {
         variant="outline"
         onClick={() => {
           navigator.clipboard.writeText(apiKey);
-          toast.success('Copied');
+          toast.success(t('copied'));
         }}
       >
         <Copy className="size-3.5" />
-        Copy
+        {tCommon('copy')}
       </Button>
       <p className="text-sm text-muted-foreground leading-relaxed">
-        <strong className="text-foreground">Store this somewhere safe.</strong> We cannot show it again.
+        {t.rich('storeSafely', { strong: (chunks) => <strong className="text-foreground">{chunks}</strong> })}
       </p>
     </>
   );
@@ -161,11 +165,12 @@ export function ApiKeyEmptyState({
   busy: boolean;
   onGenerate: () => void;
 }) {
+  const t = useTranslations('ApiKey');
   return (
     <>
-      <span className="text-sm text-muted-foreground">No active key</span>
+      <span className="text-sm text-muted-foreground">{t('noKey')}</span>
       <Button type="button" variant="outline" disabled={busy} onClick={onGenerate}>
-        Generate key
+        {t('generate')}
       </Button>
     </>
   );
@@ -186,28 +191,24 @@ export function ApiKeyConfirmModals({
   onRegen: () => void;
   onRevoke: () => void;
 }) {
+  const t = useTranslations('ApiKey');
   return (
     <>
       <ConfirmModal
         open={regenOpen}
         onClose={onCloseRegen}
-        title="Regenerate API key?"
-        body={
-          <>
-            Your current key will be <strong className="text-foreground">invalidated immediately</strong>.
-            Any integrations using it will stop working. The new key is shown once — copy it before closing.
-          </>
-        }
-        confirmLabel="Yes, regenerate"
+        title={t('regenTitle')}
+        body={t.rich('regenBody', { strong: (chunks) => <strong className="text-foreground">{chunks}</strong> })}
+        confirmLabel={t('regenConfirm')}
         confirmVariant="warning"
         onConfirm={onRegen}
       />
       <ConfirmModal
         open={revokeOpen}
         onClose={onCloseRevoke}
-        title="Revoke API key?"
-        body="This permanently invalidates your key. All API calls using it will fail immediately. You can generate a new key afterwards."
-        confirmLabel="Revoke key"
+        title={t('revokeTitle')}
+        body={t('revokeBody')}
+        confirmLabel={t('revokeConfirm')}
         confirmVariant="danger"
         onConfirm={onRevoke}
       />

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useFormatter, useTranslations } from 'next-intl';
 import { BarChart3 } from 'lucide-react';
 import { fetchPublicStats } from '@/lib/analysis/actions';
 import type { PublicStats } from '@/lib/db/analysis-jobs-service';
@@ -8,18 +9,11 @@ import { DetailedStatsModal } from '@/components/landing/detailed-stats-modal';
 import { linkVariants } from '@/components/ui/link';
 import { cn } from '@/lib/utils';
 
-const STATS = [
-  { key: 'totalFeatures' as const,     label: 'Total plots analyzed' },
-  { key: 'featuresLast7d' as const,    label: 'Last 7 days' },
-  { key: 'featuresThisMonth' as const, label: 'This month' },
-  { key: 'featuresLastMonth' as const, label: 'Last month' },
-];
-
-function formatCount(n: number): string {
-  return n.toLocaleString();
-}
+const STATS = ['totalFeatures', 'featuresLast7d', 'featuresThisMonth', 'featuresLastMonth'] as const;
 
 export function PublicStats() {
+  const t = useTranslations('Stats');
+  const format = useFormatter();
   const [stats, setStats] = useState<PublicStats | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -31,14 +25,14 @@ export function PublicStats() {
     <>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border pt-4">
         <BarChart3 className="size-3.5 shrink-0 text-text-dim" />
-        {STATS.map(({ key, label }) => (
+        {STATS.map((key) => (
           <div key={key} className="flex items-baseline gap-1.5 whitespace-nowrap">
-            <span className="text-[11px] text-text-dim">{label}</span>
+            <span className="text-[11px] text-text-dim">{t(key)}</span>
             <span className={cn(
               'text-xs font-medium tabular-nums text-text-muted',
               !stats && 'animate-pulse'
             )}>
-              {stats ? formatCount(stats[key]) : '—'}
+              {stats ? format.number(stats[key]) : '—'}
             </span>
           </div>
         ))}
@@ -47,7 +41,7 @@ export function PublicStats() {
           onClick={() => setModalOpen(true)}
           className={cn('cursor-pointer text-[11px] whitespace-nowrap', linkVariants.subtle)}
         >
-          More stats →
+          {t('more')}
         </button>
       </div>
       <DetailedStatsModal open={modalOpen} onClose={() => setModalOpen(false)} />

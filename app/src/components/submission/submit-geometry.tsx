@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { Download, Trash2, Play, Loader2, AlertTriangle } from 'lucide-react'
 import { parseGeometryFile } from '@/lib/utils/file-parser'
 import type { GeoPayload } from '@/lib/submission/useSubmitAnalysis'
@@ -24,6 +25,8 @@ export function SubmitGeometry({
   onError,
   initialFile,
 }: SubmitGeometryProps) {
+  const t = useTranslations('Submission')
+  const tCommon = useTranslations('Common')
   const [fileName, setFileName] = useState('')
   const [featureCount, setFeatureCount] = useState(0)
   const [payload, setPayload] = useState<GeoPayload | null>(null)
@@ -55,20 +58,20 @@ export function SubmitGeometry({
   const handleFile = useCallback(async (file: File) => {
     onError('')
     if (maxFileSize && file.size > maxFileSize) {
-      onError(`File too large. Maximum is ${maxFileSize / 1024} KB.`)
+      onError(t('fileTooLarge', { maxKb: maxFileSize / 1024 }))
       clearFile()
       return
     }
 
     const result = await parseGeometryFile(file)
     if ('error' in result) {
-      onError(result.error)
+      onError(t(`fileErrors.${result.error}`))
       clearFile()
       return
     }
 
     if (geometryLimit && result.featureCount > geometryLimit) {
-      onError(`Too many geometries. Maximum allowed is ${geometryLimit}.`)
+      onError(t('tooManyGeometries', { limit: geometryLimit }))
       clearFile()
       return
     }
@@ -76,7 +79,7 @@ export function SubmitGeometry({
     setFileName(file.name)
     setFeatureCount(result.featureCount)
     setPayload('wkt' in result ? { type: 'wkt', wkt: result.wkt } : { type: 'json', geojson: result.json })
-  }, [maxFileSize, geometryLimit, onError])
+  }, [maxFileSize, geometryLimit, onError, t])
 
   useEffect(() => {
     if (!initialFile || appliedFileRef.current === initialFile) return
@@ -86,7 +89,7 @@ export function SubmitGeometry({
 
   const handleAnalyze = () => {
     if (!payload) {
-      onError('Please upload a geometry file.')
+      onError(t('geometryRequired'))
       return
     }
     submit({ type: 'geometry', payload })
@@ -109,17 +112,17 @@ export function SubmitGeometry({
       />
       <div className="flex items-start gap-2 text-[12px] text-text-muted leading-relaxed">
         <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-risk-medium" />
-        Geometries must use the WGS84 coordinate reference system (EPSG:4326). Entries without coordinates may cause errors.
+        {t('geometryHint')}
       </div>
       <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} />
       <div className="flex items-center gap-2">
         <Button type="button" variant="outline" onClick={downloadExample}>
           <Download className="size-3.5" />
-          Example
+          {t('example')}
         </Button>
         <Button type="button" variant="outline" onClick={reset}>
           <Trash2 className="size-3.5" />
-          Clear
+          {tCommon('clear')}
         </Button>
         <Button
           type="button"
@@ -132,7 +135,7 @@ export function SubmitGeometry({
           ) : (
             <Play className="size-4" />
           )}
-          {isLoading ? 'Running Analysis…' : 'Run Analysis'}
+          {isLoading ? t('running') : t('run')}
         </Button>
       </div>
     </div>

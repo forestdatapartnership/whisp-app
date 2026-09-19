@@ -1,10 +1,11 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { resetPassword } from "@/lib/auth/actions";
-import { formatSystemMessage } from "@/types/system-codes";
+import { useSystemMessage } from "@/lib/shared/use-system-message";
 import { isValidPassword, getPasswordErrors, PASSWORD_RULES } from "@/lib/shared/field-validation";
 import { CenteredShell } from "@/components/layout/page-section";
 import { cardLayout } from "@/components/ui/styles";
@@ -16,6 +17,9 @@ import { Link } from "@/components/ui/link";
 import { Alert } from "@/components/ui/alert";
 
 function ResetContent() {
+  const t = useTranslations("ResetPassword");
+  const tPassword = useTranslations("Password");
+  const systemMessage = useSystemMessage();
   const params = useSearchParams();
   const token = params.get("token");
   const [password, setPassword] = useState("");
@@ -28,21 +32,22 @@ function ResetContent() {
     e.preventDefault();
     setError("");
     if (!token) {
-      setError("Invalid or missing reset token.");
+      setError(t("invalidLink"));
       return;
     }
     if (!isValidPassword(password)) {
-      setError(getPasswordErrors(password)[0] ?? "Password does not meet requirements.");
+      const rule = getPasswordErrors(password)[0];
+      setError(rule ? tPassword(`rules.${rule}`) : tPassword("invalid"));
       return;
     }
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      setError(tPassword("mismatch"));
       return;
     }
     setLoading(true);
     const result = await resetPassword(token, password);
     if (result.ok) setSuccess(true);
-    else setError(formatSystemMessage(result.code, result.args));
+    else setError(systemMessage(result.code, result.args));
     setLoading(false);
   };
 
@@ -50,12 +55,12 @@ function ResetContent() {
     return (
       <Card className={cardLayout.sm}>
         <CardHeader>
-          <CardTitle>Reset password</CardTitle>
-          <CardDescription>Invalid or missing reset link.</CardDescription>
+          <CardTitle>{t("title")}</CardTitle>
+          <CardDescription>{t("invalidLink")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button nativeButton={false} render={<Link href="/forgot-password" />} className="w-full">
-            Request a new link
+            {t("requestNew")}
           </Button>
         </CardContent>
       </Card>
@@ -65,34 +70,34 @@ function ResetContent() {
   return (
     <Card className={cardLayout.sm}>
       <CardHeader>
-        <CardTitle>Set new password</CardTitle>
+        <CardTitle>{t("setTitle")}</CardTitle>
         <CardDescription>
-          {success ? "Your password has been updated." : "Choose a strong new password."}
+          {success ? t("updatedDescription") : t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {success ? (
           <Button nativeButton={false} render={<Link href="/login" />} className="w-full">
-            Sign in
+            {t("signIn")}
           </Button>
         ) : (
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             {error && <Alert type="error" message={error} onClose={() => setError("")} />}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">New password</Label>
+              <Label htmlFor="password">{tPassword("new")}</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               <ul className="text-[11px] text-text-muted space-y-0.5">
                 {PASSWORD_RULES.map((r) => (
-                  <li key={r.message}>{r.message}</li>
+                  <li key={r.rule}>{tPassword(`rules.${r.rule}`)}</li>
                 ))}
               </ul>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="confirm">Confirm password</Label>
+              <Label htmlFor="confirm">{tPassword("confirm")}</Label>
               <Input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Updating…" : "Update password"}
+              {loading ? tPassword("updating") : tPassword("update")}
             </Button>
           </form>
         )}

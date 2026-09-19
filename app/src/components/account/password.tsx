@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { changePassword } from '@/lib/auth/user-actions';
@@ -9,12 +10,12 @@ import {
   isValidPassword,
   PASSWORD_RULES,
 } from '@/lib/shared/field-validation';
-import {
-  mapPasswordApiError,
-  type PasswordErrors,
-} from '@/lib/account/password-errors';
+import { passwordErrorField, type PasswordErrors } from '@/lib/account/password-errors';
+import { useSystemMessage } from '@/lib/shared/use-system-message';
 
 export function usePassword() {
+  const t = useTranslations('Password');
+  const systemMessage = useSystemMessage();
   const [open, setOpen] = useState(false);
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
@@ -38,11 +39,12 @@ export function usePassword() {
 
   const save = async () => {
     const next: PasswordErrors = {};
-    if (!currentPw.trim()) next.current = 'Current password is required';
+    if (!currentPw.trim()) next.current = t('currentRequired');
     if (!isValidPassword(newPw)) {
-      next.new = getPasswordErrors(newPw)[0] ?? 'Invalid password';
+      const rule = getPasswordErrors(newPw)[0];
+      next.new = rule ? t(`rules.${rule}`) : t('invalid');
     }
-    if (newPw !== confirmPw) next.confirm = 'Passwords do not match';
+    if (newPw !== confirmPw) next.confirm = t('mismatch');
     if (Object.keys(next).length > 0) {
       setErrors(next);
       return;
@@ -52,13 +54,13 @@ export function usePassword() {
     setBusy(true);
     const result = await changePassword(currentPw, newPw);
     if (result.ok) {
-      toast.success('Password updated');
+      toast.success(t('updated'));
       setOpen(false);
       setCurrentPw('');
       setNewPw('');
       setConfirmPw('');
     } else {
-      setErrors(mapPasswordApiError(result.code));
+      setErrors({ [passwordErrorField(result.code)]: systemMessage(result.code, result.args) });
     }
     setBusy(false);
   };
@@ -86,18 +88,20 @@ export function PasswordChangeToggle({
   open: boolean;
   onToggle: () => void;
 }) {
+  const t = useTranslations('Common');
   return (
     <Button type="button" variant="outline" onClick={onToggle}>
-      {open ? 'Cancel' : 'Change'}
+      {open ? t('cancel') : t('change')}
     </Button>
   );
 }
 
 export function PasswordRulesList() {
+  const t = useTranslations('Password');
   return (
     <ul className="text-xs text-muted-foreground space-y-0.5">
       {PASSWORD_RULES.map((r) => (
-        <li key={r.message}>{r.message}</li>
+        <li key={r.rule}>{t(`rules.${r.rule}`)}</li>
       ))}
     </ul>
   );
@@ -110,9 +114,10 @@ export function PasswordUpdateButton({
   onSave: () => void;
   busy: boolean;
 }) {
+  const t = useTranslations('Password');
   return (
     <Button type="button" onClick={onSave} disabled={busy}>
-      Update password
+      {t('update')}
     </Button>
   );
 }

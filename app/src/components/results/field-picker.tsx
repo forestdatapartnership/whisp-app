@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -58,6 +59,8 @@ export function FieldPicker({
   onChange,
   onClose,
 }: FieldPickerProps) {
+  const t = useTranslations("Results");
+  const tCommon = useTranslations("Common");
   const [query, setQuery] = useState("");
   const [activeGroup, setActiveGroup] = useState("");
 
@@ -142,14 +145,14 @@ export function FieldPicker({
     <div className="absolute inset-0 z-50 flex flex-col overflow-hidden bg-bg">
       <ResultsOverlayHeader
         onClose={handleClose}
-        meta={`${visible.length} selected`}
+        meta={tCommon('selectedCount', { count: visible.length })}
         leading={
           <ResultsSearchInput
             type="search"
             value={query}
             onChange={setQuery}
-            placeholder="Search fields…"
-            aria-label="Search fields"
+            placeholder={t('searchFields')}
+            aria-label={t('searchFields')}
           />
         }
       />
@@ -180,7 +183,7 @@ export function FieldPicker({
           <div className="flex flex-col gap-0.5 px-3.5 py-2.5">
             {activeCols.length === 0 ? (
               <p className="px-2 py-4 text-xs text-text-muted">
-                {query.trim() ? "No fields match your search." : "No fields in this category."}
+                {query.trim() ? t('noFieldMatches') : t('noFieldsInCategory')}
               </p>
             ) : (
               activeCols.map((key) => {
@@ -209,20 +212,20 @@ export function FieldPicker({
       </div>
       <div className="flex shrink-0 items-center gap-2 border-t border-border bg-surface px-4 py-2.5">
         <Button variant="outline" size="sm" onClick={selectNone}>
-          Select None
+          {tCommon('selectNone')}
         </Button>
         <Button variant="outline" size="sm" onClick={selectAll}>
-          Select All
+          {tCommon('selectAll')}
         </Button>
         <Button variant="outline" size="sm" onClick={selectRiskOnly}>
-          Risk Only
+          {t('riskOnly')}
         </Button>
         <div className="flex-1" />
         <Button variant="outline" size="sm" onClick={reset}>
-          Reset to defaults
+          {t('resetDefaults')}
         </Button>
         <Button variant="secondary" size="sm" onClick={handleClose}>
-          Apply
+          {t('apply')}
         </Button>
       </div>
     </div>
