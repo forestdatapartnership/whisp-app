@@ -221,13 +221,19 @@ export default function ResultsPage() {
     const current = config?.app.openforisWhispVersion?.trim() || "";
     if (!current) return;
 
-    const stored = readLocalResults();
-    if (!stored || !versionsMatch(stored.whispVersion, current)) {
-      clearLocalResults();
-      setLocalMissing(true);
-      return;
-    }
-    handleCompleted(stored.featureCollection);
+    let cancelled = false;
+    readLocalResults().then((stored) => {
+      if (cancelled) return;
+      if (!stored || !versionsMatch(stored.whispVersion, current)) {
+        clearLocalResults();
+        setLocalMissing(true);
+        return;
+      }
+      handleCompleted(stored.featureCollection);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [isLocal, handleCompleted, config?.app.openforisWhispVersion]);
 
   useEffect(() => {
@@ -383,10 +389,7 @@ export default function ResultsPage() {
     setCurrentPage(1);
   }, []);
 
-  const leaveToHome = useCallback(() => {
-    if (isLocal) clearLocalResults();
-    router.push("/");
-  }, [isLocal, router]);
+  const leaveToHome = useCallback(() => router.push("/"), [router]);
 
   const handleOpenWhispMap = useCallback(() => {
     if (isLocal || tableData.length === 0 || !config?.api.url) return;

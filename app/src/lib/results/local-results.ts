@@ -5,19 +5,45 @@ type LocalResults = {
   whispVersion: string | null;
 };
 
-let pending: LocalResults | null = null;
+const DB = "whisp";
+const STORE = "local-results";
+const KEY = "pending";
 
-export function storeLocalResults(
-  featureCollection: FeatureCollection,
-  whispVersion: string | null
-) {
-  pending = { featureCollection, whispVersion };
+function openDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(STORE);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
 }
 
-export function readLocalResults(): LocalResults | null {
-  return pending;
+// Storage failures degrade to the results page's empty state instead of breaking the open flow.
+async function run<T>(mode: IDBTransactionMode, op: (store: IDBObjectStore) => IDBRequest<T>): Promise<T | undefined> {
+  let db: IDBDatabase | undefined;
+  try {
+    db = await openDb();
+    const request = op(db.transaction(STORE, mode).objectStore(STORE));
+    return await new Promise<T>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  } catch {
+    return undefined;
+  } finally {
+    db?.close();
+  }
+}
+
+export function storeLocalResults(featureCollection: FeatureCollection, whispVersion: string | null) {
+  const results: LocalResults = { featureCollection, whispVersion };
+  return run("readwrite", (store) => store.put(results, KEY));
+}
+
+export async function readLocalResults(): Promise<LocalResults | null> {
+  return (await run<LocalResults | undefined>("readonly", (store) => store.get(KEY))) ?? null;
 }
 
 export function clearLocalResults() {
-  pending = null;
+  return run("readwrite", (store) => store.delete(KEY));
 }

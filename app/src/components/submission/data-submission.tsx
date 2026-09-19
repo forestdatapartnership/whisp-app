@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { Key } from 'lucide-react'
@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { SubmitGeometry } from './submit-geometry'
 import { SubmitGeoIds } from './submit-geo-ids'
 import { OpenResults } from './open-results'
+import { clearLocalResults } from '@/lib/results/local-results'
 
 type Tab = 'geometry' | 'geoids' | 'open'
 
@@ -31,6 +32,10 @@ export function DataSubmission() {
   const { config } = useConfig()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { hasApiKey, isLoading: apiKeyLoading } = useApiKey()
+
+  useEffect(() => {
+    clearLocalResults()
+  }, [])
 
   const maxFileSize = config?.submission.maxRequestBodySizeKb ? config.submission.maxRequestBodySizeKb * 1024 : undefined
   const needsApiKey = isAuthenticated && !hasApiKey

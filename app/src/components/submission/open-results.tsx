@@ -57,9 +57,9 @@ export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
     setPending(result)
   }
 
-  const handleOpen = () => {
+  const handleOpen = async () => {
     if (!pending || !canOpen) return
-    storeLocalResults(pending.featureCollection, pending.whispVersion)
+    await storeLocalResults(pending.featureCollection, pending.whispVersion)
     router.push('/results/local')
   }
 
