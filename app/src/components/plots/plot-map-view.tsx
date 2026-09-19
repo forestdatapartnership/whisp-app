@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { MapContainer, TileLayer, GeoJSON, LayersControl, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -8,7 +9,7 @@ import "./leaflet-dark.css";
 import { useTheme } from "@/components/layout/theme-provider";
 import { useConfig } from "@/lib/config/config-context";
 import { FeatureCollection, Feature, Geometry, GeoJsonProperties } from "geojson";
-import { riskFromValue } from "@/components/results/risk-badge";
+import { riskLevel, useRiskLabel } from "@/components/results/risk-badge";
 import { COMMODITY_OPTIONS } from "@/lib/results/risk-trees";
 
 const OSM =
@@ -38,28 +39,9 @@ function esc(v: unknown) {
   );
 }
 
-function popupHtml(props: Record<string, unknown>) {
-  const rows: string[] = [];
-  const push = (label: string, value: string) =>
-    rows.push(`<div class="map-row"><span class="map-muted">${label}</span>${value}</div>`);
-
-  if (props.plotId) push("Plot", esc(props.plotId));
-  if (props.geoid) push("Geo ID", esc(props.geoid));
-  for (const { riskField, label } of COMMODITY_OPTIONS) {
-    const v = props[riskField];
-    if (v == null || v === "") continue;
-    const { level, label: riskLabel } = riskFromValue(v);
-    push(
-      label,
-      `<span class="map-risk map-risk-${level}"><span class="map-risk-dot"></span>${esc(riskLabel)}</span>`
-    );
-  }
-  return rows.length ? `<div class="map-popup">${rows.join("")}</div>` : "";
-}
-
 function riskColor(props: GeoJsonProperties | null | undefined, riskField?: string) {
   if (!riskField || !props) return "var(--text-muted)";
-  const level = riskFromValue(props[riskField]).level;
+  const level = riskLevel(props[riskField]);
   return level === "info" ? "var(--text-muted)" : `var(--risk-${level})`;
 }
 
@@ -115,6 +97,28 @@ export function PlotMapView({
   onFeatureClick,
 }: PlotMapViewProps) {
   const { theme } = useTheme();
+  const t = useTranslations("Results");
+  const riskLabel = useRiskLabel();
+
+  const popupHtml = (props: Record<string, unknown>) => {
+    const rows: string[] = [];
+    const push = (label: string, value: string) =>
+      rows.push(`<div class="map-row"><span class="map-muted">${label}</span>${value}</div>`);
+
+    if (props.plotId) push(t("mapPlot"), esc(props.plotId));
+    if (props.geoid) push(t("mapGeoId"), esc(props.geoid));
+    for (const { key, riskField } of COMMODITY_OPTIONS) {
+      const v = props[riskField];
+      if (v == null || v === "") continue;
+      const { level, label } = riskLabel(v);
+      push(
+        t(`commodity.${key}`),
+        `<span class="map-risk map-risk-${level}"><span class="map-risk-dot"></span>${esc(label)}</span>`
+      );
+    }
+    return rows.length ? `<div class="map-popup">${rows.join("")}</div>` : "";
+  };
+
   const { config } = useConfig();
   const cartoKey = config?.map.cartoKey;
   const baseTile = BASE_TILES[theme];

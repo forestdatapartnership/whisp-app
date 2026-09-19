@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -11,7 +12,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RiskBadge, riskFromValue } from "./risk-badge";
+import { RiskBadge, useRiskLabel } from "./risk-badge";
 import { isTruthyCell, isYesNoCell } from "@/lib/results/catalog-fields";
 
 import type { CommodityMetadataMap } from "@/types/models";
@@ -62,14 +63,6 @@ function formatNumber(key: string, value: number): string {
   }).format(value);
 }
 
-function renderYesNo(value: unknown) {
-  return isTruthyCell(value) ? (
-    <span className="text-[11px] text-accent-green">yes</span>
-  ) : (
-    <span className="text-[11px] text-text-dim">no</span>
-  );
-}
-
 function renderText(text: string) {
   if (text.length > TRUNCATE_THRESHOLD) {
     const truncated =
@@ -81,32 +74,6 @@ function renderText(text: string) {
     );
   }
   return <span className="text-[11px] text-text-muted">{text}</span>;
-}
-
-function renderCell(value: unknown, type?: string, key?: string) {
-  if (value === null || value === undefined) {
-    return <span className="text-text-muted">—</span>;
-  }
-
-  if (type === "bool" || isYesNoCell(value)) {
-    return renderYesNo(value);
-  }
-
-  if (type === "numeric" && typeof value === "number") {
-    const formatted = formatNumber(key ?? "", value);
-    return (
-      <span className="font-mono text-[11px] text-text-muted tabular-nums">
-        {formatted}
-      </span>
-    );
-  }
-
-  if (key?.startsWith("risk_")) {
-    const { level, label } = riskFromValue(value);
-    return <RiskBadge level={level} label={label} />;
-  }
-
-  return renderText(String(value));
 }
 
 export function ResultsTable({
@@ -121,7 +88,39 @@ export function ResultsTable({
   onSort,
   className,
 }: ResultsTableProps) {
+  const t = useTranslations("Results");
+  const riskLabel = useRiskLabel();
   const presence = presenceRows ?? data;
+
+  const renderCell = (value: unknown, type?: string, key?: string) => {
+    if (value === null || value === undefined) {
+      return <span className="text-text-muted">—</span>;
+    }
+
+    if (type === "bool" || isYesNoCell(value)) {
+      return isTruthyCell(value) ? (
+        <span className="text-[11px] text-accent-green">{t("yes")}</span>
+      ) : (
+        <span className="text-[11px] text-text-dim">{t("no")}</span>
+      );
+    }
+
+    if (type === "numeric" && typeof value === "number") {
+      const formatted = formatNumber(key ?? "", value);
+      return (
+        <span className="font-mono text-[11px] text-text-muted tabular-nums">
+          {formatted}
+        </span>
+      );
+    }
+
+    if (key?.startsWith("risk_")) {
+      return <RiskBadge {...riskLabel(value)} />;
+    }
+
+    return renderText(String(value));
+  };
+
   const visibleColumns = useMemo(
     () =>
       columns.filter((c) => {

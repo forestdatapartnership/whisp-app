@@ -2,12 +2,7 @@ import {
   computeRiskMix,
   countTruthy,
 } from "./catalog-fields";
-import {
-  COMMODITY_OPTIONS,
-  WATERBODY_FIELD,
-  WATERBODY_LABEL,
-  buildTreeSteps,
-} from "./risk-trees";
+import { COMMODITY_OPTIONS, WATERBODY_FIELD, buildTreeSteps } from "./risk-trees";
 import { renderOfflineReportHtml } from "./offline-report-shell";
 import { downloadHtml, timestampFilename } from "@/lib/utils/export";
 
@@ -35,15 +30,16 @@ export function downloadOfflineReport(input: {
   columns: Array<{ key: string; header: string }>;
   title?: string;
   theme: "light" | "dark";
+  label: (key: string) => string;
 }) {
-  const { rows, columns, title = "WHISP risk report", theme } = input;
+  const { rows, columns, title = "WHISP risk report", theme, label } = input;
   const headers = new Map(columns.map((c) => [c.key, c.header]));
   const cols = columns.map((c) => ({ key: c.key, header: c.header }));
   const summaryColumns = SUMMARY_KEYS.filter((key) =>
     rows.some((r) => key in r)
   ).map((key) => ({
     key,
-    header: headers.get(key) ?? (key === WATERBODY_FIELD ? WATERBODY_LABEL : key),
+    header: headers.get(key) ?? (key === WATERBODY_FIELD ? label(`indicator.${WATERBODY_FIELD}`) : key),
   }));
 
   const report = {
@@ -61,7 +57,7 @@ export function downloadOfflineReport(input: {
       ? [
           {
             key: WATERBODY_FIELD,
-            label: WATERBODY_LABEL,
+            label: label(`indicator.${WATERBODY_FIELD}`),
             yes: countTruthy(rows, WATERBODY_FIELD),
             total: rows.length,
           },
@@ -69,20 +65,20 @@ export function downloadOfflineReport(input: {
       : [],
     commodities: COMMODITY_OPTIONS.map((option) => ({
       key: option.key,
-      label: option.label,
+      label: label(`commodity.${option.key}`),
       riskField: option.riskField,
       mix: computeRiskMix(rows, option.riskField),
       indicators: option.indicators
         .filter((ind) => rows.some((r) => ind.key in r))
         .map((ind) => ({
           key: ind.key,
-          label: ind.label,
+          label: label(`indicator.${ind.key}`),
           yesTone: ind.yesTone,
           yes: countTruthy(rows, ind.key),
           total: rows.length,
         })),
       tree: buildTreeSteps(option.key, rows, null).map((s) => ({
-        question: s.question,
+        question: label(`question.${s.question}`),
         yesCount: s.yesCount,
         noCount: s.noCount,
         yesOutcome: s.yesOutcome,

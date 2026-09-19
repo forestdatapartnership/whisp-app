@@ -2,26 +2,16 @@ import { useTranslations } from "next-intl";
 import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { riskValueToTone, RISK_TONE_SHORT, type RiskTone } from "@/lib/results/catalog-fields";
+import { riskValueToTone, type RiskTone } from "@/lib/results/catalog-fields";
 import {
   stepBranches,
   type TreeOutcome,
+  type TreePred,
   type TreeStepView,
 } from "@/lib/results/risk-trees";
 import { riskBorderClass, riskLevelStyles, riskTextClass } from "./risk-badge";
 
-function outcomeTone(outcome: TreeOutcome): RiskTone | null {
-  return outcome === "continue" ? null : riskValueToTone(outcome);
-}
-
-function Outcome({
-  outcome,
-  active,
-}: {
-  outcome: Exclude<TreeOutcome, "continue">;
-  active?: boolean;
-}) {
-  const tone = riskValueToTone(outcome)!;
+function Outcome({ tone, label, active }: { tone: RiskTone; label: string; active?: boolean }) {
   return (
     <span
       className={cn(
@@ -30,7 +20,7 @@ function Outcome({
         active && "underline decoration-accent-green underline-offset-2"
       )}
     >
-      {RISK_TONE_SHORT[tone]}
+      {label}
     </span>
   );
 }
@@ -52,7 +42,7 @@ function Step({
       : step.selectedSide === "no"
         ? step.noOutcome
         : null;
-  const stopTone = active ? outcomeTone(selectedOutcome ?? "continue") : null;
+  const stopTone = active && selectedOutcome && selectedOutcome !== "continue" ? riskValueToTone(selectedOutcome) : null;
   const rightOn = right.selected && !step.disabled;
   const downOn = down.selected && !step.disabled;
   const rightOff = active && !right.selected;
@@ -60,6 +50,18 @@ function Step({
 
   const t = useTranslations("Results");
   const totalAtStep = step.yesCount + step.noCount;
+  const outcomeLabel = (outcome: TreeOutcome) => {
+    const tone = riskValueToTone(outcome)!;
+    return { tone, label: t(`riskToneShort.${tone}`) };
+  };
+  const describe = (pred: TreePred): string => {
+    switch (pred.op) {
+      case "yn": return t(`indicator.${pred.field}`);
+      case "not": return t("predicateNot", { indicator: t(`indicator.${pred.field}`) });
+      case "and": return pred.of.map(describe).join(t("predicateAnd"));
+      case "or": return pred.of.map(describe).join(t("predicateOr"));
+    }
+  };
 
   return (
     <div className={cn(step.disabled && "pointer-events-none opacity-35")}>
@@ -74,13 +76,13 @@ function Step({
                 : "border-border bg-surface text-text-primary"
           )}
         >
-          {step.question}
+          {t(`question.${step.question}`)}
           <Tooltip>
             <TooltipTrigger className="ml-1 inline-block shrink-0 align-middle opacity-0 transition-opacity group-hover:opacity-100">
               <Info className="size-3 text-text-dim hover:text-text-muted" />
             </TooltipTrigger>
             <TooltipContent side="bottom" align="start">
-              {t('tests', { description: step.predicateDescription })}
+              {t('tests', { description: describe(step.predicate) })}
               <br />
               {t('reachedStep', { count: totalAtStep })}
             </TooltipContent>
@@ -94,9 +96,9 @@ function Step({
               rightOff && "opacity-35"
             )}
           >
-            <span className="uppercase tracking-wide opacity-70">{right.side}</span>
+            <span className="uppercase tracking-wide opacity-70">{t(right.side)}</span>
             <span className="text-text-dim">→</span>
-            <Outcome outcome={right.outcome} active={rightOn} />
+            <Outcome {...outcomeLabel(right.outcome)} active={rightOn} />
             {showCounts && (
               <span className="tabular-nums text-text-muted">
                 ({t('plotCount', { count: right.count })})
@@ -123,12 +125,12 @@ function Step({
               downOn ? "text-text-primary" : "text-text-muted"
             )}
           >
-            <span className="uppercase tracking-wide opacity-70">{down.side}</span>
+            <span className="uppercase tracking-wide opacity-70">{t(down.side)}</span>
             <span className="text-text-dim">↓</span>
             {down.outcome === "continue" ? (
-              <span>continue</span>
+              <span>{t("continue")}</span>
             ) : (
-              <Outcome outcome={down.outcome} active={downOn} />
+              <Outcome {...outcomeLabel(down.outcome)} active={downOn} />
             )}
             {showCounts && (
               <span className="tabular-nums text-text-muted">

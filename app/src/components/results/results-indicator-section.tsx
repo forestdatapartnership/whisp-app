@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { riskDotClass, riskTextClass } from "./risk-badge";
@@ -31,6 +32,7 @@ export function IndicatorSection({
   indicatorFilter,
   onIndicatorFilter,
 }: IndicatorSectionProps) {
+  const t = useTranslations("Results");
   return (
     <section>
       <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
@@ -84,7 +86,7 @@ export function IndicatorSection({
                           i.plotYes && i.yesTone ? riskTextClass[i.yesTone] : "text-text-muted"
                         }
                       >
-                        {i.plotYes ? "yes" : "no"}
+                        {t(i.plotYes ? "yes" : "no")}
                       </span>
                     </span>
                   ) : (
@@ -114,9 +116,8 @@ export function IndicatorSection({
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 {plotMode
-                  ? `${i.label}: ${i.plotYes ? "yes" : "no"}`
-                  : `${i.label}: ${i.yes} of ${total} plots marked yes`
-                }
+                  ? `${i.label}: ${t(i.plotYes ? "yes" : "no")}`
+                  : t("indicatorTotal", { label: i.label, yes: i.yes, total })}
               </TooltipContent>
             </Tooltip>
           );

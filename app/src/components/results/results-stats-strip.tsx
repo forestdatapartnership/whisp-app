@@ -8,7 +8,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { riskDotClass } from "./risk-badge";
 import {
   computeRiskMix,
-  RISK_TONE_LABEL,
   riskToneToValue,
   type RiskFilter,
   type RiskTone,
@@ -34,9 +33,10 @@ export function ResultsStatsStrip({
   const t = useTranslations("Results");
   const mixes = useMemo(
     () =>
-      COMMODITY_OPTIONS.map((opt) => ({
-        ...opt,
-        mix: computeRiskMix(rows, opt.riskField),
+      COMMODITY_OPTIONS.map(({ key, riskField }) => ({
+        key,
+        riskField,
+        mix: computeRiskMix(rows, riskField),
       })),
     [rows]
   );
@@ -57,10 +57,10 @@ export function ResultsStatsStrip({
           {t('riskBreakdownHelp')}
         </TooltipContent>
       </Tooltip>
-      {mixes.map(({ key, shortLabel, riskField, mix }) => (
+      {mixes.map(({ key, riskField, mix }) => (
         <div key={key} className="flex items-center gap-2 shrink-0">
           <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-text-primary">
-            {shortLabel}
+            {t(`commodityShort.${key}`)}
           </span>
           <div className="flex items-center gap-1.5">
             {RISK_TONES.map((tone) => {
@@ -93,7 +93,7 @@ export function ResultsStatsStrip({
                     {n}
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {shortLabel} · {RISK_TONE_LABEL[tone]}: {t('plotCount', { count: n })}
+                    {t(`commodityShort.${key}`)} · {t(`riskTone.${tone}`)}: {t('plotCount', { count: n })}
                   </TooltipContent>
                 </Tooltip>
               );

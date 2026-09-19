@@ -340,7 +340,61 @@
     "apply": "Apply",
     "noRiskPath": "No risk path for this commodity.",
     "tests": "Tests: {description}",
-    "reachedStep": "{count, plural, one {# plot} other {# plots}} reached this step"
+    "reachedStep": "{count, plural, one {# plot} other {# plots}} reached this step",
+    "commodity": {
+      "pcrop": "Perennial crop",
+      "acrop": "Annual crop",
+      "timber": "Timber"
+    },
+    "commodityShort": {
+      "pcrop": "Perennial",
+      "acrop": "Annual",
+      "timber": "Timber"
+    },
+    "riskTone": {
+      "low": "Low risk",
+      "medium": "More info needed",
+      "high": "High risk"
+    },
+    "riskToneShort": {
+      "low": "Low",
+      "medium": "More info needed",
+      "high": "High"
+    },
+    "indicator": {
+      "Ind_01_treecover": "Tree cover in 2020",
+      "Ind_02_commodities": "Commodity present pre-2020",
+      "Ind_03_disturbance_before_2020": "Disturbance before 2020",
+      "Ind_04_disturbance_after_2020": "Disturbance after 2020",
+      "Ind_05_primary_2020": "Primary forest in 2020",
+      "Ind_06_nat_reg_forest_2020": "Naturally regenerating forest in 2020",
+      "Ind_07_planted_plantations_2020": "Plantation in 2020",
+      "Ind_08_planted_plantations_after_2020": "Plantation after 2020",
+      "Ind_09_treecover_after_2020": "Tree cover after 2020",
+      "Ind_10_agri_after_2020": "Agriculture after 2020",
+      "Ind_11_logging_concession_before_2020": "Logging concession before 2020",
+      "In_waterbody": "In waterbody"
+    },
+    "question": {
+      "treecover2020": "Tree cover in 2020?",
+      "commodityPre2020": "Commodity present pre-2020?",
+      "disturbanceBefore2020": "Disturbance before 2020?",
+      "disturbanceAfter2020": "Disturbance after 2020?",
+      "plantation2020NoAgriAfter": "Plantation in 2020 and no agriculture after 2020?",
+      "forest2020AgriAfter": "Forest in 2020 and agriculture after 2020?",
+      "naturalForest2020PlantationAfter": "Natural forest in 2020 and plantation after 2020?",
+      "naturalForestTreecoverOrConcession": "Natural forest with post-2020 tree cover or logging concession?",
+      "primaryOrNatRegForest2020": "Primary or naturally regenerating forest in 2020?"
+    },
+    "predicateNot": "no {indicator}",
+    "predicateAnd": " and ",
+    "predicateOr": " or ",
+    "yes": "yes",
+    "no": "no",
+    "continue": "continue",
+    "indicatorTotal": "{label}: {yes} of {total} plots marked yes",
+    "mapPlot": "Plot",
+    "mapGeoId": "Geo ID"
   },
   "SystemMessages": {
     "system_internal_server_error": "An internal server error occurred. Please try again later.",

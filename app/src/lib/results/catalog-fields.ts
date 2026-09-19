@@ -39,23 +39,6 @@ export function riskValueToTone(value: string): RiskTone | null {
   return null;
 }
 
-export const RISK_TONE_LABEL: Record<RiskTone, string> = {
-  low: "Low risk",
-  medium: "More info needed",
-  high: "High risk",
-};
-
-export const RISK_TONE_SHORT: Record<RiskTone, string> = {
-  low: "Low",
-  medium: "More info needed",
-  high: "High",
-};
-
-export function riskValueLabel(value: RiskValue): string {
-  const tone = riskValueToTone(value);
-  return tone ? RISK_TONE_LABEL[tone] : String(value);
-}
-
 export function isTruthyCell(value: unknown): boolean {
   if (value === true) return true;
   if (typeof value === "string") {

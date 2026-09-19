@@ -29,9 +29,8 @@ import { useTheme } from "@/components/layout/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/icons";
 import { getResultFields } from "@/lib/docs/result-fields-actions";
-import { isTruthyCell, type RiskFilter } from "@/lib/results/catalog-fields";
+import { isTruthyCell, riskValueToTone, type RiskFilter } from "@/lib/results/catalog-fields";
 import {
-  formatResultsFilterLabel,
   getCommodity,
   getCommodityByRiskField,
   WATERBODY_FIELD,
@@ -299,10 +298,14 @@ export default function ResultsPage() {
     }
   }, [filteredData, selectedRow]);
 
-  const filterLabel = useMemo(
-    () => formatResultsFilterLabel(riskFilter, indicatorFilter),
-    [riskFilter, indicatorFilter]
-  );
+  const filterLabel = useMemo(() => {
+    if (riskFilter) {
+      const { key } = getCommodityByRiskField(riskFilter.field)!;
+      return `${t(`commodityShort.${key}`)} · ${t(`riskTone.${riskValueToTone(riskFilter.value)!}`)}`;
+    }
+    if (indicatorFilter) return `${t(`indicator.${indicatorFilter}`)} · ${t("yes")}`;
+    return null;
+  }, [riskFilter, indicatorFilter, t]);
 
   const handleCommodityChange = useCallback(
     (key: CommodityKey) => {
@@ -414,8 +417,9 @@ export default function ResultsPage() {
       columns: allColumns,
       title: isLocal ? "WHISP risk report · GeoJSON" : `WHISP risk report · ${id}`,
       theme,
+      label: t,
     });
-  }, [tableData, allColumns, id, isLocal, theme]);
+  }, [tableData, allColumns, id, isLocal, theme, t]);
 
   const selectedFeatureIndex = useMemo(() => {
     if (!selectedRow || !filteredGeoJson) return undefined;
@@ -622,6 +626,7 @@ export default function ResultsPage() {
               riskFilter={riskFilter}
               onRiskFilter={handleRiskFilter}
               indicatorFilter={indicatorFilter}
+              filterLabel={filterLabel}
               onIndicatorFilter={handleIndicatorFilter}
               onClearFilter={handleClearFilter}
             />

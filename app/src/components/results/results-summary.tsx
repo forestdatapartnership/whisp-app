@@ -7,7 +7,7 @@ import { linkVariants } from "@/components/ui/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   riskDotClass,
-  riskFromValue,
+  useRiskLabel,
   riskTextClass,
 } from "./risk-badge";
 import { ResultsFilterChip } from "./results-filter-chip";
@@ -19,7 +19,6 @@ import {
   computeRiskMix,
   countTruthy,
   isTruthyCell,
-  RISK_TONE_LABEL,
   riskToneToValue,
   type RiskFilter,
   type RiskTone,
@@ -27,9 +26,7 @@ import {
 import {
   COMMODITY_OPTIONS,
   WATERBODY_FIELD,
-  WATERBODY_LABEL,
   buildTreeSteps,
-  formatResultsFilterLabel,
   getCommodity,
   type CommodityKey,
 } from "@/lib/results/risk-trees";
@@ -52,6 +49,7 @@ export interface ResultsSummaryProps {
   indicatorFilter?: string | null;
   onIndicatorFilter?: (field: string | null) => void;
   onClearFilter?: () => void;
+  filterLabel?: string | null;
   className?: string;
 }
 
@@ -69,13 +67,14 @@ export function ResultsSummary({
   indicatorFilter,
   onIndicatorFilter,
   onClearFilter,
+  filterLabel,
   className,
 }: ResultsSummaryProps) {
   const t = useTranslations("Results");
+  const riskLabel = useRiskLabel();
   const plotMode = Boolean(selectedRow);
   const option = getCommodity(commodity);
   const { riskField } = option;
-  const filterLabel = formatResultsFilterLabel(riskFilter, indicatorFilter);
 
   const mix = useMemo(() => computeRiskMix(rows, riskField), [rows, riskField]);
   const treeSteps = useMemo(
@@ -85,11 +84,11 @@ export function ResultsSummary({
   const { riskIndicators, otherIndicators } = useMemo(() => {
     const present = new Set(columns.map((c) => c.key));
     const scope = selectedRow ? [selectedRow] : rows;
-    const toRow = (key: string, label: string, yesTone: RiskTone | null) => {
+    const toRow = (key: string, yesTone: RiskTone | null) => {
       const yes = countTruthy(scope, key);
       return {
         key,
-        label,
+        label: t(`indicator.${key}`),
         yesTone,
         yes,
         pct: Math.round((yes / (scope.length || 1)) * 100),
@@ -99,14 +98,14 @@ export function ResultsSummary({
     return {
       riskIndicators: option.indicators
         .filter((ind) => present.has(ind.key))
-        .map((ind) => toRow(ind.key, ind.label, ind.yesTone)),
+        .map((ind) => toRow(ind.key, ind.yesTone)),
       otherIndicators: present.has(WATERBODY_FIELD)
-        ? [toRow(WATERBODY_FIELD, WATERBODY_LABEL, null)]
+        ? [toRow(WATERBODY_FIELD, null)]
         : [],
     };
-  }, [columns, option.indicators, rows, selectedRow]);
+  }, [columns, option.indicators, rows, selectedRow, t]);
 
-  const selectedBadge = selectedRow ? riskFromValue(selectedRow[riskField]) : null;
+  const selectedBadge = selectedRow ? riskLabel(selectedRow[riskField]) : null;
 
   if (!open) return null;
 
@@ -135,7 +134,7 @@ export function ResultsSummary({
                       : "border-b-transparent text-text-muted hover:bg-surface-raised hover:text-text-primary"
                   )}
                 >
-                  {o.label}
+                  {t(`commodity.${o.key}`)}
                 </button>
               ))}
             </div>
@@ -185,7 +184,7 @@ export function ResultsSummary({
               >
                 <p className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
                   <span className={cn("size-[6px] rounded-full", riskDotClass[tone])} />
-                  {RISK_TONE_LABEL[tone]}
+                  {t(`riskTone.${tone}`)}
                 </p>
                 <p className={cn("text-xl font-semibold tabular-nums tracking-tight", riskTextClass[tone])}>
                   {n}

@@ -1,7 +1,8 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { riskValueToTone, RISK_TONE_SHORT, type RiskTone } from "@/lib/results/catalog-fields";
+import { riskValueToTone, type RiskTone } from "@/lib/results/catalog-fields";
 
-export type RiskLevel = "low" | "medium" | "high" | "info";
+type RiskLevel = "low" | "medium" | "high" | "info";
 
 interface RiskBadgeProps {
   level: RiskLevel;
@@ -35,10 +36,16 @@ export const riskBorderClass: Record<RiskTone, string> = {
   high: "border-risk-high",
 };
 
-export function riskFromValue(value: unknown): { level: RiskLevel; label: string } {
-  const tone = riskValueToTone(String(value ?? ""));
-  if (!tone) return { level: "info", label: String(value ?? "") };
-  return { level: tone, label: RISK_TONE_SHORT[tone] };
+export function riskLevel(value: unknown): RiskLevel {
+  return riskValueToTone(String(value ?? "")) ?? "info";
+}
+
+export function useRiskLabel() {
+  const t = useTranslations("Results");
+  return (value: unknown) => {
+    const level = riskLevel(value);
+    return { level, label: level === "info" ? String(value ?? "") : t(`riskToneShort.${level}`) };
+  };
 }
 
 export function RiskBadge({ level, label, className }: RiskBadgeProps) {

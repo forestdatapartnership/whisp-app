@@ -340,7 +340,61 @@
     "apply": "Aplicar",
     "noRiskPath": "No hay ruta de riesgo para este producto básico.",
     "tests": "Comprueba: {description}",
-    "reachedStep": "{count, plural, one {# parcela llegó} other {# parcelas llegaron}} a este paso"
+    "reachedStep": "{count, plural, one {# parcela llegó} other {# parcelas llegaron}} a este paso",
+    "commodity": {
+      "pcrop": "Cultivo perenne",
+      "acrop": "Cultivo anual",
+      "timber": "Madera"
+    },
+    "commodityShort": {
+      "pcrop": "Perenne",
+      "acrop": "Anual",
+      "timber": "Madera"
+    },
+    "riskTone": {
+      "low": "Riesgo bajo",
+      "medium": "Se necesita más información",
+      "high": "Riesgo alto"
+    },
+    "riskToneShort": {
+      "low": "Bajo",
+      "medium": "Más información",
+      "high": "Alto"
+    },
+    "indicator": {
+      "Ind_01_treecover": "Cobertura arbórea en 2020",
+      "Ind_02_commodities": "Producto básico presente antes de 2020",
+      "Ind_03_disturbance_before_2020": "Perturbación antes de 2020",
+      "Ind_04_disturbance_after_2020": "Perturbación después de 2020",
+      "Ind_05_primary_2020": "Bosque primario en 2020",
+      "Ind_06_nat_reg_forest_2020": "Bosque de regeneración natural en 2020",
+      "Ind_07_planted_plantations_2020": "Plantación en 2020",
+      "Ind_08_planted_plantations_after_2020": "Plantación después de 2020",
+      "Ind_09_treecover_after_2020": "Cobertura arbórea después de 2020",
+      "Ind_10_agri_after_2020": "Agricultura después de 2020",
+      "Ind_11_logging_concession_before_2020": "Concesión forestal antes de 2020",
+      "In_waterbody": "En masa de agua"
+    },
+    "question": {
+      "treecover2020": "¿Cobertura arbórea en 2020?",
+      "commodityPre2020": "¿Producto básico presente antes de 2020?",
+      "disturbanceBefore2020": "¿Perturbación antes de 2020?",
+      "disturbanceAfter2020": "¿Perturbación después de 2020?",
+      "plantation2020NoAgriAfter": "¿Plantación en 2020 y sin agricultura después de 2020?",
+      "forest2020AgriAfter": "¿Bosque en 2020 y agricultura después de 2020?",
+      "naturalForest2020PlantationAfter": "¿Bosque natural en 2020 y plantación después de 2020?",
+      "naturalForestTreecoverOrConcession": "¿Bosque natural con cobertura arbórea posterior a 2020 o concesión forestal?",
+      "primaryOrNatRegForest2020": "¿Bosque primario o de regeneración natural en 2020?"
+    },
+    "predicateNot": "sin {indicator}",
+    "predicateAnd": " y ",
+    "predicateOr": " o ",
+    "yes": "sí",
+    "no": "no",
+    "continue": "continuar",
+    "indicatorTotal": "{label}: {yes} de {total} parcelas marcadas como sí",
+    "mapPlot": "Parcela",
+    "mapGeoId": "Geo ID"
   },
   "SystemMessages": {
     "system_internal_server_error": "Se produjo un error interno del servidor. Inténtelo de nuevo más tarde.",
