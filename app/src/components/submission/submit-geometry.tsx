@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslations } from 'next-intl'
-import { Download, Trash2, Play, Loader2, AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { parseGeometryFile } from '@/lib/utils/file-parser'
 import type { GeoPayload } from '@/lib/submission/useSubmitAnalysis'
 import { useSubmitAnalysis } from '@/lib/submission/useSubmitAnalysis'
-import { Button } from '@/components/ui/button'
+import { SubmitActions } from './submit-actions'
 import { FileDropZone } from './file-drop-zone'
 import { AnalysisOptions, AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from './analysis-options'
 
@@ -26,7 +26,6 @@ export function SubmitGeometry({
   initialFile,
 }: SubmitGeometryProps) {
   const t = useTranslations('Submission')
-  const tCommon = useTranslations('Common')
   const [fileName, setFileName] = useState('')
   const [featureCount, setFeatureCount] = useState(0)
   const [payload, setPayload] = useState<GeoPayload | null>(null)
@@ -116,29 +115,16 @@ export function SubmitGeometry({
         {t('geometryHint')}
       </div>
       <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} />
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" onClick={downloadExample}>
-          <Download className="size-3.5" />
-          {t('example')}
-        </Button>
-        <Button type="button" variant="outline" onClick={reset}>
-          <Trash2 className="size-3.5" />
-          {tCommon('clear')}
-        </Button>
-        <Button
-          type="button"
-          className="flex-1"
-          disabled={isLoading || !payload}
-          onClick={handleAnalyze}
-        >
-          {isLoading ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Play className="size-4" />
-          )}
-          {isLoading ? t('running') : t('run')}
-        </Button>
-      </div>
+      <SubmitActions
+        downloadVisible
+        downloadLabel={t('example')}
+        onDownload={downloadExample}
+        onClear={reset}
+        runLabel={t('run')}
+        onRun={handleAnalyze}
+        runDisabled={!payload}
+        isLoading={isLoading}
+      />
     </div>
   )
 }

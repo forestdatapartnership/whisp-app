@@ -35,3 +35,6 @@ export const controlPadding = {
 } as const
 
 export const controlBase = `${controlHeight.md} ${controlFocus}`
+
+export const actionRow =
+  "flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center [&>*]:w-full sm:[&>*]:w-auto sm:[&>*:last-child]:flex-auto"

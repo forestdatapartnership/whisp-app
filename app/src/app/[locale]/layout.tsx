@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -15,6 +15,9 @@ import { ApiKeyProvider } from "@/lib/auth/api-key-context";
 import { Toaster } from "@/components/ui/sonner";
 
 import "../globals.css";
+
+// Without this iOS uses a ~980px layout viewport, so responsive breakpoints never fire.
+export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
 const manrope = Manrope({
   subsets: ["latin"],

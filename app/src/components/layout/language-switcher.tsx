@@ -15,9 +15,8 @@ import { localeLabels, locales, type Locale } from "@/i18n/locales";
 
 const languageCode = (locale: string) => locale.split("-")[0];
 
-export function LanguageSwitcher() {
+export function LocaleOptions() {
   const locale = useLocale();
-  const t = useTranslations("LanguageSwitcher");
   const pathname = usePathname();
 
   const switchTo = (nextLocale: Locale) => {
@@ -27,6 +26,30 @@ export function LanguageSwitcher() {
     const href = getPathname({ href: pathname, locale: nextLocale, forcePrefix: true });
     window.location.replace(href + window.location.search + window.location.hash);
   };
+
+  return (
+    <DropdownMenuRadioGroup value={locale}>
+      {locales.map((code) => (
+        <DropdownMenuRadioItem
+          key={code}
+          value={code}
+          closeOnClick
+          onClick={() => switchTo(code)}
+          className="cursor-pointer gap-2 py-2 pl-4 pr-10 text-sm text-text-muted focus:bg-surface-raised focus:text-text-primary"
+        >
+          <span className="w-5 shrink-0 text-left text-xs font-semibold uppercase text-text-dim">
+            {languageCode(code)}
+          </span>
+          <span lang={code}>{localeLabels[code]}</span>
+        </DropdownMenuRadioItem>
+      ))}
+    </DropdownMenuRadioGroup>
+  );
+}
+
+export function LanguageSwitcher() {
+  const locale = useLocale();
+  const t = useTranslations("LanguageSwitcher");
 
   return (
     <DropdownMenu>
@@ -40,22 +63,7 @@ export function LanguageSwitcher() {
         sideOffset={8}
         className="w-auto border-border bg-surface"
       >
-        <DropdownMenuRadioGroup value={locale}>
-          {locales.map((code) => (
-            <DropdownMenuRadioItem
-              key={code}
-              value={code}
-              closeOnClick
-              onClick={() => switchTo(code)}
-              className="cursor-pointer gap-2 py-2 pl-4 pr-10 text-sm text-text-muted focus:bg-surface-raised focus:text-text-primary"
-            >
-              <span className="w-5 shrink-0 text-left text-xs font-semibold uppercase text-text-dim">
-                {languageCode(code)}
-              </span>
-              <span lang={code}>{localeLabels[code]}</span>
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
+        <LocaleOptions />
       </DropdownMenuContent>
     </DropdownMenu>
   );

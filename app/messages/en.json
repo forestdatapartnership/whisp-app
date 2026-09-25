@@ -42,6 +42,7 @@
     "account": "Account",
     "apiKeys": "API Keys",
     "jobs": "Analysis Jobs",
+    "menu": "Menu",
     "logout": "Log out",
     "signIn": "Sign in"
   },

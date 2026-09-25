@@ -4,13 +4,31 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { BookOpen, Moon, Sun, User, Settings, BriefcaseBusiness, KeyRound, LogIn, LogOut } from "lucide-react";
+import { BookOpen, Globe, Menu, Moon, Sun, User, Settings, BriefcaseBusiness, KeyRound, LogIn, LogOut } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/components/layout/theme-provider";
-import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { LanguageSwitcher, LocaleOptions } from "@/components/layout/language-switcher";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useConfig } from "@/lib/config/config-context";
+
+const GITHUB_URL = "https://github.com/forestdatapartnership/whisp-app";
+
+const MENU_ITEM =
+  "cursor-pointer gap-2 px-4 py-2 text-sm text-text-muted focus:bg-surface-raised focus:text-text-primary";
+
+const GithubIcon = () => (
+  <svg className="size-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+);
 
 const ACCOUNT_LINKS = [
   { icon: Settings, href: "/account", label: "account" },
@@ -20,6 +38,7 @@ const ACCOUNT_LINKS = [
 
 export function Navbar() {
   const t = useTranslations("Navbar");
+  const tLanguage = useTranslations("LanguageSwitcher");
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
   const { config } = useConfig();
@@ -36,7 +55,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-[250] flex h-14 items-center gap-2 border-b border-border bg-bg px-8">
+    <nav className="sticky top-0 z-[250] flex h-14 items-center gap-2 border-b border-border bg-bg px-4 sm:px-8">
       <Link href="/" className="flex shrink-0 items-center no-underline">
         <Image
           src={theme === "dark" ? "/whisp_logo_nav_white.svg" : "/whisp_logo_nav.svg"}
@@ -50,37 +69,79 @@ export function Navbar() {
 
       <div className="flex-1" />
 
-      <Button
-        variant="ghost"
-        nativeButton={false}
-        render={<a href={`${config?.api.url ?? "/api"}/docs`} target="_blank" rel="noopener noreferrer" />}
-      >
-        <BookOpen className="size-4" aria-hidden />
-        {t("apiDocs")}
-      </Button>
-
-      <Tooltip>
-        <TooltipTrigger
-          render={<a href="https://github.com/forestdatapartnership/whisp-app" target="_blank" rel="noopener noreferrer" aria-label="GitHub" />}
-          className={buttonVariants({ variant: "ghost", size: "icon" })}
+      <div className="contents max-sm:hidden">
+        <Button
+          variant="ghost"
+          nativeButton={false}
+          render={<a href={`${config?.api.url ?? "/api"}/docs`} target="_blank" rel="noopener noreferrer" />}
         >
-          <svg className="size-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">{t("github")}</TooltipContent>
-      </Tooltip>
+          <BookOpen className="size-4" aria-hidden />
+          {t("apiDocs")}
+        </Button>
 
-      <LanguageSwitcher />
+        <Tooltip>
+          <TooltipTrigger
+            render={<a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" aria-label="GitHub" />}
+            className={buttonVariants({ variant: "ghost", size: "icon" })}
+          >
+            <GithubIcon />
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{t("github")}</TooltipContent>
+        </Tooltip>
 
-      <Tooltip>
-        <TooltipTrigger
-          onClick={toggleTheme}
-          aria-label={themeLabel}
-          className={buttonVariants({ variant: "ghost", size: "icon" })}
+        <LanguageSwitcher />
+
+        <Tooltip>
+          <TooltipTrigger
+            onClick={toggleTheme}
+            aria-label={themeLabel}
+            className={buttonVariants({ variant: "ghost", size: "icon" })}
+          >
+            {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{themeLabel}</TooltipContent>
+        </Tooltip>
+      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" size="icon" aria-label={t("menu")} className="sm:hidden" />}
         >
-          {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-        </TooltipTrigger>
-        <TooltipContent side="bottom">{themeLabel}</TooltipContent>
-      </Tooltip>
+          <Menu className="size-4" aria-hidden />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" sideOffset={8} className="w-auto border-border bg-surface">
+          <DropdownMenuItem
+            className={MENU_ITEM}
+            render={<a href={`${config?.api.url ?? "/api"}/docs`} target="_blank" rel="noopener noreferrer" />}
+          >
+            <BookOpen className="size-4" aria-hidden />
+            {t("apiDocs")}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            className={MENU_ITEM}
+            render={<a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" />}
+          >
+            <GithubIcon />
+            {t("github")}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem className={MENU_ITEM} onClick={toggleTheme}>
+            {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            {themeLabel}
+          </DropdownMenuItem>
+
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className={MENU_ITEM}>
+              <Globe className="size-4" aria-hidden />
+              {tLanguage("label")}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="w-auto border-border bg-surface">
+              <LocaleOptions />
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {isAuthenticated ? (
         <div className="relative" ref={menuRef} onBlur={handleOutsideClick}>

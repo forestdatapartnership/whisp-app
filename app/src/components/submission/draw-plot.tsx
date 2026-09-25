@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import { useFormatter, useTranslations } from 'next-intl'
-import { Download, Trash2, Play, Loader2, AlertTriangle, MapPin } from 'lucide-react'
+import { AlertTriangle, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { controlFocus, controlRounded } from '@/components/ui/styles'
 import { useSubmitAnalysis } from '@/lib/submission/useSubmitAnalysis'
 import { isValidPlot, ringAreaHa, selfIntersects, toFeatureCollection } from '@/lib/draw/geometry'
 import { downloadPlot } from '@/lib/draw/download'
 import type { Vertex } from '@/lib/draw/use-vertices'
-import { Button } from '@/components/ui/button'
 import { AnalysisOptions, AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from './analysis-options'
+import { SubmitActions } from './submit-actions'
 import { DrawDialog } from './draw/draw-dialog'
 
 interface DrawPlotProps {
@@ -20,7 +20,6 @@ interface DrawPlotProps {
 
 export function DrawPlot({ maxPlotAreaHa, onError }: DrawPlotProps) {
   const t = useTranslations('Submission')
-  const tCommon = useTranslations('Common')
   const format = useFormatter()
   const [vertices, setVertices] = useState<Vertex[]>([])
   const [open, setOpen] = useState(false)
@@ -103,20 +102,18 @@ export function DrawPlot({ maxPlotAreaHa, onError }: DrawPlotProps) {
 
       <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} />
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => downloadPlot(vertices)} disabled={!valid}>
-          <Download className="size-3.5" />
-          {t('draw.download')}
-        </Button>
-        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={reset} disabled={!valid}>
-          <Trash2 className="size-3.5" />
-          {tCommon('clear')}
-        </Button>
-        <Button type="button" className="w-full sm:flex-1" disabled={isLoading || !valid} onClick={handleAnalyze}>
-          {isLoading ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
-          {isLoading ? t('running') : t('run')}
-        </Button>
-      </div>
+      <SubmitActions
+        downloadVisible
+        downloadLabel={t('draw.download')}
+        onDownload={() => downloadPlot(vertices)}
+        downloadDisabled={!valid}
+        onClear={reset}
+        clearDisabled={!valid}
+        runLabel={t('run')}
+        onRun={handleAnalyze}
+        runDisabled={!valid}
+        isLoading={isLoading}
+      />
 
       {open && (
         <DrawDialog

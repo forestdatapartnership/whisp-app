@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import { FolderOpen, Trash2, AlertTriangle } from 'lucide-react'
+import { FolderOpen, AlertTriangle } from 'lucide-react'
 import { parseResultsFile, versionsMatch } from '@/lib/results/parse-results-file'
 import { storeLocalResults } from '@/lib/results/local-results'
 import { useConfig } from '@/lib/config/config-context'
-import { Button } from '@/components/ui/button'
+import { SubmitActions } from './submit-actions'
 import { Alert } from '@/components/ui/alert'
 import { FileDropZone } from './file-drop-zone'
 import type { FeatureCollection } from 'geojson'
@@ -19,7 +19,6 @@ interface OpenResultsProps {
 
 export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
   const t = useTranslations('Submission')
-  const tCommon = useTranslations('Common')
   const router = useRouter()
   const { config } = useConfig()
   const [file, setFile] = useState<File | null>(null)
@@ -81,32 +80,13 @@ export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
           message={`${staleMessage()} ${t('resubmit')}`}
         />
       )}
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" onClick={reset}>
-          <Trash2 className="size-3.5" />
-          {tCommon('clear')}
-        </Button>
-        {needsRerun ? (
-          <Button
-            type="button"
-            className="flex-1"
-            disabled={!file}
-            onClick={() => file && onSubmitGeometry(file)}
-          >
-            {t('continueToSubmit')}
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            className="flex-1"
-            disabled={!canOpen}
-            onClick={handleOpen}
-          >
-            <FolderOpen className="size-4" />
-            {t('openResults')}
-          </Button>
-        )}
-      </div>
+      <SubmitActions
+        onClear={reset}
+        runLabel={needsRerun ? t('continueToSubmit') : t('openResults')}
+        runIcon={needsRerun ? null : <FolderOpen className="size-4" />}
+        onRun={() => (needsRerun ? file && onSubmitGeometry(file) : handleOpen())}
+        runDisabled={needsRerun ? !file : !canOpen}
+      />
     </div>
   )
 }

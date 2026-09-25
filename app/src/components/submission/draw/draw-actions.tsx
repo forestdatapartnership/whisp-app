@@ -5,6 +5,7 @@ import { Check, Download, Hand, PencilLine, Trash2, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { actionRow } from '@/components/ui/styles'
 
 interface DrawActionsProps {
   count: number
@@ -75,28 +76,30 @@ export function DrawActions({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={actionRow}>
         <Button type="button" variant="outline" onClick={() => onDrawingChange(!drawing)} disabled={!ready}>
           {drawing ? <Hand className="size-3.5" /> : <PencilLine className="size-3.5" />}
           {drawing ? t('draw.stopDrawing') : t('draw.startDrawing')}
         </Button>
 
-        <Button type="button" variant="outline" onClick={onUndo} disabled={!canUndo}>
-          <Undo2 className="size-3.5" />
-          {t('draw.undo')}
-        </Button>
+        <div className="flex gap-2 max-sm:[&>*]:flex-1">
+          <Button type="button" variant="outline" onClick={onUndo} disabled={!canUndo}>
+            <Undo2 className="size-3.5" />
+            {t('draw.undo')}
+          </Button>
 
-        <Button type="button" variant="outline" onClick={onClear} disabled={count === 0}>
-          <Trash2 className="size-3.5" />
-          {tCommon('clear')}
-        </Button>
+          <Button type="button" variant="outline" onClick={onClear} disabled={count === 0}>
+            <Trash2 className="size-3.5" />
+            {tCommon('clear')}
+          </Button>
+        </div>
 
         <Button type="button" variant="outline" onClick={onDownload} disabled={!canUse}>
           <Download className="size-3.5" />
           {t('draw.download')}
         </Button>
 
-        <Button type="button" className="w-full sm:flex-1" onClick={onUse} disabled={!canUse}>
+        <Button type="button" onClick={onUse} disabled={!canUse}>
           <Check className="size-4" />
           {count === 1 ? t('draw.usePoint') : t('draw.usePlot')}
         </Button>

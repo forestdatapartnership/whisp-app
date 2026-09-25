@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
 import { Dialog } from '@base-ui/react/dialog'
@@ -48,11 +48,6 @@ export function DrawDialog({ initialVertices, maxPlotAreaHa, onConfirm, onClose 
   const [drawing, setDrawing] = useState(initialVertices.length > 0)
   const [locating, setLocating] = useState(false)
   const [locateFailed, setLocateFailed] = useState(false)
-
-  // Touch gets the crosshair by default: a fingertip hides the point it places.
-  useEffect(() => {
-    setCrosshair(window.matchMedia('(pointer: coarse)').matches)
-  }, [])
 
   const locate = () => {
     const map = mapRef.current
