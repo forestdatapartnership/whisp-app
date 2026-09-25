@@ -70,14 +70,15 @@ export function Navbar() {
       <div className="flex-1" />
 
       <div className="contents max-sm:hidden">
-        <Button
-          variant="ghost"
-          nativeButton={false}
-          render={<a href={`${config?.api.url ?? "/api"}/docs`} target="_blank" rel="noopener noreferrer" />}
-        >
-          <BookOpen className="size-4" aria-hidden />
-          {t("apiDocs")}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={<a href={`${config?.api.url ?? "/api"}/docs`} target="_blank" rel="noopener noreferrer" aria-label={t("apiDocs")} />}
+            className={buttonVariants({ variant: "ghost", size: "icon" })}
+          >
+            <BookOpen className="size-4" aria-hidden />
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{t("apiDocs")}</TooltipContent>
+        </Tooltip>
 
         <Tooltip>
           <TooltipTrigger

@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { ChevronDown, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,11 +54,16 @@ export function LanguageSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" aria-label={t("label")} />}>
-        <Globe className="size-4" aria-hidden />
-        {languageCode(locale).toUpperCase()}
-        <ChevronDown className="size-3" aria-hidden />
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger
+          render={<DropdownMenuTrigger render={<Button variant="ghost" aria-label={t("label")} />} />}
+        >
+          <Globe className="size-4" aria-hidden />
+          {languageCode(locale).toUpperCase()}
+          <ChevronDown className="size-3" aria-hidden />
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("label")}</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent
         align="end"
         sideOffset={8}
