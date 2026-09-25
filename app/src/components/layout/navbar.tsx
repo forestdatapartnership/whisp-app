@@ -36,7 +36,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-[250] flex h-14 items-center gap-4 border-b border-border bg-bg px-8">
+    <nav className="sticky top-0 z-[250] flex h-14 items-center gap-2 border-b border-border bg-bg px-8">
       <Link href="/" className="flex shrink-0 items-center no-underline">
         <Image
           src={theme === "dark" ? "/whisp_logo_nav_white.svg" : "/whisp_logo_nav.svg"}
