@@ -103,6 +103,7 @@ class ApiResponse(BaseModel):
 
 class PublicConfigResponse(BaseModel):
     maxRequestBodySizeKb: int | None
+    maxPlotAreaHa: int | None
     geometryLimitSync: int
     geometryLimitAsync: int
     analysisTimeoutSyncSeconds: int
