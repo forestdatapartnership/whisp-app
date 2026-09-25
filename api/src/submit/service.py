@@ -182,7 +182,7 @@ async def submit(
         time_limit=timeout,
     )
 
-    if opts.async_mode or ctx.agent == "ui":
+    if opts.async_mode or (ctx.agent or "api") != "api":
         return SubmitResult(
             SystemCode.ANALYSIS_QUEUED,
             data={

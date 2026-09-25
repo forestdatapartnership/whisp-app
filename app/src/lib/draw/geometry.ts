@@ -60,10 +60,6 @@ function isClockwise(ring: LatLng[]): boolean {
   return sum > 0
 }
 
-/**
- * The single definition of a submittable plot: one vertex is a Point, three or
- * more a Polygon, and a ring that crosses itself or encloses nothing is neither.
- */
 export function isValidPlot(count: number, crossing: boolean, areaHa: number): boolean {
   return count === 1 || (count >= 3 && !crossing && areaHa > 0)
 }

@@ -16,7 +16,7 @@ export interface AnalysisJob extends BaseModel {
   timeoutSeconds?: number;
   errorMessage?: string;
   resultsAvailable?: boolean;
-  agent?: 'ui' | 'api';
+  agent?: string;
   ipAddress?: string;
   apiVersion?: string;
   endpoint?: string;

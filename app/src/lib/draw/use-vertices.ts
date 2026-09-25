@@ -26,7 +26,6 @@ export function useVertices(initial: Vertex[] = []) {
     [commit, vertices]
   )
 
-  // Dragging edits the current step rather than adding one per pointer move.
   const move = useCallback((id: number, point: LatLng) => {
     setHistory((h) => [...h.slice(0, -1), h[h.length - 1].map((v) => (v.id === id ? { ...v, ...point } : v))])
   }, [])
