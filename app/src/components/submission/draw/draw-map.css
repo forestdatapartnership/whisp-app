@@ -1,0 +1,49 @@
+/* 15px margin around a 14px dot gives the 44px tap target that iconSize sets. */
+.whisp-vertex {
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin: 15px;
+  border-radius: 9999px;
+  background: var(--accent-green);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--accent-green);
+  cursor: pointer;
+}
+
+/* Leaflet styles divIcon with a white box by default. */
+.whisp-vertex-icon {
+  background: none;
+  border: none;
+}
+
+/* Dark halos keep the reticle legible over both bright soil and dark canopy. */
+.whisp-crosshair {
+  border: 2px solid var(--accent-green);
+  border-radius: 9999px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.whisp-crosshair::before,
+.whisp-crosshair::after {
+  content: "";
+  position: absolute;
+  background: var(--accent-green);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.whisp-crosshair::before {
+  left: 50%;
+  top: -10px;
+  bottom: -10px;
+  width: 2px;
+  transform: translateX(-1px);
+}
+
+.whisp-crosshair::after {
+  top: 50%;
+  left: -10px;
+  right: -10px;
+  height: 2px;
+  transform: translateY(-1px);
+}

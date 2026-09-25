@@ -58,9 +58,9 @@
   },
   "Home": {
     "title": "O que há nesse talhão?",
-    "subtitle": "Envie os limites dos seus talhões e obtenha uma avaliação do risco florestal baseada em evidências de vários conjuntos de dados públicos, com a tecnologia do Google Earth Engine.",
+    "subtitle": "Desenhe ou envie os limites dos seus talhões e obtenha uma avaliação do risco florestal baseada em evidências de vários conjuntos de dados públicos, com a tecnologia do Google Earth Engine.",
     "introTitle": "Novo por aqui?",
-    "intro": "O WHISP (\"What is in that plot?\", o que há nesse talhão?) ajuda você a verificar se as commodities da sua cadeia de suprimentos vêm de terras sem desmatamento recente, uma exigência central do EUDR. Envie os limites dos seus talhões e obtenha uma avaliação de risco a partir de <layers>camadas de dados e indicadores</layers>, com a nossa <library>biblioteca de código aberto</library> sobre o Google Earth Engine."
+    "intro": "O WHISP (\"What is in that plot?\", o que há nesse talhão?) ajuda você a verificar se as commodities da sua cadeia de suprimentos vêm de terras sem desmatamento recente, uma exigência central do EUDR. Desenhe ou envie os limites dos seus talhões e obtenha uma avaliação de risco a partir de <layers>camadas de dados e indicadores</layers>, com a nossa <library>biblioteca de código aberto</library> sobre o Google Earth Engine."
   },
   "Stats": {
     "totalFeatures": "Total de talhões analisados",
@@ -76,9 +76,49 @@
     "programmaticAccess": "Precisa de acesso programático? <link>Cadastre-se gratuitamente</link> para obter uma chave de API.",
     "lastThreeMonths": "Últimos 3 meses"
   },
+  "Map": {
+    "layerMap": "Mapa",
+    "layerSatellite": "Satélite",
+    "layerStreet": "Ruas"
+  },
   "Submission": {
     "tabGeometry": "Enviar geometria",
     "tabGeoIds": "Enviar Geo IDs",
+    "tabDraw": "Desenhar no mapa",
+    "draw": {
+      "intro": "Marque seu talhão em um mapa de satélite, sem precisar de arquivo.",
+      "openMap": "Abrir mapa",
+      "edit": "Toque para editar",
+      "hint": "Pelo EUDR, um único ponto basta para talhões de até 4 ha. Para talhões maiores, adicione pontos ao longo do limite.",
+      "singlePoint": "Ponto único",
+      "summary": "{points} pontos · {area} ha",
+      "summaryEditing": "{points} pontos · {area} ha · arraste para ajustar, toque para remover",
+      "download": "Baixar GeoJSON",
+      "required": "Marque seu talhão no mapa.",
+      "tooLarge": "O talhão é grande demais. O máximo permitido é {limit} ha.",
+      "title": "Marque seu talhão",
+      "locate": "Localizar-me",
+      "locating": "Localizando…",
+      "locateFailed": "Não foi possível obter sua localização. Mova o mapa ou informe as coordenadas GPS.",
+      "coordsLabel": "Coordenadas GPS",
+      "coordsPlaceholder": "GPS: 6.512345, -1.234567",
+      "coordsInvalid": "Informe latitude e longitude, por exemplo 6.512345, -1.234567",
+      "go": "Ir",
+      "discardChanges": "Descartar as alterações no mapa?",
+      "startDrawing": "Começar a desenhar",
+      "stopDrawing": "Parar de desenhar",
+      "addAtCenter": "Adicionar no centro",
+      "undo": "Desfazer",
+      "usePoint": "Usar este ponto",
+      "usePlot": "Usar este talhão",
+      "statusNavigate": "Mova e amplie o mapa até seu talhão e comece a desenhar.",
+      "crosshair": "Mira",
+      "statusStart": "Clique ou toque no limite do talhão para adicionar um ponto.",
+      "statusPoint": "Ponto único. Adicione mais pontos para traçar um limite, ou toque no ponto para removê-lo.",
+      "needMore": "Adicione mais um ponto para fechar a área.",
+      "degenerate": "Esta forma não tem área. Afaste os pontos.",
+      "crossing": "O limite cruza a si mesmo. Mova ou remova um ponto."
+    },
     "apiKeyRequiredTitle": "Chave de API necessária",
     "apiKeyRequiredBody": "Você precisa criar uma chave de API para enviar solicitações de análise. Acesse sua conta para criar uma.",
     "goToAccount": "Ir para a conta",

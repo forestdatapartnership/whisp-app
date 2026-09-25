@@ -5,6 +5,7 @@ import { readAppVersion } from '@/lib/app-version';
 
 type ApiConfigResponse = {
   maxRequestBodySizeKb?: number | null;
+  maxPlotAreaHa?: number | null;
   geometryLimitSync?: number;
   geometryLimitAsync?: number;
   openforisWhispVersion?: string;
@@ -48,6 +49,7 @@ function applyRemoteConfig(data: ApiConfigResponse) {
   if (data.maxRequestBodySizeKb != null) {
     process.env.MAX_REQUEST_BODY_SIZE_KB = String(data.maxRequestBodySizeKb);
   }
+  if (data.maxPlotAreaHa != null) process.env.MAX_PLOT_AREA_HA = String(data.maxPlotAreaHa);
   const limit = geometryLimit(data);
   if (limit != null) process.env.GEOMETRY_LIMIT = String(limit);
   syncRemoteConfig();
@@ -58,6 +60,7 @@ function syncRemoteConfig() {
   config.app.openforisWhispVersion = envOptional('OPENFORIS_WHISP_VERSION') ?? '';
   config.submission.maxRequestBodySizeKb = envOptionalInt('MAX_REQUEST_BODY_SIZE_KB');
   config.submission.geometryLimit = envOptionalInt('GEOMETRY_LIMIT');
+  config.submission.maxPlotAreaHa = envOptionalInt('MAX_PLOT_AREA_HA');
 }
 
 const loadRemote = cache(async () => {
@@ -122,6 +125,7 @@ export const config = {
   submission: {
     asyncThreshold: envInt('NEXT_PUBLIC_ASYNC_THRESHOLD', 50),
     geometryLimit: envOptionalInt('GEOMETRY_LIMIT'),
+    maxPlotAreaHa: envOptionalInt('MAX_PLOT_AREA_HA'),
     maxRequestBodySizeKb: envOptionalInt('MAX_REQUEST_BODY_SIZE_KB')
   },
 

@@ -66,8 +66,7 @@ async def _read_json(request: Request, settings: Settings) -> dict:
 
 
 def _build_context(request: Request, api_key: ApiKey) -> JobContext:
-    agent_header = request.headers.get("x-whisp-agent")
-    agent = "ui" if agent_header == "ui" else "api"
+    agent = request.headers.get("x-whisp-agent") or "api"
 
     forwarded = request.headers.get("x-forwarded-for")
     ip = forwarded.split(",")[0].strip() if forwarded else request.headers.get("x-real-ip")

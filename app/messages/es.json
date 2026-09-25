@@ -58,9 +58,9 @@
   },
   "Home": {
     "title": "¿Qué hay en esa parcela?",
-    "subtitle": "Suba los límites de sus parcelas y obtenga una evaluación del riesgo forestal basada en evidencia de múltiples conjuntos de datos públicos, con la tecnología de Google Earth Engine.",
+    "subtitle": "Dibuje o suba los límites de sus parcelas y obtenga una evaluación del riesgo forestal basada en evidencia de múltiples conjuntos de datos públicos, con la tecnología de Google Earth Engine.",
     "introTitle": "¿Es nuevo aquí?",
-    "intro": "WHISP («What is in that plot?», ¿qué hay en esa parcela?) le ayuda a verificar que los productos básicos de su cadena de suministro provienen de tierras sin deforestación reciente, un requisito central del EUDR. Suba los límites de sus parcelas y obtenga una evaluación de riesgo a partir de <layers>capas de datos e indicadores</layers>, con nuestra <library>biblioteca de código abierto</library> sobre Google Earth Engine."
+    "intro": "WHISP («What is in that plot?», ¿qué hay en esa parcela?) le ayuda a verificar que los productos básicos de su cadena de suministro provienen de tierras sin deforestación reciente, un requisito central del EUDR. Dibuje o suba los límites de sus parcelas y obtenga una evaluación de riesgo a partir de <layers>capas de datos e indicadores</layers>, con nuestra <library>biblioteca de código abierto</library> sobre Google Earth Engine."
   },
   "Stats": {
     "totalFeatures": "Parcelas analizadas en total",
@@ -76,9 +76,49 @@
     "programmaticAccess": "¿Necesita acceso programático? <link>Regístrese gratis</link> para obtener una clave de API.",
     "lastThreeMonths": "Últimos 3 meses"
   },
+  "Map": {
+    "layerMap": "Mapa",
+    "layerSatellite": "Satélite",
+    "layerStreet": "Callejero"
+  },
   "Submission": {
     "tabGeometry": "Enviar geometría",
     "tabGeoIds": "Enviar Geo IDs",
+    "tabDraw": "Dibujar en el mapa",
+    "draw": {
+      "intro": "Marque su parcela en un mapa satelital, sin necesidad de archivos.",
+      "openMap": "Abrir mapa",
+      "edit": "Toque para editar",
+      "hint": "Según el EUDR, un solo punto basta para parcelas de hasta 4 ha. Para parcelas mayores, añada puntos alrededor del límite.",
+      "singlePoint": "Punto único",
+      "summary": "{points} puntos · {area} ha",
+      "summaryEditing": "{points} puntos · {area} ha · arrastre para ajustar, toque para eliminar",
+      "download": "Descargar GeoJSON",
+      "required": "Marque su parcela en el mapa.",
+      "tooLarge": "La parcela es demasiado grande. El máximo permitido es {limit} ha.",
+      "title": "Marque su parcela",
+      "locate": "Localizarme",
+      "locating": "Localizando…",
+      "locateFailed": "No se pudo obtener su ubicación. Mueva el mapa o introduzca coordenadas GPS.",
+      "coordsLabel": "Coordenadas GPS",
+      "coordsPlaceholder": "GPS: 6.512345, -1.234567",
+      "coordsInvalid": "Introduzca latitud y longitud, por ejemplo 6.512345, -1.234567",
+      "go": "Ir",
+      "discardChanges": "¿Descartar los cambios del mapa?",
+      "startDrawing": "Empezar a dibujar",
+      "stopDrawing": "Dejar de dibujar",
+      "addAtCenter": "Añadir en el centro",
+      "undo": "Deshacer",
+      "usePoint": "Usar este punto",
+      "usePlot": "Usar esta parcela",
+      "statusNavigate": "Mueva y acerque el mapa hasta su parcela y empiece a dibujar.",
+      "crosshair": "Cruz",
+      "statusStart": "Haga clic o toque el límite de la parcela para añadir un punto.",
+      "statusPoint": "Punto único. Añada más puntos para trazar un límite, o toque el punto para eliminarlo.",
+      "needMore": "Añada un punto más para cerrar el área.",
+      "degenerate": "Esta forma no tiene área. Separe los puntos.",
+      "crossing": "El límite se cruza consigo mismo. Mueva o elimine un punto."
+    },
     "apiKeyRequiredTitle": "Se requiere una clave de API",
     "apiKeyRequiredBody": "Necesita crear una clave de API para enviar solicitudes de análisis. Vaya a su cuenta para crear una.",
     "goToAccount": "Ir a la cuenta",

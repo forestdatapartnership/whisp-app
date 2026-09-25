@@ -38,6 +38,7 @@ export function SubmitGeometry({
     analysisOptions,
     featureCount,
     asyncThreshold,
+    agent: 'ui:geojson',
   })
 
   useEffect(() => {

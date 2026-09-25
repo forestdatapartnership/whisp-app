@@ -36,6 +36,7 @@ export function SubmitGeoIds({
     analysisOptions,
     featureCount,
     asyncThreshold,
+    agent: 'ui:geoids',
   })
 
   useEffect(() => {

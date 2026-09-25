@@ -58,9 +58,9 @@
   },
   "Home": {
     "title": "Qu'y a-t-il dans cette parcelle ?",
-    "subtitle": "Importez les limites de vos parcelles et obtenez une évaluation du risque forestier fondée sur des preuves, à partir de plusieurs jeux de données publics, grâce à Google Earth Engine.",
+    "subtitle": "Dessinez ou importez les limites de vos parcelles et obtenez une évaluation du risque forestier fondée sur des preuves, à partir de plusieurs jeux de données publics, grâce à Google Earth Engine.",
     "introTitle": "Nouveau ici ?",
-    "intro": "WHISP (« What is in that plot? », qu'y a-t-il dans cette parcelle ?) vous aide à vérifier que les produits de base de votre chaîne d'approvisionnement proviennent de terres exemptes de déforestation récente, une exigence centrale du RDUE. Importez les limites de vos parcelles et obtenez une évaluation du risque à partir de <layers>couches de données et d'indicateurs</layers>, grâce à notre <library>bibliothèque open source</library> sur Google Earth Engine."
+    "intro": "WHISP (« What is in that plot? », qu'y a-t-il dans cette parcelle ?) vous aide à vérifier que les produits de base de votre chaîne d'approvisionnement proviennent de terres exemptes de déforestation récente, une exigence centrale du RDUE. Dessinez ou importez les limites de vos parcelles et obtenez une évaluation du risque à partir de <layers>couches de données et d'indicateurs</layers>, grâce à notre <library>bibliothèque open source</library> sur Google Earth Engine."
   },
   "Stats": {
     "totalFeatures": "Parcelles analysées au total",
@@ -76,9 +76,49 @@
     "programmaticAccess": "Besoin d'un accès programmatique ? <link>Inscrivez-vous gratuitement</link> pour obtenir une clé d'API.",
     "lastThreeMonths": "3 derniers mois"
   },
+  "Map": {
+    "layerMap": "Carte",
+    "layerSatellite": "Satellite",
+    "layerStreet": "Rues"
+  },
   "Submission": {
     "tabGeometry": "Envoyer une géométrie",
     "tabGeoIds": "Envoyer des Geo IDs",
+    "tabDraw": "Dessiner sur la carte",
+    "draw": {
+      "intro": "Marquez votre parcelle sur une carte satellite, sans fichier.",
+      "openMap": "Ouvrir la carte",
+      "edit": "Touchez pour modifier",
+      "hint": "Selon le RDUE, un seul point suffit pour les parcelles jusqu'à 4 ha. Pour les parcelles plus grandes, ajoutez des points le long de la limite.",
+      "singlePoint": "Point unique",
+      "summary": "{points} points · {area} ha",
+      "summaryEditing": "{points} points · {area} ha · faites glisser pour ajuster, touchez pour supprimer",
+      "download": "Télécharger le GeoJSON",
+      "required": "Veuillez marquer votre parcelle sur la carte.",
+      "tooLarge": "La parcelle est trop grande. Le maximum autorisé est de {limit} ha.",
+      "title": "Marquez votre parcelle",
+      "locate": "Me localiser",
+      "locating": "Localisation…",
+      "locateFailed": "Impossible d'obtenir votre position. Déplacez la carte ou saisissez des coordonnées GPS.",
+      "coordsLabel": "Coordonnées GPS",
+      "coordsPlaceholder": "GPS : 6.512345, -1.234567",
+      "coordsInvalid": "Saisissez la latitude et la longitude, par exemple 6.512345, -1.234567",
+      "go": "Aller",
+      "discardChanges": "Abandonner les modifications de la carte ?",
+      "startDrawing": "Commencer à dessiner",
+      "stopDrawing": "Arrêter de dessiner",
+      "addAtCenter": "Ajouter au centre",
+      "undo": "Annuler",
+      "usePoint": "Utiliser ce point",
+      "usePlot": "Utiliser cette parcelle",
+      "statusNavigate": "Déplacez et zoomez la carte jusqu'à votre parcelle, puis commencez à dessiner.",
+      "crosshair": "Réticule",
+      "statusStart": "Cliquez ou touchez la limite de la parcelle pour ajouter un point.",
+      "statusPoint": "Point unique. Ajoutez d'autres points pour tracer une limite, ou touchez le point pour le supprimer.",
+      "needMore": "Ajoutez encore un point pour fermer la zone.",
+      "degenerate": "Cette forme n'a aucune superficie. Écartez les points.",
+      "crossing": "La limite se croise elle-même. Déplacez ou supprimez un point."
+    },
     "apiKeyRequiredTitle": "Clé d'API requise",
     "apiKeyRequiredBody": "Vous devez créer une clé d'API pour envoyer des demandes d'analyse. Rendez-vous dans votre compte pour en créer une.",
     "goToAccount": "Aller au compte",

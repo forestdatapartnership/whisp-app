@@ -172,7 +172,7 @@ async function _getDetailedPublicStats(): Promise<DetailedPublicStats> {
     ),
     pool.query(
       `SELECT
-         COALESCE(SUM(feature_count) FILTER (WHERE agent = 'ui'), 0) AS ui_features,
+         COALESCE(SUM(feature_count) FILTER (WHERE agent <> 'api'), 0) AS ui_features,
          COALESCE(SUM(feature_count) FILTER (WHERE agent = 'api'), 0) AS api_features
        FROM analysis_jobs
        WHERE status = $1`,

@@ -46,7 +46,18 @@ def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Setti
     except Exception as e:
         logger.warning("analyze_geojson failed, falling back to count-only metrics: %s", e)
         metrics = {"count": polygon_count}
+
+    _check_plot_area(metrics, settings)
     return metrics
+
+
+def _check_plot_area(metrics: dict, settings: Settings) -> None:
+    limit = settings.max_plot_area_ha
+    largest = metrics.get("max_area_ha")
+    if limit is None or not isinstance(largest, (int, float)):
+        return
+    if largest > limit:
+        raise AppError(SystemCode.VALIDATION_PLOT_TOO_LARGE, [round(largest), limit])
 
 
 def _options_payload(opts: AnalysisOptions) -> dict:

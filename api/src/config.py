@@ -44,6 +44,8 @@ class Settings(BaseSettings):
 
     max_request_body_size_kb: int | None = None
 
+    max_plot_area_ha: int | None = None
+
     geometry_limit_sync: int = 500
     geometry_limit_async: int = 10000
     analysis_timeout_sync_seconds: int = 60
@@ -94,6 +96,7 @@ class Settings(BaseSettings):
     def public_config(self) -> dict[str, int | str | None]:
         return {
             "maxRequestBodySizeKb": self.max_request_body_size_kb,
+            "maxPlotAreaHa": self.max_plot_area_ha,
             "geometryLimitSync": self.geometry_limit_sync,
             "geometryLimitAsync": self.geometry_limit_async,
             "analysisTimeoutSyncSeconds": self.analysis_timeout_sync_seconds,

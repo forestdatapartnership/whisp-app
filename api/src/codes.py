@@ -24,6 +24,7 @@ class SystemCode(str, Enum):
     VALIDATION_INVALID_CRS = ("validation_invalid_crs", 400, "Invalid coordinate reference system. Only EPSG:4326 is supported.")
 
     VALIDATION_TOO_MANY_GEOMETRIES = ("validation_too_many_geometries", 400, "Too many geometries provided. Maximum allowed is {0}.")
+    VALIDATION_PLOT_TOO_LARGE = ("validation_plot_too_large", 400, "Plot is too large: {0} ha. Maximum allowed is {1} ha.")
     VALIDATION_REQUEST_BODY_TOO_LARGE = ("validation_request_body_too_large", 413, "Request body is too large: {0} KB. Maximum allowed size is {1} KB.")
     VALIDATION_INVALID_EXTERNAL_ID_COLUMN = ("validation_invalid_external_id_column", 400, 'The external ID column "{0}" does not exist in your GeoJSON features. Available columns: {1}')
     VALIDATION_GEO_ID_NOT_FOUND = ("validation_geo_id_not_found", 400, "One or more Geo IDs were not found in GeoID.")

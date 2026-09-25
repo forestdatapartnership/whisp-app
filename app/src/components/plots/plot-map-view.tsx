@@ -2,29 +2,14 @@
 
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { MapContainer, TileLayer, GeoJSON, LayersControl, useMap } from "react-leaflet";
+import { MapContainer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./leaflet-dark.css";
-import { useTheme } from "@/components/layout/theme-provider";
-import { useConfig } from "@/lib/config/config-context";
+import { BaseLayers } from "./base-layers";
 import { FeatureCollection, Feature, Geometry, GeoJsonProperties } from "geojson";
 import { riskLevel, useRiskLabel } from "@/components/results/risk-badge";
 import { COMMODITY_OPTIONS } from "@/lib/results/risk-trees";
-
-const OSM =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-const CARTO = `${OSM} &copy; <a href="https://carto.com/attributions">CARTO</a>`;
-
-const BASE_TILES = {
-  dark: { url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attribution: CARTO },
-  light: { url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", attribution: CARTO },
-} as const;
-
-// Domain-locked and sent in browser tile requests, so the key is public by design.
-function withKey(url: string, key?: string) {
-  return key ? `${url}?key=${encodeURIComponent(key)}` : url;
-}
 
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => string })._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -96,7 +81,6 @@ export function PlotMapView({
   riskField,
   onFeatureClick,
 }: PlotMapViewProps) {
-  const { theme } = useTheme();
   const t = useTranslations("Results");
   const riskLabel = useRiskLabel();
 
@@ -119,9 +103,6 @@ export function PlotMapView({
     return rows.length ? `<div class="map-popup">${rows.join("")}</div>` : "";
   };
 
-  const { config } = useConfig();
-  const cartoKey = config?.map.cartoKey;
-  const baseTile = BASE_TILES[theme];
   const selectedPlotId =
     selectedFeatureIndex != null && selectedFeatureIndex >= 0
       ? geoJsonData.features[selectedFeatureIndex]?.properties?.plotId
@@ -150,24 +131,7 @@ export function PlotMapView({
         scrollWheelZoom
       >
         <MapController geoJsonData={geoJsonData} selectedFeatureIndex={selectedFeatureIndex} />
-        <LayersControl key={`${theme}-${cartoKey ? "keyed" : "unkeyed"}`} position="topright">
-          <LayersControl.BaseLayer checked name={theme === "dark" ? "Dark Map" : "Light Map"}>
-            <TileLayer url={withKey(baseTile.url, cartoKey)} attribution={baseTile.attribution} />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Satellite">
-            <TileLayer
-              url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
-              attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-              maxZoom={18}
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Street Map">
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution={OSM}
-            />
-          </LayersControl.BaseLayer>
-        </LayersControl>
+        <BaseLayers />
         <GeoJSON
           key={`${riskField ?? "none"}-${geoJsonData.features.length}-${String(selectedPlotId ?? "")}`}
           data={geoJsonData}

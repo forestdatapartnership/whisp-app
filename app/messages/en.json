@@ -58,9 +58,9 @@
   },
   "Home": {
     "title": "What is in that plot?",
-    "subtitle": "Upload plot boundaries and get an evidence-based forest risk assessment across multiple public datasets — powered by Google Earth Engine.",
+    "subtitle": "Draw or upload plot boundaries and get an evidence-based forest risk assessment across multiple public datasets — powered by Google Earth Engine.",
     "introTitle": "New here?",
-    "intro": "WHISP (\"What is in that plot?\") helps you verify supply chain commodities come from land free of recent deforestation — a core EUDR requirement. Upload plot boundaries and get a risk assessment across <layers>data layers & indicators</layers>, powered by our <library>open-source library</library> via Google Earth Engine."
+    "intro": "WHISP (\"What is in that plot?\") helps you verify supply chain commodities come from land free of recent deforestation — a core EUDR requirement. Draw or upload plot boundaries and get a risk assessment across <layers>data layers & indicators</layers>, powered by our <library>open-source library</library> via Google Earth Engine."
   },
   "Stats": {
     "totalFeatures": "Total plots analyzed",
@@ -76,9 +76,49 @@
     "programmaticAccess": "Need programmatic access? <link>Register for free</link> to get an API key.",
     "lastThreeMonths": "Last 3 months"
   },
+  "Map": {
+    "layerMap": "Map",
+    "layerSatellite": "Satellite",
+    "layerStreet": "Street"
+  },
   "Submission": {
     "tabGeometry": "Submit Geometry",
     "tabGeoIds": "Submit Geo IDs",
+    "tabDraw": "Draw on Map",
+    "draw": {
+      "intro": "Mark your plot on a satellite map — no file needed.",
+      "openMap": "Open map",
+      "edit": "Tap to edit",
+      "hint": "Under EUDR, a single point is enough for plots up to 4 ha. For larger plots, add points around the boundary.",
+      "singlePoint": "Single point",
+      "summary": "{points} points · {area} ha",
+      "summaryEditing": "{points} points · {area} ha · drag to adjust, tap to remove",
+      "download": "Download GeoJSON",
+      "required": "Please mark your plot on the map.",
+      "tooLarge": "Plot is too large. Maximum allowed is {limit} ha.",
+      "title": "Mark your plot",
+      "locate": "Locate me",
+      "locating": "Locating…",
+      "locateFailed": "Could not find your location. Move the map or enter GPS coordinates.",
+      "coordsLabel": "GPS coordinates",
+      "coordsPlaceholder": "GPS: 6.512345, -1.234567",
+      "coordsInvalid": "Enter latitude and longitude, for example 6.512345, -1.234567",
+      "go": "Go",
+      "discardChanges": "Discard your map changes?",
+      "startDrawing": "Start drawing",
+      "stopDrawing": "Stop drawing",
+      "addAtCenter": "Add at center",
+      "undo": "Undo",
+      "usePoint": "Use this point",
+      "usePlot": "Use this plot",
+      "statusNavigate": "Pan and zoom to your plot, then start drawing.",
+      "crosshair": "Crosshair",
+      "statusStart": "Click or tap the plot boundary to add a point.",
+      "statusPoint": "Single point. Add more points to trace a boundary, or tap the point to remove it.",
+      "needMore": "Add one more point to close the area.",
+      "degenerate": "This shape has no area. Move the points apart.",
+      "crossing": "The boundary crosses itself. Move or remove a point."
+    },
     "apiKeyRequiredTitle": "API Key Required",
     "apiKeyRequiredBody": "You need to create an API key to submit analysis requests. Go to your account to create one.",
     "goToAccount": "Go to Account",
