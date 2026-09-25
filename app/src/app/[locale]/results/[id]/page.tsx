@@ -527,22 +527,6 @@ export default function ResultsPage() {
     />
   );
 
-  if (filteredData.length === 0) {
-    return (
-      <>
-        {toolbar}
-        <div className="flex flex-1 items-center justify-center">
-          <div className="flex flex-col items-center gap-3 text-text-muted">
-            <p className="text-sm">{t('noFilterMatches')}</p>
-            <Button variant="outline" size="sm" onClick={handleClearFilter}>
-              {t('clearFilters')}
-            </Button>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   const pickerColumns = allColumns.filter((c) => !c.excludeFromResults);
   const pickerGroups = columnGroups.map((g) => ({
     ...g,
@@ -553,21 +537,7 @@ export default function ResultsPage() {
 
   return (
     <div className="-mx-6 -my-8 flex flex-1 flex-col self-stretch overflow-hidden">
-      <ResultsToolbar
-        title={isLocal ? t('localTitle') : t('title')}
-        plotCount={sortedData.length}
-        mapVisible={mapVisible}
-        onToggleMap={setMapVisible}
-        summaryOpen={summaryOpen}
-        onOpenSummary={handleOpenSummary}
-        onCloseSummary={() => setSummaryOpen(false)}
-        onBack={leaveToHome}
-        onExportCsv={handleExportCsv}
-        onExportGeoJson={handleExportGeoJson}
-        onExportHtml={handleExportHtml}
-        onOpenWhispMap={handleOpenWhispMap}
-        whispMapDisabled={isLocal || !config?.api.url}
-      />
+      {toolbar}
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row lg:overflow-hidden">
         <div
           className={`flex min-w-0 flex-col overflow-hidden ${mapVisible ? "flex-1 lg:flex-[0_0_56%]" : "flex-1"}`}
@@ -586,17 +556,26 @@ export default function ResultsPage() {
               riskFilter={riskFilter}
               onRiskFilter={handleRiskFilter}
             />
-            <ResultsTable
-              columns={allColumns}
-              visibleCols={visibleCols}
-              data={pageData}
-              presenceRows={tableData}
-              selectedRowId={selectedRow ? String(selectedRow.plotId) : null}
-              onSelectRow={setSelectedRow}
-              sortColumn={sortColumn}
-              sortAsc={sortAsc}
-              onSort={handleSort}
-            />
+            {filteredData.length === 0 ? (
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-text-muted">
+                <p className="text-sm">{t('noFilterMatches')}</p>
+                <Button variant="outline" size="sm" onClick={handleClearFilter}>
+                  {t('clearFilters')}
+                </Button>
+              </div>
+            ) : (
+              <ResultsTable
+                columns={allColumns}
+                visibleCols={visibleCols}
+                data={pageData}
+                presenceRows={tableData}
+                selectedRowId={selectedRow ? String(selectedRow.plotId) : null}
+                onSelectRow={setSelectedRow}
+                sortColumn={sortColumn}
+                sortAsc={sortAsc}
+                onSort={handleSort}
+              />
+            )}
             <ResultsPagination
               currentPage={safePage}
               totalPages={totalPages}
