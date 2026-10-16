@@ -1,13 +1,49 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 
 from src.codes import SystemCode
 
 
 # ── Request bodies ─────────────────────────────────────────────────────────────
+
+class EarthEngineServiceAccount(BaseModel):
+    type: Literal["service_account"] = "service_account"
+    client_email: str = Field(min_length=1)
+    private_key: SecretStr = Field(min_length=1)
+    private_key_id: str | None = None
+    project_id: str | None = None
+    token_uri: Literal["https://oauth2.googleapis.com/token"] = "https://oauth2.googleapis.com/token"
+
+
+class EarthEngineInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+
+    project: str = Field(min_length=1, max_length=128)
+    accessToken: SecretStr | None = Field(default=None, min_length=1)
+    serviceAccount: EarthEngineServiceAccount | None = None
+
+    @model_validator(mode="after")
+    def validate_credentials(self) -> Self:
+        if (self.accessToken is None) == (self.serviceAccount is None):
+            raise ValueError("Provide exactly one of accessToken or serviceAccount")
+        return self
+
+    def task_payload(self) -> dict:
+        if self.accessToken is not None:
+            return {"project": self.project, "accessToken": self.accessToken.get_secret_value()}
+        account = self.serviceAccount
+        assert account is not None
+        return {
+            "project": self.project,
+            "serviceAccount": {
+                **account.model_dump(exclude={"private_key"}, exclude_none=True),
+                "private_key": account.private_key.get_secret_value(),
+            },
+        }
+
 
 class AnalysisOptionsInput(BaseModel):
     externalIdColumn: str | None = None
@@ -19,7 +55,17 @@ class AnalysisOptionsInput(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class SubmitGeoJsonRequest(BaseModel):
+class SubmitRequest(BaseModel):
+    analysisOptions: AnalysisOptionsInput | None = None
+    earthEngine: EarthEngineInput | None = Field(
+        default=None, exclude=True, repr=False,
+        description="Caller Earth Engine project and credentials for this analysis only. "
+        "Provide an accessToken valid for the queue wait and analysis, or serviceAccount JSON. "
+        "Credentials are held in the task queue, not saved with analysis inputs or job records.",
+    )
+
+
+class SubmitGeoJsonRequest(SubmitRequest):
     model_config = ConfigDict(
         extra="allow",
         json_schema_extra={
@@ -52,10 +98,8 @@ class SubmitGeoJsonRequest(BaseModel):
         }
     )
 
-    analysisOptions: AnalysisOptionsInput | None = None
 
-
-class SubmitWktRequest(BaseModel):
+class SubmitWktRequest(SubmitRequest):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -71,10 +115,9 @@ class SubmitWktRequest(BaseModel):
     )
 
     wkt: str
-    analysisOptions: AnalysisOptionsInput | None = None
 
 
-class SubmitGeoIdsRequest(BaseModel):
+class SubmitGeoIdsRequest(SubmitRequest):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -89,7 +132,6 @@ class SubmitGeoIdsRequest(BaseModel):
     )
 
     geoIds: list[str]
-    analysisOptions: AnalysisOptionsInput | None = None
 
 
 # ── Response model ─────────────────────────────────────────────────────────────

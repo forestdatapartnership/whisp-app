@@ -23,10 +23,10 @@ export function PublicStats() {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border pt-4">
         <BarChart3 className="size-3.5 shrink-0 text-text-dim" />
         {STATS.map((key) => (
-          <div key={key} className="flex items-baseline gap-1.5 whitespace-nowrap">
+          <div key={key} className="flex items-baseline gap-1 whitespace-nowrap">
             <span className="text-[11px] text-text-dim">{t(key)}</span>
             <span className={cn(
               'text-xs font-medium tabular-nums text-text-muted',

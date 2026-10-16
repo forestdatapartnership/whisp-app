@@ -1,18 +1,21 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { AlertTriangle } from 'lucide-react'
-import { parseGeometryFile } from '@/lib/utils/file-parser'
-import type { GeoPayload } from '@/lib/submission/useSubmitAnalysis'
+import { parseGeometryText, readGeometryFile } from '@/lib/utils/file-parser'
+import { parseFeatures } from '@/lib/draw/geojson'
+import { geometryAreaHa } from '@/lib/draw/geometry'
 import { useSubmitAnalysis } from '@/lib/submission/useSubmitAnalysis'
 import { SubmitActions } from './submit-actions'
-import { FileDropZone } from './file-drop-zone'
+import { FileTextInput } from './file-text-input'
+import { MapDrawInput } from './draw/map-draw-input'
 import { AnalysisOptions, AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from './analysis-options'
 
 interface SubmitGeometryProps {
   maxFileSize?: number
   geometryLimit?: number
+  maxPlotAreaHa?: number
   asyncThreshold?: number
   onError: (msg: string) => void
   initialFile?: File | null
@@ -21,78 +24,62 @@ interface SubmitGeometryProps {
 export function SubmitGeometry({
   maxFileSize,
   geometryLimit,
+  maxPlotAreaHa,
   asyncThreshold = 50,
   onError,
   initialFile,
 }: SubmitGeometryProps) {
   const t = useTranslations('Submission')
-  const [fileName, setFileName] = useState('')
-  const [featureCount, setFeatureCount] = useState(0)
-  const [payload, setPayload] = useState<GeoPayload | null>(null)
+  const [text, setText] = useState('')
   const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS)
-
+  const parsed = useMemo(() => parseGeometryText(text), [text])
   const appliedFileRef = useRef<File | null>(null)
 
   const { submit, isLoading, error: submitError } = useSubmitAnalysis({
     analysisOptions,
-    featureCount,
+    featureCount: 'error' in parsed ? 0 : parsed.featureCount,
     asyncThreshold,
-    agent: 'ui:geojson',
   })
 
   useEffect(() => {
     if (submitError) onError(submitError)
   }, [submitError, onError])
 
-  const clearFile = () => {
-    setFileName('')
-    setPayload(null)
-    setFeatureCount(0)
-  }
-
-  const reset = () => {
-    clearFile()
-    onError('')
-  }
-
-  const handleFile = useCallback(async (file: File) => {
-    onError('')
-    if (maxFileSize && file.size > maxFileSize) {
-      onError(t('fileTooLarge', { maxKb: maxFileSize / 1024 }))
-      clearFile()
-      return
-    }
-
-    const result = await parseGeometryFile(file)
-    if ('error' in result) {
-      onError(t(`fileErrors.${result.error}`))
-      clearFile()
-      return
-    }
-
-    if (geometryLimit && result.featureCount > geometryLimit) {
-      onError(t('tooManyGeometries', { limit: geometryLimit }))
-      clearFile()
-      return
-    }
-
-    setFileName(file.name)
-    setFeatureCount(result.featureCount)
-    setPayload('wkt' in result ? { type: 'wkt', wkt: result.wkt } : { type: 'json', geojson: result.json })
-  }, [maxFileSize, geometryLimit, onError, t])
-
   useEffect(() => {
     if (!initialFile || appliedFileRef.current === initialFile) return
     appliedFileRef.current = initialFile
-    void handleFile(initialFile)
-  }, [initialFile, handleFile])
-
-  const handleAnalyze = () => {
-    if (!payload) {
-      onError(t('geometryRequired'))
+    if (maxFileSize && initialFile.size > maxFileSize) {
+      onError(t('fileTooLarge', { maxKb: maxFileSize / 1024 }))
       return
     }
-    submit({ type: 'geometry', payload })
+    void readGeometryFile(initialFile).then((result) => {
+      if (typeof result === 'string') setText(result)
+      else onError(t(`fileErrors.${result.error}`))
+    })
+  }, [initialFile, maxFileSize, onError, t])
+
+  const reset = () => {
+    setText('')
+    onError('')
+  }
+
+  const handleAnalyze = () => {
+    if ('error' in parsed) {
+      onError(t(`fileErrors.${parsed.error}`))
+      return
+    }
+    if (geometryLimit && parsed.featureCount > geometryLimit) {
+      onError(t('tooManyGeometries', { limit: geometryLimit }))
+      return
+    }
+    if (maxPlotAreaHa != null && parseFeatures(text)?.some((feature) => geometryAreaHa(feature.geometry) > maxPlotAreaHa)) {
+      onError(t('draw.tooLarge', { limit: maxPlotAreaHa }))
+      return
+    }
+    submit({
+      type: 'geometry',
+      payload: 'wkt' in parsed ? { type: 'wkt', wkt: parsed.wkt } : { type: 'json', geojson: parsed.json },
+    })
   }
 
   const downloadExample = () => {
@@ -104,15 +91,21 @@ export function SubmitGeometry({
 
   return (
     <div className="flex flex-col gap-3">
-      <FileDropZone
+      <FileTextInput
         accept=".txt,.json,.geojson"
-        fileName={fileName}
-        onFile={handleFile}
         formats=".txt · .json · .geojson"
-      />
+        placeholder={t('geometryPlaceholder')}
+        value={text}
+        onChange={setText}
+        readFile={readGeometryFile}
+        maxFileSize={maxFileSize}
+        onError={onError}
+      >
+        <MapDrawInput value={text} onChange={setText} />
+      </FileTextInput>
       <div className="flex items-start gap-2 text-[12px] text-text-muted leading-relaxed">
         <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-risk-medium" />
-        {t('geometryHint')}
+        {t('geometryHint')} {t('draw.hint')}
       </div>
       <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} />
       <SubmitActions
@@ -122,7 +115,7 @@ export function SubmitGeometry({
         onClear={reset}
         runLabel={t('run')}
         onRun={handleAnalyze}
-        runDisabled={!payload}
+        runDisabled={!text.trim()}
         isLoading={isLoading}
       />
     </div>

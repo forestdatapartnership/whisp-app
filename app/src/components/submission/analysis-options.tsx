@@ -35,7 +35,7 @@ export interface AnalysisOptionsValue {
 
 export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptionsValue = {
   externalIdColumn: '',
-  nationalCodes: ['cm', 'co', 'ci', 'br'],
+  nationalCodes: [],
   unitType: 'ha',
   async: true,
   geometryAuditTrail: false,

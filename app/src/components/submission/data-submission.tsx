@@ -17,11 +17,10 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SubmitGeometry } from './submit-geometry'
 import { SubmitGeoIds } from './submit-geo-ids'
-import { DrawPlot } from './draw-plot'
 import { OpenResults } from './open-results'
 import { clearLocalResults } from '@/lib/results/local-results'
 
-type Tab = 'geometry' | 'geoids' | 'open' | 'draw'
+type Tab = 'geometry' | 'geoids' | 'open'
 
 export function DataSubmission() {
   const t = useTranslations('Submission')
@@ -57,7 +56,6 @@ export function DataSubmission() {
         <TabsList className="w-full flex-wrap gap-0.5 p-1">
           <TabsTrigger value="geometry" className="flex-1 px-1.5 sm:px-3">{t('tabGeometry')}</TabsTrigger>
           <TabsTrigger value="geoids" className="flex-1 px-1.5 sm:px-3">{t('tabGeoIds')}</TabsTrigger>
-          <TabsTrigger value="draw" className="flex-1 px-1.5 sm:px-3">{t('tabDraw')}</TabsTrigger>
           <TabsTrigger value="open" className="flex-1 px-1.5 sm:px-3">{t('openResults')}</TabsTrigger>
         </TabsList>
       </Tabs>
@@ -87,6 +85,7 @@ export function DataSubmission() {
         <SubmitGeometry
           maxFileSize={maxFileSize}
           geometryLimit={config?.submission.geometryLimit}
+          maxPlotAreaHa={config?.submission.maxPlotAreaHa}
           asyncThreshold={config?.submission.asyncThreshold}
           onError={setError}
           initialFile={geometryFile}
@@ -98,8 +97,6 @@ export function DataSubmission() {
           asyncThreshold={config?.submission.asyncThreshold}
           onError={setError}
         />
-      ) : activeTab === 'draw' ? (
-        <DrawPlot maxPlotAreaHa={config?.submission.maxPlotAreaHa} onError={setError} />
       ) : null}
     </div>
   )

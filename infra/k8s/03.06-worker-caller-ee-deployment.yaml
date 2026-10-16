@@ -1,0 +1,81 @@
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: whisp-caller-secrets-provider
+  namespace: ${GKE_NAMESPACE}
+spec:
+  provider: gke
+  parameters:
+    secrets: |
+      - resourceName: "${ENV_SECRET}"
+        path: ".env.local"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisp-worker-caller-ee
+  namespace: ${GKE_NAMESPACE}
+  labels:
+    app: whisp-worker-caller-ee
+    env: ${ENVIRONMENT}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whisp-worker-caller-ee
+  template:
+    metadata:
+      labels:
+        app: whisp-worker-caller-ee
+      annotations:
+        gke-internal.autoupdate.gke.io/sidecar-containers: "true"
+        gke-gcsfuse/volumes: "true"
+    spec:
+      serviceAccountName: whisp-app-ksa
+      terminationGracePeriodSeconds: 1860
+      containers:
+      - name: whisp-worker-caller-ee
+        image: ${IMAGE_REGISTRY}/whisp-api:${VERSION}
+        imagePullPolicy: Always
+        command:
+        - sh
+        - -c
+        - exec celery -A src.worker.celery_app worker -Q caller-ee --pool=prefork --concurrency=4 --without-mingle --without-gossip 2>&1
+        env:
+        - name: DEPLOYED_AT
+          value: "${DEPLOYED_AT}"
+        - name: EE_CALLER_CREDENTIALS
+          value: "1"
+        - name: DB_HOST
+          value: "cloud-sql-proxy"
+        - name: DB_PORT
+          value: "5432"
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            memory: 4Gi
+        volumeMounts:
+        - name: whisp-volume-gcs
+          mountPath: /app/temp
+          readOnly: false
+        - name: gcp-secrets-inline
+          mountPath: /app/.env.local
+          subPath: .env.local
+          readOnly: true
+      volumes:
+      - name: whisp-volume-gcs
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: ${GCS_BUCKET}
+            mountOptions: "implicit-dirs"
+      - name: gcp-secrets-inline
+        csi:
+          driver: secrets-store-gke.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "whisp-caller-secrets-provider"

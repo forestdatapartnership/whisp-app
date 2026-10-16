@@ -9,6 +9,7 @@ from src.exceptions import AppError
 from src.io import files
 from src.job_progress import JobProgress, timestamped
 from src.redis import publish, wait_for
+from src.schemas import EarthEngineInput
 from src.submit.schemas import AnalysisOptions, AnalysisTaskContext, JobContext, SubmitResult
 from src.submit.validators import count_individual_polygons, get_common_property_names, validate_external_id_column
 from src.worker.celery_app import app as celery_app
@@ -125,6 +126,7 @@ async def _wait_for_completion(token: str, timeout: int, settings: Settings) -> 
 async def submit(
     token: str, fc: dict, opts: AnalysisOptions, ctx: JobContext, settings: Settings,
     input_metrics: dict | None = None,
+    earth_engine: EarthEngineInput | None = None,
 ) -> SubmitResult:
     feature_count = (input_metrics or {}).get("count") or len(fc.get("features") or [])
     timeout = settings.analysis_timeout_seconds(async_mode=opts.async_mode)
@@ -139,7 +141,7 @@ async def submit(
         api_version=settings.api_version,
         endpoint=ctx.endpoint,
         feature_count=feature_count,
-        analysis_options=options_payload or None,
+        analysis_options={**options_payload, "callerEarthEngine": True} if earth_engine is not None else options_payload or None,
         timeout_seconds=timeout,
         status=SystemCode.ANALYSIS_QUEUED,
         is_async=opts.async_mode,
@@ -174,12 +176,21 @@ async def submit(
         api_key_id=ctx.api_key_id,
         input_metrics=input_metrics,
     )
+    task_name = "src.worker.tasks.run_analysis"
+    task_args = [asdict(task_context), asdict(opts)]
+    send_options = {}
+    if earth_engine is not None:
+        queue = "caller-ee"
+        task_name = "src.worker.tasks.run_caller_analysis"
+        task_args.append(earth_engine.task_payload())
+        send_options = {"argsrepr": "<caller credentials redacted>", "kwargsrepr": "{}"}
     celery_app.send_task(
-        "src.worker.tasks.run_analysis",
-        args=[asdict(task_context), asdict(opts)],
+        task_name,
+        args=task_args,
         queue=queue,
         task_id=AnalysisTask.task_id_for(token),
         time_limit=timeout,
+        **send_options,
     )
 
     if opts.async_mode or (ctx.agent or "api") != "api":

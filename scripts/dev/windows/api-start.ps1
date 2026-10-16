@@ -88,7 +88,15 @@ $AsyncProc = Start-Process -FilePath "python" -ArgumentList @(
 ) -WorkingDirectory $ApiDir -PassThru -NoNewWindow
 $Processes += $AsyncProc
 
-Assert-ProcessesAlive -DelaySeconds 8 -Processes @($SyncProc, $AsyncProc)
+$env:EE_CALLER_CREDENTIALS = "1"
+if (Test-Path Env:EE_HIGH_VOL) { Remove-Item Env:EE_HIGH_VOL }
+$CallerProc = Start-Process -FilePath "python" -ArgumentList @(
+    "-m", "celery", "-A", "src.worker.celery_app", "worker",
+    "-Q", "caller-ee", "--concurrency=1", "--pool=threads", "--without-mingle", "--without-gossip", "--hostname", "caller-ee@%h"
+) -WorkingDirectory $ApiDir -PassThru -NoNewWindow
+$Processes += $CallerProc
+
+Assert-ProcessesAlive -DelaySeconds 8 -Processes @($SyncProc, $AsyncProc, $CallerProc)
 
 Write-Host "API ready: http://localhost:$ApiPort"
 Watch-Processes -Processes $Processes

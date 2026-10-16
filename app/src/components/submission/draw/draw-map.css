@@ -5,9 +5,8 @@
   height: 14px;
   margin: 15px;
   border-radius: 9999px;
-  background: var(--accent-green);
-  border: 2px solid var(--bg);
-  box-shadow: 0 0 0 1px var(--accent-green);
+  background: #fff;
+  border: 2px solid #111827;
   cursor: pointer;
 }
 

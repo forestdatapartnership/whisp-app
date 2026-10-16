@@ -1,19 +1,20 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
 import { Dialog } from '@base-ui/react/dialog'
-import './draw-map.css'
 import { Crosshair } from 'lucide-react'
-import type { Map as LeafletMap } from 'leaflet'
+import type { LocationEvent, Map as LeafletMap } from 'leaflet'
 import { Button, CloseButton } from '@/components/ui/button'
 import { cardBase, controlSize } from '@/components/ui/styles'
-import { useVertices, type Vertex } from '@/lib/draw/use-vertices'
-import { isValidPlot, ringAreaHa, selfIntersects, type LatLng } from '@/lib/draw/geometry'
-import { downloadPlot } from '@/lib/draw/download'
+import { shapeIssue, type LatLng } from '@/lib/draw/geometry'
+import { isEdited, toGeoJson, toShapes, type SourceFeature } from '@/lib/draw/geojson'
+import { downloadBlob, timestampFilename } from '@/lib/utils/export'
 import { DrawActions } from './draw-actions'
-import { LocatePanel } from './locate-panel'
+import type { LocationFix } from './draw-map'
+import { LocatePanel, type LocateStatus } from './locate-panel'
+import { useShapes } from './use-shapes'
 
 const LOCATE_ZOOM = 17
 
@@ -32,63 +33,70 @@ const DrawMap = dynamic(() => import('./draw-map').then((m) => m.DrawMap), {
 })
 
 interface DrawDialogProps {
-  initialVertices: Vertex[]
+  features: SourceFeature[]
   maxPlotAreaHa?: number
-  onConfirm: (vertices: Vertex[]) => void
+  onConfirm: (geojson: string) => void
   onClose: () => void
 }
 
-export function DrawDialog({ initialVertices, maxPlotAreaHa, onConfirm, onClose }: DrawDialogProps) {
+export function DrawDialog({ features, maxPlotAreaHa, onConfirm, onClose }: DrawDialogProps) {
   const t = useTranslations('Submission')
-  const mapRef = useRef<LeafletMap | null>(null)
+  const [{ shapes: initialShapes, locked }] = useState(() => toShapes(features))
+  const { shapes, active, add, remove, startMove, move, select, removeActive, undo, canUndo } = useShapes(initialShapes)
+  const [map, setMap] = useState<LeafletMap | null>(null)
+  const [drawing, setDrawing] = useState(initialShapes.length > 0)
   const [crosshair, setCrosshair] = useState(false)
-  const { vertices, add, remove, move, clear, undo, canUndo } = useVertices(initialVertices)
-  const [mapReady, setMapReady] = useState(false)
-  // Reopening an existing plot means editing it, so skip the navigate step.
-  const [drawing, setDrawing] = useState(initialVertices.length > 0)
-  const [locating, setLocating] = useState(false)
-  const [locateFailed, setLocateFailed] = useState(false)
+  const [locateStatus, setLocateStatus] = useState<LocateStatus>('idle')
+  const [fix, setFix] = useState<LocationFix | null>(null)
+
+  useEffect(() => {
+    if (!map) return
+    const found = (e: LocationEvent) => {
+      setFix({ point: e.latlng, accuracy: e.accuracy })
+      setLocateStatus('idle')
+    }
+    const failed = () => setLocateStatus('failed')
+    map.on('locationfound', found)
+    map.on('locationerror', failed)
+    return () => {
+      map.off('locationfound', found)
+      map.off('locationerror', failed)
+    }
+  }, [map])
 
   const locate = () => {
-    const map = mapRef.current
     if (!map) return
-    setLocateFailed(false)
-    setLocating(true)
+    setLocateStatus('locating')
     map.locate({ setView: true, maxZoom: LOCATE_ZOOM, enableHighAccuracy: true, timeout: 10_000 })
   }
 
-  const stopLocating = () => setLocating(false)
-
-  const failLocating = () => {
-    setLocating(false)
-    setLocateFailed(true)
-  }
-
   const goTo = (point: LatLng) => {
-    const map = mapRef.current
-    if (!map) return
-    map.setView([point.lat, point.lng], LOCATE_ZOOM)
-    setLocateFailed(false)
+    map?.setView(point, LOCATE_ZOOM)
+    setLocateStatus('idle')
   }
 
   const changeDrawing = (next: boolean) => {
     setDrawing(next)
-    if (next) mapRef.current?.getContainer().focus()
+    if (next) map?.getContainer().focus()
   }
 
   const addAtCenter = () => {
-    const center = mapRef.current?.getCenter()
-    if (center) add(center)
+    if (map) add(map.getCenter())
   }
+
+  const download = () =>
+    downloadBlob(new Blob([toGeoJson(features, shapes)], { type: 'application/geo+json' }), timestampFilename('geojson', 'plots'))
 
   const requestClose = () => {
     if (!canUndo || window.confirm(t('draw.discardChanges'))) onClose()
   }
 
-  const crossing = selfIntersects(vertices)
-  const areaHa = ringAreaHa(vertices)
-  const tooLarge = maxPlotAreaHa != null && areaHa > maxPlotAreaHa
-  const canUse = isValidPlot(vertices.length, crossing, areaHa) && !tooLarge
+  const vertices = active?.vertices ?? []
+  // Untouched shapes are passed through as they came, so only edits have to be valid.
+  const issue = active && isEdited(active) ? shapeIssue(vertices, maxPlotAreaHa) : null
+  const canUse = !issue
+  // A shape being drawn takes every click as a vertex, so tracing along a neighbour can't switch to it.
+  const canSelect = !active || (active.source !== undefined && !issue)
 
   return (
     <Dialog.Root open onOpenChange={(nextOpen) => { if (!nextOpen) requestClose() }}>
@@ -97,29 +105,31 @@ export function DrawDialog({ initialVertices, maxPlotAreaHa, onConfirm, onClose 
         <Dialog.Viewport className="fixed inset-0 z-[301] flex items-center justify-center p-2 sm:p-4">
           <Dialog.Popup className={`${cardBase} flex h-full max-h-[720px] w-full max-w-[880px] flex-col overflow-hidden shadow-xl`}>
             <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-2.5">
-              <Dialog.Title className="truncate text-sm font-semibold text-text-primary">{t('draw.title')}</Dialog.Title>
+              <div className="flex min-w-0 items-baseline gap-2">
+                <Dialog.Title className="truncate text-sm font-semibold text-text-primary">{t('draw.title')}</Dialog.Title>
+                {locked.length > 0 && (
+                  <span className="truncate text-[12px] text-text-muted">{t('draw.readOnly')}</span>
+                )}
+              </div>
               <CloseButton type="button" className={controlSize.md} onClick={requestClose} />
             </header>
 
-            <LocatePanel
-              ready={mapReady}
-              locating={locating}
-              failed={locateFailed}
-              onLocate={locate}
-              onGoTo={goTo}
-            />
+            <LocatePanel ready={map !== null} status={locateStatus} onLocate={locate} onGoTo={goTo} />
 
             <div className="relative flex-1 overflow-hidden">
               <DrawMap
-                vertices={vertices}
+                shapes={shapes}
+                active={active}
+                canSelect={canSelect}
+                locked={locked}
                 drawing={drawing}
-                mapRef={mapRef}
-                onReady={() => setMapReady(true)}
+                fix={fix}
+                onMap={setMap}
                 onAddVertex={add}
                 onRemoveVertex={remove}
+                onMoveStart={startMove}
                 onMove={move}
-                onLocated={stopLocating}
-                onLocateError={failLocating}
+                onSelect={select}
               />
 
               {drawing && crosshair && (
@@ -129,7 +139,7 @@ export function DrawDialog({ initialVertices, maxPlotAreaHa, onConfirm, onClose 
                     type="button"
                     className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 shadow-xl"
                     onClick={addAtCenter}
-                    disabled={!mapReady}
+                    disabled={!map}
                   >
                     <Crosshair className="size-4" />
                     {t('draw.addAtCenter')}
@@ -139,20 +149,22 @@ export function DrawDialog({ initialVertices, maxPlotAreaHa, onConfirm, onClose 
             </div>
 
             <DrawActions
-              count={vertices.length}
-              areaHa={areaHa}
-              crossing={crossing}
+              vertices={vertices}
+              issue={issue}
               maxPlotAreaHa={maxPlotAreaHa}
-              ready={mapReady}
+              hasShapes={shapes.length > 0}
+              ready={map !== null}
               drawing={drawing}
               crosshair={crosshair}
               canUndo={canUndo}
               canUse={canUse}
+              canDownload={!issue && (shapes.length > 0 || locked.length > 0)}
               onDrawingChange={changeDrawing}
+              onAddShape={() => select(null)}
               onUndo={undo}
-              onClear={clear}
-              onUse={() => onConfirm(vertices)}
-              onDownload={() => downloadPlot(vertices)}
+              onDelete={removeActive}
+              onDownload={download}
+              onUse={() => onConfirm(toGeoJson(features, shapes))}
               onCrosshairChange={setCrosshair}
             />
           </Dialog.Popup>

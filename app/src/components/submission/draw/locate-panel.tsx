@@ -7,18 +7,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { parseLatLng, type LatLng } from '@/lib/draw/geometry'
 
+export type LocateStatus = 'idle' | 'locating' | 'failed'
+
 interface LocatePanelProps {
   ready: boolean
-  locating: boolean
-  failed: boolean
+  status: LocateStatus
   onLocate: () => void
   onGoTo: (point: LatLng) => void
 }
 
-export function LocatePanel({ ready, locating, failed, onLocate, onGoTo }: LocatePanelProps) {
+export function LocatePanel({ ready, status, onLocate, onGoTo }: LocatePanelProps) {
   const t = useTranslations('Submission')
   const [coords, setCoords] = useState('')
   const [invalid, setInvalid] = useState(false)
+  const locating = status === 'locating'
 
   const goToCoords = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -57,7 +59,7 @@ export function LocatePanel({ ready, locating, failed, onLocate, onGoTo }: Locat
         </form>
       </div>
 
-      {(invalid || failed) && (
+      {(invalid || status === 'failed') && (
         <p id={invalid ? 'draw-coordinates-error' : undefined} role="alert" className="text-[12px] text-destructive">
           {invalid ? t('draw.coordsInvalid') : t('draw.locateFailed')}
         </p>

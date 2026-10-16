@@ -123,7 +123,9 @@ async def submit_geojson(
     ctx = _build_context(request, api_key)
 
     token = service.new_token()
-    result = await service.submit(token, fc, opts, ctx, settings, input_metrics=input_metrics)
+    result = await service.submit(
+        token, fc, opts, ctx, settings, input_metrics=input_metrics, earth_engine=body.earthEngine,
+    )
     return api_response(result.code, data=result.data, context=result.context)
 
 
@@ -164,7 +166,9 @@ async def submit_wkt(
     ctx = _build_context(request, api_key)
 
     token = service.new_token()
-    result = await service.submit(token, fc, opts, ctx, settings, input_metrics=input_metrics)
+    result = await service.submit(
+        token, fc, opts, ctx, settings, input_metrics=input_metrics, earth_engine=body.earthEngine,
+    )
     return api_response(result.code, data=result.data, context=result.context)
 
 
@@ -205,5 +209,7 @@ async def submit_geo_ids(
     ctx = _build_context(request, api_key)
 
     token = service.new_token()
-    result = await service.submit(token, fc, opts, ctx, settings, input_metrics=input_metrics)
+    result = await service.submit(
+        token, fc, opts, ctx, settings, input_metrics=input_metrics, earth_engine=body.earthEngine,
+    )
     return api_response(result.code, data=result.data, context=result.context)

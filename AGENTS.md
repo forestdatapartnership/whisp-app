@@ -36,8 +36,7 @@ The three deployed images are `app`, `api`, and `db-migrate`.
 
 ## Verifying a change
 
-Run the check that covers what you touched. Do not skip it because the change
-looks trivial.
+Run these only when asked. Never run them on your own initiative.
 
 ```
 cd app && npx tsc --noEmit     # type check
@@ -52,6 +51,8 @@ anything — do not imply a check you did not perform.
 
 ## Constraints
 
+- Do only what was asked, nothing more: no unrequested checks, builds, tests,
+  refactors, or fixes. If something else looks worth doing, mention it and stop.
 - Do not edit `.github/workflows/` unless that is the task you were given.
 - Do not touch `infra/`, credentials, or anything holding a secret.
   `api/credentials.json` is a local service-account file: never read it, print

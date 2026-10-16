@@ -3,11 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { AlertTriangle } from 'lucide-react'
-import { parseGeoIdText, parseGeoIdFile } from '@/lib/utils/file-parser'
+import { parseGeoIdText, readGeoIdFile } from '@/lib/utils/file-parser'
 import { useSubmitAnalysis } from '@/lib/submission/useSubmitAnalysis'
 import { SubmitActions } from './submit-actions'
-import { Textarea } from '@/components/ui/textarea'
-import { FileDropZone } from './file-drop-zone'
+import { FileTextInput } from './file-text-input'
 import { AnalysisOptions, AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from './analysis-options'
 
 interface SubmitGeoIdsProps {
@@ -24,9 +23,7 @@ export function SubmitGeoIds({
   onError,
 }: SubmitGeoIdsProps) {
   const t = useTranslations('Submission')
-  const tCommon = useTranslations('Common')
   const [geoIdText, setGeoIdText] = useState('')
-  const [geoIdFileName, setGeoIdFileName] = useState('')
   const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS)
 
   const cleanIds = parseGeoIdText(geoIdText)
@@ -36,7 +33,6 @@ export function SubmitGeoIds({
     analysisOptions,
     featureCount,
     asyncThreshold,
-    agent: 'ui:geoids',
   })
 
   useEffect(() => {
@@ -45,25 +41,7 @@ export function SubmitGeoIds({
 
   const reset = () => {
     setGeoIdText('')
-    setGeoIdFileName('')
     onError('')
-  }
-
-  const handleGeoIdFile = async (file: File) => {
-    onError('')
-    if (maxFileSize && file.size > maxFileSize) {
-      onError(t('fileTooLarge', { maxKb: maxFileSize / 1024 }))
-      setGeoIdFileName('')
-      return
-    }
-    const result = await parseGeoIdFile(file)
-    if (!Array.isArray(result)) {
-      onError(t(`fileErrors.${result.error}`))
-      setGeoIdFileName('')
-      return
-    }
-    setGeoIdFileName(file.name)
-    setGeoIdText(result.join('\n'))
   }
 
   const handleAnalyze = () => {
@@ -87,26 +65,16 @@ export function SubmitGeoIds({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-stretch gap-0 min-h-40 max-sm:flex-col">
-        <FileDropZone
-          accept=".txt"
-          fileName={geoIdFileName}
-          onFile={handleGeoIdFile}
-          formats={t('txtFile')}
-          compact
-        />
-
-        <div className="flex-shrink-0 w-8 flex items-center justify-center text-[11px] text-text-muted max-sm:w-full max-sm:py-1.5 max-sm:justify-center">
-          {tCommon('or')}
-        </div>
-
-        <Textarea
-          value={geoIdText}
-          onChange={(e) => { setGeoIdText(e.target.value); setGeoIdFileName('') }}
-          placeholder={t('geoIdsPlaceholder')}
-          className="flex-1 font-mono max-sm:min-h-24"
-        />
-      </div>
+      <FileTextInput
+        accept=".txt"
+        formats={t('txtFile')}
+        placeholder={t('geoIdsPlaceholder')}
+        value={geoIdText}
+        onChange={setGeoIdText}
+        readFile={readGeoIdFile}
+        maxFileSize={maxFileSize}
+        onError={onError}
+      />
 
       <div className="flex items-start gap-2 text-[12px] text-text-muted leading-relaxed">
         <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-risk-medium" />

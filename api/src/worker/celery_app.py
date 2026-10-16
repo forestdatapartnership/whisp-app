@@ -78,6 +78,10 @@ def _clear_task_log_context(**_):
 @worker_init.connect
 @worker_process_init.connect
 def _init_worker(sender=None, **kwargs):
+    if os.environ.get("EE_CALLER_CREDENTIALS") == "1":
+        # Per-task ee.Initialize; worker must use prefork or threads with --concurrency=1.
+        return
+
     import openforis_whisp as whisp
 
     high_vol = os.environ.get("EE_HIGH_VOL") == "1"

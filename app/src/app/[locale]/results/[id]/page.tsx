@@ -65,12 +65,7 @@ function buildFromFields(fields: ResultField[]) {
   }));
 
   const defaultVisible = sorted
-    .filter(
-      (f) =>
-        f.displayMetadata?.excludeFromResults !== true &&
-        f.displayMetadata?.visibleByDefault !== false &&
-        !(f.id.startsWith("Ind_") && f.displayMetadata?.visibleByDefault !== true)
-    )
+    .filter((f) => f.displayMetadata?.excludeFromResults !== true)
     .map((f) => f.id);
 
   return { allColumns, columnGroups, defaultVisible };
@@ -80,13 +75,12 @@ function mergeUnknownColumns(
   existing: ColumnDef[],
   groups: ColumnGroup[],
   visible: string[],
-  defaultVisible: string[],
   row: ResultRow | undefined
 ) {
-  if (!row) return { allColumns: existing, columnGroups: groups, visibleCols: visible, defaultVisibleCols: defaultVisible };
+  if (!row) return { allColumns: existing, columnGroups: groups, visibleCols: visible };
   const known = new Set(existing.map((c) => c.key));
   const unknown = Object.keys(row).filter((k) => k !== "geo" && !known.has(k));
-  if (unknown.length === 0) return { allColumns: existing, columnGroups: groups, visibleCols: visible, defaultVisibleCols: defaultVisible };
+  if (unknown.length === 0) return { allColumns: existing, columnGroups: groups, visibleCols: visible };
 
   const fallbacks: ColumnDef[] = unknown.map((key) => ({
     key,
@@ -101,8 +95,7 @@ function mergeUnknownColumns(
       ...groups.filter((g) => g.name !== "Other"),
       { name: "Other", columns: [...(groups.find((g) => g.name === "Other")?.columns ?? []), ...unknown] },
     ],
-    visibleCols: visible,
-    defaultVisibleCols: [...defaultVisible, ...unknown],
+    visibleCols: [...visible, ...unknown],
   };
 }
 
@@ -160,7 +153,6 @@ export default function ResultsPage() {
   const [allColumns, setAllColumns] = useState<ColumnDef[]>([]);
   const [columnGroups, setColumnGroups] = useState<ColumnGroup[]>([]);
   const [visibleCols, setVisibleCols] = useState<string[]>([]);
-  const [defaultVisibleCols, setDefaultVisibleCols] = useState<string[]>([]);
   const [tableData, setTableData] = useState<ResultRow[]>([]);
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
   const [localMissing, setLocalMissing] = useState(false);
@@ -191,20 +183,18 @@ export default function ResultsPage() {
       setAllColumns(built.allColumns);
       setColumnGroups(built.columnGroups);
       setVisibleCols(built.defaultVisible);
-      setDefaultVisibleCols(built.defaultVisible);
     });
   }, []);
 
   useEffect(() => {
     if (tableData.length === 0) return;
-    const merged = mergeUnknownColumns(allColumns, columnGroups, visibleCols, defaultVisibleCols, tableData[0]);
+    const merged = mergeUnknownColumns(allColumns, columnGroups, visibleCols, tableData[0]);
     if (merged.allColumns !== allColumns) {
       setAllColumns(merged.allColumns);
       setColumnGroups(merged.columnGroups);
       setVisibleCols(merged.visibleCols);
-      setDefaultVisibleCols(merged.defaultVisibleCols);
     }
-  }, [tableData, allColumns, columnGroups, visibleCols, defaultVisibleCols]);
+  }, [tableData, allColumns, columnGroups, visibleCols]);
 
   const handleCompleted = useCallback((data: unknown) => {
     const fc = data as FeatureCollection;
@@ -592,7 +582,6 @@ export default function ResultsPage() {
               columns={pickerColumns}
               groups={pickerGroups}
               visible={visibleCols}
-              defaultVisible={defaultVisibleCols}
               onChange={setVisibleCols}
               onClose={() => setFieldPickerOpen(false)}
             />

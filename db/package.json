@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "migrate": "node migrate.js",
-    "status": "node migrate.js status"
+    "status": "node migrate.js status",
+    "sync-fields": "node sync-result-fields.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

@@ -45,7 +45,6 @@ interface FieldPickerProps {
   columns: FieldPickerColumn[];
   groups: ColumnGroup[];
   visible: string[];
-  defaultVisible: string[];
   onChange: (visible: string[]) => void;
   onClose: () => void;
 }
@@ -55,7 +54,6 @@ export function FieldPicker({
   columns,
   groups,
   visible,
-  defaultVisible,
   onChange,
   onClose,
 }: FieldPickerProps) {
@@ -126,8 +124,6 @@ export function FieldPicker({
       checked ? [...visible, key] : visible.filter((k) => k !== key)
     );
   };
-
-  const reset = () => onChange([...defaultVisible]);
 
   const selectAll = () => onChange(columns.map((c) => c.key));
   const selectNone = () => onChange([]);
@@ -221,9 +217,6 @@ export function FieldPicker({
           {t('riskOnly')}
         </Button>
         <div className="flex-1" />
-        <Button variant="outline" size="sm" onClick={reset}>
-          {t('resetDefaults')}
-        </Button>
         <Button variant="secondary" size="sm" onClick={handleClose}>
           {t('apply')}
         </Button>

@@ -17,6 +17,7 @@ const CARTO_TILES = {
 // Each source stops at its own native level; overzooming upscales those tiles so the
 // map keeps rendering instead of going blank.
 const MAX_ZOOM = 21
+export const SATELLITE_MAX_ZOOM = 18
 
 // Domain-locked and sent in browser tile requests, so the key is public by design.
 const withKey = (url: string, key?: string) => (key ? `${url}?key=${encodeURIComponent(key)}` : url)
@@ -43,7 +44,7 @@ export function BaseLayers({ defaultLayer = 'map' }: { defaultLayer?: 'map' | 's
         <TileLayer
           url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
           attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-          maxNativeZoom={18}
+          maxNativeZoom={SATELLITE_MAX_ZOOM}
           maxZoom={MAX_ZOOM}
         />
       </LayersControl.BaseLayer>

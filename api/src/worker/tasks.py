@@ -15,6 +15,7 @@ from src.io import files
 from src.submit.schemas import AnalysisOptions, AnalysisTaskContext
 from src.worker.celery_app import app
 from src.worker.analysis_task import AnalysisTask
+from src.worker.earth_engine_init import caller_earth_engine_session
 
 logger = logging.getLogger(__name__)
 logging.getLogger("whisp").propagate = False
@@ -120,3 +121,16 @@ def run_analysis(self: AnalysisTask, context: dict, opts_dict: dict) -> None:
     ctx = AnalysisTaskContext.parse(context)
     opts = AnalysisOptions(**opts_dict)
     _run_whisp_blocking(ctx.token, opts, feature_count=ctx.feature_count)
+
+
+@app.task(base=AnalysisTask, bind=True, name="src.worker.tasks.run_caller_analysis")
+def run_caller_analysis(self: AnalysisTask, context: dict, opts_dict: dict, earth_engine: dict) -> None:
+    ctx = AnalysisTaskContext.parse(context)
+    opts = AnalysisOptions(**opts_dict)
+    error_message = "Caller Earth Engine failed; check credentials, project access, and inputs"
+    try:
+        with caller_earth_engine_session(earth_engine, opts.async_mode):
+            _run_whisp_blocking(ctx.token, opts, feature_count=ctx.feature_count)
+    except Exception:
+        logger.exception("%s", error_message)
+        raise RuntimeError(error_message) from None

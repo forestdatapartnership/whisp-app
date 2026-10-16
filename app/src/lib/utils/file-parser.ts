@@ -1,65 +1,55 @@
 type FileErrorKey = 'readError' | 'empty' | 'invalidGeoJson' | 'unsupportedFormat' | 'noGeoIds'
 
-export type ParseResult =
+export type FileTextResult = string | { error: FileErrorKey }
+
+type GeometryParseResult =
   | { wkt: string; featureCount: number }
   | { json: Record<string, unknown>; featureCount: number }
   | { error: FileErrorKey }
 
-export function parseGeometryFile(file: File): Promise<ParseResult> {
+function readTextFile(file: File): Promise<FileTextResult> {
   return new Promise((resolve) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       const text = e.target?.result
-      if (typeof text !== 'string') {
-        resolve({ error: 'readError' })
-        return
-      }
-
-      if (file.name.endsWith('.txt')) {
-        const trimmed = text.trim()
-        if (!trimmed) {
-          resolve({ error: 'empty' })
-          return
-        }
-        const featureCount = countWktFeatures(trimmed)
-        resolve({ wkt: trimmed, featureCount })
-      } else if (file.name.endsWith('.json') || file.name.endsWith('.geojson')) {
-        try {
-          const jsonData = JSON.parse(text)
-          let featureCount = 1
-          if (jsonData.type === 'FeatureCollection' && Array.isArray(jsonData.features)) {
-            featureCount = jsonData.features.length
-          }
-          resolve({ json: jsonData, featureCount })
-        } catch {
-          resolve({ error: 'invalidGeoJson' })
-        }
-      } else {
-        resolve({ error: 'unsupportedFormat' })
-      }
+      resolve(typeof text === 'string' ? text : { error: 'readError' })
     }
     reader.onerror = () => resolve({ error: 'readError' })
     reader.readAsText(file)
   })
+}
+
+export function parseGeometryText(text: string): GeometryParseResult {
+  const trimmed = text.trim()
+  if (!trimmed) return { error: 'empty' }
+  if (!trimmed.startsWith('{')) return { wkt: trimmed, featureCount: countWktFeatures(trimmed) }
+  try {
+    const json = JSON.parse(trimmed)
+    const featureCount = json.type === 'FeatureCollection' && Array.isArray(json.features) ? json.features.length : 1
+    return { json, featureCount }
+  } catch {
+    return { error: 'invalidGeoJson' }
+  }
+}
+
+export async function readGeometryFile(file: File): Promise<FileTextResult> {
+  if (!/\.(txt|json|geojson)$/i.test(file.name)) return { error: 'unsupportedFormat' }
+  const text = await readTextFile(file)
+  if (typeof text !== 'string') return text
+  const result = parseGeometryText(text)
+  if ('wkt' in result && !/\.txt$/i.test(file.name)) return { error: 'invalidGeoJson' }
+  return 'error' in result ? result : text.trim()
 }
 
 export function parseGeoIdText(text: string): string[] {
   return text.split(/[\n,]/).map((l) => l.trim()).filter(Boolean)
 }
 
-export function parseGeoIdFile(file: File): Promise<string[] | { error: FileErrorKey }> {
-  return new Promise((resolve) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const text = e.target?.result
-      if (typeof text !== 'string') { resolve({ error: 'readError' }); return }
-      const ids = parseGeoIdText(text)
-      if (ids.length === 0) { resolve({ error: 'noGeoIds' }); return }
-      resolve(ids)
-    }
-    reader.onerror = () => resolve({ error: 'readError' })
-    reader.readAsText(file)
-  })
+export async function readGeoIdFile(file: File): Promise<FileTextResult> {
+  const text = await readTextFile(file)
+  if (typeof text !== 'string') return text
+  const ids = parseGeoIdText(text)
+  return ids.length > 0 ? ids.join('\n') : { error: 'noGeoIds' }
 }
 
 function countWktFeatures(wkt: string): number {

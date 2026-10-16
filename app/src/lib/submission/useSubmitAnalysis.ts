@@ -3,7 +3,6 @@
 import { useCallback, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import type { FeatureCollection } from 'geojson'
 import { storeSyncResult } from '@/lib/submission/sync-result'
 import type { AnalysisOptionsValue } from '@/components/submission/analysis-options'
 
@@ -17,7 +16,7 @@ type ApiEnvelope = {
 
 export type GeoPayload =
   | { type: 'wkt'; wkt: string }
-  | { type: 'json'; geojson: Record<string, unknown> | FeatureCollection }
+  | { type: 'json'; geojson: Record<string, unknown> }
 
 export type SubmitPayload =
   | { type: 'geometry'; payload: GeoPayload }
@@ -27,12 +26,10 @@ export function useSubmitAnalysis({
   analysisOptions,
   featureCount,
   asyncThreshold = 50,
-  agent,
 }: {
   analysisOptions: AnalysisOptionsValue
   featureCount: number
   asyncThreshold?: number
-  agent?: string
 }) {
   const t = useTranslations('Submission')
   const router = useRouter()
@@ -66,10 +63,14 @@ export function useSubmitAnalysis({
       try {
         const res = await fetch(`/internal/submit/${endpoint}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(agent ? { 'X-Whisp-Agent': agent } : {}) },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
-        const data = (await res.json()) as ApiEnvelope
+        const data = (await res.json().catch(() => null)) as ApiEnvelope | null
+        if (!data) {
+          setError(t('apiUnavailable'))
+          return
+        }
         if (!res.ok) {
           const parts = [data.message, data.cause].filter(Boolean)
           setError(parts.length > 0 ? parts.join('\n') : t('httpError', { status: res.status }))
@@ -89,7 +90,7 @@ export function useSubmitAnalysis({
         setIsLoading(false)
       }
     },
-    [analysisOptions, featureCount, asyncThreshold, agent, router, t]
+    [analysisOptions, featureCount, asyncThreshold, router, t]
   )
 
   return { submit, isLoading, error, setError }

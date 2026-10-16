@@ -2,6 +2,7 @@ import 'server-only';
 
 import { cache } from 'react';
 import { readAppVersion } from '@/lib/app-version';
+import { DEFAULT_MAX_MAP_FEATURES } from '@/lib/draw/geojson';
 
 type ApiConfigResponse = {
   maxRequestBodySizeKb?: number | null;
@@ -131,6 +132,7 @@ export const config = {
 
   map: {
     cartoKey: envOptional('CARTO_BASEMAP_KEY'),
+    maxFeatures: envInt('MAX_MAP_FEATURES', DEFAULT_MAX_MAP_FEATURES),
   },
 
   app: {

@@ -101,14 +101,15 @@ class AnalysisTask(Task):
 
         opts_dict = args[1] if len(args) > 1 and isinstance(args[1], dict) else {}
         is_async = bool(opts_dict.get("async_mode"))
-        for position, job in enumerate(run_sync(db_jobs.list_queued_jobs, is_async), start=1):
+        caller_ee = self.name == "src.worker.tasks.run_caller_analysis"
+        for position, job in enumerate(run_sync(db_jobs.list_queued_jobs, is_async, caller_ee), start=1):
             state = get_sync(job["id"]) or {}
             publish_sync(
                 job["id"],
                 JobProgress.of(
                     SystemCode.ANALYSIS_QUEUED,
                     feature_count=job.get("feature_count"),
-                    async_mode=is_async,
+                    async_mode=job["is_async"],
                     messages=[*(state.get("messages") or []), timestamped(f"Position {position} in queue")],
                 ).to_redis(),
             )

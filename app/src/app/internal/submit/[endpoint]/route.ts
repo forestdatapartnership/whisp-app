@@ -9,10 +9,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ endpoin
   }
 
   const body = await req.text();
-  const agent = req.headers.get('x-whisp-agent');
   const res = await apiFetch(`/submit/${endpoint}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(agent ? { 'X-Whisp-Agent': agent } : {}) },
+    headers: { 'Content-Type': 'application/json' },
     body: body || undefined,
   });
 
