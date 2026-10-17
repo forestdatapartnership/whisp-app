@@ -39,64 +39,43 @@ import {
 import type { ResultField } from "@/types/models";
 import type { FeatureCollection } from "geojson";
 
-function buildFromFields(fields: ResultField[]) {
-  const eligible = fields.filter((f) => f.analysisMetadata?.excludeFromOutput !== true);
-  const sorted = [...eligible].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
+function buildColumns(fields: ResultField[], row: ResultRow | undefined) {
+  const byId = new Map(fields.map((f) => [f.id, f]));
+  const position = (key: string) => byId.get(key)?.order ?? Number.MAX_SAFE_INTEGER;
+  const keys = Object.keys(row ?? {})
+    .filter((key) => key !== "geo")
+    .sort((a, b) => position(a) - position(b));
 
-  const allColumns: ColumnDef[] = sorted.map((f) => ({
-    key: f.id,
-    header: f.displayMetadata?.displayName ?? f.id,
-    type: f.type,
-    category: f.category,
-    description: f.description,
-    commodityMetadata: f.commodityMetadata,
-    excludeFromResults: f.displayMetadata?.excludeFromResults === true,
-  }));
+  const allColumns: ColumnDef[] = keys.map((key) => {
+    const f = byId.get(key);
+    if (!f) {
+      return { key, header: key, type: typeof row?.[key] === "number" ? "numeric" : "text", category: "Other" };
+    }
+    return {
+      key,
+      header: f.displayMetadata?.displayName ?? f.id,
+      type: f.type,
+      category: f.category,
+      description: f.description,
+      commodityMetadata: f.commodityMetadata,
+      excludeFromResults: f.displayMetadata?.excludeFromResults === true,
+    };
+  });
 
   const categoryMap = new Map<string, string[]>();
-  for (const f of sorted) {
-    const cat = f.category ?? "Other";
+  for (const col of allColumns) {
+    const cat = col.category ?? "Other";
     if (!categoryMap.has(cat)) categoryMap.set(cat, []);
-    categoryMap.get(cat)!.push(f.id);
+    categoryMap.get(cat)!.push(col.key);
   }
   const columnGroups: ColumnGroup[] = [...categoryMap.entries()].map(([name, columns]) => ({
     name,
     columns,
   }));
 
-  const defaultVisible = sorted
-    .filter((f) => f.displayMetadata?.excludeFromResults !== true)
-    .map((f) => f.id);
+  const defaultVisible = allColumns.filter((c) => !c.excludeFromResults).map((c) => c.key);
 
   return { allColumns, columnGroups, defaultVisible };
-}
-
-function mergeUnknownColumns(
-  existing: ColumnDef[],
-  groups: ColumnGroup[],
-  visible: string[],
-  row: ResultRow | undefined
-) {
-  if (!row) return { allColumns: existing, columnGroups: groups, visibleCols: visible };
-  const known = new Set(existing.map((c) => c.key));
-  const unknown = Object.keys(row).filter((k) => k !== "geo" && !known.has(k));
-  if (unknown.length === 0) return { allColumns: existing, columnGroups: groups, visibleCols: visible };
-
-  const fallbacks: ColumnDef[] = unknown.map((key) => ({
-    key,
-    header: key,
-    type: typeof row[key] === "number" ? "numeric" : "text",
-    category: "Other",
-  }));
-
-  return {
-    allColumns: [...existing, ...fallbacks],
-    columnGroups: [
-      ...groups.filter((g) => g.name !== "Other"),
-      { name: "Other", columns: [...(groups.find((g) => g.name === "Other")?.columns ?? []), ...unknown] },
-    ],
-    visibleCols: [...visible, ...unknown],
-  };
 }
 
 function featuresToRows(fc: FeatureCollection): ResultRow[] {
@@ -150,8 +129,7 @@ export default function ResultsPage() {
   const [selectedRow, setSelectedRow] = useState<ResultRow | null>(null);
   const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
-  const [allColumns, setAllColumns] = useState<ColumnDef[]>([]);
-  const [columnGroups, setColumnGroups] = useState<ColumnGroup[]>([]);
+  const [fields, setFields] = useState<ResultField[]>([]);
   const [visibleCols, setVisibleCols] = useState<string[]>([]);
   const [tableData, setTableData] = useState<ResultRow[]>([]);
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
@@ -178,23 +156,18 @@ export default function ResultsPage() {
 
   useEffect(() => {
     getResultFields().then((result) => {
-      if (!result.ok) return;
-      const built = buildFromFields(result.data);
-      setAllColumns(built.allColumns);
-      setColumnGroups(built.columnGroups);
-      setVisibleCols(built.defaultVisible);
+      if (result.ok) setFields(result.data);
     });
   }, []);
 
+  const { allColumns, columnGroups, defaultVisible } = useMemo(
+    () => buildColumns(fields, tableData[0]),
+    [fields, tableData]
+  );
+
   useEffect(() => {
-    if (tableData.length === 0) return;
-    const merged = mergeUnknownColumns(allColumns, columnGroups, visibleCols, tableData[0]);
-    if (merged.allColumns !== allColumns) {
-      setAllColumns(merged.allColumns);
-      setColumnGroups(merged.columnGroups);
-      setVisibleCols(merged.visibleCols);
-    }
-  }, [tableData, allColumns, columnGroups, visibleCols]);
+    setVisibleCols(defaultVisible);
+  }, [defaultVisible]);
 
   const handleCompleted = useCallback((data: unknown) => {
     const fc = data as FeatureCollection;
