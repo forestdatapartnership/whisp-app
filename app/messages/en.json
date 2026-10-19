@@ -363,6 +363,8 @@
     "download": "Download",
     "htmlReport": "HTML Report",
     "openInWhispMap": "Open in Whisp Map",
+    "currentSelection": "Current selection",
+    "fullResults": "Full results",
     "map": "Map",
     "searchPlaceholder": "Search plot ID, external ID, country…",
     "selectFields": "Select fields",

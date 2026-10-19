@@ -1,9 +1,9 @@
-/* 15px margin around a 14px dot gives the 44px tap target that iconSize sets. */
+/* 4px margin around a 14px dot gives the 22px tap target that iconSize sets. */
 .whisp-vertex {
   display: block;
   width: 14px;
   height: 14px;
-  margin: 15px;
+  margin: 4px;
   border-radius: 9999px;
   background: #fff;
   border: 2px solid #111827;

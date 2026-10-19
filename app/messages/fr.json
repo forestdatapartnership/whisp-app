@@ -363,6 +363,8 @@
     "download": "Télécharger",
     "htmlReport": "Rapport HTML",
     "openInWhispMap": "Ouvrir dans Whisp Map",
+    "currentSelection": "Sélection actuelle",
+    "fullResults": "Résultats complets",
     "map": "Carte",
     "searchPlaceholder": "Rechercher par ID de parcelle, ID externe, pays…",
     "selectFields": "Sélectionner les champs",

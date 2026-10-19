@@ -55,8 +55,8 @@ const ACCURACY = { color: LOCKED_COLOR, weight: 1, fillOpacity: 0.1 }
 const vertexIcon = L.divIcon({
   className: 'whisp-vertex-icon',
   html: '<span class="whisp-vertex"></span>',
-  iconSize: [44, 44],
-  iconAnchor: [22, 22],
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
 })
 
 function initialView(shapes: Shape[], locked: SourceFeature[]) {

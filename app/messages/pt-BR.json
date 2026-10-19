@@ -363,6 +363,8 @@
     "download": "Baixar",
     "htmlReport": "Relatório HTML",
     "openInWhispMap": "Abrir no Whisp Map",
+    "currentSelection": "Seleção atual",
+    "fullResults": "Resultados completos",
     "map": "Mapa",
     "searchPlaceholder": "Buscar por ID do talhão, ID externo, país…",
     "selectFields": "Selecionar campos",

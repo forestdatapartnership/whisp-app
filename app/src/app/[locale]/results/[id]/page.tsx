@@ -354,14 +354,28 @@ export default function ResultsPage() {
 
   const leaveToHome = useCallback(() => router.push("/"), [router]);
 
-  const handleOpenWhispMap = useCallback(() => {
+  // The same filters as the table, so the API returns what is on screen.
+  const selectionQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    if (selectedRow) {
+      params.set("ids", String(selectedRow.plotId));
+      return params.toString();
+    }
+    if (search.trim()) params.set("q", search);
+    if (riskFilter) params.set(riskFilter.field, riskFilter.value);
+    if (indicatorFilter) params.set(indicatorFilter, "yes");
+    return params.toString();
+  }, [selectedRow, search, riskFilter, indicatorFilter]);
+
+  const handleOpenWhispMap = useCallback((selectionOnly: boolean) => {
     if (isLocal || tableData.length === 0 || !config?.api.url) return;
-    const downloadUrl = `${config.api.url}/generate-geojson/${id}`;
+    const query = selectionOnly ? `?${selectionQuery}` : "";
+    const downloadUrl = `${config.api.url}/generate-geojson/${id}${query}`;
     window.open(
       `https://whisp.earthmap.org/?aoi=WHISP&fetchJson=${encodeURIComponent(downloadUrl)}`,
       "_blank"
     );
-  }, [id, isLocal, tableData.length, config]);
+  }, [id, isLocal, tableData.length, config, selectionQuery]);
 
   const handleExportCsv = useCallback(() => {
     const cols = allColumns.map((c) => c.key);
@@ -487,6 +501,8 @@ export default function ResultsPage() {
       onExportHtml={handleExportHtml}
       onOpenWhispMap={handleOpenWhispMap}
       whispMapDisabled={isLocal || !config?.api.url}
+      hasSelection={selectionQuery !== ""}
+      selectionEmpty={!selectedRow && filteredData.length === 0}
     />
   );
 

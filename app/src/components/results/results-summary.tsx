@@ -116,6 +116,11 @@ export function ResultsSummary({
           !plotMode ? (
             <span>
               {t('plotCount', { count: filteredCount })}
+              {filterLabel && onClearFilter && (
+                <button type="button" onClick={onClearFilter} className={cn("ml-2 cursor-pointer", linkVariants.accent)}>
+                  {t('clearFilters')}
+                </button>
+              )}
             </span>
           ) : undefined
         }

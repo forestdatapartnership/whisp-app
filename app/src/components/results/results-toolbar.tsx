@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Map, Table2 } from "lucide-react";
+import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Layers, ListFilter, Map, Table2 } from "lucide-react";
 
 interface ResultsToolbarProps {
   title: string;
@@ -25,8 +25,10 @@ interface ResultsToolbarProps {
   onExportCsv?: () => void;
   onExportGeoJson?: () => void;
   onExportHtml?: () => void;
-  onOpenWhispMap?: () => void;
+  onOpenWhispMap?: (selectionOnly: boolean) => void;
   whispMapDisabled?: boolean;
+  hasSelection?: boolean;
+  selectionEmpty?: boolean;
   className?: string;
 }
 
@@ -44,6 +46,8 @@ export function ResultsToolbar({
   onExportHtml,
   onOpenWhispMap,
   whispMapDisabled = false,
+  hasSelection = false,
+  selectionEmpty = false,
   className,
 }: ResultsToolbarProps) {
   const t = useTranslations("Results");
@@ -127,15 +131,42 @@ export function ResultsToolbar({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button
-        variant="default"
-        size="sm"
-        onClick={onOpenWhispMap}
-        disabled={whispMapDisabled}
-      >
-        <Map />
-        {t('openInWhispMap')}
-      </Button>
+      {hasSelection && !whispMapDisabled ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="default" size="sm" />}>
+            <Map />
+            {t('openInWhispMap')}
+            <ChevronDown />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[160px] border-border bg-surface">
+            <DropdownMenuItem
+              disabled={selectionEmpty}
+              onClick={() => onOpenWhispMap?.(true)}
+              className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
+            >
+              <ListFilter className="h-3 w-3" />
+              {t('currentSelection')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onOpenWhispMap?.(false)}
+              className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
+            >
+              <Layers className="h-3 w-3" />
+              {t('fullResults')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => onOpenWhispMap?.(false)}
+          disabled={whispMapDisabled}
+        >
+          <Map />
+          {t('openInWhispMap')}
+        </Button>
+      )}
       <div className="flex items-center gap-[7px] text-xs text-text-muted">
         <Switch
           checked={mapVisible}
