@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-proxy-config
-  namespace: whisp-development
+  namespace: ${GKE_NAMESPACE}
   labels:
     app: grafana-proxy
 data:
@@ -28,7 +28,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: grafana-proxy
-  namespace: whisp-development
+  namespace: ${GKE_NAMESPACE}
   labels:
     app: grafana-proxy
 spec:
@@ -70,7 +70,7 @@ apiVersion: cloud.google.com/v1
 kind: BackendConfig
 metadata:
   name: grafana-proxy-backend-config
-  namespace: whisp-development
+  namespace: ${GKE_NAMESPACE}
 spec:
   timeoutSec: 300
   healthCheck:
@@ -82,7 +82,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: grafana-proxy
-  namespace: whisp-development
+  namespace: ${GKE_NAMESPACE}
   annotations:
     cloud.google.com/backend-config: '{"default": "grafana-proxy-backend-config"}'
 spec:
