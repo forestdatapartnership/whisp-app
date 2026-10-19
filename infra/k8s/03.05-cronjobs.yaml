@@ -27,10 +27,14 @@ spec:
             - sh
             - -c
             - |
-              set -a; . /app/.env.local; set +a
               export PGPASSWORD="$DB_PASSWORD"
               psql -h cloud-sql-proxy -p 5432 -U "$DB_USER" -d "$DB_NAME" \
                 -c "SELECT release_stuck_analysis_jobs();"
+            envFrom:
+            - configMapRef:
+                name: whisp-config
+            - secretRef:
+                name: whisp-secrets
             env:
             - name: DEPLOYED_AT
               value: "${DEPLOYED_AT}"
@@ -40,18 +44,6 @@ spec:
                 memory: 64Mi
               limits:
                 memory: 128Mi
-            volumeMounts:
-            - name: gcp-secrets-inline
-              mountPath: /app/.env.local
-              subPath: .env.local
-              readOnly: true
-          volumes:
-          - name: gcp-secrets-inline
-            csi:
-              driver: secrets-store-gke.csi.k8s.io
-              readOnly: true
-              volumeAttributes:
-                secretProviderClass: "whisp-secrets-provider"
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -82,10 +74,14 @@ spec:
             - sh
             - -c
             - |
-              set -a; . /app/.env.local; set +a
               export PGPASSWORD="$DB_PASSWORD"
               psql -h cloud-sql-proxy -p 5432 -U "$DB_USER" -d "$DB_NAME" \
                 -c "SELECT target, rows_affected FROM anonymize_expired_pii(${PII_RETENTION_DAYS:-90});"
+            envFrom:
+            - configMapRef:
+                name: whisp-config
+            - secretRef:
+                name: whisp-secrets
             env:
             - name: DEPLOYED_AT
               value: "${DEPLOYED_AT}"
@@ -95,15 +91,43 @@ spec:
                 memory: 64Mi
               limits:
                 memory: 128Mi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: whisp-clean-temp
+  namespace: ${GKE_NAMESPACE}
+  labels:
+    app: whisp-clean-temp
+    env: ${ENVIRONMENT}
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: whisp-clean-temp
+            image: busybox:1.37
+            command:
+            - sh
+            - -c
+            - find /app/temp -type f -mmin +10 -delete
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 128Mi
             volumeMounts:
-            - name: gcp-secrets-inline
-              mountPath: /app/.env.local
-              subPath: .env.local
-              readOnly: true
+            - name: temp
+              mountPath: /app/temp
           volumes:
-          - name: gcp-secrets-inline
-            csi:
-              driver: secrets-store-gke.csi.k8s.io
-              readOnly: true
-              volumeAttributes:
-                secretProviderClass: "whisp-secrets-provider"
+          - name: temp
+            hostPath:
+              path: /var/lib/whisp/${GKE_NAMESPACE}
+              type: DirectoryOrCreate

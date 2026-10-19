@@ -15,9 +15,6 @@ spec:
     metadata:
       labels:
         app: whisp-worker-sync
-      annotations:
-        gke-internal.autoupdate.gke.io/sidecar-containers: "true"
-        gke-gcsfuse/volumes: "true"
     spec:
       serviceAccountName: whisp-app-ksa
       containers:
@@ -28,6 +25,11 @@ spec:
         - sh
         - -c
         - exec celery -A src.worker.celery_app worker -Q sync --concurrency=2 --without-mingle --without-gossip 2>&1
+        envFrom:
+        - configMapRef:
+            name: whisp-config
+        - secretRef:
+            name: whisp-secrets
         env:
         - name: DEPLOYED_AT
           value: "${DEPLOYED_AT}"
@@ -46,27 +48,18 @@ spec:
           limits:
             memory: 2Gi
         volumeMounts:
-        - name: whisp-volume-gcs
+        - name: temp
           mountPath: /app/temp
           readOnly: false
-        - name: gcp-secrets-inline
+        - name: gee-credentials
           mountPath: /app/credentials.json
           subPath: credentials.json
           readOnly: true
-        - name: gcp-secrets-inline
-          mountPath: /app/.env.local
-          subPath: .env.local
-          readOnly: true
       volumes:
-      - name: whisp-volume-gcs
-        csi:
-          driver: gcsfuse.csi.storage.gke.io
-          volumeAttributes:
-            bucketName: ${GCS_BUCKET}
-            mountOptions: "implicit-dirs"
-      - name: gcp-secrets-inline
-        csi:
-          driver: secrets-store-gke.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: "whisp-secrets-provider"
+      - name: temp
+        hostPath:
+          path: /var/lib/whisp/${GKE_NAMESPACE}
+          type: DirectoryOrCreate
+      - name: gee-credentials
+        secret:
+          secretName: whisp-gee-credentials

@@ -18,20 +18,13 @@ spec:
       - name: db-migrate
         image: ${IMAGE_REGISTRY}/whisp-db-migrate:${VERSION}
         imagePullPolicy: Always
+        envFrom:
+        - configMapRef:
+            name: whisp-config
+        - secretRef:
+            name: whisp-secrets
         env:
         - name: DB_HOST
           value: "cloud-sql-proxy"
         - name: DB_PORT
           value: "5432"
-        volumeMounts:
-        - name: gcp-secrets-inline
-          mountPath: /app/.env.local
-          subPath: .env.local
-          readOnly: true
-      volumes:
-      - name: gcp-secrets-inline
-        csi:
-          driver: secrets-store-gke.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: "whisp-secrets-provider"

@@ -36,6 +36,8 @@ class Settings(BaseSettings):
         env_file=_ENV_FILES,
         env_file_encoding="utf-8",
         extra="ignore",
+        # GitHub variables left unset reach the ConfigMap as empty strings; they should fall back to the defaults.
+        env_ignore_empty=True,
     )
 
     temp_dir: Path = Field(default=Path("./temp"))
