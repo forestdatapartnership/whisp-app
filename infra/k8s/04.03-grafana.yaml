@@ -508,6 +508,8 @@ spec:
       - name: grafana
         image: grafana/grafana:11.2.0
         env:
+        - name: DEPLOYED_AT
+          value: "${DEPLOYED_AT}"
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "false"
         - name: GF_SECURITY_ADMIN_USER
