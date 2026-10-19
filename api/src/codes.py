@@ -29,7 +29,7 @@ class SystemCode(str, Enum):
     VALIDATION_INVALID_EXTERNAL_ID_COLUMN = ("validation_invalid_external_id_column", 400, 'The external ID column "{0}" does not exist in your GeoJSON features. Available columns: {1}')
     VALIDATION_GEO_ID_NOT_FOUND = ("validation_geo_id_not_found", 400, "One or more Geo IDs were not found in GeoID.")
     VALIDATION_INVALID_GEO_ID = ("validation_invalid_geo_id", 400, 'Invalid Geo ID "{0}".')
-    VALIDATION_INVALID_EARTH_ENGINE = ("validation_invalid_earth_engine", 400, "Invalid Earth Engine headers. Send x-ee-project with either x-ee-token or x-ee-service-account (base64-encoded key file).")
+    VALIDATION_INVALID_EARTH_ENGINE = ("validation_invalid_earth_engine", 400, "Invalid Earth Engine headers. Send either x-ee-token or x-ee-service-account (base64-encoded key file), optionally with x-ee-project.")
 
     SERVICE_GEOID_NOT_CONFIGURED = ("service_geoid_not_configured", 503, "GeoID service is not configured. Please contact the administrator.")
     SERVICE_GEOID_UNAVAILABLE = ("service_geoid_unavailable", 503, "GeoID service is currently unavailable. Please try again later.")

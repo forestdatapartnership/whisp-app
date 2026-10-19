@@ -87,7 +87,8 @@ def _earth_engine(
     x_ee_project: str | None = Header(
         default=None,
         alias="x-ee-project",
-        description="Run this analysis in your own Earth Engine project, with x-ee-token or x-ee-service-account. "
+        description="Optional Earth Engine project to run this analysis in. Without it the credentials' own Earth Engine "
+        "access applies, which suits a service account key; an access token usually needs a project. "
         "Credentials are only held in the task queue, never saved with analysis inputs or job records.",
     ),
     x_ee_token: str | None = Header(

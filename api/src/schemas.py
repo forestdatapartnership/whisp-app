@@ -23,7 +23,7 @@ class EarthEngineServiceAccount(BaseModel):
 class EarthEngineInput(BaseModel):
     model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
 
-    project: str = Field(min_length=1, max_length=128)
+    project: str | None = Field(default=None, min_length=1, max_length=128)
     accessToken: SecretStr | None = Field(default=None, min_length=1)
     serviceAccount: EarthEngineServiceAccount | None = None
 
