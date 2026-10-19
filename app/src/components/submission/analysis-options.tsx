@@ -48,12 +48,17 @@ interface AnalysisOptionsProps {
   value: AnalysisOptionsValue
   onChange: (value: AnalysisOptionsValue) => void
   disabled?: boolean
+  idColumns?: string[]
 }
 
-export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisOptionsProps) {
+export function AnalysisOptions({ value, onChange, disabled = false, idColumns }: AnalysisOptionsProps) {
   const t = useTranslations('AnalysisOptions')
   const [open, setOpen] = useState(false)
   const unitItems = UNIT_OPTIONS.map((unit) => ({ value: unit, label: t(`unit.${unit}`) }))
+  const idItems = [
+    { value: null, label: t('externalIdNone') },
+    ...(idColumns ?? []).map((column) => ({ value: column, label: column })),
+  ]
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -102,13 +107,31 @@ export function AnalysisOptions({ value, onChange, disabled = false }: AnalysisO
 
               <div className="flex flex-col gap-1.5">
                 <Label>{t('externalId')}</Label>
-                <Input
-                  type="text"
-                  placeholder={t('externalIdPlaceholder')}
-                  value={value.externalIdColumn ?? ''}
-                  onChange={(e) => onChange({ ...value, externalIdColumn: e.target.value })}
-                  disabled={disabled}
-                />
+                {idColumns ? (
+                  <Select
+                    items={idItems}
+                    value={value.externalIdColumn || null}
+                    onValueChange={(v) => onChange({ ...value, externalIdColumn: (v as string | null) ?? '' })}
+                    disabled={disabled || idColumns.length === 0}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t('externalIdNone')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {idItems.map((item) => (
+                        <SelectItem key={item.value ?? ''} value={item.value}>{item.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    type="text"
+                    placeholder={t('externalIdPlaceholder')}
+                    value={value.externalIdColumn ?? ''}
+                    onChange={(e) => onChange({ ...value, externalIdColumn: e.target.value })}
+                    disabled={disabled}
+                  />
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">

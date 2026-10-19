@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from src.auth.api_key import ApiKey, api_key_dependency
 from src.codes import SystemCode
@@ -10,6 +11,7 @@ from src.responses import api_response
 from src.schemas import (
     SUBMIT_ERRORS,
     SUBMIT_GEOID_ERRORS,
+    EarthEngineInput,
     SubmitGeoJsonRequest,
     SubmitGeoIdsRequest,
     SubmitWktRequest,
@@ -81,6 +83,34 @@ def _build_context(request: Request, api_key: ApiKey) -> JobContext:
     )
 
 
+def _earth_engine(
+    x_ee_project: str | None = Header(
+        default=None,
+        alias="x-ee-project",
+        description="Run this analysis in your own Earth Engine project, with x-ee-token or x-ee-service-account. "
+        "Credentials are only held in the task queue, never saved with analysis inputs or job records.",
+    ),
+    x_ee_token: str | None = Header(
+        default=None,
+        alias="x-ee-token",
+        description="Access token for your Earth Engine project. It must stay valid through the queue wait and the analysis.",
+    ),
+    x_ee_service_account: str | None = Header(
+        default=None,
+        alias="x-ee-service-account",
+        description="Your service account key file, base64-encoded. Tokens are renewed during the analysis, so it suits long jobs.",
+    ),
+) -> EarthEngineInput | None:
+    if not (x_ee_project or x_ee_token or x_ee_service_account):
+        return None
+    try:
+        return EarthEngineInput.model_validate(
+            {"project": x_ee_project, "accessToken": x_ee_token, "serviceAccount": x_ee_service_account}
+        )
+    except ValidationError:
+        raise AppError(SystemCode.VALIDATION_INVALID_EARTH_ENGINE) from None
+
+
 @router.post(
     "/geojson",
     response_model=None,
@@ -95,6 +125,7 @@ async def submit_geojson(
     body: SubmitGeoJsonRequest,
     settings: SettingsDep,
     api_key: ApiKey = Depends(api_key_dependency),
+    earth_engine: EarthEngineInput | None = Depends(_earth_engine),
 ) -> JSONResponse:
     _check_request_size(request, settings)
 
@@ -124,7 +155,7 @@ async def submit_geojson(
 
     token = service.new_token()
     result = await service.submit(
-        token, fc, opts, ctx, settings, input_metrics=input_metrics, earth_engine=body.earthEngine,
+        token, fc, opts, ctx, settings, input_metrics=input_metrics, earth_engine=earth_engine,
     )
     return api_response(result.code, data=result.data, context=result.context)
 
@@ -143,6 +174,7 @@ async def submit_wkt(
     body: SubmitWktRequest,
     settings: SettingsDep,
     api_key: ApiKey = Depends(api_key_dependency),
+    earth_engine: EarthEngineInput | None = Depends(_earth_engine),
 ) -> JSONResponse:
     _check_request_size(request, settings)
 
@@ -167,7 +199,7 @@ async def submit_wkt(
 
     token = service.new_token()
     result = await service.submit(
-        token, fc, opts, ctx, settings, input_metrics=input_metrics, earth_engine=body.earthEngine,
+        token, fc, opts, ctx, settings, input_metrics=input_metrics, earth_engine=earth_engine,
     )
     return api_response(result.code, data=result.data, context=result.context)
 
@@ -187,6 +219,7 @@ async def submit_geo_ids(
     settings: SettingsDep,
     api_key: ApiKey = Depends(api_key_dependency),
     x_geoid_token: str | None = Header(default=None, alias="x-geoid-token"),
+    earth_engine: EarthEngineInput | None = Depends(_earth_engine),
 ) -> JSONResponse:
     _check_request_size(request, settings)
 
@@ -210,6 +243,6 @@ async def submit_geo_ids(
 
     token = service.new_token()
     result = await service.submit(
-        token, fc, opts, ctx, settings, input_metrics=input_metrics, earth_engine=body.earthEngine,
+        token, fc, opts, ctx, settings, input_metrics=input_metrics, earth_engine=earth_engine,
     )
     return api_response(result.code, data=result.data, context=result.context)

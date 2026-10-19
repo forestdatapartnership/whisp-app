@@ -173,6 +173,7 @@
     "units": "Units",
     "externalId": "External ID Column",
     "externalIdPlaceholder": "Enter column name",
+    "externalIdNone": "None",
     "auditTrail": "Geometry Audit Trail",
     "auditTrailHelp": "Geospatial data may be modified slightly during the analysis in Google Earth Engine, especially notable for very small polygons. We return the modified output for transparency in what was analysed, but if you require your input data to be returned you can select this option and it will add an extra column called 'geo_original'.",
     "unit": {

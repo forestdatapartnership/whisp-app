@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import base64
+import json
 from typing import Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 
 from src.codes import SystemCode
 
@@ -24,6 +26,12 @@ class EarthEngineInput(BaseModel):
     project: str = Field(min_length=1, max_length=128)
     accessToken: SecretStr | None = Field(default=None, min_length=1)
     serviceAccount: EarthEngineServiceAccount | None = None
+
+    @field_validator("serviceAccount", mode="before")
+    @classmethod
+    def decode_service_account(cls, value: Any) -> Any:
+        # A key file's line breaks can't travel in a header, so it arrives base64-encoded.
+        return json.loads(base64.b64decode(value, validate=True)) if isinstance(value, str) else value
 
     @model_validator(mode="after")
     def validate_credentials(self) -> Self:
@@ -57,12 +65,6 @@ class AnalysisOptionsInput(BaseModel):
 
 class SubmitRequest(BaseModel):
     analysisOptions: AnalysisOptionsInput | None = None
-    earthEngine: EarthEngineInput | None = Field(
-        default=None, exclude=True, repr=False,
-        description="Caller Earth Engine project and credentials for this analysis only. "
-        "Provide an accessToken valid for the queue wait and analysis, or serviceAccount JSON. "
-        "Credentials are held in the task queue, not saved with analysis inputs or job records.",
-    )
 
 
 class SubmitGeoJsonRequest(SubmitRequest):
@@ -227,6 +229,7 @@ VALIDATION_ERRORS: tuple[SystemCode, ...] = (
     SystemCode.VALIDATION_PLOT_TOO_LARGE,
     SystemCode.VALIDATION_REQUEST_BODY_TOO_LARGE,
     SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN,
+    SystemCode.VALIDATION_INVALID_EARTH_ENGINE,
 )
 
 SUBMIT_ERRORS: tuple[SystemCode, ...] = (

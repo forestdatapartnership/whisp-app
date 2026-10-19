@@ -173,6 +173,7 @@
     "units": "Unidades",
     "externalId": "Columna de ID externo",
     "externalIdPlaceholder": "Nombre de la columna",
+    "externalIdNone": "Ninguna",
     "auditTrail": "Trazabilidad de la geometría",
     "auditTrailHelp": "Los datos geoespaciales pueden modificarse ligeramente durante el análisis en Google Earth Engine, sobre todo en polígonos muy pequeños. Devolvemos la salida modificada por transparencia sobre lo que se analizó; si necesita recuperar sus datos de entrada, active esta opción y se añadirá una columna adicional llamada 'geo_original'.",
     "unit": {

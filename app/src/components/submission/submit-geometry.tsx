@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { AlertTriangle } from 'lucide-react'
-import { parseGeometryText, readGeometryFile } from '@/lib/utils/file-parser'
+import { commonPropertyNames, parseGeometryText, readGeometryFile } from '@/lib/utils/file-parser'
 import { parseFeatures } from '@/lib/draw/geojson'
 import { geometryAreaHa } from '@/lib/draw/geometry'
 import { useSubmitAnalysis } from '@/lib/submission/useSubmitAnalysis'
@@ -33,10 +33,15 @@ export function SubmitGeometry({
   const [text, setText] = useState('')
   const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptionsValue>(DEFAULT_ANALYSIS_OPTIONS)
   const parsed = useMemo(() => parseGeometryText(text), [text])
+  const idColumns = useMemo(() => ('json' in parsed ? commonPropertyNames(parsed.json) : []), [parsed])
+  // A column picked for an earlier input may not exist in the current one.
+  const options = !analysisOptions.externalIdColumn || idColumns.includes(analysisOptions.externalIdColumn)
+    ? analysisOptions
+    : { ...analysisOptions, externalIdColumn: '' }
   const appliedFileRef = useRef<File | null>(null)
 
   const { submit, isLoading, error: submitError } = useSubmitAnalysis({
-    analysisOptions,
+    analysisOptions: options,
     featureCount: 'error' in parsed ? 0 : parsed.featureCount,
     asyncThreshold,
   })
@@ -107,7 +112,7 @@ export function SubmitGeometry({
         <AlertTriangle className="size-3.5 flex-shrink-0 mt-0.5 text-risk-medium" />
         {t('geometryHint')} {t('draw.hint')}
       </div>
-      <AnalysisOptions value={analysisOptions} onChange={setAnalysisOptions} />
+      <AnalysisOptions value={options} onChange={setAnalysisOptions} idColumns={idColumns} />
       <SubmitActions
         downloadVisible
         downloadLabel={t('example')}

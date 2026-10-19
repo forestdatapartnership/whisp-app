@@ -32,6 +32,18 @@ export function parseGeometryText(text: string): GeometryParseResult {
   }
 }
 
+// The API only accepts an external ID column that every feature has.
+export function commonPropertyNames(json: Record<string, unknown>): string[] {
+  const features: unknown[] = json.type === 'Feature' ? [json] : Array.isArray(json.features) ? json.features : []
+  let common: string[] | null = null
+  for (const feature of features) {
+    const keys = new Set(Object.keys((feature as { properties?: object | null } | null)?.properties ?? {}))
+    common = common ? common.filter((key) => keys.has(key)) : [...keys]
+    if (common.length === 0) break
+  }
+  return (common ?? []).sort()
+}
+
 export async function readGeometryFile(file: File): Promise<FileTextResult> {
   if (!/\.(txt|json|geojson)$/i.test(file.name)) return { error: 'unsupportedFormat' }
   const text = await readTextFile(file)
