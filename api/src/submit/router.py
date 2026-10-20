@@ -94,12 +94,14 @@ def _earth_engine(
     x_ee_token: str | None = Header(
         default=None,
         alias="x-ee-token",
-        description="Access token for your Earth Engine project. It must stay valid through the queue wait and the analysis.",
+        description="Optional. Run this analysis with your own Earth Engine access token instead of Whisp's account. "
+        "It must stay valid through the queue wait and the analysis.",
     ),
     x_ee_service_account: str | None = Header(
         default=None,
         alias="x-ee-service-account",
-        description="Your service account key file, base64-encoded. Tokens are renewed during the analysis, so it suits long jobs.",
+        description="Optional. Run this analysis with your own Earth Engine service account key file, base64-encoded, "
+        "instead of Whisp's account. Tokens are renewed during the analysis, so it suits long jobs.",
     ),
 ) -> EarthEngineInput | None:
     if not (x_ee_project or x_ee_token or x_ee_service_account):
