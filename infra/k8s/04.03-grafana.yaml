@@ -149,7 +149,7 @@ data:
           },
           "targets": [
             {
-              "expr": "{namespace=\"$namespace\", app=~\"whisp-worker-async|whisp-worker-sync\", level=~\"$severity\"} | json | drop __error__, __error_details__ | line_format \"{{ if .message }}{{ .message }}{{ else }}{{ __line__ }}{{ end }}\"",
+              "expr": "{namespace=\"$namespace\", app=~\"whisp-worker-.*\", level=~\"$severity\"} | json | drop __error__, __error_details__ | line_format \"{{ if .message }}{{ .message }}{{ else }}{{ __line__ }}{{ end }}\"",
               "refId": "A"
             }
           ]
