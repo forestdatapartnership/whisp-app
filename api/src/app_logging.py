@@ -4,6 +4,7 @@ import logging.config
 import re
 from typing import Any
 
+from celery.exceptions import TimeLimitExceeded
 from pythonjsonlogger import jsonlogger
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -56,6 +57,15 @@ class DropSuccessfulAccessLogFilter(logging.Filter):
         return int(match.group(1)) >= 400
 
 
+# AnalysisTask._persist_timeout logs each hard timeout once, as a warning with the job context these lines lack.
+class DropCeleryTimeLimitLogFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.name != "celery.worker.request":
+            return True
+        exc = record.exc_info[1] if record.exc_info else None
+        return not (isinstance(exc, TimeLimitExceeded) or str(record.msg).startswith("Hard time limit"))
+
+
 class AppJsonFormatter(jsonlogger.JsonFormatter):
     def add_fields(
         self,
@@ -88,13 +98,16 @@ def log_config_dict() -> dict[str, Any]:
             "drop_successful_access": {
                 "()": "src.app_logging.DropSuccessfulAccessLogFilter",
             },
+            "drop_celery_time_limit": {
+                "()": "src.app_logging.DropCeleryTimeLimitLogFilter",
+            },
         },
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
                 "formatter": "json",
                 "stream": "ext://sys.stdout",
-                "filters": ["drop_successful_access"],
+                "filters": ["drop_successful_access", "drop_celery_time_limit"],
             },
         },
         "root": {
