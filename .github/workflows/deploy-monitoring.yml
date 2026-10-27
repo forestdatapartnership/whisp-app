@@ -34,6 +34,4 @@ jobs:
           export DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           export GRAFANA_ADMIN_USER=$(printf '%s' "$GRAFANA_ADMIN_USER" | base64 -w0)
           export GRAFANA_ADMIN_PASSWORD=$(printf '%s' "$GRAFANA_ADMIN_PASSWORD" | base64 -w0)
-          for f in infra/monitoring/*.yaml; do
-            envsubst '$DEPLOYED_AT $GRAFANA_ADMIN_USER $GRAFANA_ADMIN_PASSWORD' < "$f" | kubectl apply -f -
-          done
+          envsubst '$DEPLOYED_AT $GRAFANA_ADMIN_USER $GRAFANA_ADMIN_PASSWORD' < infra/monitoring/40-grafana.yaml | kubectl apply -f -
