@@ -92,8 +92,6 @@ jobs:
           APP_KEYCLOAK_CLIENT_SECRET: ${{ secrets.APP_KEYCLOAK_CLIENT_SECRET }}
           APP_EMAIL_USER: ${{ secrets.APP_EMAIL_USER }}
           APP_EMAIL_PASS: ${{ secrets.APP_EMAIL_PASS }}
-          APP_GRAFANA_ADMIN_USER: ${{ secrets.APP_GRAFANA_ADMIN_USER }}
-          APP_GRAFANA_ADMIN_PASSWORD: ${{ secrets.APP_GRAFANA_ADMIN_PASSWORD }}
           APP_GEE_CREDENTIALS: ${{ secrets.APP_GEE_CREDENTIALS }}
         run: |
           set -euo pipefail

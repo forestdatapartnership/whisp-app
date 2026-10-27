@@ -1,4 +1,14 @@
 apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-admin
+  namespace: monitoring
+type: Opaque
+data:
+  admin-user: "${APP_GRAFANA_ADMIN_USER}"
+  admin-password: "${APP_GRAFANA_ADMIN_PASSWORD}"
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-provisioning
