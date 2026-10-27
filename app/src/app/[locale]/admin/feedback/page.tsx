@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useFormatter, useLocale, useNow, useTranslations } from 'next-intl';
 import { ChevronRight, Download, RefreshCw, Search } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { ContentShell } from '@/components/layout/page-section';
@@ -52,6 +52,7 @@ function FeedbackResults() {
   const t = useTranslations('Feedback');
   const locale = useLocale();
   const format = useFormatter();
+  const now = useNow({ updateInterval: 60_000 });
   const systemMessage = useSystemMessage();
   const [responses, setResponses] = useState<FeedbackResponse[] | null>(null);
   const [error, setError] = useState('');
@@ -149,7 +150,7 @@ function FeedbackResults() {
               <p className={`mb-3 ${labelClass}`}>{questionLabel(name)}</p>
               <div
                 className="grid gap-x-6 gap-y-2.5 md:auto-cols-fr md:grid-flow-col"
-                style={{ gridTemplateRows: `repeat(${Math.ceil(options.length / columns)}, auto)` }}
+                style={{ gridTemplateRows: `repeat(${Math.min(options.length, MAX_CHART_ROWS)}, auto)` }}
               >
                 {ordered.map((option, i) => {
                   const percent = answered ? Math.round((counts[i] / answered) * 100) : 0;
@@ -251,7 +252,7 @@ function FeedbackResults() {
                       </button>
                     </td>
                     <td className="whitespace-nowrap px-4 py-2.5 text-[11px] text-text-muted" title={format.dateTime(date, 'short')}>
-                      {format.relativeTime(date)}
+                      {format.relativeTime(date, now)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-2.5 text-[11px]">
                       <p className="text-text-primary">{r.email ?? 'Anonymous'}</p>
