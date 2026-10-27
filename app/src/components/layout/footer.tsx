@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
-import { Link } from "@/components/ui/link";
+import { Link, linkVariants } from "@/components/ui/link";
 import { VersionLink } from "@/components/layout/version-link";
+import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
 import { useConfig } from "@/lib/config/config-context";
 
 function FooterDropdown({ label, items }: {
@@ -63,6 +64,7 @@ const Sep = () => <span className="px-2 text-xs text-text-dim select-none">·</s
 export function Footer() {
   const t = useTranslations("Footer");
   const { config } = useConfig();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const docsLinks = [
     { href: `${config?.api.url ?? "/api"}/docs`, label: t("api"), target: "_blank" },
     { href: "https://github.com/forestdatapartnership/whisp/blob/main/layers_description.md", label: t("layerDescriptions"), target: "_blank" },
@@ -99,9 +101,14 @@ export function Footer() {
       <Sep />
       <FooterDropdown label={t("legal")} items={legalLinks} />
       <Sep />
-      <Link href="/feedback" variant="muted" className="whitespace-nowrap">
+      <button
+        type="button"
+        onClick={() => setFeedbackOpen(true)}
+        className={`cursor-pointer whitespace-nowrap transition-colors ${linkVariants.muted}`}
+      >
         {t("feedback")}
-      </Link>
+      </button>
+      <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       <div className="ml-auto flex items-center">
         <VersionLink />
       </div>

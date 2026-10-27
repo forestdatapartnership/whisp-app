@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "@/i18n/navigation";
+import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
 import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Layers, ListFilter, Map, MessageSquare, Table2 } from "lucide-react";
 
 interface ResultsToolbarProps {
@@ -53,6 +53,7 @@ export function ResultsToolbar({
 }: ResultsToolbarProps) {
   const t = useTranslations("Results");
   const [exportOpen, setExportOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   return (
     <div
@@ -89,10 +90,11 @@ export function ResultsToolbar({
         </>
       )}
       <div className="flex-1" />
-      <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/feedback" target="_blank" />}>
+      <Button variant="ghost" size="sm" onClick={() => setFeedbackOpen(true)}>
         <MessageSquare />
         {t('feedback')}
       </Button>
+      <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       <Button variant="outline" size="sm" onClick={onBack}>
         <ArrowLeft />
         {t('newAnalysis')}

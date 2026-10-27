@@ -445,9 +445,7 @@
     "textHint": "Até {max, number} caracteres. Não inclua dados pessoais.",
     "send": "Enviar feedback",
     "sending": "Enviando…",
-    "thanksTitle": "Obrigado pelo seu feedback",
-    "thanks": "Vamos usá-lo para melhorar o Whisp.",
-    "back": "Voltar ao Whisp",
+    "thanks": "Obrigado pelo seu feedback.",
     "questions": {
       "usefulness": {
         "label": "Quão útil o Whisp é para o seu trabalho?",
