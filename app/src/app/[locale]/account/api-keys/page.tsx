@@ -1,11 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { CenteredShell, PageSection } from '@/components/layout/page-section';
 import { Card, CardContent } from '@/components/ui/card';
+import { linkVariants } from '@/components/ui/link';
 import { cardLayout } from '@/components/ui/styles';
 import { ApiQuickStart } from '@/components/account/api-quick-start';
+import { FeedbackDialog } from '@/components/feedback/feedback-dialog';
 import {
   ApiKeyConfirmModals,
   ApiKeyDisplay,
@@ -20,6 +23,7 @@ import { maskApiKey } from '@/lib/account/api-key-utils';
 export default function ApiKeysPage() {
   const t = useTranslations('ApiKey');
   const apiKey = useAccountApiKey();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const displayKey =
     apiKey.revealed ?? (apiKey.apiKey ? maskApiKey(apiKey.apiKey) : '');
@@ -60,6 +64,21 @@ export default function ApiKeysPage() {
               </CardContent>
             </Card>
           </PageSection>
+
+          <p className="text-sm text-text-muted">
+            {t.rich('feedbackPrompt', {
+              link: (chunks) => (
+                <button
+                  type="button"
+                  onClick={() => setFeedbackOpen(true)}
+                  className={`cursor-pointer transition-colors ${linkVariants.accent}`}
+                >
+                  {chunks}
+                </button>
+              ),
+            })}
+          </p>
+          <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
 
           <ApiKeyConfirmModals
             regenOpen={apiKey.regenOpen}

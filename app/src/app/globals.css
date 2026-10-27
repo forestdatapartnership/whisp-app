@@ -136,3 +136,8 @@
   h3 { font-weight: 600; letter-spacing: -0.02em; }
   p  { font-weight: 450; }
 }
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--text-muted) 60%, transparent) color-mix(in oklab, var(--border) 40%, transparent);
+}

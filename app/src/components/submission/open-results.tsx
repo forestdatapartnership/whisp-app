@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { FolderOpen, AlertTriangle } from 'lucide-react'
-import { parseResultsFile, versionsMatch } from '@/lib/results/parse-results-file'
+import { parseResultsFile, resultsOpenable } from '@/lib/results/parse-results-file'
 import { storeLocalResults } from '@/lib/results/local-results'
 import { useConfig } from '@/lib/config/config-context'
 import { SubmitActions } from './submit-actions'
@@ -29,7 +29,7 @@ export function OpenResults({ onError, onSubmitGeometry }: OpenResultsProps) {
 
   const currentVersion = config?.app.openforisWhispVersion?.trim() || ''
   const exportVersion = pending?.whispVersion?.trim() || ''
-  const canOpen = Boolean(pending && versionsMatch(exportVersion, currentVersion))
+  const canOpen = Boolean(pending && resultsOpenable(exportVersion, currentVersion))
   const needsRerun = Boolean(pending && !canOpen)
   const staleMessage = () => {
     if (!exportVersion) return t('noVersion')

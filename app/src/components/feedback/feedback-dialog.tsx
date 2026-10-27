@@ -14,14 +14,14 @@ export function FeedbackDialog({ open, onClose }: { open: boolean; onClose: () =
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-[300] bg-bg/70" />
         <Dialog.Viewport className="fixed inset-0 z-[301] flex items-center justify-center p-2 sm:p-4">
-          <Dialog.Popup className={`${cardBase} ${cardLayout.lg} flex max-h-full flex-col overflow-hidden shadow-xl`}>
-            <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-2.5">
+          <Dialog.Popup
+            className={`${cardBase} ${cardLayout.lg} grid max-h-full grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden shadow-xl`}
+          >
+            <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-2.5">
               <Dialog.Title className="text-sm font-semibold text-text-primary">{t("title")}</Dialog.Title>
               <CloseButton type="button" className={controlSize.md} onClick={onClose} />
             </header>
-            <div className="overflow-y-auto p-5">
-              <FeedbackForm onClose={onClose} />
-            </div>
+            <FeedbackForm onClose={onClose} />
           </Dialog.Popup>
         </Dialog.Viewport>
       </Dialog.Portal>

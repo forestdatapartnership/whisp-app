@@ -7,17 +7,18 @@ import { CloseButton } from "@/components/ui/button";
 interface InfoToastProps {
   storageKey: string;
   title: string;
-  children: ReactNode;
+  delay?: number;
+  children: ReactNode | ((dismiss: () => void) => ReactNode);
 }
 
-export function InfoToast({ storageKey, title, children }: InfoToastProps) {
+export function InfoToast({ storageKey, title, delay = 0, children }: InfoToastProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem(storageKey)) {
-      setVisible(true);
-    }
-  }, [storageKey]);
+    if (localStorage.getItem(storageKey)) return;
+    const timer = setTimeout(() => setVisible(true), delay);
+    return () => clearTimeout(timer);
+  }, [storageKey, delay]);
 
   const dismiss = () => {
     setVisible(false);
@@ -36,7 +37,9 @@ export function InfoToast({ storageKey, title, children }: InfoToastProps) {
         <Info className="mt-0.5 size-4 shrink-0 text-accent-green" aria-hidden />
         <div className="flex-1 min-w-0">
           <p className="mb-1 text-[13px] font-semibold text-text-primary">{title}</p>
-          <div className="text-[12px] leading-relaxed text-text-muted">{children}</div>
+          <div className="text-[12px] leading-relaxed text-text-muted">
+            {typeof children === "function" ? children(dismiss) : children}
+          </div>
         </div>
         <CloseButton onClick={dismiss} className="shrink-0 self-start" />
       </div>

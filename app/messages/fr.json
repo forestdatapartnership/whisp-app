@@ -282,7 +282,8 @@
     "regenConfirm": "Oui, régénérer",
     "revokeTitle": "Révoquer la clé d'API ?",
     "revokeBody": "Cette action invalide définitivement votre clé. Tous les appels à l'API qui l'utilisent échoueront immédiatement. Vous pourrez ensuite générer une nouvelle clé.",
-    "revokeConfirm": "Révoquer la clé"
+    "revokeConfirm": "Révoquer la clé",
+    "feedbackPrompt": "Vous développez avec l'API ? <link>Nous aimerions savoir à quoi elle vous sert</link>."
   },
   "ApiQuickStart": {
     "title": "Démarrage rapide",
@@ -437,46 +438,52 @@
     "continue": "continuer",
     "indicatorTotal": "{label} : {yes} parcelles sur {total} marquées oui",
     "mapPlot": "Parcelle",
-    "mapGeoId": "Geo ID"
+    "mapGeoId": "Geo ID",
+    "feedbackPromptTitle": "Comment s'est passée cette analyse ?",
+    "feedbackPrompt": "<link>Partagez votre avis</link> pour nous aider à améliorer Whisp."
   },
   "Feedback": {
-    "title": "Aidez-nous à améliorer Whisp",
-    "description": "{count, plural, one {# question facultative} other {# questions facultatives}}, moins d'une minute.",
-    "textHint": "Jusqu'à {max, number} caractères. N'incluez pas de données personnelles.",
+    "title": "Prenez une minute pour nous aider à améliorer Whisp",
+    "textHint": "N'incluez pas de données personnelles.",
     "send": "Envoyer des commentaires",
     "sending": "Envoi…",
     "thanks": "Merci pour vos commentaires.",
     "questions": {
-      "usefulness": {
-        "label": "Dans quelle mesure Whisp est-il utile pour votre travail ?",
-        "options": {
-          "1": "Pas utile",
-          "2": "Peu utile",
-          "3": "Moyennement utile",
-          "4": "Très utile",
-          "5": "Extrêmement utile"
-        }
+      "rating": {
+        "label": "Comment évalueriez-vous Whisp dans l'ensemble ?"
       },
-      "ease": {
-        "label": "Whisp est-il facile à utiliser ?",
+      "region": {
+        "label": "Depuis quelle région utilisez-vous Whisp ?",
         "options": {
-          "1": "Très difficile",
-          "2": "Difficile",
-          "3": "Ni facile ni difficile",
-          "4": "Facile",
-          "5": "Très facile"
+          "africa": "Afrique",
+          "asia_pacific": "Asie et Pacifique",
+          "europe_central_asia": "Europe et Asie centrale",
+          "latin_america_caribbean": "Amérique latine et Caraïbes",
+          "near_east_north_africa": "Proche-Orient et Afrique du Nord",
+          "north_america": "Amérique du Nord"
         }
       },
       "organization": {
         "label": "Pour quel type d'organisation travaillez-vous ?",
         "options": {
-          "government": "Gouvernement",
-          "academia": "Milieu universitaire",
-          "private": "Secteur privé",
-          "ngo": "ONG",
-          "un": "ONU",
+          "government": "Gouvernement ou autorité publique",
+          "operator": "Opérateur",
+          "trader": "Commerçant",
+          "producer": "Producteur, coopérative ou groupement de petits exploitants",
+          "certification": "Organisme de certification ou de vérification",
+          "financial": "Institution financière",
+          "ngo": "ONG ou société civile",
+          "academia": "Milieu universitaire ou recherche",
+          "un": "ONU ou organisation intergouvernementale",
           "other": "Autre"
         }
+      },
+      "use": {
+        "label": "À quoi vous sert Whisp ?"
+      },
+      "datasets": {
+        "label": "Connaissez-vous des jeux de données que nous pourrions intégrer ?",
+        "hint": "Veuillez préciser : nom ou lien du jeu de données, pays ou zone couverts, et en quoi il serait utile."
       },
       "improvement": {
         "label": "Si vous pouviez améliorer une seule chose dans Whisp, laquelle serait-ce ?"

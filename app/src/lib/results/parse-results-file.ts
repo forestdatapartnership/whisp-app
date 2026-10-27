@@ -13,13 +13,22 @@ type ParseResultsResult =
   | { featureCollection: FeatureCollection; whispVersion: string | null }
   | { error: ResultsFileErrorKey };
 
-export function versionsMatch(
+function versionsMatch(
   exported: string | null | undefined,
   current: string | null | undefined
 ) {
   const a = exported?.trim() || "";
   const b = current?.trim() || "";
   return Boolean(a && b && a === b);
+}
+
+export function resultsOpenable(
+  exported: string | null | undefined,
+  current: string | null | undefined
+) {
+  // Local dev without the API can't learn the app's library version; any results file with a version opens there.
+  if (process.env.NODE_ENV === "development" && !current?.trim()) return Boolean(exported?.trim());
+  return versionsMatch(exported, current);
 }
 
 function parseMeta(raw: unknown): Record<string, unknown> | null {

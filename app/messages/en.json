@@ -282,7 +282,8 @@
     "regenConfirm": "Yes, regenerate",
     "revokeTitle": "Revoke API key?",
     "revokeBody": "This permanently invalidates your key. All API calls using it will fail immediately. You can generate a new key afterwards.",
-    "revokeConfirm": "Revoke key"
+    "revokeConfirm": "Revoke key",
+    "feedbackPrompt": "Building with the API? <link>We'd love to hear what you use it for</link>."
   },
   "ApiQuickStart": {
     "title": "Quick start",
@@ -437,46 +438,52 @@
     "continue": "continue",
     "indicatorTotal": "{label}: {yes} of {total} plots marked yes",
     "mapPlot": "Plot",
-    "mapGeoId": "Geo ID"
+    "mapGeoId": "Geo ID",
+    "feedbackPromptTitle": "How did this analysis go?",
+    "feedbackPrompt": "<link>Share your feedback</link> to help us improve Whisp."
   },
   "Feedback": {
-    "title": "Help us improve Whisp",
-    "description": "{count, plural, one {# optional question} other {# optional questions}}, under a minute.",
-    "textHint": "Up to {max, number} characters. Please don't include personal details.",
+    "title": "Take a minute to help us improve Whisp",
+    "textHint": "Please don't include personal details.",
     "send": "Send feedback",
     "sending": "Sending…",
     "thanks": "Thank you for your feedback.",
     "questions": {
-      "usefulness": {
-        "label": "How useful is Whisp for your work?",
-        "options": {
-          "1": "Not useful",
-          "2": "Slightly useful",
-          "3": "Moderately useful",
-          "4": "Very useful",
-          "5": "Extremely useful"
-        }
+      "rating": {
+        "label": "How would you rate Whisp overall?"
       },
-      "ease": {
-        "label": "How easy is Whisp to use?",
+      "region": {
+        "label": "Which region do you use Whisp from?",
         "options": {
-          "1": "Very difficult",
-          "2": "Difficult",
-          "3": "Neither easy nor difficult",
-          "4": "Easy",
-          "5": "Very easy"
+          "africa": "Africa",
+          "asia_pacific": "Asia and the Pacific",
+          "europe_central_asia": "Europe and Central Asia",
+          "latin_america_caribbean": "Latin America and the Caribbean",
+          "near_east_north_africa": "Near East and North Africa",
+          "north_america": "North America"
         }
       },
       "organization": {
         "label": "What type of organization do you work for?",
         "options": {
-          "government": "Government",
-          "academia": "Academia",
-          "private": "Private sector",
-          "ngo": "NGO",
-          "un": "UN",
+          "government": "Government or public authority",
+          "operator": "Operator",
+          "trader": "Trader",
+          "producer": "Producer, cooperative or smallholder group",
+          "certification": "Certification or verification body",
+          "financial": "Financial institution",
+          "ngo": "NGO or civil society",
+          "academia": "Academia or research",
+          "un": "UN or intergovernmental organization",
           "other": "Other"
         }
+      },
+      "use": {
+        "label": "What do you use Whisp for?"
+      },
+      "datasets": {
+        "label": "Do you know any datasets we could incorporate?",
+        "hint": "Please include: Dataset name or link, country or area it covers, and why it would be useful."
       },
       "improvement": {
         "label": "If you could improve one thing in Whisp, what would it be?"

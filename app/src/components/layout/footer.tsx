@@ -65,6 +65,16 @@ export function Footer() {
   const t = useTranslations("Footer");
   const { config } = useConfig();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  // Email links use ?feedback; drop it once read so a refresh doesn't reopen the dialog.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("feedback")) return;
+    url.searchParams.delete("feedback");
+    window.history.replaceState(null, "", url);
+    setFeedbackOpen(true);
+  }, []);
+
   const docsLinks = [
     { href: `${config?.api.url ?? "/api"}/docs`, label: t("api"), target: "_blank" },
     { href: "https://github.com/forestdatapartnership/whisp/blob/main/layers_description.md", label: t("layerDescriptions"), target: "_blank" },

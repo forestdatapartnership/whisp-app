@@ -1,9 +1,9 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { getAuthUserWithRefresh } from '@/lib/auth/session';
+import { getAuthUserWithRefresh, requireAdmin } from '@/lib/auth/session';
 import { action } from '@/lib/server/action';
-import { insertFeedback } from '@/lib/db/feedback-service';
+import { insertFeedback, listFeedback } from '@/lib/db/feedback-service';
 import { FEEDBACK_QUESTIONS, FEEDBACK_TEXT_MAX_LENGTH } from '@/lib/feedback/questions';
 import { SystemError } from '@/types/system-error';
 import { SystemCode } from '@/types/system-codes';
@@ -61,4 +61,9 @@ export const submitFeedback = action(async (answers: Record<string, string>): Pr
 
   const user = await getAuthUserWithRefresh();
   await insertFeedback(valid, user?.id ?? null);
+});
+
+export const fetchFeedback = action(async () => {
+  await requireAdmin();
+  return listFeedback();
 });

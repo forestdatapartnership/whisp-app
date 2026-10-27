@@ -24,7 +24,7 @@ import {
   clearLocalResults,
   readLocalResults,
 } from "@/lib/results/local-results";
-import { versionsMatch } from "@/lib/results/parse-results-file";
+import { resultsOpenable } from "@/lib/results/parse-results-file";
 import { useTheme } from "@/components/layout/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/icons";
@@ -180,14 +180,14 @@ export default function ResultsPage() {
   }, []);
 
   useEffect(() => {
-    if (!isLocal) return;
-    const current = config?.app.openforisWhispVersion?.trim() || "";
-    if (!current) return;
+    if (!isLocal || !config) return;
+    const current = config.app.openforisWhispVersion?.trim() || "";
+    if (!current && process.env.NODE_ENV !== "development") return;
 
     let cancelled = false;
     readLocalResults().then((stored) => {
       if (cancelled) return;
-      if (!stored || !versionsMatch(stored.whispVersion, current)) {
+      if (!stored || !resultsOpenable(stored.whispVersion, current)) {
         clearLocalResults();
         setLocalMissing(true);
         return;
@@ -197,7 +197,7 @@ export default function ResultsPage() {
     return () => {
       cancelled = true;
     };
-  }, [isLocal, handleCompleted, config?.app.openforisWhispVersion]);
+  }, [isLocal, handleCompleted, config]);
 
   useEffect(() => {
     if (isLocal) return;

@@ -11,7 +11,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { InfoToast } from "@/components/ui/info-toast";
+import { linkVariants } from "@/components/ui/link";
 import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
+import { FEEDBACK_PROMPT_KEY } from "@/components/feedback/feedback-form";
 import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Layers, ListFilter, Map, MessageSquare, Table2 } from "lucide-react";
 
 interface ResultsToolbarProps {
@@ -95,6 +98,24 @@ export function ResultsToolbar({
         {t('feedback')}
       </Button>
       <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      <InfoToast storageKey={FEEDBACK_PROMPT_KEY} title={t('feedbackPromptTitle')} delay={5000}>
+        {(dismiss) =>
+          t.rich('feedbackPrompt', {
+            link: (chunks) => (
+              <button
+                type="button"
+                onClick={() => {
+                  dismiss();
+                  setFeedbackOpen(true);
+                }}
+                className={cn("cursor-pointer transition-colors", linkVariants.accent)}
+              >
+                {chunks}
+              </button>
+            ),
+          })
+        }
+      </InfoToast>
       <Button variant="outline" size="sm" onClick={onBack}>
         <ArrowLeft />
         {t('newAnalysis')}

@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { BookOpen, Globe, Menu, Moon, Sun, User, Settings, BriefcaseBusiness, KeyRound, LogIn, LogOut } from "lucide-react";
+import { BookOpen, Globe, Menu, Moon, Sun, User, Settings, BriefcaseBusiness, KeyRound, LogIn, LogOut, MessageSquare } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -43,7 +43,7 @@ export function Navbar() {
   const t = useTranslations("Navbar");
   const tLanguage = useTranslations("LanguageSwitcher");
   const { theme, toggleTheme } = useTheme();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const { config } = useConfig();
   const themeLabel = theme === "dark" ? t("lightMode") : t("darkMode");
   const [open, setOpen] = useState(false);
@@ -182,6 +182,17 @@ export function Navbar() {
                   {t(label)}
                 </Link>
               ))}
+              {isAdmin && (
+                <Link
+                  href="/admin/feedback"
+                  role="menuitem"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-text-muted hover:bg-surface-raised hover:text-text-primary transition-colors"
+                >
+                  <MessageSquare className="size-3.5" aria-hidden />
+                  Feedback
+                </Link>
+              )}
 
               <button
                 role="menuitem"
