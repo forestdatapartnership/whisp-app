@@ -2,7 +2,7 @@
 
 *Esta traducción se ofrece únicamente a título informativo. En caso de discrepancia, prevalece la versión en inglés.*
 
-**Última actualización:** marzo de 2026
+**Última actualización:** octubre de 2026
 
 ## 1. Sobre esta política
 
@@ -54,6 +54,14 @@ Las geometrías pueden ser sensibles según el contexto (p. ej., el límite de u
 | **Dirección de correo electrónico** | Notificaciones del servicio |
 | **Estado de la suscripción** | Gestión de las preferencias de notificación |
 
+### 2.5 Comentarios
+
+| Dato | Finalidad |
+|---|---|
+| **Respuestas al formulario de comentarios** (valoraciones, tipo de organización, comentarios) | Mejorar WHISP |
+
+Si ha iniciado sesión, sus comentarios se vinculan a su cuenta. No incluya datos personales en sus comentarios.
+
 ## 3. Cómo utilizamos sus datos
 
 Utilizamos sus datos personales exclusivamente para:
@@ -79,6 +87,7 @@ Utilizamos sus datos personales exclusivamente para:
 | **Claves de API** | Hasta su revocación o la eliminación de la cuenta (eliminación lógica para el registro de auditoría) |
 | **Tokens de verificación de correo / restablecimiento de contraseña** | Válidos durante 1 hora; revocados tras su uso |
 | **Suscripciones a notificaciones** | Hasta que cancele la suscripción o elimine su cuenta |
+| **Comentarios** | Se conservan para mejorar el servicio; se desvinculan de su cuenta si la elimina |
 | **Registros de la aplicación** | Sujetos a la política de rotación de registros de la infraestructura |
 
 ## 5. Servicios de terceros y transferencias de datos
@@ -127,7 +136,7 @@ Puede actualizar su nombre, apellidos y organización en la página **Configurac
 Puede eliminar de forma permanente su cuenta y todos los datos asociados desde la página **Configuración**. La eliminación de la cuenta:
 - Requiere confirmar la contraseña
 - Elimina permanentemente su perfil de usuario, claves de API, tokens de verificación y tokens de restablecimiento de contraseña
-- Anonimiza los registros de trabajos de análisis asociados
+- Anonimiza los registros de trabajos de análisis y los comentarios asociados
 
 ### 7.4 Limitar el tratamiento de datos
 

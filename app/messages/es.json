@@ -55,7 +55,8 @@
     "legal": "Legal",
     "privacyPolicy": "Política de privacidad",
     "termsOfUse": "Condiciones de uso",
-    "geeDataSeparation": "Separación de datos de GEE"
+    "geeDataSeparation": "Separación de datos de GEE",
+    "feedback": "Comentarios"
   },
   "Home": {
     "title": "¿Qué hay en esa parcela?",
@@ -363,6 +364,7 @@
     "download": "Descargar",
     "htmlReport": "Informe HTML",
     "openInWhispMap": "Abrir en Whisp Map",
+    "feedback": "Comentarios",
     "currentSelection": "Selección actual",
     "fullResults": "Resultados completos",
     "map": "Mapa",
@@ -441,6 +443,52 @@
     "indicatorTotal": "{label}: {yes} de {total} parcelas marcadas como sí",
     "mapPlot": "Parcela",
     "mapGeoId": "Geo ID"
+  },
+  "Feedback": {
+    "title": "Ayúdenos a mejorar Whisp",
+    "description": "{count, plural, one {# pregunta opcional} other {# preguntas opcionales}}, menos de un minuto.",
+    "textHint": "Hasta {max, number} caracteres. No incluya datos personales.",
+    "send": "Enviar comentarios",
+    "sending": "Enviando…",
+    "thanksTitle": "Gracias por sus comentarios",
+    "thanks": "Los usaremos para mejorar Whisp.",
+    "back": "Volver a Whisp",
+    "questions": {
+      "usefulness": {
+        "label": "¿Qué tan útil es Whisp para su trabajo?",
+        "options": {
+          "1": "Nada útil",
+          "2": "Poco útil",
+          "3": "Moderadamente útil",
+          "4": "Muy útil",
+          "5": "Extremadamente útil"
+        }
+      },
+      "ease": {
+        "label": "¿Qué tan fácil es usar Whisp?",
+        "options": {
+          "1": "Muy difícil",
+          "2": "Difícil",
+          "3": "Ni fácil ni difícil",
+          "4": "Fácil",
+          "5": "Muy fácil"
+        }
+      },
+      "organization": {
+        "label": "¿En qué tipo de organización trabaja?",
+        "options": {
+          "government": "Gobierno",
+          "academia": "Ámbito académico",
+          "private": "Sector privado",
+          "ngo": "ONG",
+          "un": "ONU",
+          "other": "Otro"
+        }
+      },
+      "improvement": {
+        "label": "Si pudiera mejorar una sola cosa de Whisp, ¿cuál sería?"
+      }
+    }
   },
   "SystemMessages": {
     "system_internal_server_error": "Se produjo un error interno del servidor. Inténtelo de nuevo más tarde.",

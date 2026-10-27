@@ -11,7 +11,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Layers, ListFilter, Map, Table2 } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Layers, ListFilter, Map, MessageSquare, Table2 } from "lucide-react";
 
 interface ResultsToolbarProps {
   title: string;
@@ -88,6 +89,10 @@ export function ResultsToolbar({
         </>
       )}
       <div className="flex-1" />
+      <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/feedback" target="_blank" />}>
+        <MessageSquare />
+        {t('feedback')}
+      </Button>
       <Button variant="outline" size="sm" onClick={onBack}>
         <ArrowLeft />
         {t('newAnalysis')}

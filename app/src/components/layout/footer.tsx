@@ -98,6 +98,10 @@ export function Footer() {
       <FooterDropdown label={t("docs")} items={docsLinks} />
       <Sep />
       <FooterDropdown label={t("legal")} items={legalLinks} />
+      <Sep />
+      <Link href="/feedback" variant="muted" className="whitespace-nowrap">
+        {t("feedback")}
+      </Link>
       <div className="ml-auto flex items-center">
         <VersionLink />
       </div>

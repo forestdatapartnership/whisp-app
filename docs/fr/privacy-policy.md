@@ -2,7 +2,7 @@
 
 *Cette traduction est fournie à titre informatif uniquement. En cas de divergence, la version anglaise prévaut.*
 
-**Dernière mise à jour :** mars 2026
+**Dernière mise à jour :** octobre 2026
 
 ## 1. À propos de cette politique
 
@@ -54,6 +54,14 @@ Les géométries peuvent être sensibles selon le contexte (par exemple, la limi
 | **Adresse e-mail** | Notifications du service |
 | **Statut d'abonnement** | Gestion des préférences de notification |
 
+### 2.5 Commentaires
+
+| Donnée | Finalité |
+|---|---|
+| **Réponses au formulaire de commentaires** (évaluations, type d'organisation, commentaires) | Améliorer WHISP |
+
+Si vous êtes connecté, vos commentaires sont associés à votre compte. N'incluez pas de données personnelles dans vos commentaires.
+
 ## 3. Comment nous utilisons vos données
 
 Nous utilisons vos données personnelles exclusivement pour :
@@ -79,6 +87,7 @@ Nous n'utilisons **pas** vos données pour :
 | **Clés d'API** | Jusqu'à révocation ou suppression du compte (suppression logique pour la piste d'audit) |
 | **Jetons de vérification d'e-mail / de réinitialisation du mot de passe** | Valables 1 heure ; révoqués après utilisation |
 | **Abonnements aux notifications** | Jusqu'à votre désabonnement ou la suppression de votre compte |
+| **Commentaires** | Conservés pour améliorer le service ; dissociés de votre compte si vous le supprimez |
 | **Journaux de l'application** | Soumis à la politique de rotation des journaux de l'infrastructure |
 
 ## 5. Services tiers et transferts de données
@@ -127,7 +136,7 @@ Vous pouvez mettre à jour votre prénom, votre nom et votre organisation sur la
 Vous pouvez supprimer définitivement votre compte et toutes les données associées depuis la page **Paramètres**. La suppression du compte :
 - Requiert la confirmation du mot de passe
 - Supprime définitivement votre profil utilisateur, vos clés d'API, vos jetons de vérification et vos jetons de réinitialisation du mot de passe
-- Anonymise les enregistrements de tâches d'analyse associés
+- Anonymise les enregistrements de tâches d'analyse et les commentaires associés
 
 ### 7.4 Limiter le traitement des données
 

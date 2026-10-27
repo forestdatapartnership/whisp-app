@@ -55,7 +55,8 @@
     "legal": "Legal",
     "privacyPolicy": "Privacy Policy",
     "termsOfUse": "Terms of Use",
-    "geeDataSeparation": "GEE Data Separation"
+    "geeDataSeparation": "GEE Data Separation",
+    "feedback": "Feedback"
   },
   "Home": {
     "title": "What is in that plot?",
@@ -363,6 +364,7 @@
     "download": "Download",
     "htmlReport": "HTML Report",
     "openInWhispMap": "Open in Whisp Map",
+    "feedback": "Feedback",
     "currentSelection": "Current selection",
     "fullResults": "Full results",
     "map": "Map",
@@ -441,6 +443,52 @@
     "indicatorTotal": "{label}: {yes} of {total} plots marked yes",
     "mapPlot": "Plot",
     "mapGeoId": "Geo ID"
+  },
+  "Feedback": {
+    "title": "Help us improve Whisp",
+    "description": "{count, plural, one {# optional question} other {# optional questions}}, under a minute.",
+    "textHint": "Up to {max, number} characters. Please don't include personal details.",
+    "send": "Send feedback",
+    "sending": "Sending…",
+    "thanksTitle": "Thank you for your feedback",
+    "thanks": "We'll use it to improve Whisp.",
+    "back": "Back to Whisp",
+    "questions": {
+      "usefulness": {
+        "label": "How useful is Whisp for your work?",
+        "options": {
+          "1": "Not useful",
+          "2": "Slightly useful",
+          "3": "Moderately useful",
+          "4": "Very useful",
+          "5": "Extremely useful"
+        }
+      },
+      "ease": {
+        "label": "How easy is Whisp to use?",
+        "options": {
+          "1": "Very difficult",
+          "2": "Difficult",
+          "3": "Neither easy nor difficult",
+          "4": "Easy",
+          "5": "Very easy"
+        }
+      },
+      "organization": {
+        "label": "What type of organization do you work for?",
+        "options": {
+          "government": "Government",
+          "academia": "Academia",
+          "private": "Private sector",
+          "ngo": "NGO",
+          "un": "UN",
+          "other": "Other"
+        }
+      },
+      "improvement": {
+        "label": "If you could improve one thing in Whisp, what would it be?"
+      }
+    }
   },
   "SystemMessages": {
     "system_internal_server_error": "An internal server error occurred. Please try again later.",

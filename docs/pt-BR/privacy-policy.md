@@ -2,7 +2,7 @@
 
 *Esta tradução é fornecida apenas para fins informativos. Em caso de divergência, prevalece a versão em inglês.*
 
-**Última atualização:** março de 2026
+**Última atualização:** outubro de 2026
 
 ## 1. Sobre esta política
 
@@ -54,6 +54,14 @@ As geometrias podem ser sensíveis dependendo do contexto (por exemplo, o limite
 | **Endereço de e-mail** | Notificações do serviço |
 | **Status da assinatura** | Gerenciamento das preferências de notificação |
 
+### 2.5 Feedback
+
+| Dado | Finalidade |
+|---|---|
+| **Respostas ao formulário de feedback** (avaliações, tipo de organização, comentários) | Melhorar o WHISP |
+
+Se você estiver conectado, seu feedback fica vinculado à sua conta. Não inclua dados pessoais nos seus comentários.
+
 ## 3. Como usamos seus dados
 
 Usamos seus dados pessoais exclusivamente para:
@@ -79,6 +87,7 @@ Usamos seus dados pessoais exclusivamente para:
 | **Chaves de API** | Até a revogação ou a exclusão da conta (exclusão lógica para a trilha de auditoria) |
 | **Tokens de verificação de e-mail / redefinição de senha** | Válidos por 1 hora; revogados após o uso |
 | **Assinaturas de notificação** | Até você cancelar a assinatura ou excluir sua conta |
+| **Feedback** | Mantido para melhorar o serviço; desvinculado da sua conta se você excluí-la |
 | **Logs do aplicativo** | Sujeitos à política de rotação de logs da infraestrutura |
 
 ## 5. Serviços de terceiros e transferências de dados
@@ -127,7 +136,7 @@ Você pode atualizar seu nome, sobrenome e organização na página **Configura�
 Você pode excluir permanentemente sua conta e todos os dados associados na página **Configurações**. A exclusão da conta:
 - Exige a confirmação da senha
 - Exclui permanentemente seu perfil de usuário, chaves de API, tokens de verificação e tokens de redefinição de senha
-- Anonimiza os registros de tarefas de análise associados
+- Anonimiza os registros de tarefas de análise e o feedback associados
 
 ### 7.4 Limitar o processamento de dados
 

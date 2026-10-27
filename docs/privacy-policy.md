@@ -1,6 +1,6 @@
 # WHISP Privacy Policy
 
-**Last updated:** March 2026
+**Last updated:** October 2026
 
 ## 1. About This Policy
 
@@ -52,6 +52,14 @@ Geometries may be sensitive depending on context (e.g. a farm boundary linked to
 | **Email address** | Service notifications |
 | **Subscription status** | Managing notification preferences |
 
+### 2.5 Feedback
+
+| Data | Purpose |
+|---|---|
+| **Feedback answers** (ratings, organisation type, comments) | Improving WHISP |
+
+If you are signed in, your feedback is linked to your account. Please do not include personal details in your comments.
+
 ## 3. How We Use Your Data
 
 We use your personal data exclusively for:
@@ -77,6 +85,7 @@ We do **not** use your data for:
 | **API keys** | Until revoked or account deleted (soft-deleted for audit trail) |
 | **Email verification / password reset tokens** | Valid for 1 hour; revoked after use |
 | **Notification subscriptions** | Until you unsubscribe or delete your account |
+| **Feedback** | Retained to improve the service; unlinked from your account if you delete it |
 | **Application logs** | Subject to infrastructure log rotation policy |
 
 ## 5. Third-Party Services and Data Transfers
@@ -125,7 +134,7 @@ You can update your first name, last name, and organisation through the **Settin
 You can permanently delete your account and all associated data through the **Settings** page. Account deletion:
 - Requires password confirmation
 - Permanently deletes your user profile, API keys, verification tokens, and password reset tokens
-- Anonymises associated analysis job records
+- Anonymises associated analysis job records and feedback
 
 ### 7.4 Limit Data Processing
 
