@@ -5,8 +5,8 @@ metadata:
   namespace: monitoring
 type: Opaque
 data:
-  admin-user: "${APP_GRAFANA_ADMIN_USER}"
-  admin-password: "${APP_GRAFANA_ADMIN_PASSWORD}"
+  admin-user: "${GRAFANA_ADMIN_USER}"
+  admin-password: "${GRAFANA_ADMIN_PASSWORD}"
 ---
 apiVersion: v1
 kind: ConfigMap
