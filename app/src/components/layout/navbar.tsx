@@ -36,6 +36,9 @@ const ACCOUNT_LINKS = [
   { icon: BriefcaseBusiness, href: "/account/jobs", label: "jobs" },
 ] as const;
 
+const LOGOUT_ITEM_CLASS =
+  "flex w-full items-center gap-2 px-4 py-2 text-sm text-text-muted hover:bg-destructive/10 hover:text-destructive transition-colors";
+
 export function Navbar() {
   const t = useTranslations("Navbar");
   const tLanguage = useTranslations("LanguageSwitcher");
@@ -183,11 +186,21 @@ export function Navbar() {
               <button
                 role="menuitem"
                 onClick={() => { logout(); setOpen(false); }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-text-muted hover:bg-destructive/10 hover:text-destructive transition-colors"
+                className={LOGOUT_ITEM_CLASS}
               >
                 <LogOut className="size-3.5" aria-hidden />
                 {t("logout")}
               </button>
+              {user?.is_sso && (
+                <button
+                  role="menuitem"
+                  onClick={() => { logout(true); setOpen(false); }}
+                  className={LOGOUT_ITEM_CLASS}
+                >
+                  <LogOut className="size-3.5" aria-hidden />
+                  {t("logoutSso")}
+                </button>
+              )}
             </div>
           )}
         </div>

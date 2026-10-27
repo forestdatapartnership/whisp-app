@@ -19,7 +19,7 @@ When you register for a WHISP account, we collect:
 | Data | Purpose |
 |---|---|
 | **First name, last name** | Account identification |
-| **Email address** | Authentication, account verification, password reset, notifications |
+| **Email address** | Authentication, password reset, notifications |
 | **Password** | Authentication (stored as a bcrypt hash, never in plaintext) |
 | **Organisation** (optional) | User profile context |
 
@@ -66,7 +66,7 @@ We use your personal data exclusively for:
 
 - **Providing the service** — account management, authentication, API access
 - **Running geospatial analyses** — processing your submitted geometries through Google Earth Engine (no personal data is sent to GEE)
-- **Service communications** — email verification, password reset, service notifications
+- **Service communications** — password reset, service notifications
 - **Security and abuse prevention** — rate limiting, IP-based abuse detection
 - **Service improvement** — aggregated, non-identifying usage statistics
 
@@ -83,7 +83,7 @@ We do **not** use your data for:
 | **IP addresses** in analysis job records | Automatically anonymised after the configured retention period (default: 90 days) |
 | **Analysis job metadata** | Retained for service operation; IP addresses within are anonymised per the schedule above |
 | **API keys** | Until revoked or account deleted (soft-deleted for audit trail) |
-| **Email verification / password reset tokens** | Valid for 1 hour; revoked after use |
+| **Password reset tokens** | Valid for 1 hour; revoked after use |
 | **Notification subscriptions** | Until you unsubscribe or delete your account |
 | **Feedback** | Retained to improve the service; unlinked from your account if you delete it |
 | **Application logs** | Subject to infrastructure log rotation policy |
@@ -96,7 +96,7 @@ WHISP interacts with the following third-party services during operation:
 |---|---|---|
 | **Google Earth Engine** | Geometries and technical analysis parameters only. **No personal data** (names, emails, IPs, user IDs) is transmitted. | Geospatial computation engine |
 | **Asset Registry** | GeoIDs (when using GeoID submission) | Resolving geographic identifiers to geometry |
-| **Google Gmail SMTP** | Recipient email address, email content | Sending verification and password reset emails |
+| **Google Gmail SMTP** | Recipient email address, email content | Sending password reset emails |
 | **Google Maps API** | Client-side map interactions (subject to Google's privacy policy) | Map visualisation in the UI |
 
 For the technical evidence of data separation between WHISP and Google Earth Engine, see the [GEE Data Separation Annex](./gee-data-separation).
@@ -132,7 +132,7 @@ You can update your first name, last name, and organisation through the **Settin
 ### 7.3 Delete Your Account
 
 You can permanently delete your account and all associated data through the **Settings** page. Account deletion:
-- Requires password confirmation
+- Requires confirmation, plus your password for accounts that don't sign in with SSO
 - Permanently deletes your user profile, API keys, verification tokens, and password reset tokens
 - Anonymises associated analysis job records and feedback
 

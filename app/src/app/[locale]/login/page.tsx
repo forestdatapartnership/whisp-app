@@ -14,13 +14,7 @@ import { Alert } from "@/components/ui/alert";
 import { CenteredShell } from "@/components/layout/page-section";
 import { cardLayout } from "@/components/ui/styles";
 import { SystemCode } from "@/types/system-codes";
-
-function ssoLoginUrl(next: string, loginHint?: string) {
-  const url = new URL("/auth/sso/login", window.location.origin);
-  url.searchParams.set("next", next.startsWith("/") ? next : "/");
-  if (loginHint) url.searchParams.set("login_hint", loginHint);
-  return url.toString();
-}
+import { ssoLoginUrl } from "@/lib/auth/sso-login-url";
 
 function LoginForm() {
   const t = useTranslations("Login");

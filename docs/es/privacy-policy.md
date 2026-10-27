@@ -21,7 +21,7 @@ Al registrar una cuenta de WHISP, recopilamos:
 | Dato | Finalidad |
 |---|---|
 | **Nombre y apellidos** | Identificación de la cuenta |
-| **Dirección de correo electrónico** | Autenticación, verificación de la cuenta, restablecimiento de contraseña, notificaciones |
+| **Dirección de correo electrónico** | Autenticación, restablecimiento de contraseña, notificaciones |
 | **Contraseña** | Autenticación (almacenada como hash bcrypt, nunca en texto plano) |
 | **Organización** (opcional) | Contexto del perfil de usuario |
 
@@ -68,7 +68,7 @@ Utilizamos sus datos personales exclusivamente para:
 
 - **Prestar el servicio**: gestión de la cuenta, autenticación, acceso a la API
 - **Ejecutar análisis geoespaciales**: procesar las geometrías que envía a través de Google Earth Engine (no se envía ningún dato personal a GEE)
-- **Comunicaciones del servicio**: verificación del correo electrónico, restablecimiento de contraseña, notificaciones del servicio
+- **Comunicaciones del servicio**: restablecimiento de contraseña, notificaciones del servicio
 - **Seguridad y prevención de abusos**: limitación de solicitudes, detección de abusos basada en la IP
 - **Mejora del servicio**: estadísticas de uso agregadas y no identificativas
 
@@ -85,7 +85,7 @@ Utilizamos sus datos personales exclusivamente para:
 | **Direcciones IP** en los registros de trabajos de análisis | Anonimizadas automáticamente tras el periodo de conservación configurado (por defecto: 90 días) |
 | **Metadatos de los trabajos de análisis** | Conservados para el funcionamiento del servicio; las direcciones IP que contienen se anonimizan según el calendario anterior |
 | **Claves de API** | Hasta su revocación o la eliminación de la cuenta (eliminación lógica para el registro de auditoría) |
-| **Tokens de verificación de correo / restablecimiento de contraseña** | Válidos durante 1 hora; revocados tras su uso |
+| **Tokens de restablecimiento de contraseña** | Válidos durante 1 hora; revocados tras su uso |
 | **Suscripciones a notificaciones** | Hasta que cancele la suscripción o elimine su cuenta |
 | **Comentarios** | Se conservan para mejorar el servicio; se desvinculan de su cuenta si la elimina |
 | **Registros de la aplicación** | Sujetos a la política de rotación de registros de la infraestructura |
@@ -98,7 +98,7 @@ WHISP interactúa con los siguientes servicios de terceros durante su funcionami
 |---|---|---|
 | **Google Earth Engine** | Únicamente geometrías y parámetros técnicos de análisis. **No se transmite ningún dato personal** (nombres, correos electrónicos, IP, identificadores de usuario). | Motor de cálculo geoespacial |
 | **Asset Registry** | GeoIDs (cuando se envían GeoIDs) | Resolución de identificadores geográficos a geometrías |
-| **SMTP de Google Gmail** | Dirección de correo del destinatario, contenido del mensaje | Envío de correos de verificación y restablecimiento de contraseña |
+| **SMTP de Google Gmail** | Dirección de correo del destinatario, contenido del mensaje | Envío de correos de restablecimiento de contraseña |
 | **API de Google Maps** | Interacciones del mapa en el cliente (sujetas a la política de privacidad de Google) | Visualización de mapas en la interfaz |
 
 Para la evidencia técnica de la separación de datos entre WHISP y Google Earth Engine, véase el [Anexo sobre la separación de datos de GEE](./gee-data-separation).
@@ -134,7 +134,7 @@ Puede actualizar su nombre, apellidos y organización en la página **Configurac
 ### 7.3 Eliminar su cuenta
 
 Puede eliminar de forma permanente su cuenta y todos los datos asociados desde la página **Configuración**. La eliminación de la cuenta:
-- Requiere confirmar la contraseña
+- Requiere confirmación y, en las cuentas que no inician sesión con SSO, la contraseña
 - Elimina permanentemente su perfil de usuario, claves de API, tokens de verificación y tokens de restablecimiento de contraseña
 - Anonimiza los registros de trabajos de análisis y los comentarios asociados
 

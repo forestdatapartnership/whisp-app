@@ -1,20 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { getPathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { forgotPassword } from "@/lib/auth/actions";
+import { ssoLoginUrl } from "@/lib/auth/sso-login-url";
 import { useSystemMessage } from "@/lib/shared/use-system-message";
+import { SystemCode } from "@/types/system-codes";
 import { Alert } from "@/components/ui/alert";
 import { CenteredShell } from "@/components/layout/page-section";
 import { cardLayout } from "@/components/ui/styles";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("ForgotPassword");
+  const locale = useLocale();
   const systemMessage = useSystemMessage();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -26,8 +30,15 @@ export default function ForgotPasswordPage() {
     setError("");
     setIsLoading(true);
     const result = await forgotPassword(email);
-    if (result.ok) setSuccess(true);
-    else setError(systemMessage(result.code, result.args));
+    if (result.ok) {
+      setSuccess(true);
+    } else {
+      setError(systemMessage(result.code, result.args));
+      if (result.code === SystemCode.AUTH_SSO_REQUIRED) {
+        window.location.assign(ssoLoginUrl(getPathname({ href: "/", locale }), email));
+        return;
+      }
+    }
     setIsLoading(false);
   };
 

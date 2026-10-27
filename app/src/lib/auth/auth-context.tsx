@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { fetchUserProfile } from '@/lib/auth/user-actions';
-import { loginUser, logoutUser } from '@/lib/auth/actions';
+import { loginUser } from '@/lib/auth/actions';
 import { useSystemMessage } from '@/lib/shared/use-system-message';
 import type { SystemCode } from '@/types/system-codes';
 import type { UserProfile } from '@/types/user';
@@ -14,7 +14,7 @@ type AuthContextType = {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<{ ok: boolean; code?: SystemCode }>;
-  logout: () => Promise<void>;
+  logout: (signOutOfSso?: boolean) => void;
   refreshUser: () => Promise<void>;
   clearError: () => void;
 };
@@ -51,16 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, [loadUserProfile]);
 
-  const logout = useCallback(async () => {
-    const result = await logoutUser();
-    if (!result.ok) {
-      setError(systemMessage(result.code, result.args));
-      return;
-    }
+  const logout = useCallback((signOutOfSso = false) => {
     setUser(null);
     setError(null);
-    window.location.href = '/auth/sso/logout';
-  }, [systemMessage]);
+    window.location.href = signOutOfSso ? '/auth/sso/logout' : '/auth/sso/logout?keep_sso';
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     setError(null);

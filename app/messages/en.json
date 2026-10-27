@@ -44,6 +44,7 @@
     "jobs": "Analysis Jobs",
     "menu": "Menu",
     "logout": "Log out",
+    "logoutSso": "Log out of SSO",
     "signIn": "Sign in"
   },
   "Footer": {
@@ -213,14 +214,6 @@
     "updatedDescription": "Your password has been updated.",
     "signIn": "Sign in"
   },
-  "VerifyEmail": {
-    "title": "Email verification",
-    "verifying": "Verifying your email address…",
-    "verified": "Your email has been verified.",
-    "failed": "Verification could not be completed.",
-    "missingToken": "Verification token is missing.",
-    "signIn": "Sign in"
-  },
   "Password": {
     "section": "Password",
     "changeTitle": "Change password",
@@ -256,7 +249,9 @@
     "serviceNotificationsHint": "Email when the Whisp service has important updates",
     "dangerZone": "Danger zone",
     "deleteAccount": "Delete account",
-    "deleteAccountHint": "Permanently removes your account and associated data. Cannot be undone."
+    "deleteAccountHint": "Permanently removes your account and associated data. Cannot be undone.",
+    "ssoManaged": "Your name, email and password are managed through SSO.",
+    "manageAccount": "Manage account"
   },
   "Profile": {
     "save": "Save changes",
@@ -494,16 +489,13 @@
     "system_internal_server_error": "An internal server error occurred. Please try again later.",
     "auth_unauthorized": "Unauthorized access. Please authenticate.",
     "auth_invalid_credentials": "Invalid email or password.",
-    "auth_email_not_verified": "Please verify your email before logging in. Check your inbox for a verification link.",
+    "auth_email_not_verified": "This email address hasn't been verified. Sign in with SSO using the same email to continue.",
     "auth_invalid_token": "Invalid or expired token.",
     "auth_rate_limit_exceeded": "Rate limit exceeded. Try again in {0} seconds.",
     "auth_admin_required": "Administrator access required",
     "auth_sso_required": "This account signs in via SSO. Redirecting you to the login provider...",
     "auth_sso_failed": "SSO sign-in failed. Please try again.",
     "user_weak_password": "Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.",
-    "user_email_already_exists": "An account with this email already exists.",
-    "user_invalid_email": "Please provide a valid email address.",
-    "user_registration_failed": "Registration failed. Please try again.",
     "user_not_found": "User not found.",
     "user_password_confirmation_required": "Password confirmation is required for this operation.",
     "user_invalid_password": "Current password is incorrect.",

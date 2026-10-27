@@ -162,7 +162,7 @@ Sign-in uses the OIDC authorization code flow with PKCE. The Next.js app is the 
 | `GET /auth/sso/login` | Starts sign-in. Generates PKCE verifier + `state`, stores them in a short-lived `sso_state` cookie, redirects to Keycloak's `authorization_endpoint`. Accepts `next` (post-login path) and `login_hint` (prefills the email). |
 | `GET /auth/sso/register` | Same as login, but redirects to Keycloak's `/registrations` page so the user self-registers. |
 | `GET /auth/sso/callback` | Keycloak redirect target. Validates `state`, exchanges the code for tokens, verifies the ID token, provisions the user, sets session cookies. |
-| `GET /auth/sso/logout` | Clears app cookies and redirects to Keycloak's `end_session_endpoint` (RP-initiated logout) so the IdP session ends too. |
+| `GET /auth/sso/logout` | Clears app cookies and redirects to Keycloak's `end_session_endpoint` (RP-initiated logout) so the IdP session ends too. With `keep_sso`, it only clears the app cookies and returns home, leaving the Keycloak session signed in. |
 | `GET /auth/sso/account` | Redirects to the Keycloak account console for profile/password/MFA management. |
 
 All SSO routes return `501` when Keycloak is not configured.

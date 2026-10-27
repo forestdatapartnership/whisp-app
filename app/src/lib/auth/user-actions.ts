@@ -37,10 +37,14 @@ export const updateUserProfile = action(async (data: {
 export const deleteUserAccount = action(async (password: string): Promise<void> => {
   const user = await getAuthUserWithRefresh();
   if (!user) throw new SystemError(SystemCode.AUTH_UNAUTHORIZED);
-  if (!password) throw new SystemError(SystemCode.USER_PASSWORD_CONFIRMATION_REQUIRED);
+  const profile = await getUserByUuid(user.id);
+  if (!profile) throw new SystemError(SystemCode.USER_NOT_FOUND);
 
-  const isValid = await verifyUserPassword(user.id, password);
-  if (!isValid) throw new SystemError(SystemCode.USER_INVALID_PASSWORD);
+  if (!profile.is_sso) {
+    if (!password) throw new SystemError(SystemCode.USER_PASSWORD_CONFIRMATION_REQUIRED);
+    const isValid = await verifyUserPassword(user.id, password);
+    if (!isValid) throw new SystemError(SystemCode.USER_INVALID_PASSWORD);
+  }
 
   await deleteUser(user.id);
 });

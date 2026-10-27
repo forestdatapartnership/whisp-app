@@ -44,6 +44,7 @@
     "jobs": "Análises realizadas",
     "menu": "Menu",
     "logout": "Sair",
+    "logoutSso": "Sair do SSO",
     "signIn": "Entrar"
   },
   "Footer": {
@@ -213,14 +214,6 @@
     "updatedDescription": "Sua senha foi atualizada.",
     "signIn": "Entrar"
   },
-  "VerifyEmail": {
-    "title": "Verificação de e-mail",
-    "verifying": "Verificando seu endereço de e-mail…",
-    "verified": "Seu e-mail foi verificado.",
-    "failed": "Não foi possível concluir a verificação.",
-    "missingToken": "O token de verificação está ausente.",
-    "signIn": "Entrar"
-  },
   "Password": {
     "section": "Senha",
     "changeTitle": "Alterar senha",
@@ -256,7 +249,9 @@
     "serviceNotificationsHint": "Receber um e-mail quando o serviço Whisp tiver atualizações importantes",
     "dangerZone": "Zona de perigo",
     "deleteAccount": "Excluir conta",
-    "deleteAccountHint": "Remove permanentemente sua conta e os dados associados. Não é possível desfazer."
+    "deleteAccountHint": "Remove permanentemente sua conta e os dados associados. Não é possível desfazer.",
+    "ssoManaged": "Seu nome, e-mail e senha são gerenciados pelo SSO.",
+    "manageAccount": "Gerenciar conta"
   },
   "Profile": {
     "save": "Salvar alterações",
@@ -494,16 +489,13 @@
     "system_internal_server_error": "Ocorreu um erro interno do servidor. Tente novamente mais tarde.",
     "auth_unauthorized": "Acesso não autorizado. Faça login.",
     "auth_invalid_credentials": "E-mail ou senha inválidos.",
-    "auth_email_not_verified": "Verifique seu e-mail antes de fazer login. Procure o link de verificação na sua caixa de entrada.",
+    "auth_email_not_verified": "Este endereço de e-mail não foi verificado. Entre com SSO usando o mesmo e-mail para continuar.",
     "auth_invalid_token": "Token inválido ou expirado.",
     "auth_rate_limit_exceeded": "Limite de solicitações excedido. Tente novamente em {0} segundos.",
     "auth_admin_required": "Acesso de administrador necessário",
     "auth_sso_required": "Esta conta faz login via SSO. Redirecionando para o provedor de login...",
     "auth_sso_failed": "O login com SSO falhou. Tente novamente.",
     "user_weak_password": "A senha deve ter pelo menos 8 caracteres e conter letra maiúscula, minúscula, número e caractere especial.",
-    "user_email_already_exists": "Já existe uma conta com este e-mail.",
-    "user_invalid_email": "Informe um endereço de e-mail válido.",
-    "user_registration_failed": "O cadastro falhou. Tente novamente.",
     "user_not_found": "Usuário não encontrado.",
     "user_password_confirmation_required": "Esta operação exige a confirmação da senha.",
     "user_invalid_password": "A senha atual está incorreta.",

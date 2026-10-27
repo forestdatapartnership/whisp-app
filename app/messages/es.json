@@ -44,6 +44,7 @@
     "jobs": "Análisis realizados",
     "menu": "Menú",
     "logout": "Cerrar sesión",
+    "logoutSso": "Cerrar sesión en SSO",
     "signIn": "Iniciar sesión"
   },
   "Footer": {
@@ -213,14 +214,6 @@
     "updatedDescription": "Su contraseña se ha actualizado.",
     "signIn": "Iniciar sesión"
   },
-  "VerifyEmail": {
-    "title": "Verificación de correo electrónico",
-    "verifying": "Verificando su dirección de correo…",
-    "verified": "Su correo electrónico ha sido verificado.",
-    "failed": "No se pudo completar la verificación.",
-    "missingToken": "Falta el token de verificación.",
-    "signIn": "Iniciar sesión"
-  },
   "Password": {
     "section": "Contraseña",
     "changeTitle": "Cambiar contraseña",
@@ -256,7 +249,9 @@
     "serviceNotificationsHint": "Recibir un correo cuando el servicio Whisp tenga novedades importantes",
     "dangerZone": "Zona de peligro",
     "deleteAccount": "Eliminar cuenta",
-    "deleteAccountHint": "Elimina permanentemente su cuenta y los datos asociados. No se puede deshacer."
+    "deleteAccountHint": "Elimina permanentemente su cuenta y los datos asociados. No se puede deshacer.",
+    "ssoManaged": "Su nombre, correo electrónico y contraseña se gestionan mediante SSO.",
+    "manageAccount": "Gestionar cuenta"
   },
   "Profile": {
     "save": "Guardar cambios",
@@ -494,16 +489,13 @@
     "system_internal_server_error": "Se produjo un error interno del servidor. Inténtelo de nuevo más tarde.",
     "auth_unauthorized": "Acceso no autorizado. Inicie sesión.",
     "auth_invalid_credentials": "Correo electrónico o contraseña no válidos.",
-    "auth_email_not_verified": "Verifique su correo electrónico antes de iniciar sesión. Busque el enlace de verificación en su bandeja de entrada.",
+    "auth_email_not_verified": "Esta dirección de correo electrónico no se ha verificado. Inicie sesión con SSO usando el mismo correo para continuar.",
     "auth_invalid_token": "Token no válido o caducado.",
     "auth_rate_limit_exceeded": "Se superó el límite de solicitudes. Inténtelo de nuevo en {0} segundos.",
     "auth_admin_required": "Se requiere acceso de administrador",
     "auth_sso_required": "Esta cuenta inicia sesión mediante SSO. Redirigiendo al proveedor de inicio de sesión...",
     "auth_sso_failed": "El inicio de sesión con SSO falló. Inténtelo de nuevo.",
     "user_weak_password": "La contraseña debe tener al menos 8 caracteres e incluir mayúsculas, minúsculas, un número y un carácter especial.",
-    "user_email_already_exists": "Ya existe una cuenta con este correo electrónico.",
-    "user_invalid_email": "Introduzca una dirección de correo electrónico válida.",
-    "user_registration_failed": "El registro falló. Inténtelo de nuevo.",
     "user_not_found": "Usuario no encontrado.",
     "user_password_confirmation_required": "Esta operación requiere confirmar la contraseña.",
     "user_invalid_password": "La contraseña actual es incorrecta.",

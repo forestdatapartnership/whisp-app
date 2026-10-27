@@ -11,9 +11,6 @@ export enum SystemCode {
   AUTH_SSO_FAILED = 'auth_sso_failed',
 
   USER_WEAK_PASSWORD = 'user_weak_password',
-  USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists',
-  USER_INVALID_EMAIL = 'user_invalid_email',
-  USER_REGISTRATION_FAILED = 'user_registration_failed',
   USER_NOT_FOUND = 'user_not_found',
   USER_PASSWORD_CONFIRMATION_REQUIRED = 'user_password_confirmation_required',
   USER_INVALID_PASSWORD = 'user_invalid_password',

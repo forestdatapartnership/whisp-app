@@ -21,7 +21,7 @@ Lorsque vous créez un compte WHISP, nous collectons :
 | Donnée | Finalité |
 |---|---|
 | **Prénom, nom** | Identification du compte |
-| **Adresse e-mail** | Authentification, vérification du compte, réinitialisation du mot de passe, notifications |
+| **Adresse e-mail** | Authentification, réinitialisation du mot de passe, notifications |
 | **Mot de passe** | Authentification (stocké sous forme de hachage bcrypt, jamais en clair) |
 | **Organisation** (facultatif) | Contexte du profil utilisateur |
 
@@ -68,7 +68,7 @@ Nous utilisons vos données personnelles exclusivement pour :
 
 - **Fournir le service** — gestion du compte, authentification, accès à l'API
 - **Exécuter des analyses géospatiales** — traiter les géométries que vous soumettez via Google Earth Engine (aucune donnée personnelle n'est envoyée à GEE)
-- **Communications du service** — vérification de l'e-mail, réinitialisation du mot de passe, notifications du service
+- **Communications du service** — réinitialisation du mot de passe, notifications du service
 - **Sécurité et prévention des abus** — limitation du débit, détection des abus par adresse IP
 - **Amélioration du service** — statistiques d'utilisation agrégées et non identifiantes
 
@@ -85,7 +85,7 @@ Nous n'utilisons **pas** vos données pour :
 | **Adresses IP** dans les enregistrements de tâches d'analyse | Anonymisées automatiquement après la période de conservation configurée (par défaut : 90 jours) |
 | **Métadonnées des tâches d'analyse** | Conservées pour le fonctionnement du service ; les adresses IP qu'elles contiennent sont anonymisées selon le calendrier ci-dessus |
 | **Clés d'API** | Jusqu'à révocation ou suppression du compte (suppression logique pour la piste d'audit) |
-| **Jetons de vérification d'e-mail / de réinitialisation du mot de passe** | Valables 1 heure ; révoqués après utilisation |
+| **Jetons de réinitialisation du mot de passe** | Valables 1 heure ; révoqués après utilisation |
 | **Abonnements aux notifications** | Jusqu'à votre désabonnement ou la suppression de votre compte |
 | **Commentaires** | Conservés pour améliorer le service ; dissociés de votre compte si vous le supprimez |
 | **Journaux de l'application** | Soumis à la politique de rotation des journaux de l'infrastructure |
@@ -98,7 +98,7 @@ WHISP interagit avec les services tiers suivants pendant son fonctionnement :
 |---|---|---|
 | **Google Earth Engine** | Géométries et paramètres techniques d'analyse uniquement. **Aucune donnée personnelle** (noms, e-mails, adresses IP, identifiants utilisateur) n'est transmise. | Moteur de calcul géospatial |
 | **Asset Registry** | GeoIDs (lors d'une soumission par GeoID) | Résolution des identifiants géographiques en géométries |
-| **SMTP Google Gmail** | Adresse e-mail du destinataire, contenu de l'e-mail | Envoi des e-mails de vérification et de réinitialisation du mot de passe |
+| **SMTP Google Gmail** | Adresse e-mail du destinataire, contenu de l'e-mail | Envoi des e-mails de réinitialisation du mot de passe |
 | **API Google Maps** | Interactions cartographiques côté client (soumises à la politique de confidentialité de Google) | Visualisation cartographique dans l'interface |
 
 Pour les preuves techniques de la séparation des données entre WHISP et Google Earth Engine, voir l'[annexe sur la séparation des données GEE](./gee-data-separation).
@@ -134,7 +134,7 @@ Vous pouvez mettre à jour votre prénom, votre nom et votre organisation sur la
 ### 7.3 Supprimer votre compte
 
 Vous pouvez supprimer définitivement votre compte et toutes les données associées depuis la page **Paramètres**. La suppression du compte :
-- Requiert la confirmation du mot de passe
+- Requiert une confirmation, ainsi que le mot de passe pour les comptes qui ne se connectent pas avec SSO
 - Supprime définitivement votre profil utilisateur, vos clés d'API, vos jetons de vérification et vos jetons de réinitialisation du mot de passe
 - Anonymise les enregistrements de tâches d'analyse et les commentaires associés
 

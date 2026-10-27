@@ -44,6 +44,7 @@
     "jobs": "Analyses effectuées",
     "menu": "Menu",
     "logout": "Se déconnecter",
+    "logoutSso": "Se déconnecter du SSO",
     "signIn": "Se connecter"
   },
   "Footer": {
@@ -213,14 +214,6 @@
     "updatedDescription": "Votre mot de passe a été mis à jour.",
     "signIn": "Se connecter"
   },
-  "VerifyEmail": {
-    "title": "Vérification de l'e-mail",
-    "verifying": "Vérification de votre adresse e-mail…",
-    "verified": "Votre adresse e-mail a été vérifiée.",
-    "failed": "La vérification n'a pas pu être effectuée.",
-    "missingToken": "Le jeton de vérification est manquant.",
-    "signIn": "Se connecter"
-  },
   "Password": {
     "section": "Mot de passe",
     "changeTitle": "Changer le mot de passe",
@@ -256,7 +249,9 @@
     "serviceNotificationsHint": "Recevoir un e-mail lorsque le service Whisp a des mises à jour importantes",
     "dangerZone": "Zone de danger",
     "deleteAccount": "Supprimer le compte",
-    "deleteAccountHint": "Supprime définitivement votre compte et les données associées. Cette action est irréversible."
+    "deleteAccountHint": "Supprime définitivement votre compte et les données associées. Cette action est irréversible.",
+    "ssoManaged": "Votre nom, votre e-mail et votre mot de passe sont gérés via le SSO.",
+    "manageAccount": "Gérer le compte"
   },
   "Profile": {
     "save": "Enregistrer les modifications",
@@ -494,16 +489,13 @@
     "system_internal_server_error": "Une erreur interne du serveur est survenue. Veuillez réessayer plus tard.",
     "auth_unauthorized": "Accès non autorisé. Veuillez vous authentifier.",
     "auth_invalid_credentials": "E-mail ou mot de passe non valide.",
-    "auth_email_not_verified": "Veuillez vérifier votre e-mail avant de vous connecter. Consultez votre boîte de réception pour trouver le lien de vérification.",
+    "auth_email_not_verified": "Cette adresse e-mail n'a pas été vérifiée. Connectez-vous avec SSO en utilisant la même adresse pour continuer.",
     "auth_invalid_token": "Jeton non valide ou expiré.",
     "auth_rate_limit_exceeded": "Limite de requêtes dépassée. Réessayez dans {0} secondes.",
     "auth_admin_required": "Accès administrateur requis",
     "auth_sso_required": "Ce compte se connecte via SSO. Redirection vers le fournisseur de connexion...",
     "auth_sso_failed": "La connexion SSO a échoué. Veuillez réessayer.",
     "user_weak_password": "Le mot de passe doit comporter au moins 8 caractères et contenir une majuscule, une minuscule, un chiffre et un caractère spécial.",
-    "user_email_already_exists": "Un compte existe déjà avec cet e-mail.",
-    "user_invalid_email": "Veuillez saisir une adresse e-mail valide.",
-    "user_registration_failed": "L'inscription a échoué. Veuillez réessayer.",
     "user_not_found": "Utilisateur introuvable.",
     "user_password_confirmation_required": "La confirmation du mot de passe est requise pour cette opération.",
     "user_invalid_password": "Le mot de passe actuel est incorrect.",

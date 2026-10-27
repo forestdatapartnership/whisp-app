@@ -18,7 +18,8 @@ type DeleteErrors = {
 };
 
 export function useDeleteAccount() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  const needsPassword = !user?.is_sso;
   const t = useTranslations('DeleteAccount');
   const systemMessage = useSystemMessage();
   const [open, setOpen] = useState(false);
@@ -40,7 +41,7 @@ export function useDeleteAccount() {
 
   const confirmDelete = async () => {
     const next: DeleteErrors = {};
-    if (!password.trim()) next.password = t('passwordRequired');
+    if (needsPassword && !password.trim()) next.password = t('passwordRequired');
     if (confirmText.trim().toLowerCase() !== 'delete') {
       next.confirm = t('confirmHint');
     }
@@ -53,7 +54,7 @@ export function useDeleteAccount() {
     setBusy(true);
     const result = await deleteUserAccount(password);
     if (result.ok) {
-      await logout();
+      logout();
     } else {
       if (result.code === SystemCode.USER_INVALID_PASSWORD) {
         setErrors({ password: systemMessage(result.code, result.args) });
@@ -76,6 +77,7 @@ export function useDeleteAccount() {
     close,
     confirmDelete,
     busy,
+    needsPassword,
   };
 }
 
@@ -99,6 +101,7 @@ export function DeleteAccountModal({
   setConfirmText,
   clearError,
   busy,
+  needsPassword,
 }: {
   open: boolean;
   onClose: () => void;
@@ -110,6 +113,7 @@ export function DeleteAccountModal({
   setConfirmText: (v: string) => void;
   clearError: (key: keyof DeleteErrors) => void;
   busy: boolean;
+  needsPassword: boolean;
 }) {
   const t = useTranslations('DeleteAccount');
   const canConfirm = confirmText.trim().toLowerCase() === 'delete';
@@ -133,16 +137,18 @@ export function DeleteAccountModal({
             onClose={() => clearError('general')}
           />
         )}
-        <AccountField label={t('passwordLabel')} error={errors.password}>
-          <AccountInput
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              clearError('password');
-            }}
-          />
-        </AccountField>
+        {needsPassword && (
+          <AccountField label={t('passwordLabel')} error={errors.password}>
+            <AccountInput
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                clearError('password');
+              }}
+            />
+          </AccountField>
+        )}
         <AccountField label={t('confirmHint')} error={errors.confirm}>
           <AccountInput
             value={confirmText}

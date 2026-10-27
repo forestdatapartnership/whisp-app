@@ -21,7 +21,7 @@ Ao criar uma conta no WHISP, coletamos:
 | Dado | Finalidade |
 |---|---|
 | **Nome e sobrenome** | Identificação da conta |
-| **Endereço de e-mail** | Autenticação, verificação da conta, redefinição de senha, notificações |
+| **Endereço de e-mail** | Autenticação, redefinição de senha, notificações |
 | **Senha** | Autenticação (armazenada como hash bcrypt, nunca em texto simples) |
 | **Organização** (opcional) | Contexto do perfil do usuário |
 
@@ -68,7 +68,7 @@ Usamos seus dados pessoais exclusivamente para:
 
 - **Prestar o serviço** — gerenciamento da conta, autenticação, acesso à API
 - **Executar análises geoespaciais** — processar as geometrias que você envia por meio do Google Earth Engine (nenhum dado pessoal é enviado ao GEE)
-- **Comunicações do serviço** — verificação de e-mail, redefinição de senha, notificações do serviço
+- **Comunicações do serviço** — redefinição de senha, notificações do serviço
 - **Segurança e prevenção de abusos** — limitação de taxa, detecção de abusos com base no IP
 - **Melhoria do serviço** — estatísticas de uso agregadas e não identificáveis
 
@@ -85,7 +85,7 @@ Usamos seus dados pessoais exclusivamente para:
 | **Endereços IP** nos registros de tarefas de análise | Anonimizados automaticamente após o período de retenção configurado (padrão: 90 dias) |
 | **Metadados das tarefas de análise** | Retidos para a operação do serviço; os endereços IP contidos são anonimizados conforme o cronograma acima |
 | **Chaves de API** | Até a revogação ou a exclusão da conta (exclusão lógica para a trilha de auditoria) |
-| **Tokens de verificação de e-mail / redefinição de senha** | Válidos por 1 hora; revogados após o uso |
+| **Tokens de redefinição de senha** | Válidos por 1 hora; revogados após o uso |
 | **Assinaturas de notificação** | Até você cancelar a assinatura ou excluir sua conta |
 | **Feedback** | Mantido para melhorar o serviço; desvinculado da sua conta se você excluí-la |
 | **Logs do aplicativo** | Sujeitos à política de rotação de logs da infraestrutura |
@@ -98,7 +98,7 @@ O WHISP interage com os seguintes serviços de terceiros durante a operação:
 |---|---|---|
 | **Google Earth Engine** | Apenas geometrias e parâmetros técnicos de análise. **Nenhum dado pessoal** (nomes, e-mails, IPs, IDs de usuário) é transmitido. | Motor de computação geoespacial |
 | **Asset Registry** | GeoIDs (ao usar o envio por GeoID) | Resolução de identificadores geográficos em geometrias |
-| **SMTP do Google Gmail** | Endereço de e-mail do destinatário, conteúdo do e-mail | Envio de e-mails de verificação e redefinição de senha |
+| **SMTP do Google Gmail** | Endereço de e-mail do destinatário, conteúdo do e-mail | Envio de e-mails de redefinição de senha |
 | **API do Google Maps** | Interações com o mapa no lado do cliente (sujeitas à política de privacidade do Google) | Visualização de mapas na interface |
 
 Para as evidências técnicas da separação de dados entre o WHISP e o Google Earth Engine, consulte o [Anexo sobre a separação de dados do GEE](./gee-data-separation).
@@ -134,7 +134,7 @@ Você pode atualizar seu nome, sobrenome e organização na página **Configura�
 ### 7.3 Excluir sua conta
 
 Você pode excluir permanentemente sua conta e todos os dados associados na página **Configurações**. A exclusão da conta:
-- Exige a confirmação da senha
+- Exige confirmação e, nas contas que não entram com SSO, a senha
 - Exclui permanentemente seu perfil de usuário, chaves de API, tokens de verificação e tokens de redefinição de senha
 - Anonimiza os registros de tarefas de análise e o feedback associados
 
