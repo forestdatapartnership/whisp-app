@@ -1,11 +1,5 @@
-import { getTranslations } from 'next-intl/server';
-import { MarkdownPage } from '@/components/layout/markdown-page';
-
-export async function generateMetadata() {
-  const t = await getTranslations('Footer');
-  return { title: `${t('termsOfUse')} - Whisp` };
-}
+import { redirect } from 'next/navigation';
 
 export default function TermsOfServicePage() {
-  return <MarkdownPage fileName="terms-of-service.md" />;
+  redirect('https://www.openforis.org/whisp-terms/');
 }

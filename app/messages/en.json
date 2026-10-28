@@ -453,14 +453,16 @@
         "label": "How would you rate Whisp overall?"
       },
       "region": {
-        "label": "Which region do you use Whisp from?",
+        "label": "Which regions do you use Whisp for?",
+        "hint": "Select all that apply.",
         "options": {
           "africa": "Africa",
           "asia_pacific": "Asia and the Pacific",
           "europe_central_asia": "Europe and Central Asia",
           "latin_america_caribbean": "Latin America and the Caribbean",
           "near_east_north_africa": "Near East and North Africa",
-          "north_america": "North America"
+          "north_america": "North America",
+          "global": "Global"
         }
       },
       "organization": {
@@ -472,6 +474,7 @@
           "producer": "Producer, cooperative or smallholder group",
           "certification": "Certification or verification body",
           "financial": "Financial institution",
+          "digital": "Digital service provider",
           "ngo": "NGO or civil society",
           "academia": "Academia or research",
           "un": "UN or intergovernmental organization",

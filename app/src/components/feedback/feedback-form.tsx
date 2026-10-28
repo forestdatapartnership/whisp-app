@@ -9,7 +9,12 @@ import { Alert } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StarRating } from "@/components/ui/star-rating";
 import { submitFeedback } from "@/lib/feedback/actions";
-import { FEEDBACK_QUESTIONS, FEEDBACK_TEXT_MAX_LENGTH, sortOptions } from "@/lib/feedback/questions";
+import {
+  FEEDBACK_CHOICE_SEPARATOR,
+  FEEDBACK_QUESTIONS,
+  FEEDBACK_TEXT_MAX_LENGTH,
+  sortOptions,
+} from "@/lib/feedback/questions";
 import { useSystemMessage } from "@/lib/shared/use-system-message";
 
 export const FEEDBACK_PROMPT_KEY = "whisp-feedback-prompt-dismissed";
@@ -48,12 +53,19 @@ export function FeedbackForm({ onClose }: { onClose: () => void }) {
       <ScrollArea className="min-h-0">
         <form id={formId} className="flex flex-col gap-5 p-5" onSubmit={handleSubmit}>
           {error && <Alert type="error" message={error} onClose={() => setError("")} />}
-          {FEEDBACK_QUESTIONS.map(({ name, options, stars }, index) => {
+          {FEEDBACK_QUESTIONS.map(({ name, options, stars, multiple }, index) => {
             const question = `${index + 1}. ${t(`questions.${name}.label`)}`;
-            const hint = t.has(`questions.${name}.hint`) ? t(`questions.${name}.hint`) : null;
+            const hintId = t.has(`questions.${name}.hint`) ? `${name}-hint` : undefined;
+            const hint = hintId && (
+              <p id={hintId} className="mt-1 text-xs text-text-muted">
+                {t(`questions.${name}.hint`)}
+              </p>
+            );
+            const chosen = (answers[name] ?? "").split(FEEDBACK_CHOICE_SEPARATOR);
             return options ? (
-              <fieldset key={name}>
+              <fieldset key={name} aria-describedby={hintId}>
                 <legend className={questionClass}>{question}</legend>
+                {hint}
                 {stars ? (
                   <StarRating
                     className="mt-2"
@@ -64,7 +76,11 @@ export function FeedbackForm({ onClose }: { onClose: () => void }) {
                 ) : (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {sortOptions(options, (option) => t(`questions.${name}.options.${option}`), locale).map((option) => {
-                      const selected = answers[name] === option;
+                      const selected = chosen.includes(option);
+                      // Multiple choices keep the survey's option order, so the same selection is always stored the same way.
+                      const next = multiple
+                        ? options.filter((o) => (o === option ? !selected : chosen.includes(o))).join(FEEDBACK_CHOICE_SEPARATOR)
+                        : (selected ? "" : option);
                       return (
                         <Button
                           key={option}
@@ -72,7 +88,7 @@ export function FeedbackForm({ onClose }: { onClose: () => void }) {
                           size="sm"
                           variant="outline"
                           aria-pressed={selected}
-                          onClick={() => setAnswer(name, selected ? "" : option)}
+                          onClick={() => setAnswer(name, next)}
                         >
                           {t(`questions.${name}.options.${option}`)}
                         </Button>
@@ -86,14 +102,10 @@ export function FeedbackForm({ onClose }: { onClose: () => void }) {
                 <label htmlFor={name} className={questionClass}>
                   {question}
                 </label>
-                {hint && (
-                  <p id={`${name}-hint`} className="mt-1 text-xs text-text-muted">
-                    {hint}
-                  </p>
-                )}
+                {hint}
                 <Textarea
                   id={name}
-                  aria-describedby={hint ? `${name}-hint` : undefined}
+                  aria-describedby={hintId}
                   rows={1}
                   maxLength={FEEDBACK_TEXT_MAX_LENGTH}
                   value={answers[name] ?? ""}

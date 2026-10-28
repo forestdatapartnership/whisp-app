@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/auth/auth-context';
 import { fetchFeedback } from '@/lib/feedback/actions';
-import { FEEDBACK_QUESTIONS, sortOptions } from '@/lib/feedback/questions';
+import { FEEDBACK_CHOICE_SEPARATOR, FEEDBACK_QUESTIONS, sortOptions } from '@/lib/feedback/questions';
 import { useSystemMessage } from '@/lib/shared/use-system-message';
 import { cn } from '@/lib/utils';
 import { downloadBlob, rowsToCsv, timestampFilename } from '@/lib/utils/export';
@@ -92,8 +92,11 @@ function FeedbackResults() {
   const questionLabel = (name: string) => (t.has(`questions.${name}.label`) ? t(`questions.${name}.label`) : name);
   const answerLabel = (name: string, value: string) => {
     if (name === ratingQuestion?.name) return `${value} ★`;
-    const key = `questions.${name}.options.${value}`;
-    return t.has(key) ? t(key) : value;
+    if (!choiceQuestions.some((q) => q.name === name)) return value;
+    return value
+      .split(FEEDBACK_CHOICE_SEPARATOR)
+      .map((choice) => (t.has(`questions.${name}.options.${choice}`) ? t(`questions.${name}.options.${choice}`) : choice))
+      .join(', ');
   };
   const commentOf = (r: FeedbackResponse) =>
     filter
@@ -139,14 +142,24 @@ function FeedbackResults() {
         ))}
       </div>
 
-      <div className="grid shrink-0 gap-4 border-b border-border p-[18px] md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid shrink-0 gap-4 border-b border-border p-[18px] md:grid-cols-3 lg:grid-cols-6">
         {choiceQuestions.map(({ name, options = [], stars }) => {
           const ordered = stars ? options : sortOptions(options, (option) => answerLabel(name, option), locale);
-          const counts = ordered.map((option) => all.filter((r) => r.answers[name] === option).length);
-          const answered = counts.reduce((sum, c) => sum + c, 0);
+          const counts = ordered.map(
+            (option) => all.filter((r) => r.answers[name]?.split(FEEDBACK_CHOICE_SEPARATOR).includes(option)).length
+          );
+          // Shares are of respondents, so multiple-choice shares can add up to more than 100%.
+          const answered = all.filter((r) => r.answers[name]).length;
           const columns = Math.ceil(options.length / MAX_CHART_ROWS);
           return (
-            <div key={name} className={cn('rounded-md border border-border bg-surface p-4', columns > 1 && 'md:col-span-2')}>
+            <div
+              key={name}
+              className={cn(
+                'rounded-md border border-border bg-surface p-4',
+                columns > 1 && 'md:col-span-2',
+                columns > 2 && 'md:col-span-3'
+              )}
+            >
               <p className={`mb-3 ${labelClass}`}>{questionLabel(name)}</p>
               <div
                 className="grid gap-x-6 gap-y-2.5 md:auto-cols-fr md:grid-flow-col"

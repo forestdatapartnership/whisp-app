@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { getAuthUserWithRefresh, requireAdmin } from '@/lib/auth/session';
 import { action } from '@/lib/server/action';
 import { insertFeedback, listFeedback } from '@/lib/db/feedback-service';
-import { FEEDBACK_QUESTIONS, FEEDBACK_TEXT_MAX_LENGTH } from '@/lib/feedback/questions';
+import { FEEDBACK_CHOICE_SEPARATOR, FEEDBACK_QUESTIONS, FEEDBACK_TEXT_MAX_LENGTH } from '@/lib/feedback/questions';
 import { SystemError } from '@/types/system-error';
 import { SystemCode } from '@/types/system-codes';
 
@@ -48,12 +48,13 @@ export const submitFeedback = action(async (answers: Record<string, string>): Pr
   checkRateLimit(ALL_IPS, MAX_TOTAL);
 
   const valid: Record<string, string> = {};
-  for (const { name, options } of FEEDBACK_QUESTIONS) {
+  for (const { name, options, multiple } of FEEDBACK_QUESTIONS) {
     const value = answers?.[name];
     if (typeof value !== 'string') continue;
     // Postgres text can't store NUL characters.
     const answer = value.replaceAll('\0', '').trim().slice(0, FEEDBACK_TEXT_MAX_LENGTH);
-    if (answer && (!options || options.includes(answer))) valid[name] = answer;
+    const choices = multiple ? answer.split(FEEDBACK_CHOICE_SEPARATOR) : [answer];
+    if (answer && (!options || choices.every((choice) => options.includes(choice)))) valid[name] = answer;
   }
   if (Object.keys(valid).length === 0) {
     throw new SystemError(SystemCode.VALIDATION_MISSING_REQUIRED_FIELDS, ['answers']);
