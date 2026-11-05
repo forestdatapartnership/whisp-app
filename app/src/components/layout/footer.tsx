@@ -81,7 +81,7 @@ export function Footer() {
   ];
   const legalLinks = [
     { href: "/legal/privacy-policy", label: t("privacyPolicy") },
-    { href: "https://www.openforis.org/whisp-terms/", label: t("termsOfUse"), target: "_blank" },
+    { href: "/legal/terms-of-service", label: t("termsOfUse") },
     { href: "/legal/gee-data-separation", label: t("geeDataSeparation") },
   ];
   return (
