@@ -45,7 +45,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: |
             --model claude-sonnet-5
-            --max-turns 25
+            --max-turns 40
             --tools Read,Grep,Glob
           prompt: |
             Read `issue.json` in the working directory and `AGENTS.md` at the
@@ -66,7 +66,8 @@ jobs:
                than this repo, say so and stop. That is the most useful answer
                you can give, because it means nobody here needs to look.
 
-            Your final message is posted as the comment on the issue:
+            Your final message is posted as the comment on the issue, so start
+            it directly with the first look:
 
             - where it lives, as `path/to/file.ts:42`
             - what you think is happening
