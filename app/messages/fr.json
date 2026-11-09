@@ -249,7 +249,8 @@
     "serviceNotificationsHint": "Recevoir un e-mail lorsque le service Whisp a des mises à jour importantes",
     "dangerZone": "Zone de danger",
     "deleteAccount": "Supprimer le compte",
-    "deleteAccountHint": "Supprime définitivement votre compte et les données associées. Cette action est irréversible.",
+    "deleteAccountHint": "Supprime définitivement votre profil Whisp, votre clé d'API et vos abonnements aux notifications. Vos analyses passées et vos commentaires sont conservés, mais ne sont plus liés à vous. Cette action est irréversible.",
+    "deleteAccountSso": "Votre compte SSO de la FAO n'est pas supprimé. Si vous devez aussi le supprimer, veuillez <link>contacter le support</link>.",
     "ssoManaged": "Votre nom, votre e-mail et votre mot de passe sont gérés via le SSO.",
     "manageAccount": "Gérer le compte"
   },
@@ -260,7 +261,7 @@
   "DeleteAccount": {
     "trigger": "Supprimer le compte",
     "title": "Supprimer votre compte ?",
-    "body": "Cette action supprimera définitivement votre compte Whisp, tous les résultats enregistrés et les clés d'API.",
+    "body": "Cette action supprimera définitivement votre profil Whisp, votre clé d'API et vos abonnements aux notifications.",
     "passwordLabel": "Votre mot de passe",
     "passwordRequired": "Le mot de passe est requis",
     "confirmHint": "Saisissez \"delete\" pour confirmer"

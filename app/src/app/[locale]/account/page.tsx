@@ -212,6 +212,13 @@ function AccountSettings() {
                 <div>
                   <p className="text-sm font-medium text-foreground">{t('deleteAccount')}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">{t('deleteAccountHint')}</p>
+                  {user?.is_sso && (
+                    <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                      {t.rich('deleteAccountSso', {
+                        link: (chunks) => <Link href="mailto:Open-Foris@fao.org" unlocalized className="font-medium">{chunks}</Link>,
+                      })}
+                    </p>
+                  )}
                 </div>
                 <DeleteAccountTrigger onClick={() => deleteAccount.setOpen(true)} />
               </div>

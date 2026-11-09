@@ -249,7 +249,8 @@
     "serviceNotificationsHint": "Email when the Whisp service has important updates",
     "dangerZone": "Danger zone",
     "deleteAccount": "Delete account",
-    "deleteAccountHint": "Permanently removes your account and associated data. Cannot be undone.",
+    "deleteAccountHint": "Permanently deletes your Whisp profile, API key and notification subscriptions. Your past analyses and feedback are kept, but no longer linked to you. This cannot be undone.",
+    "deleteAccountSso": "Your FAO SSO account is not deleted. If you need it deleted too, please <link>contact support</link>.",
     "ssoManaged": "Your name, email and password are managed through SSO.",
     "manageAccount": "Manage account"
   },
@@ -260,7 +261,7 @@
   "DeleteAccount": {
     "trigger": "Delete account",
     "title": "Delete your account?",
-    "body": "This will permanently delete your Whisp account, all saved results, and API keys.",
+    "body": "This will permanently delete your Whisp profile, API key and notification subscriptions.",
     "passwordLabel": "Your password",
     "passwordRequired": "Password is required",
     "confirmHint": "Type \"delete\" to confirm"
