@@ -55,27 +55,30 @@ jobs:
 
             Give a first look, not a full investigation. Someone does the real
             work afterwards; your job is to save them the first twenty minutes.
-            Spend your turns locating things, not exhausting the question.
+            Take the simplest explanation that fits what the reporter actually
+            wrote, and stop as soon as you have it.
 
-            1. Find the code that governs what was asked about. Search the
-               repo -- never guess at file names.
+            1. Find the code that runs today for what was asked about. Search
+               the repo -- never guess at file names, and ignore old code that
+               nothing calls.
             2. Say which this is: a real defect, a configuration problem,
                expected behaviour the reporter misunderstood, or something not
                reproducible from what they wrote.
-            3. If it belongs to `openforis-whisp` or the map viewer rather
-               than this repo, say so and stop. That is the most useful answer
-               you can give, because it means nobody here needs to look.
+            3. If it belongs to `openforis-whisp`, the map viewer or Keycloak
+               (registration, email verification, SSO passwords) rather than
+               this repo, say so and stop. That is the most useful answer you
+               can give, because it means nobody here needs to look.
 
             Your final message is posted as the comment on the issue, so start
-            it directly with the first look:
+            it directly with the first look. Three bullets, one sentence each:
 
             - where it lives, as `path/to/file.ts:42`
             - what you think is happening
             - what you are unsure about, stated plainly
 
-            Short. No filler, no praise, no restating the question, no summary
-            of what you searched. Describe a fix if you see one, but do not
-            apply it -- you are reading, not changing.
+            No filler, no praise, no restating the question, no summary of what
+            you searched. If a fix is obvious, add it in one sentence, but do
+            not apply it -- you are reading, not changing.
 
       - name: Comment
         env:
