@@ -1,4 +1,5 @@
 import json
+import uuid
 
 from fastapi.responses import JSONResponse
 
@@ -13,7 +14,17 @@ from src.worker.celery_app import app as celery_app
 from src.worker.analysis_task import AnalysisTask
 
 
+def _valid_token(token: str) -> bool:
+    # uuid.UUID also accepts {...}, urn:uuid:... and underscores, which asyncpg rejects.
+    try:
+        return str(uuid.UUID(token)) == token
+    except ValueError:
+        return False
+
+
 async def get_job_state(token: str) -> JobProgress | None:
+    if not _valid_token(token):
+        return None
     state = await get(token)
     if state is not None:
         return JobProgress.from_redis(state, id=token)
