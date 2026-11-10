@@ -127,7 +127,6 @@ WHISP also keeps the following in your browser. They are not sent to WHISP's ser
 | `whisp-intro-dismissed` | Local storage | Remembering that you closed the introduction |
 | `whisp-feedback-prompt-dismissed` | Local storage | Remembering that you answered or closed the feedback prompt |
 | `whisp-sync:…` | Session storage | Passing analysis results to the results page; removed once read |
-| `whisp-release-v…` | Session storage | Caching the link to the current release notes |
 | `whisp` database | IndexedDB | Showing a results file you open from your computer; removed when you return to the submission page |
 
 WHISP does not use any analytics, tracking, or advertising cookies.

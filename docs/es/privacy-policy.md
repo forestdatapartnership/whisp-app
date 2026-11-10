@@ -129,7 +129,6 @@ WHISP también guarda lo siguiente en su navegador. Estos datos no se envían a 
 | `whisp-intro-dismissed` | Almacenamiento local | Recordar que cerró la introducción |
 | `whisp-feedback-prompt-dismissed` | Almacenamiento local | Recordar que respondió o cerró la invitación a dejar comentarios |
 | `whisp-sync:…` | Almacenamiento de sesión | Pasar los resultados del análisis a la página de resultados; se eliminan una vez leídos |
-| `whisp-release-v…` | Almacenamiento de sesión | Guardar en caché el enlace a las notas de la versión actual |
 | Base de datos `whisp` | IndexedDB | Mostrar un archivo de resultados que abre desde su equipo; se elimina al volver a la página de envío |
 
 WHISP no utiliza cookies de analítica, seguimiento ni publicidad.
