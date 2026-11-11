@@ -154,6 +154,11 @@ class PublicConfigResponse(BaseModel):
     analysisTimeoutAsyncSeconds: int
     openforisWhispVersion: str
     geoidBaseUrl: str | None
+    rateLimitWindowMs: int
+    rateLimitMaxRequests: int = Field(description="Requests each API key can make per window.")
+    maxConcurrentAnalyses: int | None = Field(
+        description="Analyses each account can have queued or running at once; null means no limit."
+    )
 
 
 # ── Route response helper ──────────────────────────────────────────────────────

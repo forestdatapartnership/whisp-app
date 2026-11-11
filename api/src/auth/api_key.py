@@ -8,8 +8,8 @@ from src.codes import SystemCode
 from src.db.api_keys import ApiKeyRow, find_api_key
 from src.exceptions import AppError
 
-_DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000
-_DEFAULT_RATE_LIMIT_MAX_REQUESTS = 30
+DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000
+DEFAULT_RATE_LIMIT_MAX_REQUESTS = 30
 
 
 @dataclass
@@ -31,8 +31,8 @@ async def api_key_dependency(
 
     bind(user_id=row.user_id, api_key_id=row.id)
 
-    window_ms = row.rate_limit_window_ms or _DEFAULT_RATE_LIMIT_WINDOW_MS
-    limit = row.rate_limit_max_requests or _DEFAULT_RATE_LIMIT_MAX_REQUESTS
+    window_ms = row.rate_limit_window_ms or DEFAULT_RATE_LIMIT_WINDOW_MS
+    limit = row.rate_limit_max_requests or DEFAULT_RATE_LIMIT_MAX_REQUESTS
 
     result = check_rate_limit(str(row.id), window_ms, limit)
     if not result.allowed:
