@@ -450,8 +450,8 @@
     "sending": "Sending…",
     "thanks": "Thank you for your feedback.",
     "questions": {
-      "rating": {
-        "label": "How would you rate Whisp overall?"
+      "satisfaction": {
+        "label": "How satisfied are you with Whisp?"
       },
       "region": {
         "label": "Which regions do you use Whisp for?",

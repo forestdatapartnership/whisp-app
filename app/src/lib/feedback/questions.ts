@@ -5,7 +5,8 @@ export const FEEDBACK_CHOICE_SEPARATOR = ',';
 
 // The name is stored with each answer, so a question whose meaning changes needs a new name.
 export const FEEDBACK_QUESTIONS: { name: string; options?: string[]; stars?: boolean; multiple?: boolean }[] = [
-  { name: 'rating', options: ['1', '2', '3', '4', '5'], stars: true },
+  { name: 'satisfaction', options: ['1', '2', '3', '4', '5'], stars: true },
+  { name: 'improvement' },
   {
     name: 'region',
     options: ['africa', 'asia_pacific', 'europe_central_asia', 'latin_america_caribbean', 'near_east_north_africa', 'north_america', 'global'],
@@ -17,7 +18,6 @@ export const FEEDBACK_QUESTIONS: { name: string; options?: string[]; stars?: boo
   },
   { name: 'use' },
   { name: 'datasets' },
-  { name: 'improvement' },
 ];
 
 const LAST_OPTIONS = ['global', 'other'];

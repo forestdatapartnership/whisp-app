@@ -450,8 +450,8 @@
     "sending": "Envoi…",
     "thanks": "Merci pour vos commentaires.",
     "questions": {
-      "rating": {
-        "label": "Comment évalueriez-vous Whisp dans l'ensemble ?"
+      "satisfaction": {
+        "label": "Quel est votre niveau de satisfaction à l'égard de Whisp ?"
       },
       "region": {
         "label": "Pour quelles régions utilisez-vous Whisp ?",
