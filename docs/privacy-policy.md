@@ -1,6 +1,6 @@
 # WHISP Privacy Policy
 
-**Last updated:** October 2026
+**Last updated:** November 2026
 
 ## 1. About This Policy
 
@@ -81,6 +81,7 @@ We do **not** use your data for:
 | Data Category | Retention Period |
 |---|---|
 | **Account data** (name, email, SSO identifier; password hash for WHISP-only accounts) | Until you delete your account |
+| **Submitted geometries and analysis results** | Deleted automatically within 15 minutes |
 | **IP addresses** in analysis job records | Automatically anonymised after the configured retention period (default: 90 days) |
 | **Analysis job metadata** | Retained for service operation; IP addresses within are anonymised per the schedule above |
 | **API keys** | Until revoked or account deleted (soft-deleted for audit trail) |
@@ -99,7 +100,8 @@ WHISP interacts with the following third-party services during operation:
 | **Google Earth Engine** | Geometries and technical analysis parameters only. **No personal data** (names, emails, IPs, user IDs) is transmitted. | Geospatial computation engine |
 | **Asset Registry** | GeoIDs (when using GeoID submission) and, if you sign in with SSO, a short-lived SSO access token | Resolving geographic identifiers to geometry |
 | **Google Gmail SMTP** | Recipient email address, email content | Sending password reset emails for WHISP-only accounts |
-| **Google Maps API** | Client-side map interactions (subject to Google's privacy policy) | Map visualisation in the UI |
+| **Map providers** (CARTO, Google, OpenStreetMap) | Your IP address and the map area you view, as your browser loads map images from them | Map backgrounds in the UI |
+| **Whisp Map** ([whisp.earthmap.org](https://whisp.earthmap.org)) | Your analysis results, when you open them in Whisp Map | Showing your results on a map |
 
 WHISP runs on Google Cloud servers in Europe. For the technical evidence of data separation between WHISP and Google Earth Engine, see the [GEE Data Separation Annex](./gee-data-separation).
 
@@ -113,8 +115,9 @@ WHISP uses the following cookies:
 | `refreshToken` | Strictly necessary | Renewing the WHISP session | 7 days |
 | `kc_refresh_token` | Strictly necessary | Keeping your SSO session for GeoID lookups and SSO sign-out | 30 days |
 | `sso_state` | Strictly necessary | Protecting the SSO sign-in redirect | 5 minutes |
+| `NEXT_LOCALE` | Preference | Remembering the language you chose | Until you close your browser |
 
-These cookies are:
+Apart from `NEXT_LOCALE`, these cookies are:
 - **HttpOnly** — not accessible to client-side JavaScript
 - **Secure** — transmitted only over HTTPS (in production)
 - **SameSite=Strict** — not sent with cross-site requests, except `sso_state`, which uses SameSite=Lax so it is still sent when FAO's sign-in page redirects you back

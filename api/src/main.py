@@ -53,6 +53,8 @@ def create_app() -> FastAPI:
             "Error responses omit `data` and may include a `cause` field. "
             "See the [SystemCode](#/components/schemas/SystemCode) schema for all possible codes."
         ),
+        terms_of_service="/legal/terms-of-service",
+        license_info={"name": "MIT", "url": "https://github.com/forestdatapartnership/whisp-app/blob/main/LICENSE"},
         openapi_tags=[
             {"name": "submit", "description": "Submit geometries for analysis (GeoJSON, WKT, or GeoIDs)"},
             {"name": "status", "description": "Poll or stream job status; cancel running jobs"},

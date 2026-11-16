@@ -2,7 +2,7 @@
 
 *Esta traducción se ofrece únicamente a título informativo. En caso de discrepancia, prevalece la versión en inglés.*
 
-**Última actualización:** octubre de 2026
+**Última actualización:** noviembre de 2026
 
 ## 1. Sobre esta política
 
@@ -83,6 +83,7 @@ Utilizamos sus datos personales exclusivamente para:
 | Categoría de datos | Periodo de conservación |
 |---|---|
 | **Datos de la cuenta** (nombre, correo electrónico, identificador de SSO; hash de la contraseña en las cuentas propias de WHISP) | Hasta que elimine su cuenta |
+| **Geometrías enviadas y resultados de los análisis** | Se eliminan automáticamente en un plazo de 15 minutos |
 | **Direcciones IP** en los registros de trabajos de análisis | Anonimizadas automáticamente tras el periodo de conservación configurado (por defecto: 90 días) |
 | **Metadatos de los trabajos de análisis** | Conservados para el funcionamiento del servicio; las direcciones IP que contienen se anonimizan según el calendario anterior |
 | **Claves de API** | Hasta su revocación o la eliminación de la cuenta (eliminación lógica para el registro de auditoría) |
@@ -101,7 +102,8 @@ WHISP interactúa con los siguientes servicios de terceros durante su funcionami
 | **Google Earth Engine** | Únicamente geometrías y parámetros técnicos de análisis. **No se transmite ningún dato personal** (nombres, correos electrónicos, IP, identificadores de usuario). | Motor de cálculo geoespacial |
 | **Asset Registry** | GeoIDs (cuando se envían GeoIDs) y, si inicia sesión con SSO, un token de acceso de SSO de corta duración | Resolución de identificadores geográficos a geometrías |
 | **SMTP de Google Gmail** | Dirección de correo del destinatario, contenido del mensaje | Envío de correos de restablecimiento de contraseña en las cuentas propias de WHISP |
-| **API de Google Maps** | Interacciones del mapa en el cliente (sujetas a la política de privacidad de Google) | Visualización de mapas en la interfaz |
+| **Proveedores de mapas** (CARTO, Google, OpenStreetMap) | Su dirección IP y la zona del mapa que consulta, ya que su navegador les descarga las imágenes del mapa | Fondos de mapa en la interfaz |
+| **Whisp Map** ([whisp.earthmap.org](https://whisp.earthmap.org)) | Los resultados de su análisis, cuando los abre en Whisp Map | Mostrar sus resultados en un mapa |
 
 WHISP se ejecuta en servidores de Google Cloud en Europa. Para la evidencia técnica de la separación de datos entre WHISP y Google Earth Engine, véase el [Anexo sobre la separación de datos de GEE](./gee-data-separation).
 

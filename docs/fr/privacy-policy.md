@@ -2,7 +2,7 @@
 
 *Cette traduction est fournie à titre informatif uniquement. En cas de divergence, la version anglaise prévaut.*
 
-**Dernière mise à jour :** octobre 2026
+**Dernière mise à jour :** novembre 2026
 
 ## 1. À propos de cette politique
 
@@ -83,6 +83,7 @@ Nous n'utilisons **pas** vos données pour :
 | Catégorie de données | Durée de conservation |
 |---|---|
 | **Données de compte** (nom, e-mail, identifiant SSO ; hachage du mot de passe pour les comptes propres à WHISP) | Jusqu'à la suppression de votre compte |
+| **Géométries soumises et résultats d'analyse** | Supprimés automatiquement dans un délai de 15 minutes |
 | **Adresses IP** dans les enregistrements de tâches d'analyse | Anonymisées automatiquement après la période de conservation configurée (par défaut : 90 jours) |
 | **Métadonnées des tâches d'analyse** | Conservées pour le fonctionnement du service ; les adresses IP qu'elles contiennent sont anonymisées selon le calendrier ci-dessus |
 | **Clés d'API** | Jusqu'à révocation ou suppression du compte (suppression logique pour la piste d'audit) |
@@ -101,7 +102,8 @@ WHISP interagit avec les services tiers suivants pendant son fonctionnement :
 | **Google Earth Engine** | Géométries et paramètres techniques d'analyse uniquement. **Aucune donnée personnelle** (noms, e-mails, adresses IP, identifiants utilisateur) n'est transmise. | Moteur de calcul géospatial |
 | **Asset Registry** | GeoIDs (lors d'une soumission par GeoID) et, si vous vous connectez avec le SSO, un jeton d'accès SSO de courte durée | Résolution des identifiants géographiques en géométries |
 | **SMTP Google Gmail** | Adresse e-mail du destinataire, contenu de l'e-mail | Envoi des e-mails de réinitialisation du mot de passe pour les comptes propres à WHISP |
-| **API Google Maps** | Interactions cartographiques côté client (soumises à la politique de confidentialité de Google) | Visualisation cartographique dans l'interface |
+| **Fournisseurs de cartes** (CARTO, Google, OpenStreetMap) | Votre adresse IP et la zone de la carte que vous consultez, car votre navigateur leur demande les images de la carte | Fonds de carte dans l'interface |
+| **Whisp Map** ([whisp.earthmap.org](https://whisp.earthmap.org)) | Vos résultats d'analyse, lorsque vous les ouvrez dans Whisp Map | Afficher vos résultats sur une carte |
 
 WHISP fonctionne sur des serveurs Google Cloud situés en Europe. Pour les preuves techniques de la séparation des données entre WHISP et Google Earth Engine, voir l'[annexe sur la séparation des données GEE](./gee-data-separation).
 
@@ -115,8 +117,9 @@ WHISP utilise les cookies suivants :
 | `refreshToken` | Strictement nécessaire | Renouvellement de la session WHISP | 7 jours |
 | `kc_refresh_token` | Strictement nécessaire | Maintien de votre session SSO pour les recherches de GeoID et la déconnexion du SSO | 30 jours |
 | `sso_state` | Strictement nécessaire | Protection de la redirection de connexion SSO | 5 minutes |
+| `NEXT_LOCALE` | Préférence | Mémoriser la langue que vous avez choisie | Jusqu'à la fermeture du navigateur |
 
-Ces cookies sont :
+À l'exception de `NEXT_LOCALE`, ces cookies sont :
 - **HttpOnly** — inaccessibles au JavaScript côté client
 - **Secure** — transmis uniquement via HTTPS (en production)
 - **SameSite=Strict** — non envoyés avec les requêtes intersites, sauf `sso_state`, qui utilise SameSite=Lax afin d'être encore envoyé lorsque la page de connexion de la FAO vous redirige

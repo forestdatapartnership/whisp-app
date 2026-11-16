@@ -261,7 +261,7 @@ SSO activates only when both `KEYCLOAK_ISSUER` and `KEYCLOAK_CLIENT_ID` are set.
 ## Setup and Installation
 
 ### Prerequisites
-- [Node.js](https://nodejs.org) v18+
+- [Node.js](https://nodejs.org) v20.9+
 - [Python 3.11+](https://www.python.org/downloads/)
 - [PostgreSQL](https://www.postgresql.org/) v12+
 - [Redis](https://redis.io/)
@@ -359,7 +359,7 @@ All analysis endpoints require an `X-API-KEY` header. The key is issued by the W
 | `/config` | GET | Public runtime configuration |
 | `/health` | GET | Health check |
 
-Routes are also available under the `/api` prefix (e.g. `/api/submit/geojson`).
+All routes are under the `/api` prefix (e.g. `/api/submit/geojson`).
 
 The Next.js app proxies authenticated submit and status calls through `/internal/submit/*` and `/internal/status/*` so browser sessions can use the user's API key without exposing it client-side.
 
@@ -388,7 +388,7 @@ For direct library use without the API, see the [openforis-whisp package](https:
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIT](LICENSE). Use of the hosted service is subject to the [Terms of Service](docs/terms-of-service.md); see also the [Privacy Policy](docs/privacy-policy.md).
 
 ---
 
