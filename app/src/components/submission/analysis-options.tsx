@@ -31,6 +31,7 @@ export interface AnalysisOptionsValue {
   unitType: UnitType
   async: boolean
   geometryAuditTrail: boolean
+  batchSize?: number
 }
 
 export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptionsValue = {
@@ -157,6 +158,35 @@ export function AnalysisOptions({ value, onChange, disabled = false, idColumns }
                     disabled={disabled}
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Label>{t('batchSize')}</Label>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={(props) => (
+                        <button type="button" {...props} className="text-text-muted hover:text-text-primary transition-colors">
+                          <Info className="size-3.5" />
+                        </button>
+                      )}
+                    />
+                    <TooltipContent className="max-w-xs text-justify leading-relaxed">
+                      {t('batchSizeHelp')}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={value.batchSize ?? ''}
+                  onChange={(e) => {
+                    const size = Math.trunc(e.target.valueAsNumber)
+                    onChange({ ...value, batchSize: size >= 1 ? size : undefined })
+                  }}
+                  disabled={disabled}
+                />
               </div>
             </div>
           </div>

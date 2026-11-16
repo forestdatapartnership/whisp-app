@@ -59,6 +59,7 @@ class AnalysisOptionsInput(BaseModel):
     nationalCodes: list[str] | None = None
     async_: bool = Field(False, alias="async")
     geometryAuditTrail: bool = False
+    batchSize: int | None = Field(None, ge=1, description="Optional. Features per Earth Engine request in async mode.")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -94,7 +95,8 @@ class SubmitGeoJsonRequest(SubmitRequest):
                     "nationalCodes": ["co", "ci", "br"],
                     "unitType": "ha",
                     "async": True,
-                    "geometryAuditTrail": False
+                    "geometryAuditTrail": False,
+                    "batchSize": 10
                 }
             }
         }
@@ -110,7 +112,8 @@ class SubmitWktRequest(SubmitRequest):
                     "nationalCodes": ["co", "ci", "br"],
                     "unitType": "ha",
                     "async": True,
-                    "geometryAuditTrail": False
+                    "geometryAuditTrail": False,
+                    "batchSize": 10
                 }
             }
         }
@@ -127,7 +130,8 @@ class SubmitGeoIdsRequest(SubmitRequest):
                 "analysisOptions": {
                     "unitType": "ha",
                     "async": True,
-                    "geometryAuditTrail": False
+                    "geometryAuditTrail": False,
+                    "batchSize": 10
                 }
             }
         }

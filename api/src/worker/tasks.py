@@ -71,6 +71,8 @@ def _run_whisp_blocking(token: str, opts: AnalysisOptions, feature_count: int | 
         df_kwargs["unit_type"] = opts.unit_type
     if opts.geometry_audit_trail:
         df_kwargs["geometry_audit_trail"] = True
+    if opts.batch_size:
+        df_kwargs["batch_size"] = opts.batch_size
 
     state = get_sync(token) or {}
     messages = [*(state.get("messages") or []), timestamped("Starting analysis")]

@@ -10,6 +10,7 @@ class AnalysisOptions:
     national_codes: list[str] | None = None
     async_mode: bool = False
     geometry_audit_trail: bool = False
+    batch_size: int | None = None
 
     @classmethod
     def parse(cls, raw: dict | None) -> "AnalysisOptions":
@@ -21,6 +22,7 @@ class AnalysisOptions:
             national_codes=[str(c).lower() for c in nc] if isinstance(nc, list) and nc else None,
             async_mode=bool(d.get("async", False)),
             geometry_audit_trail=bool(d.get("geometryAuditTrail", False)),
+            batch_size=d.get("batchSize"),
         )
 
 

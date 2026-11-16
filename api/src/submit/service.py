@@ -73,6 +73,8 @@ def _options_payload(opts: AnalysisOptions) -> dict:
         payload["async"] = True
     if opts.geometry_audit_trail:
         payload["geometryAuditTrail"] = True
+    if opts.batch_size:
+        payload["batchSize"] = opts.batch_size
     return payload
 
 
