@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisp-worker-local
+  namespace: ${GKE_NAMESPACE}
+  labels:
+    app: whisp-worker-local
+    env: ${ENVIRONMENT}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whisp-worker-local
+  template:
+    metadata:
+      labels:
+        app: whisp-worker-local
+    spec:
+      serviceAccountName: whisp-app-ksa
+      terminationGracePeriodSeconds: 1860
+      containers:
+      - name: whisp-worker-local
+        image: ${IMAGE_REGISTRY}/whisp-api:${VERSION}
+        imagePullPolicy: Always
+        command:
+        - sh
+        - -c
+        - exec celery -A src.worker.celery_app worker -Q local --pool=prefork --concurrency=1 --without-mingle --without-gossip 2>&1
+        envFrom:
+        - configMapRef:
+            name: whisp-config
+        - secretRef:
+            name: whisp-secrets
+        env:
+        - name: DEPLOYED_AT
+          value: "${DEPLOYED_AT}"
+        - name: EE_INIT_PER_TASK
+          value: "1"
+        - name: DB_HOST
+          value: "cloud-sql-proxy"
+        - name: DB_PORT
+          value: "5432"
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        resources:
+          requests:
+            cpu: "1"
+            memory: 1Gi
+          limits:
+            memory: 3Gi
+        volumeMounts:
+        - name: temp
+          mountPath: /app/temp
+          readOnly: false
+        - name: gee-credentials
+          mountPath: /app/credentials.json
+          subPath: credentials.json
+          readOnly: true
+        - name: scratch
+          mountPath: /tmp
+      volumes:
+      - name: temp
+        hostPath:
+          path: /var/lib/whisp/${GKE_NAMESPACE}
+          type: DirectoryOrCreate
+      - name: gee-credentials
+        secret:
+          secretName: whisp-gee-credentials
+      - name: scratch
+        emptyDir:
+          sizeLimit: 20Gi

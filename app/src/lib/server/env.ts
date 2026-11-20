@@ -7,8 +7,10 @@ import { DEFAULT_MAX_MAP_FEATURES } from '@/lib/draw/geojson';
 type ApiConfigResponse = {
   maxRequestBodySizeKb?: number | null;
   maxPlotAreaHa?: number | null;
+  maxTotalAreaLocalHa?: number;
   geometryLimitSync?: number;
   geometryLimitAsync?: number;
+  geometryLimitLocal?: number;
   openforisWhispVersion?: string;
   geoidBaseUrl?: string | null;
 };
@@ -51,8 +53,10 @@ function applyRemoteConfig(data: ApiConfigResponse) {
     process.env.MAX_REQUEST_BODY_SIZE_KB = String(data.maxRequestBodySizeKb);
   }
   if (data.maxPlotAreaHa != null) process.env.MAX_PLOT_AREA_HA = String(data.maxPlotAreaHa);
+  if (data.maxTotalAreaLocalHa != null) process.env.MAX_TOTAL_AREA_LOCAL_HA = String(data.maxTotalAreaLocalHa);
   const limit = geometryLimit(data);
   if (limit != null) process.env.GEOMETRY_LIMIT = String(limit);
+  if (data.geometryLimitLocal != null) process.env.GEOMETRY_LIMIT_LOCAL = String(data.geometryLimitLocal);
   syncRemoteConfig();
 }
 
@@ -61,7 +65,9 @@ function syncRemoteConfig() {
   config.app.openforisWhispVersion = envOptional('OPENFORIS_WHISP_VERSION') ?? '';
   config.submission.maxRequestBodySizeKb = envOptionalInt('MAX_REQUEST_BODY_SIZE_KB');
   config.submission.geometryLimit = envOptionalInt('GEOMETRY_LIMIT');
+  config.submission.geometryLimitLocal = envOptionalInt('GEOMETRY_LIMIT_LOCAL');
   config.submission.maxPlotAreaHa = envOptionalInt('MAX_PLOT_AREA_HA');
+  config.submission.maxTotalAreaLocalHa = envOptionalInt('MAX_TOTAL_AREA_LOCAL_HA');
 }
 
 const loadRemote = cache(async () => {
@@ -126,7 +132,9 @@ export const config = {
   submission: {
     asyncThreshold: envInt('NEXT_PUBLIC_ASYNC_THRESHOLD', 50),
     geometryLimit: envOptionalInt('GEOMETRY_LIMIT'),
+    geometryLimitLocal: envOptionalInt('GEOMETRY_LIMIT_LOCAL'),
     maxPlotAreaHa: envOptionalInt('MAX_PLOT_AREA_HA'),
+    maxTotalAreaLocalHa: envOptionalInt('MAX_TOTAL_AREA_LOCAL_HA'),
     maxRequestBodySizeKb: envOptionalInt('MAX_REQUEST_BODY_SIZE_KB')
   },
 

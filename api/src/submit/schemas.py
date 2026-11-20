@@ -11,19 +11,28 @@ class AnalysisOptions:
     async_mode: bool = False
     geometry_audit_trail: bool = False
     batch_size: int | None = None
+    local_mode: bool = False
 
     @classmethod
     def parse(cls, raw: dict | None) -> "AnalysisOptions":
         d = raw or {}
         nc = d.get("nationalCodes")
+        local_mode = bool(d.get("localMode", False))
         return cls(
             external_id_column=d.get("externalIdColumn"),
             unit_type=d.get("unitType"),
             national_codes=[str(c).lower() for c in nc] if isinstance(nc, list) and nc else None,
-            async_mode=bool(d.get("async", False)),
+            async_mode=bool(d.get("async", False)) or local_mode,
             geometry_audit_trail=bool(d.get("geometryAuditTrail", False)),
             batch_size=d.get("batchSize"),
+            local_mode=local_mode,
         )
+
+    @property
+    def processing_mode(self) -> str:
+        if self.local_mode:
+            return "local"
+        return "concurrent" if self.async_mode else "sequential"
 
 
 @dataclass

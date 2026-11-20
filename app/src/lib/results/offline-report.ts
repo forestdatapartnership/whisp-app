@@ -2,7 +2,14 @@ import {
   computeRiskMix,
   countTruthy,
 } from "./catalog-fields";
-import { COMMODITY_OPTIONS, WATERBODY_FIELD, buildTreeSteps } from "./risk-trees";
+import {
+  COMMODITY_OPTIONS,
+  WATERBODY_FIELD,
+  buildTreeSteps,
+  questionLabel,
+  type Translate,
+  type TreeStepView,
+} from "./risk-trees";
 import { renderOfflineReportHtml } from "./offline-report-shell";
 import { downloadHtml, timestampFilename } from "@/lib/utils/export";
 
@@ -25,12 +32,20 @@ function cellValue(value: unknown): string | number | boolean | null {
   return String(value);
 }
 
+function withQuestions(steps: TreeStepView[], label: Translate): Array<TreeStepView & { question: string }> {
+  return steps.map((s) => ({
+    ...s,
+    question: questionLabel(s.columns, label),
+    then: typeof s.then === "string" ? s.then : withQuestions(s.then, label),
+  }));
+}
+
 export function downloadOfflineReport(input: {
   rows: Array<Record<string, unknown>>;
   columns: Array<{ key: string; header: string }>;
   title?: string;
   theme: "light" | "dark";
-  label: (key: string) => string;
+  label: Translate;
 }) {
   const { rows, columns, title = "WHISP risk report", theme, label } = input;
   const headers = new Map(columns.map((c) => [c.key, c.header]));
@@ -77,13 +92,7 @@ export function downloadOfflineReport(input: {
           yes: countTruthy(rows, ind.key),
           total: rows.length,
         })),
-      tree: buildTreeSteps(option.key, rows, null).map((s) => ({
-        question: label(`question.${s.question}`),
-        yesCount: s.yesCount,
-        noCount: s.noCount,
-        yesOutcome: s.yesOutcome,
-        noOutcome: s.noOutcome,
-      })),
+      tree: withQuestions(buildTreeSteps(option.key, rows, null), label),
     })),
   };
 

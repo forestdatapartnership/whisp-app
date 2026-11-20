@@ -72,8 +72,9 @@ def progress_api_data(job: JobProgress, *, token: str | None = None) -> dict:
         data["featureCount"] = job.feature_count
     if job.percent is not None:
         data["percent"] = job.percent
-    if job.async_mode is not None:
-        data["asyncMode"] = job.async_mode
+    if job.mode is not None:
+        data["mode"] = job.mode
+        data["asyncMode"] = job.mode != "sequential"
     if job.messages:
         data["processStatusMessages"] = job.messages
     return data

@@ -47,9 +47,11 @@ class Settings(BaseSettings):
     max_request_body_size_kb: int | None = None
 
     max_plot_area_ha: int | None = None
+    max_total_area_local_ha: int = 45000
 
     geometry_limit_sync: int = 500
     geometry_limit_async: int = 10000
+    geometry_limit_local: int = 500
     analysis_timeout_sync_seconds: int = 60
     analysis_timeout_async_seconds: int = 1800
 
@@ -99,8 +101,10 @@ class Settings(BaseSettings):
         return {
             "maxRequestBodySizeKb": self.max_request_body_size_kb,
             "maxPlotAreaHa": self.max_plot_area_ha,
+            "maxTotalAreaLocalHa": self.max_total_area_local_ha,
             "geometryLimitSync": self.geometry_limit_sync,
             "geometryLimitAsync": self.geometry_limit_async,
+            "geometryLimitLocal": self.geometry_limit_local,
             "analysisTimeoutSyncSeconds": self.analysis_timeout_sync_seconds,
             "analysisTimeoutAsyncSeconds": self.analysis_timeout_async_seconds,
             "openforisWhispVersion": self.openforis_whisp_version,

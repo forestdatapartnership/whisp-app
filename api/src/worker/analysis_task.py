@@ -1,10 +1,8 @@
 import logging
-import threading
 
 from celery import Task
-from celery.exceptions import Ignore, TimeLimitExceeded
+from celery.exceptions import Ignore, SoftTimeLimitExceeded, TimeLimitExceeded
 from celery.states import SUCCESS
-from celery.worker.request import Request
 
 from src.app_logging import bind
 from src.codes import SystemCode
@@ -17,30 +15,10 @@ from src.submit.schemas import AnalysisTaskContext
 logger = logging.getLogger(__name__)
 
 
-class AnalysisRequest(Request):
-    # TODO remove, this is temp workaround until Celery 5.7
-    def on_timeout(self, soft, timeout):
-        ctx = AnalysisTask._task_context(self.args, self.kwargs)
-        super().on_timeout(soft, timeout)
-        if ctx is not None:
-            threading.Thread(
-                target=self.task._persist_timeout,
-                args=(ctx,),
-                name=f"analysis-timeout-{ctx.token}",
-                daemon=True,
-            ).start()
-
-
 class AnalysisTask(Task):
-    Request = AnalysisRequest
-
     @classmethod
     def task_id_for(cls, token: str) -> str:
         return f"analysis-{token}"
-
-    @staticmethod
-    def _task_context(args: tuple, kwargs: dict) -> AnalysisTaskContext | None:
-        return AnalysisTaskContext.from_task_message(args, kwargs)
 
     def _persist_terminal(
         self,
@@ -65,28 +43,10 @@ class AnalysisTask(Task):
             SystemCode.ANALYSIS_ERROR.value,
         }
 
-    def _persist_timeout(self, ctx: AnalysisTaskContext) -> None:
-        try:
-            if self._already_terminal(ctx.token):
-                return
-            bind(
-                token=ctx.token,
-                user_id=ctx.user_id,
-                api_key_id=ctx.api_key_id,
-                input_metrics=ctx.input_metrics,
-            )
-            error_message = SystemCode.ANALYSIS_TIMEOUT.format(ctx.timeout)
-            self._persist_terminal(
-                ctx.token, SystemCode.ANALYSIS_TIMEOUT, error_message=error_message,
-            )
-            logger.warning("analysis timed out: %s", error_message)
-        except Exception:
-            logger.exception("failed to persist analysis timeout for %s", ctx.token)
-
     def before_start(self, task_id, args, kwargs):
         self._outcome: SystemCode | None = None
         self._error_message: str | None = None
-        ctx = self._task_context(args, kwargs)
+        ctx = AnalysisTaskContext.from_task_message(args, kwargs)
         if ctx is None:
             return
         if self._already_terminal(ctx.token):
@@ -99,28 +59,31 @@ class AnalysisTask(Task):
             started_at=db_jobs.utc_now(),
         )
 
-        opts_dict = args[1] if len(args) > 1 and isinstance(args[1], dict) else {}
-        is_async = bool(opts_dict.get("async_mode"))
-        caller_ee = self.name == "src.worker.tasks.run_caller_analysis"
-        for position, job in enumerate(run_sync(db_jobs.list_queued_jobs, is_async, caller_ee), start=1):
-            state = get_sync(job["id"]) or {}
+        queue = self.request.delivery_info["routing_key"]
+        for position, row in enumerate(run_sync(db_jobs.list_queued_jobs, queue), start=1):
+            job = JobProgress.from_db(row)
+            state = get_sync(job.id) or {}
             publish_sync(
-                job["id"],
+                job.id,
                 JobProgress.of(
                     SystemCode.ANALYSIS_QUEUED,
-                    feature_count=job.get("feature_count"),
-                    async_mode=job["is_async"],
+                    feature_count=job.feature_count,
+                    mode=job.mode,
                     messages=[*(state.get("messages") or []), timestamped(f"Position {position} in queue")],
                 ).to_redis(),
             )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        ctx = self._task_context(args, kwargs)
+        ctx = AnalysisTaskContext.from_task_message(args, kwargs)
         timeout = ctx.timeout if ctx else None
 
-        if isinstance(exc, TimeLimitExceeded):
+        if isinstance(exc, (SoftTimeLimitExceeded, TimeLimitExceeded)):
             self._outcome = SystemCode.ANALYSIS_TIMEOUT
             self._error_message = SystemCode.ANALYSIS_TIMEOUT.format(timeout)
+            if ctx is not None:
+                # A hard time limit runs this in the main worker process, without the task's log context
+                bind(token=ctx.token, user_id=ctx.user_id, api_key_id=ctx.api_key_id, input_metrics=ctx.input_metrics)
+            logger.warning("analysis timed out: %s", self._error_message)
         else:
             self._outcome = SystemCode.ANALYSIS_ERROR
             self._error_message = str(exc)
@@ -128,7 +91,7 @@ class AnalysisTask(Task):
         super().on_failure(exc, task_id, args, kwargs, einfo)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        ctx = self._task_context(args, kwargs)
+        ctx = AnalysisTaskContext.from_task_message(args, kwargs)
         token = ctx.token if ctx else None
         if token is None or self._already_terminal(token):
             return

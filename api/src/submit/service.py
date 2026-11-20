@@ -32,7 +32,10 @@ def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Setti
     # whisp.analyze_geojson counts features, not individual polygons inside multipolygons.
     # TODO: align this in the whisp library so we can use its count directly.
     polygon_count = count_individual_polygons(fc)
-    limit = settings.geometry_limit_async if opts.async_mode else settings.geometry_limit_sync
+    if opts.local_mode:
+        limit = settings.geometry_limit_local
+    else:
+        limit = settings.geometry_limit_async if opts.async_mode else settings.geometry_limit_sync
     if polygon_count > limit:
         raise AppError(SystemCode.VALIDATION_TOO_MANY_GEOMETRIES, [limit])
 
@@ -49,6 +52,8 @@ def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Setti
         metrics = {"count": polygon_count}
 
     _check_plot_area(metrics, settings)
+    if opts.local_mode:
+        _check_total_area(metrics, settings)
     return metrics
 
 
@@ -59,6 +64,18 @@ def _check_plot_area(metrics: dict, settings: Settings) -> None:
         return
     if largest > limit:
         raise AppError(SystemCode.VALIDATION_PLOT_TOO_LARGE, [round(largest), limit])
+
+
+def _check_total_area(metrics: dict, settings: Settings) -> None:
+    mean = metrics.get("mean_area_ha")
+    if not isinstance(mean, (int, float)):
+        return
+    # The mean covers polygon features only: points have no area.
+    types = metrics.get("geometry_types") or {}
+    total = mean * (types.get("Polygon", 0) + types.get("MultiPolygon", 0))
+    limit = settings.max_total_area_local_ha
+    if total > limit:
+        raise AppError(SystemCode.VALIDATION_TOTAL_AREA_TOO_LARGE, [round(total), limit])
 
 
 def _options_payload(opts: AnalysisOptions) -> dict:
@@ -75,7 +92,25 @@ def _options_payload(opts: AnalysisOptions) -> dict:
         payload["geometryAuditTrail"] = True
     if opts.batch_size:
         payload["batchSize"] = opts.batch_size
+    if opts.local_mode:
+        payload["localMode"] = True
     return payload
+
+
+_TASK_NAMES = {
+    "sync": "src.worker.tasks.run_analysis",
+    "async": "src.worker.tasks.run_analysis",
+    "caller-ee": "src.worker.tasks.run_caller_analysis",
+    "local": "src.worker.tasks.run_local_analysis",
+}
+
+
+def _queue(opts: AnalysisOptions, earth_engine: EarthEngineInput | None) -> str:
+    if opts.local_mode:
+        return "local"
+    if earth_engine is not None:
+        return "caller-ee"
+    return "async" if opts.async_mode else "sync"
 
 
 def _is_terminal_event(event: dict) -> bool:
@@ -133,6 +168,7 @@ async def submit(
     feature_count = (input_metrics or {}).get("count") or len(fc.get("features") or [])
     timeout = settings.analysis_timeout_seconds(async_mode=opts.async_mode)
     options_payload = _options_payload(opts)
+    queue = _queue(opts, earth_engine)
 
     queue_position = await db_jobs.create_analysis_job(
         job_id=token,
@@ -146,7 +182,7 @@ async def submit(
         analysis_options={**options_payload, "callerEarthEngine": True} if earth_engine is not None else options_payload or None,
         timeout_seconds=timeout,
         status=SystemCode.ANALYSIS_QUEUED,
-        is_async=opts.async_mode,
+        queue=queue,
         openforis_whisp_version=settings.openforis_whisp_version,
         earthengine_api_version=settings.earthengine_api_version,
         max_concurrent_analyses=ctx.max_concurrent_analyses,
@@ -160,7 +196,7 @@ async def submit(
         JobProgress.of(
             SystemCode.ANALYSIS_QUEUED,
             feature_count=feature_count,
-            async_mode=opts.async_mode,
+            mode=opts.processing_mode,
             messages=[timestamped(queue_msg)],
         ).to_redis(),
     )
@@ -170,7 +206,6 @@ async def submit(
         payload["analysisOptions"] = options_payload
     files.atomic_write_json(files.input_path(token), payload)
 
-    queue = "async" if opts.async_mode else "sync"
     task_context = AnalysisTaskContext(
         token=token,
         timeout=timeout,
@@ -178,20 +213,19 @@ async def submit(
         api_key_id=ctx.api_key_id,
         input_metrics=input_metrics,
     )
-    task_name = "src.worker.tasks.run_analysis"
     task_args = [asdict(task_context), asdict(opts)]
     send_options = {}
     if earth_engine is not None:
-        queue = "caller-ee"
-        task_name = "src.worker.tasks.run_caller_analysis"
         task_args.append(earth_engine.task_payload())
         send_options = {"argsrepr": "<caller credentials redacted>", "kwargsrepr": "{}"}
     celery_app.send_task(
-        task_name,
+        _TASK_NAMES[queue],
         args=task_args,
         queue=queue,
         task_id=AnalysisTask.task_id_for(token),
-        time_limit=timeout,
+        # The task stops itself at the soft limit; the hard kill a minute later is the backstop.
+        soft_time_limit=timeout,
+        time_limit=timeout + 60,
         **send_options,
     )
 

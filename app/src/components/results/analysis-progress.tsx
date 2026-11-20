@@ -11,13 +11,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 
+export type ProcessingMode = "sequential" | "concurrent" | "local";
+
 export function AnalysisProgress({
   token,
   code,
   featureCount,
   percent,
   messages,
-  asyncMode,
+  mode,
   onCancelled,
 }: {
   token: string;
@@ -25,7 +27,7 @@ export function AnalysisProgress({
   featureCount?: number;
   percent?: number;
   messages?: string[];
-  asyncMode?: boolean;
+  mode?: ProcessingMode;
   onCancelled?: () => void;
 }) {
   const t = useTranslations("AnalysisProgress");
@@ -38,7 +40,7 @@ export function AnalysisProgress({
   }, [messages?.length]);
 
   const isQueued = code === 'analysis_queued';
-  const queueMode = asyncMode ? t('concurrent') : t('sequential');
+  const queueMode = t(mode ?? 'sequential');
   const title = isQueued ? t('queuedTitle') : t('progressTitle');
   const subtitle = isQueued
     ? t('queuedSubtitle', { mode: queueMode })

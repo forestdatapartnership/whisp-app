@@ -4,6 +4,8 @@ import threading
 from collections.abc import AsyncIterator, Callable
 from typing import Any
 
+import redis
+
 from src.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -33,8 +35,6 @@ def _parse(data: str | bytes | dict) -> dict[str, Any]:
 
 def _sync_redis():
     if not getattr(_worker_redis, "client", None):
-        import redis
-
         _worker_redis.client = redis.from_url(get_settings().redis_url, decode_responses=True)
     return _worker_redis.client
 
@@ -50,7 +50,8 @@ def _store_and_publish(body: str, job_id: str) -> None:
 def publish_sync(job_id: str, data: dict[str, Any]) -> None:
     try:
         _store_and_publish(json.dumps(data), job_id)
-    except Exception:
+    # Not Exception: a Celery soft time limit raised during a progress update must still stop the task.
+    except redis.RedisError:
         logger.exception("redis publish failed for job %s", job_id)
 
 
@@ -58,7 +59,7 @@ def get_sync(job_id: str) -> dict[str, Any] | None:
     try:
         raw = _sync_redis().get(_state_key(job_id))
         return _parse(raw) if raw is not None else None
-    except Exception:
+    except redis.RedisError:
         logger.exception("redis get failed for job %s", job_id)
         return None
 

@@ -128,12 +128,17 @@ PIDS+=($SYNC_PID)
 ASYNC_PID=$!
 PIDS+=($ASYNC_PID)
 
-(cd "$API_DIR" && EE_CALLER_CREDENTIALS=1 python -m celery -A src.worker.celery_app worker \
+(cd "$API_DIR" && EE_INIT_PER_TASK=1 python -m celery -A src.worker.celery_app worker \
     -Q caller-ee --concurrency=1 --pool=prefork --without-mingle --without-gossip --hostname caller-ee@%h) &
 CALLER_PID=$!
 PIDS+=($CALLER_PID)
 
-assert_pids_alive 8 "$SYNC_PID" "$ASYNC_PID" "$CALLER_PID"
+(cd "$API_DIR" && EE_INIT_PER_TASK=1 python -m celery -A src.worker.celery_app worker \
+    -Q local --concurrency=1 --pool=prefork --without-mingle --without-gossip --hostname local@%h) &
+LOCAL_PID=$!
+PIDS+=($LOCAL_PID)
+
+assert_pids_alive 8 "$SYNC_PID" "$ASYNC_PID" "$CALLER_PID" "$LOCAL_PID"
 
 echo "API ready: http://localhost:$API_PORT"
 watch_pids "${PIDS[@]}"

@@ -34,7 +34,7 @@ spec:
         env:
         - name: DEPLOYED_AT
           value: "${DEPLOYED_AT}"
-        - name: EE_CALLER_CREDENTIALS
+        - name: EE_INIT_PER_TASK
           value: "1"
         - name: DB_HOST
           value: "cloud-sql-proxy"

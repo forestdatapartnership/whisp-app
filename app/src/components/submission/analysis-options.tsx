@@ -32,6 +32,7 @@ export interface AnalysisOptionsValue {
   async: boolean
   geometryAuditTrail: boolean
   batchSize?: number
+  localMode: boolean
 }
 
 export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptionsValue = {
@@ -40,6 +41,7 @@ export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptionsValue = {
   unitType: 'ha',
   async: true,
   geometryAuditTrail: false,
+  localMode: false,
 }
 
 const COUNTRY_CODES = ['cm', 'co', 'ci', 'br'] as const
@@ -50,6 +52,26 @@ interface AnalysisOptionsProps {
   onChange: (value: AnalysisOptionsValue) => void
   disabled?: boolean
   idColumns?: string[]
+}
+
+function HelpLabel({ label, help }: { label: string; help: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Label>{label}</Label>
+      <Tooltip>
+        <TooltipTrigger
+          render={(props) => (
+            <button type="button" {...props} className="text-text-muted hover:text-text-primary transition-colors">
+              <Info className="size-3.5" />
+            </button>
+          )}
+        />
+        <TooltipContent className="max-w-xs text-justify leading-relaxed">
+          {help}
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  )
 }
 
 export function AnalysisOptions({ value, onChange, disabled = false, idColumns }: AnalysisOptionsProps) {
@@ -136,21 +158,7 @@ export function AnalysisOptions({ value, onChange, disabled = false, idColumns }
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-1.5">
-                  <Label>{t('auditTrail')}</Label>
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={(props) => (
-                        <button type="button" {...props} className="text-text-muted hover:text-text-primary transition-colors">
-                          <Info className="size-3.5" />
-                        </button>
-                      )}
-                    />
-                    <TooltipContent className="max-w-xs text-justify leading-relaxed">
-                      {t('auditTrailHelp')}
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+                <HelpLabel label={t('auditTrail')} help={t('auditTrailHelp')} />
                 <div className="flex items-center h-9">
                   <Switch
                     checked={value.geometryAuditTrail}
@@ -161,21 +169,7 @@ export function AnalysisOptions({ value, onChange, disabled = false, idColumns }
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-1.5">
-                  <Label>{t('batchSize')}</Label>
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={(props) => (
-                        <button type="button" {...props} className="text-text-muted hover:text-text-primary transition-colors">
-                          <Info className="size-3.5" />
-                        </button>
-                      )}
-                    />
-                    <TooltipContent className="max-w-xs text-justify leading-relaxed">
-                      {t('batchSizeHelp')}
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+                <HelpLabel label={t('batchSize')} help={t('batchSizeHelp')} />
                 <Input
                   type="number"
                   min={1}
@@ -185,8 +179,19 @@ export function AnalysisOptions({ value, onChange, disabled = false, idColumns }
                     const size = Math.trunc(e.target.valueAsNumber)
                     onChange({ ...value, batchSize: size >= 1 ? size : undefined })
                   }}
-                  disabled={disabled}
+                  disabled={disabled || value.localMode}
                 />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <HelpLabel label={t('localMode')} help={t('localModeHelp')} />
+                <div className="flex items-center h-9">
+                  <Switch
+                    checked={value.localMode}
+                    onCheckedChange={(checked) => onChange({ ...value, localMode: !!checked })}
+                    disabled={disabled}
+                  />
+                </div>
               </div>
             </div>
           </div>

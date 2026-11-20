@@ -15,7 +15,9 @@ import { AnalysisOptions, AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from 
 interface SubmitGeometryProps {
   maxFileSize?: number
   geometryLimit?: number
+  geometryLimitLocal?: number
   maxPlotAreaHa?: number
+  maxTotalAreaLocalHa?: number
   asyncThreshold?: number
   onError: (msg: string) => void
   initialFile?: File | null
@@ -24,7 +26,9 @@ interface SubmitGeometryProps {
 export function SubmitGeometry({
   maxFileSize,
   geometryLimit,
+  geometryLimitLocal,
   maxPlotAreaHa,
+  maxTotalAreaLocalHa,
   asyncThreshold = 50,
   onError,
   initialFile,
@@ -38,6 +42,7 @@ export function SubmitGeometry({
   const options = !analysisOptions.externalIdColumn || idColumns.includes(analysisOptions.externalIdColumn)
     ? analysisOptions
     : { ...analysisOptions, externalIdColumn: '' }
+  const limit = options.localMode ? geometryLimitLocal : geometryLimit
   const appliedFileRef = useRef<File | null>(null)
 
   const { submit, isLoading, error: submitError } = useSubmitAnalysis({
@@ -73,12 +78,18 @@ export function SubmitGeometry({
       onError(t(`fileErrors.${parsed.error}`))
       return
     }
-    if (geometryLimit && parsed.featureCount > geometryLimit) {
-      onError(t('tooManyGeometries', { limit: geometryLimit }))
+    if (limit && parsed.featureCount > limit) {
+      onError(t('tooManyGeometries', { limit }))
       return
     }
-    if (maxPlotAreaHa != null && parseFeatures(text)?.some((feature) => geometryAreaHa(feature.geometry) > maxPlotAreaHa)) {
+    const features = parseFeatures(text)
+    if (maxPlotAreaHa != null && features?.some((feature) => geometryAreaHa(feature.geometry) > maxPlotAreaHa)) {
       onError(t('draw.tooLarge', { limit: maxPlotAreaHa }))
+      return
+    }
+    const totalAreaHa = features?.reduce((sum, feature) => sum + geometryAreaHa(feature.geometry), 0) ?? 0
+    if (options.localMode && maxTotalAreaLocalHa != null && totalAreaHa > maxTotalAreaLocalHa) {
+      onError(t('totalAreaTooLarge', { limit: maxTotalAreaLocalHa }))
       return
     }
     submit({

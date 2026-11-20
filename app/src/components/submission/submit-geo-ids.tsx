@@ -12,6 +12,7 @@ import { AnalysisOptions, AnalysisOptionsValue, DEFAULT_ANALYSIS_OPTIONS } from 
 interface SubmitGeoIdsProps {
   maxFileSize?: number
   geometryLimit?: number
+  geometryLimitLocal?: number
   asyncThreshold?: number
   onError: (msg: string) => void
 }
@@ -19,6 +20,7 @@ interface SubmitGeoIdsProps {
 export function SubmitGeoIds({
   maxFileSize,
   geometryLimit,
+  geometryLimitLocal,
   asyncThreshold = 50,
   onError,
 }: SubmitGeoIdsProps) {
@@ -49,8 +51,9 @@ export function SubmitGeoIds({
       onError(t('geoIdsRequired'))
       return
     }
-    if (geometryLimit && cleanIds.length > geometryLimit) {
-      onError(t('tooManyGeoIds', { limit: geometryLimit }))
+    const limit = analysisOptions.localMode ? geometryLimitLocal : geometryLimit
+    if (limit && cleanIds.length > limit) {
+      onError(t('tooManyGeoIds', { limit }))
       return
     }
     submit({ type: 'geo-ids', geoIds: cleanIds })

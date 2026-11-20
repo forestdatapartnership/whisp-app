@@ -85,7 +85,9 @@ export function DataSubmission() {
         <SubmitGeometry
           maxFileSize={maxFileSize}
           geometryLimit={config?.submission.geometryLimit}
+          geometryLimitLocal={config?.submission.geometryLimitLocal}
           maxPlotAreaHa={config?.submission.maxPlotAreaHa}
+          maxTotalAreaLocalHa={config?.submission.maxTotalAreaLocalHa}
           asyncThreshold={config?.submission.asyncThreshold}
           onError={setError}
           initialFile={geometryFile}
@@ -94,6 +96,7 @@ export function DataSubmission() {
         <SubmitGeoIds
           maxFileSize={maxFileSize}
           geometryLimit={config?.submission.geometryLimit}
+          geometryLimitLocal={config?.submission.geometryLimitLocal}
           asyncThreshold={config?.submission.asyncThreshold}
           onError={setError}
         />

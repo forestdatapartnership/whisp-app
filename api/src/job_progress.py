@@ -1,8 +1,10 @@
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
 from src.codes import SystemCode
+from src.submit.schemas import AnalysisOptions
 
 
 def timestamped(message: str) -> str:
@@ -17,7 +19,7 @@ class JobProgress:
     messages: list[str] | None = None
     error_message: str | None = None
     feature_count: int | None = None
-    async_mode: bool | None = None
+    mode: str | None = None
 
     @staticmethod
     def _parse_status(value: SystemCode | str | None) -> SystemCode:
@@ -39,7 +41,7 @@ class JobProgress:
         messages: list[str] | None = None,
         error_message: str | None = None,
         feature_count: int | None = None,
-        async_mode: bool | None = None,
+        mode: str | None = None,
     ) -> "JobProgress":
         return cls(
             status=cls._parse_status(status),
@@ -47,7 +49,7 @@ class JobProgress:
             messages=messages,
             error_message=error_message,
             feature_count=feature_count,
-            async_mode=async_mode,
+            mode=mode,
         )
 
     @classmethod
@@ -59,18 +61,20 @@ class JobProgress:
             messages=data.get("messages"),
             error_message=data.get("error_message"),
             feature_count=data.get("feature_count"),
-            async_mode=data.get("async_mode"),
+            mode=data.get("mode"),
         )
 
     @classmethod
     def from_db(cls, row: dict[str, Any]) -> "JobProgress":
-        options = row.get("analysis_options") or {}
+        options = row.get("analysis_options")
+        if isinstance(options, str):
+            options = json.loads(options)
         return cls(
             id=row["id"],
             status=cls._parse_status(row["status"]),
             feature_count=row.get("feature_count"),
             error_message=row.get("error_message"),
-            async_mode=bool(options.get("async")) if isinstance(options, dict) else None,
+            mode=AnalysisOptions.parse(options).processing_mode,
         )
 
     def to_redis(self) -> dict[str, Any]:
@@ -79,7 +83,7 @@ class JobProgress:
             "percent": self.percent,
             "error_message": self.error_message,
             "feature_count": self.feature_count,
-            "async_mode": self.async_mode,
+            "mode": self.mode,
         }
         if self.messages is not None:
             payload["messages"] = self.messages

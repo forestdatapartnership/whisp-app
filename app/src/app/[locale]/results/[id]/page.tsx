@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { ArrowLeft } from "lucide-react";
-import { AnalysisProgress } from "@/components/results/analysis-progress";
+import { AnalysisProgress, type ProcessingMode } from "@/components/results/analysis-progress";
 import { AnalysisError } from "@/components/results/analysis-error";
 import { ResultsToolbar } from "@/components/results/results-toolbar";
 import { ResultsSearchBar } from "@/components/results/results-search-bar";
@@ -436,7 +436,7 @@ export default function ResultsPage() {
     const featureCount = response?.data?.featureCount as number | undefined;
     const percent = response?.data?.percent as number | undefined;
     const messages = response?.data?.processStatusMessages as string[] | undefined;
-    const asyncMode = response?.data?.asyncMode as boolean | undefined;
+    const mode = response?.data?.mode as ProcessingMode | undefined;
     return (
       <AnalysisProgress
         token={id}
@@ -444,7 +444,7 @@ export default function ResultsPage() {
         featureCount={featureCount}
         percent={percent}
         messages={messages}
-        asyncMode={asyncMode}
+        mode={mode}
         onCancelled={() => router.push("/")}
       />
     );

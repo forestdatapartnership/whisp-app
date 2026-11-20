@@ -7,15 +7,18 @@ from src.db.pool import acquire_pool
 from src.exceptions import AppError
 
 
-def _queued_condition(is_async: bool, caller_ee: bool = False) -> str:
-    if caller_ee:
-        return "analysis_options->>'callerEarthEngine' = 'true'"
+def _queued_condition(queue: str) -> str:
+    if queue == "local":
+        return "analysis_options->>'localMode' = 'true'"
+    not_local = "analysis_options->>'localMode' IS DISTINCT FROM 'true'"
+    if queue == "caller-ee":
+        return f"analysis_options->>'callerEarthEngine' = 'true' AND {not_local}"
     mode = (
         "analysis_options->>'async' = 'true'"
-        if is_async
+        if queue == "async"
         else "(analysis_options IS NULL OR analysis_options->>'async' IS DISTINCT FROM 'true')"
     )
-    return f"({mode}) AND analysis_options->>'callerEarthEngine' IS DISTINCT FROM 'true'"
+    return f"({mode}) AND analysis_options->>'callerEarthEngine' IS DISTINCT FROM 'true' AND {not_local}"
 
 
 async def create_analysis_job(
@@ -31,7 +34,7 @@ async def create_analysis_job(
     analysis_options: dict | None,
     timeout_seconds: int | None = None,
     status: SystemCode,
-    is_async: bool = False,
+    queue: str,
     openforis_whisp_version: str | None = None,
     earthengine_api_version: str | None = None,
     max_concurrent_analyses: int | None = None,
@@ -75,10 +78,9 @@ async def create_analysis_job(
                 json.dumps(input_metrics) if input_metrics is not None else None,
             )
 
-            caller_ee = bool((analysis_options or {}).get("callerEarthEngine"))
             row = await conn.fetchrow(
                 f"SELECT COUNT(*)::int AS pos FROM analysis_jobs "
-                f"WHERE status = $1 AND {_queued_condition(is_async, caller_ee)}",
+                f"WHERE status = $1 AND {_queued_condition(queue)}",
                 SystemCode.ANALYSIS_QUEUED.value,
             )
             return row["pos"] if row else 1
@@ -122,12 +124,12 @@ async def update_analysis_job(job_id: str, **updates: Any) -> None:
     )
 
 
-async def list_queued_jobs(is_async: bool, caller_ee: bool = False) -> list[dict]:
+async def list_queued_jobs(queue: str) -> list[dict]:
     pool = await acquire_pool()
     rows = await pool.fetch(
-        f"SELECT id, feature_count, COALESCE(analysis_options->>'async', 'false') = 'true' AS is_async "
+        f"SELECT id, status, feature_count, analysis_options "
         f"FROM analysis_jobs "
-        f"WHERE status = $1 AND {_queued_condition(is_async, caller_ee)} ORDER BY created_at ASC",
+        f"WHERE status = $1 AND {_queued_condition(queue)} ORDER BY created_at ASC",
         SystemCode.ANALYSIS_QUEUED.value,
     )
     return [dict(r) for r in rows]

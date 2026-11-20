@@ -78,7 +78,7 @@ def _clear_task_log_context(**_):
 @worker_init.connect
 @worker_process_init.connect
 def _init_worker(sender=None, **kwargs):
-    if os.environ.get("EE_CALLER_CREDENTIALS") == "1":
+    if os.environ.get("EE_INIT_PER_TASK") == "1":
         # Per-task ee.Initialize; worker must use prefork or threads with --concurrency=1.
         return
 

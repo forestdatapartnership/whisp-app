@@ -27,7 +27,7 @@ The application is split into independently deployable services:
 | **API** | `api/` | FastAPI service — submit, status, GeoJSON/CSV export |
 | **Workers** | `api/` (Celery) | Background analysis — runs `openforis-whisp` against Google Earth Engine |
 | **Database** | `db/` | PostgreSQL schema and migrations |
-| **Infra** | `infra/k8s/` | GKE manifests (API, app, sync/async workers, Redis, Cloud SQL proxy) |
+| **Infra** | `infra/k8s/` | GKE manifests (API, app, workers, Redis, Cloud SQL proxy) |
 
 ### High-Level Architecture
 
@@ -55,6 +55,8 @@ graph TB
     subgraph Workers["Celery Workers"]
         SYNC[sync queue]
         ASYNC[async queue]
+        CALLER[caller-ee queue]
+        LOCAL[local queue]
         WHISP[openforis-whisp]
     end
 
@@ -80,8 +82,12 @@ graph TB
     SUBMIT --> REDIS
     SUBMIT --> SYNC
     SUBMIT --> ASYNC
+    SUBMIT --> CALLER
+    SUBMIT --> LOCAL
     SYNC --> WHISP
     ASYNC --> WHISP
+    CALLER --> WHISP
+    LOCAL --> WHISP
     WHISP --> GEE
     WHISP --> TEMP
     WHISP --> REDIS
@@ -108,7 +114,7 @@ sequenceDiagram
     API->>DB: Create analysis_jobs row
     API->>API: Write input GeoJSON to temp storage
     API->>R: Publish queued progress
-    API->>W: Enqueue run_analysis (sync or async queue)
+    API->>W: Enqueue the analysis (sync, async, caller-ee or local queue)
     API-->>APP: Return token + statusUrl
 
     loop Progress updates
@@ -128,9 +134,9 @@ sequenceDiagram
 
 - **Token = one analysis job**, not one plot. A batch submission (multi-feature GeoJSON) produces a single token containing results for all features.
 - **Results are ephemeral.** Output files live in temp storage; job progress snapshots in Redis expire after 10 minutes. WHISP does not provide long-term result storage — integrators should persist GeoJSON/CSV themselves if needed.
-- **Two worker queues:** `sync` for small, inline requests; `async` for larger batches (uses the Earth Engine high-volume endpoint).
+- **Worker queues:** `sync` for small, inline requests; `async` for larger batches (uses the Earth Engine high-volume endpoint); `caller-ee` for analyses run with the caller's own Earth Engine credentials (`x-ee-*` headers); `local` for `localMode` analyses, calculated on Whisp's servers so Earth Engine never receives exact plot boundaries. `localMode` always runs async and ignores the `async` flag; with caller credentials it stays on the `local` queue.
 - **Shared PostgreSQL** stores users, API keys, rate limits, analysis job metadata, and reference data (result fields, commodities).
-- **Production deployment** runs API, app, sync worker, async worker, Redis, and Cloud SQL proxy as separate GKE workloads. Temp storage is a hostPath directory on the node; a CronJob deletes files older than 10 minutes.
+- **Production deployment** runs the API, app, workers (sync, async, caller-EE and local), Redis, and Cloud SQL proxy as separate GKE workloads. Temp storage is a hostPath directory on the node; a CronJob deletes files older than 10 minutes.
 
 ## Access Methods
 

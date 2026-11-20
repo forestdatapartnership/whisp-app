@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from typing import Iterator
 
+from src.config import get_settings
 from src.schemas import EarthEngineInput
 
 EE_STANDARD_URL = "https://earthengine.googleapis.com"
@@ -47,3 +48,13 @@ def caller_earth_engine_session(caller_payload: dict, async_mode: bool) -> Itera
         yield
     finally:
         ee.Reset()
+
+
+@contextmanager
+def whisp_earth_engine_session() -> Iterator[None]:
+    import openforis_whisp as whisp
+
+    # No reset around it: a caller session resets Earth Engine before and after itself, and
+    # initialize_ee keeps an existing session for the same key and endpoint.
+    whisp.initialize_ee(str(get_settings().ee_credential_path.resolve()), use_high_vol_endpoint=True)
+    yield

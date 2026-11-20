@@ -54,18 +54,18 @@ class EarthEngineInput(BaseModel):
 
 
 class AnalysisOptionsInput(BaseModel):
-    externalIdColumn: str | None = None
-    unitType: str | None = None
-    nationalCodes: list[str] | None = None
-    async_: bool = Field(False, alias="async")
-    geometryAuditTrail: bool = False
+    externalIdColumn: str | None = Field(None, description="Optional. GeoJSON property copied into the results as the external ID; it must exist on every feature.")
+    unitType: str | None = Field(None, description="Optional. Units for the results: ha (default) or percent.")
+    nationalCodes: list[str] | None = Field(None, description="Optional. ISO2 country codes whose national datasets are added, e.g. co, ci, br.")
+    async_: bool = Field(False, alias="async", description="Optional. Queues the analysis and returns a token to poll instead of waiting for the result. Allows larger inputs; limits in /api/config.")
+    geometryAuditTrail: bool = Field(False, description="Optional. Adds a geo_original column with each geometry as submitted.")
     batchSize: int | None = Field(None, ge=1, description="Optional. Features per Earth Engine request in async mode.")
-
+    localMode: bool = Field(False, description="Optional. Runs on Whisp's servers, so Earth Engine never receives exact plot boundaries. Always async; the async flag is ignored. Limits in /api/config.")
     model_config = ConfigDict(populate_by_name=True)
 
 
 class SubmitRequest(BaseModel):
-    analysisOptions: AnalysisOptionsInput | None = None
+    analysisOptions: AnalysisOptionsInput | None = Field(None, description="Optional. Defaults apply when omitted.")
 
 
 class SubmitGeoJsonRequest(SubmitRequest):
@@ -96,7 +96,8 @@ class SubmitGeoJsonRequest(SubmitRequest):
                     "unitType": "ha",
                     "async": True,
                     "geometryAuditTrail": False,
-                    "batchSize": 10
+                    "batchSize": 10,
+                    "localMode": False
                 }
             }
         }
@@ -113,13 +114,14 @@ class SubmitWktRequest(SubmitRequest):
                     "unitType": "ha",
                     "async": True,
                     "geometryAuditTrail": False,
-                    "batchSize": 10
+                    "batchSize": 10,
+                    "localMode": False
                 }
             }
         }
     )
 
-    wkt: str
+    wkt: str = Field(description="Geometry in WKT, with WGS84 longitude/latitude coordinates.")
 
 
 class SubmitGeoIdsRequest(SubmitRequest):
@@ -131,13 +133,14 @@ class SubmitGeoIdsRequest(SubmitRequest):
                     "unitType": "ha",
                     "async": True,
                     "geometryAuditTrail": False,
-                    "batchSize": 10
+                    "batchSize": 10,
+                    "localMode": False
                 }
             }
         }
     )
 
-    geoIds: list[str]
+    geoIds: list[str] = Field(description="GeoIDs to analyse; each is resolved to its geometry first.")
 
 
 # ── Response model ─────────────────────────────────────────────────────────────
@@ -150,15 +153,17 @@ class ApiResponse(BaseModel):
 
 
 class PublicConfigResponse(BaseModel):
-    maxRequestBodySizeKb: int | None
-    maxPlotAreaHa: int | None
-    geometryLimitSync: int
-    geometryLimitAsync: int
-    analysisTimeoutSyncSeconds: int
-    analysisTimeoutAsyncSeconds: int
-    openforisWhispVersion: str
-    geoidBaseUrl: str | None
-    rateLimitWindowMs: int
+    maxRequestBodySizeKb: int | None = Field(description="Largest request body accepted, in KB; null means no limit.")
+    maxPlotAreaHa: int | None = Field(description="Largest plot allowed, in hectares; null means no limit.")
+    maxTotalAreaLocalHa: int = Field(description="Largest total plot area allowed in one analysis with localMode, in hectares.")
+    geometryLimitSync: int = Field(description="Max plots allowed in one sync analysis.")
+    geometryLimitAsync: int = Field(description="Max plots allowed in one async analysis.")
+    geometryLimitLocal: int = Field(description="Max plots allowed in one analysis with localMode.")
+    analysisTimeoutSyncSeconds: int = Field(description="Time limit for a sync analysis, in seconds.")
+    analysisTimeoutAsyncSeconds: int = Field(description="Time limit for an async analysis, in seconds.")
+    openforisWhispVersion: str = Field(description="Version of the openforis-whisp analysis library.")
+    geoidBaseUrl: str | None = Field(description="GeoID service used to resolve GeoIDs; null when not configured.")
+    rateLimitWindowMs: int = Field(description="Length of the rate limit window, in milliseconds.")
     rateLimitMaxRequests: int = Field(description="Requests each API key can make per window.")
     maxConcurrentAnalyses: int | None = Field(
         description="Analyses each account can have queued or running at once; null means no limit."
@@ -236,6 +241,7 @@ VALIDATION_ERRORS: tuple[SystemCode, ...] = (
     SystemCode.VALIDATION_COORDINATES_IN_METERS,
     SystemCode.VALIDATION_TOO_MANY_GEOMETRIES,
     SystemCode.VALIDATION_PLOT_TOO_LARGE,
+    SystemCode.VALIDATION_TOTAL_AREA_TOO_LARGE,
     SystemCode.VALIDATION_REQUEST_BODY_TOO_LARGE,
     SystemCode.VALIDATION_INVALID_EXTERNAL_ID_COLUMN,
     SystemCode.VALIDATION_INVALID_EARTH_ENGINE,
