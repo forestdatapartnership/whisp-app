@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import shutil
 import tempfile
@@ -120,7 +121,8 @@ def _run_whisp_blocking(token: str, opts: AnalysisOptions, feature_count: int | 
         whisp_logger.removeHandler(h)
     whisp_logger.addHandler(handler)
     try:
-        with redirect_stdout(None):
+        # A real stream, not None: the library's loggers call sys.stdout.flush() after each message
+        with open(os.devnull, "w") as devnull, redirect_stdout(devnull):
             stats_df = _compute_stats(token, opts)
 
             risk_df = whisp.whisp_risk(
