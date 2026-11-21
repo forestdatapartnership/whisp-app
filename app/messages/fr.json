@@ -342,6 +342,8 @@
     "processingCount": "Traitement de {count, plural, one {# entité} other {# entités}} en mode {mode}",
     "processing": "Traitement en mode {mode}",
     "progress": "Progression",
+    "downloadProgress": "Téléchargement",
+    "processingProgress": "Traitement",
     "status": "État",
     "waiting": "En attente dans la file…",
     "starting": "Démarrage…",

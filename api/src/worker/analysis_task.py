@@ -1,7 +1,9 @@
 import logging
+import threading
 
 from celery import Task
-from celery.exceptions import Ignore, SoftTimeLimitExceeded, TimeLimitExceeded
+from celery.exceptions import Ignore, SoftTimeLimitExceeded, TimeLimitExceeded, WorkerLostError
+from celery.signals import task_failure
 from celery.states import SUCCESS
 
 from src.app_logging import bind
@@ -42,6 +44,19 @@ class AnalysisTask(Task):
             SystemCode.ANALYSIS_TIMEOUT.value,
             SystemCode.ANALYSIS_ERROR.value,
         }
+
+    def _persist_in_background(self, ctx: AnalysisTaskContext, status: SystemCode, error_message: str | None) -> None:
+        # For failures Celery reports in the main worker process. On its own thread, a database outage would block
+        # the worker, and the pool children it forks would inherit the connections.
+        def persist() -> None:
+            bind(token=ctx.token, user_id=ctx.user_id, api_key_id=ctx.api_key_id, input_metrics=ctx.input_metrics)
+            try:
+                if not self._already_terminal(ctx.token):
+                    self._persist_terminal(ctx.token, status, error_message=error_message)
+            except Exception:
+                logger.exception("failed to persist analysis failure")
+
+        threading.Thread(target=persist, name=f"analysis-failure-{ctx.token}", daemon=True).start()
 
     def before_start(self, task_id, args, kwargs):
         self._outcome: SystemCode | None = None
@@ -92,8 +107,13 @@ class AnalysisTask(Task):
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         ctx = AnalysisTaskContext.from_task_message(args, kwargs)
-        token = ctx.token if ctx else None
-        if token is None or self._already_terminal(token):
+        if ctx is None:
+            return
+        if isinstance(retval, TimeLimitExceeded):
+            # A hard time limit calls this in the main worker process, right after on_failure
+            self._persist_in_background(ctx, self._outcome, self._error_message)
+            return
+        if self._already_terminal(ctx.token):
             return
 
         if status == SUCCESS:
@@ -102,4 +122,20 @@ class AnalysisTask(Task):
             outcome = self._outcome or SystemCode.ANALYSIS_ERROR
 
         error_message = self._error_message or None
-        self._persist_terminal(token, outcome, error_message=error_message)
+        self._persist_terminal(ctx.token, outcome, error_message=error_message)
+
+
+@task_failure.connect
+def _fail_lost_analysis(sender=None, exception=None, args=None, kwargs=None, **_):
+    # Celery calls this in the main worker process when the analysis process is killed, e.g. for exceeding
+    # the memory limit; the task's own handlers die with that process
+    if not (isinstance(sender, AnalysisTask) and isinstance(exception, WorkerLostError)):
+        return
+    ctx = AnalysisTaskContext.from_task_message(args, kwargs)
+    if ctx is not None:
+        sender._persist_in_background(
+            ctx,
+            SystemCode.ANALYSIS_ERROR,
+            "The analysis stopped unexpectedly, most likely because it ran out of memory. "
+            "Please try again with fewer or smaller plots.",
+        )

@@ -116,7 +116,11 @@ spec:
             command:
             - sh
             - -c
-            - find /app/temp -type f -mmin +10 -delete
+            - |
+              # An analysis reads its input until it has a result; release_stuck_analysis_jobs fails one still queued after 24 hours
+              find /app/temp -type f -name '*-result.json' -mmin +10 | while read -r f; do rm -f "$f" "${f%-result.json}.json"; done
+              find /app/temp -type f -name '*-result.csv' -mmin +10 -delete
+              find /app/temp -type f -mmin +1440 -delete
             resources:
               requests:
                 cpu: 25m

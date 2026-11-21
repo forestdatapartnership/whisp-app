@@ -342,6 +342,8 @@
     "processingCount": "Processing {count, plural, one {# feature} other {# features}} in {mode} Mode",
     "processing": "Processing in {mode} Mode",
     "progress": "Progress",
+    "downloadProgress": "Download",
+    "processingProgress": "Processing",
     "status": "Status",
     "waiting": "Waiting in queue…",
     "starting": "Starting…",

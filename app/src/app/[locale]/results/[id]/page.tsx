@@ -435,6 +435,7 @@ export default function ResultsPage() {
   if (isProcessing) {
     const featureCount = response?.data?.featureCount as number | undefined;
     const percent = response?.data?.percent as number | undefined;
+    const downloadPercent = response?.data?.downloadPercent as number | undefined;
     const messages = response?.data?.processStatusMessages as string[] | undefined;
     const mode = response?.data?.mode as ProcessingMode | undefined;
     return (
@@ -443,6 +444,7 @@ export default function ResultsPage() {
         code={code}
         featureCount={featureCount}
         percent={percent}
+        downloadPercent={downloadPercent}
         messages={messages}
         mode={mode}
         onCancelled={() => router.push("/")}

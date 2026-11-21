@@ -16,6 +16,7 @@ class JobProgress:
     status: SystemCode
     id: str | None = None
     percent: int | None = None
+    download_percent: int | None = None
     messages: list[str] | None = None
     error_message: str | None = None
     feature_count: int | None = None
@@ -38,6 +39,7 @@ class JobProgress:
         status: SystemCode | str,
         *,
         percent: int | None = None,
+        download_percent: int | None = None,
         messages: list[str] | None = None,
         error_message: str | None = None,
         feature_count: int | None = None,
@@ -46,6 +48,7 @@ class JobProgress:
         return cls(
             status=cls._parse_status(status),
             percent=percent,
+            download_percent=download_percent,
             messages=messages,
             error_message=error_message,
             feature_count=feature_count,
@@ -58,6 +61,7 @@ class JobProgress:
             id=id,
             status=cls._parse_status(data.get("status")),
             percent=data.get("percent"),
+            download_percent=data.get("download_percent"),
             messages=data.get("messages"),
             error_message=data.get("error_message"),
             feature_count=data.get("feature_count"),
@@ -81,6 +85,7 @@ class JobProgress:
         payload: dict[str, Any] = {
             "status": self.status.value,
             "percent": self.percent,
+            "download_percent": self.download_percent,
             "error_message": self.error_message,
             "feature_count": self.feature_count,
             "mode": self.mode,

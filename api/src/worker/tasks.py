@@ -31,7 +31,7 @@ logging.getLogger("whisp").propagate = False
 
 _SKIP_MESSAGE_PREFIX = "Mode:"
 _SKIP_MESSAGE_CONTAINS = "Concurrent processing + formatting + validation complete"
-_PROGRESS_RE = re.compile(r"Progress: [\d,]+/[\d,]+ (?:batches|downloads) \((\d+)%\)")
+_PROGRESS_RE = re.compile(r"Progress: [\d,]+/[\d,]+ (batches|downloads) \((\d+)%\)")
 _LOCAL_SCRATCH = Path(tempfile.gettempdir()) / "whisp-local"
 
 
@@ -41,6 +41,7 @@ class _ProgressHandler(logging.Handler):
         self.token = token
         self._messages = messages
         self._last_percent = 0
+        self._download_percent: int | None = None
         self._feature_count = feature_count
         self._mode = mode
 
@@ -51,15 +52,19 @@ class _ProgressHandler(logging.Handler):
 
         self._messages.append(timestamped(message))
 
+        # Only local mode downloads before it processes; one percent would run to 100% twice
         pm = _PROGRESS_RE.search(message)
-        if pm:
-            self._last_percent = int(pm.group(1))
+        if pm and pm.group(1) == "downloads":
+            self._download_percent = int(pm.group(2))
+        elif pm:
+            self._last_percent = int(pm.group(2))
 
         publish_sync(
             self.token,
             JobProgress.of(
                 SystemCode.ANALYSIS_PROCESSING,
                 percent=self._last_percent,
+                download_percent=self._download_percent,
                 feature_count=self._feature_count,
                 mode=self._mode,
                 messages=self._messages,
@@ -71,6 +76,8 @@ def _compute_stats(token: str, opts: AnalysisOptions) -> pd.DataFrame:
     import openforis_whisp as whisp
 
     input_file = str(files.input_path(token))
+    if not os.path.isfile(input_file):
+        raise FileNotFoundError("Analysis input not found. It may have expired; please submit the analysis again.")
     df_kwargs: dict[str, Any] = {}
     if opts.national_codes:
         df_kwargs["national_codes"] = opts.national_codes

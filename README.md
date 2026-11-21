@@ -136,7 +136,7 @@ sequenceDiagram
 - **Results are ephemeral.** Output files live in temp storage; job progress snapshots in Redis expire after 10 minutes. WHISP does not provide long-term result storage — integrators should persist GeoJSON/CSV themselves if needed.
 - **Worker queues:** `sync` for small, inline requests; `async` for larger batches (uses the Earth Engine high-volume endpoint); `caller-ee` for analyses run with the caller's own Earth Engine credentials (`x-ee-*` headers); `local` for `localMode` analyses, calculated on Whisp's servers so Earth Engine never receives exact plot boundaries. `localMode` always runs async and ignores the `async` flag; with caller credentials it stays on the `local` queue.
 - **Shared PostgreSQL** stores users, API keys, rate limits, analysis job metadata, and reference data (result fields, commodities).
-- **Production deployment** runs the API, app, workers (sync, async, caller-EE and local), Redis, and Cloud SQL proxy as separate GKE workloads. Temp storage is a hostPath directory on the node; a CronJob deletes files older than 10 minutes.
+- **Production deployment** runs the API, app, workers (sync, async, caller-EE and local), Redis, and Cloud SQL proxy as separate GKE workloads. Temp storage is a hostPath directory on the node; a CronJob deletes results 10 minutes after they are written, together with their input, and inputs without a result after 24 hours.
 
 ## Access Methods
 

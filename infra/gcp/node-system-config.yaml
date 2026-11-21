@@ -1,0 +1,7 @@
+# Replaces the node pool's whole kubelet config; the first two settings keep its current values.
+kubeletConfig:
+  insecureKubeletReadonlyPortEnabled: false
+  maxParallelImagePulls: 3
+  # Kill only the process over a container's memory limit, so the Celery main process survives an analysis
+  # that runs out of memory and fails it
+  singleProcessOomKill: true

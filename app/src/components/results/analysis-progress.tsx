@@ -13,11 +13,29 @@ import { Button } from "@/components/ui/button";
 
 export type ProcessingMode = "sequential" | "concurrent" | "local";
 
+function ProgressBar({ label, percent }: { label: string; percent: number }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-text-muted">
+        <span>{label}</span>
+        <span>{percent}%</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-border">
+        <div
+          className="h-full rounded-full bg-accent-green transition-all duration-300 ease-out"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function AnalysisProgress({
   token,
   code,
   featureCount,
   percent,
+  downloadPercent,
   messages,
   mode,
   onCancelled,
@@ -26,6 +44,7 @@ export function AnalysisProgress({
   code?: string;
   featureCount?: number;
   percent?: number;
+  downloadPercent?: number;
   messages?: string[];
   mode?: ProcessingMode;
   onCancelled?: () => void;
@@ -61,19 +80,15 @@ export function AnalysisProgress({
           </div>
         </div>
 
-        {typeof percent === "number" && percent > 0 && (
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-text-muted">
-              <span>{t('progress')}</span>
-              <span>{percent}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-border">
-              <div
-                className="h-full rounded-full bg-accent-green transition-all duration-300 ease-out"
-                style={{ width: `${percent}%` }}
-              />
-            </div>
-          </div>
+        {typeof downloadPercent === "number" ? (
+          <>
+            <ProgressBar label={t('downloadProgress')} percent={downloadPercent} />
+            <ProgressBar label={t('processingProgress')} percent={percent ?? 0} />
+          </>
+        ) : (
+          typeof percent === "number" && percent > 0 && (
+            <ProgressBar label={t('progress')} percent={percent} />
+          )
         )}
 
         <div className="flex flex-col gap-2">

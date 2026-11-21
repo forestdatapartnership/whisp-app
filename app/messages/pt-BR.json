@@ -342,6 +342,8 @@
     "processingCount": "Processando {count, plural, one {# feição} other {# feições}} no modo {mode}",
     "processing": "Processando no modo {mode}",
     "progress": "Progresso",
+    "downloadProgress": "Download",
+    "processingProgress": "Processamento",
     "status": "Status",
     "waiting": "Aguardando na fila…",
     "starting": "Iniciando…",
