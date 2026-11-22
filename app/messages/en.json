@@ -342,7 +342,7 @@
     "processingCount": "Processing {count, plural, one {# feature} other {# features}} in {mode} Mode",
     "processing": "Processing in {mode} Mode",
     "progress": "Progress",
-    "downloadProgress": "Download",
+    "downloadProgress": "Downloading",
     "processingProgress": "Processing",
     "status": "Status",
     "waiting": "Waiting in queue…",
@@ -415,7 +415,7 @@
     },
     "indicator": {
       "Ind_01_treecover": "Tree cover in 2020",
-      "Ind_02_commodities": "Commodity present pre-2020",
+      "Ind_02_commodities": "Commodity present in 2020",
       "Ind_03_disturbance_before_2020": "Disturbance before 2020",
       "Ind_04_disturbance_after_2020": "Disturbance after 2020",
       "Ind_05_primary_2020": "Primary forest in 2020",

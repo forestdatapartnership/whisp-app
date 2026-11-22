@@ -415,7 +415,7 @@
     },
     "indicator": {
       "Ind_01_treecover": "Cobertura arbórea en 2020",
-      "Ind_02_commodities": "Producto básico presente antes de 2020",
+      "Ind_02_commodities": "Producto básico presente en 2020",
       "Ind_03_disturbance_before_2020": "Perturbación antes de 2020",
       "Ind_04_disturbance_after_2020": "Perturbación después de 2020",
       "Ind_05_primary_2020": "Bosque primario en 2020",

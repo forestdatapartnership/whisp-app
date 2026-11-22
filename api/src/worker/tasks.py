@@ -1,19 +1,24 @@
+import json
 import logging
 import os
 import re
 import shutil
+import subprocess
+import sys
 import tempfile
 import time
+import traceback
 from contextlib import AbstractContextManager, redirect_stdout, suppress
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
+from celery import platforms
 
 from src.codes import SystemCode
 from src.config import get_settings
-from src.app_logging import resolve_level
+from src.app_logging import bind, configure, resolve_level
 from src.redis import get_sync, publish_sync
 from src.job_progress import JobProgress, timestamped
 from src.io import files
@@ -89,8 +94,8 @@ def _compute_stats(token: str, opts: AnalysisOptions) -> pd.DataFrame:
         df_kwargs["geometry_audit_trail"] = True
 
     if opts.local_mode:
-        # Called directly with the same 5% decoys as mode="local" to set max_extract_workers=1:
-        # the extraction then runs in a thread, as a prefork worker can't start child processes.
+        # Called directly with the same 5% decoys as mode="local" to set max_extract_workers=1: the extraction
+        # then runs in a thread, which uses less memory than a process pool.
         return whisp.whisp_stats_local(
             input_file,
             output_dir=str(_LOCAL_SCRATCH / token),
@@ -176,7 +181,7 @@ def run_caller_analysis(self: AnalysisTask, context: dict, opts_dict: dict, eart
 
 
 def _remove_stale_scratch(max_age_seconds: int) -> None:
-    # Only a killed run (cancel, hard time limit, out of memory) leaves its folder behind; one older
+    # Only a killed pool process (cancel, hard time limit) leaves its folder behind; one older
     # than the analysis time limit belongs to an analysis that has already timed out or been killed.
     cutoff = time.time() - max_age_seconds
     for path in _LOCAL_SCRATCH.glob("*"):
@@ -185,11 +190,18 @@ def _remove_stale_scratch(max_age_seconds: int) -> None:
                 shutil.rmtree(path, ignore_errors=True)
 
 
-@app.task(base=AnalysisTask, bind=True, name="src.worker.tasks.run_local_analysis", throws=(CallerEarthEngineError,))
-def run_local_analysis(self: AnalysisTask, context: dict, opts_dict: dict, earth_engine: dict | None = None) -> None:
-    ctx = AnalysisTaskContext.parse(context)
-    opts = AnalysisOptions(**opts_dict)
-    _remove_stale_scratch(ctx.timeout)
+def _local_error_file(token: str) -> Path:
+    return _LOCAL_SCRATCH / token / "error.json"
+
+
+def run_local_process() -> None:
+    # Entry point of the process each local analysis runs in (python -m src.worker.local_analysis)
+    payload = json.load(sys.stdin)
+    ctx = AnalysisTaskContext.parse(payload["context"])
+    opts = AnalysisOptions(**payload["opts"])
+    configure()
+    bind(token=ctx.token, user_id=ctx.user_id, api_key_id=ctx.api_key_id, input_metrics=ctx.input_metrics)
+    earth_engine = payload["earth_engine"]
     session = (
         caller_earth_engine_session(earth_engine, opts.async_mode)
         if earth_engine
@@ -197,5 +209,43 @@ def run_local_analysis(self: AnalysisTask, context: dict, opts_dict: dict, earth
     )
     try:
         _run_in_session(session, ctx, opts)
+    except Exception as e:
+        error_file = _local_error_file(ctx.token)
+        error_file.parent.mkdir(parents=True, exist_ok=True)
+        error_file.write_text(json.dumps({"type": type(e).__name__, "message": str(e), "traceback": traceback.format_exc()}))
+        sys.exit(1)
+
+
+def _local_process_error(token: str, returncode: int) -> Exception:
+    if returncode == -9:  # SIGKILL, as sent by the out-of-memory killer
+        return RuntimeError(
+            "The analysis stopped unexpectedly, most likely because it ran out of memory. "
+            "Please try again with fewer or smaller plots."
+        )
+    error_file = _local_error_file(token)
+    if not error_file.exists():
+        return RuntimeError(f"The analysis process exited with code {returncode}")
+    error = json.loads(error_file.read_text())
+    exc_type = CallerEarthEngineError if error["type"] == CallerEarthEngineError.__name__ else RuntimeError
+    exc = exc_type(error["message"])
+    exc.add_note(error["traceback"])
+    return exc
+
+
+@app.task(base=AnalysisTask, bind=True, name="src.worker.tasks.run_local_analysis", throws=(CallerEarthEngineError,))
+def run_local_analysis(self: AnalysisTask, context: dict, opts_dict: dict, earth_engine: dict | None = None) -> None:
+    ctx = AnalysisTaskContext.parse(context)
+    _remove_stale_scratch(ctx.timeout)
+    try:
+        # In its own process, running out of memory kills only the analysis (the node pool sets singleProcessOomKill),
+        # and this pool process records the failure; run() kills it when the soft time limit interrupts the wait
+        returncode = subprocess.run(
+            [sys.executable, "-m", "src.worker.local_analysis"],
+            input=json.dumps({"context": context, "opts": opts_dict, "earth_engine": earth_engine}).encode(),
+            # A cancel or a hard time limit kills this pool process outright, and the analysis must go with it
+            preexec_fn=(lambda: platforms.set_pdeathsig("SIGKILL")) if sys.platform == "linux" else None,
+        ).returncode
+        if returncode:
+            raise _local_process_error(ctx.token, returncode)
     finally:
         shutil.rmtree(_LOCAL_SCRATCH / ctx.token, ignore_errors=True)
