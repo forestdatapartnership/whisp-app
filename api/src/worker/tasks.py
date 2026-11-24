@@ -95,8 +95,8 @@ def _compute_stats(token: str, opts: AnalysisOptions) -> pd.DataFrame:
 
     if opts.local_mode:
         # Called directly with the same 5% decoys as mode="local" to cap the extraction processes: the library
-        # defaults to the node's CPU count minus one, more than the pod's memory holds. Extraction runs in batches
-        # of 25 plots, so a 50-plot analysis with decoys has at most 3.
+        # defaults to the node's CPU count minus one, more than the pod's memory holds (~1.25 GB per process),
+        # and dev and prod share the node's 8 vCPUs.
         return whisp.whisp_stats_local(
             input_file,
             output_dir=str(_LOCAL_SCRATCH / token),
