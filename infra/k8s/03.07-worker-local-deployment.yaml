@@ -36,6 +36,9 @@ spec:
           value: "${DEPLOYED_AT}"
         - name: EE_INIT_PER_TASK
           value: "1"
+        # openforis-whisp gives every open file a 50 MB read cache, and GDAL keeps up to 100 tiles open by default
+        - name: GDAL_MAX_DATASET_POOL_SIZE
+          value: "10"
         - name: DB_HOST
           value: "cloud-sql-proxy"
         - name: DB_PORT
