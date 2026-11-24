@@ -46,7 +46,7 @@ spec:
             cpu: 100m
             memory: 384Mi
           limits:
-            memory: 768Mi
+            memory: 1Gi
         readinessProbe:
           httpGet:
             path: /
@@ -60,11 +60,26 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 20
 ---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: whisp-app-backend-config
+  namespace: ${GKE_NAMESPACE}
+spec:
+  # The 30 s default cuts off status streams and large result downloads on slower connections
+  timeoutSec: 600
+  healthCheck:
+    type: HTTP
+    port: 3000
+    requestPath: /
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: whisp-app
   namespace: ${GKE_NAMESPACE}
+  annotations:
+    cloud.google.com/backend-config: '{"default": "whisp-app-backend-config"}'
 spec:
   selector:
     app: whisp-app

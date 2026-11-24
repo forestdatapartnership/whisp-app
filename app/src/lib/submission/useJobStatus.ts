@@ -36,7 +36,8 @@ export function useJobStatus({
     if (!token || completedRef.current || fallback) return
 
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 10_000)
+    // The API sends a completed job's headers only after building its result, one job at a time
+    const timeout = setTimeout(() => { controller.abort(); setFallback(true) }, 30_000)
 
     const run = async () => {
       try {
@@ -84,23 +85,29 @@ export function useJobStatus({
   useEffect(() => {
     if (!token || !fallback) return
 
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let stopped = false
+
+    // A completed job returns its whole result, which can take longer than the interval to download
     const poll = async () => {
       try {
         const res = await fetch(`/internal/status/${token}`)
         const json: JobStatus = await res.json()
         setResponse(json)
         if (json.code === 'analysis_completed') {
-          clearInterval(timer)
           handleCompleted(json.data)
-        } else if (TERMINAL.has(json.code)) {
-          clearInterval(timer)
+          return
         }
+        if (TERMINAL.has(json.code)) return
       } catch { /* retry next interval */ }
+      if (!stopped) timer = setTimeout(poll, POLL_INTERVAL)
     }
 
-    const timer = setInterval(poll, POLL_INTERVAL)
     poll()
-    return () => clearInterval(timer)
+    return () => {
+      stopped = true
+      clearTimeout(timer)
+    }
   }, [token, fallback, handleCompleted])
 
   const isLoading = !!token && !response
