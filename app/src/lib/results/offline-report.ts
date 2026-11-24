@@ -40,14 +40,15 @@ function withQuestions(steps: TreeStepView[], label: Translate): Array<TreeStepV
   }));
 }
 
-export function downloadOfflineReport(input: {
+export function buildOfflineReport(input: {
   rows: Array<Record<string, unknown>>;
   columns: Array<{ key: string; header: string }>;
   title?: string;
   theme: "light" | "dark";
+  language?: string;
   label: Translate;
 }) {
-  const { rows, columns, title = "WHISP risk report", theme, label } = input;
+  const { rows, columns, title = "WHISP risk report", label } = input;
   const headers = new Map(columns.map((c) => [c.key, c.header]));
   const cols = columns.map((c) => ({ key: c.key, header: c.header }));
   const summaryColumns = SUMMARY_KEYS.filter((key) =>
@@ -57,7 +58,7 @@ export function downloadOfflineReport(input: {
     header: headers.get(key) ?? (key === WATERBODY_FIELD ? label(`indicator.${WATERBODY_FIELD}`) : key),
   }));
 
-  const report = {
+  return {
     exportedAt: new Date().toISOString(),
     title,
     plotCount: rows.length,
@@ -95,9 +96,11 @@ export function downloadOfflineReport(input: {
       tree: withQuestions(buildTreeSteps(option.key, rows, null), label),
     })),
   };
+}
 
+export function downloadOfflineReport(input: Parameters<typeof buildOfflineReport>[0]) {
   downloadHtml(
-    renderOfflineReportHtml(JSON.stringify(report), theme),
+    renderOfflineReportHtml(JSON.stringify(buildOfflineReport(input)), input.theme, input.language),
     timestampFilename("html", "report")
   );
 }

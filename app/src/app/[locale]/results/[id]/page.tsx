@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -19,7 +20,7 @@ import { useConfig } from "@/lib/config/config-context";
 import { useJobStatus } from "@/lib/submission/useJobStatus";
 import { readSyncResult } from "@/lib/submission/sync-result";
 import { downloadCsv, downloadGeoJson, timestampFilename } from "@/lib/utils/export";
-import { downloadOfflineReport } from "@/lib/results/offline-report";
+import { exportHtmlReport, ReportDownloadError } from "@/lib/results/export-html-report";
 import {
   clearLocalResults,
   readLocalResults,
@@ -110,6 +111,7 @@ function compareResultValues(
 
 export default function ResultsPage() {
   const t = useTranslations("Results");
+  const locale = useLocale();
   const tCommon = useTranslations("Common");
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -134,6 +136,8 @@ export default function ResultsPage() {
   const [tableData, setTableData] = useState<ResultRow[]>([]);
   const [geoJsonData, setGeoJsonData] = useState<FeatureCollection | null>(null);
   const [localMissing, setLocalMissing] = useState(false);
+  const [exportingHtml, setExportingHtml] = useState(false);
+  const exportingHtmlRef = useRef(false);
 
   const riskField = getCommodity(commodity).riskField;
 
@@ -370,7 +374,7 @@ export default function ResultsPage() {
   const handleOpenWhispMap = useCallback((selectionOnly: boolean) => {
     if (isLocal || tableData.length === 0 || !config?.api.url) return;
     const query = selectionOnly ? `?${selectionQuery}` : "";
-    const downloadUrl = `${config.api.url}/generate-geojson/${id}${query}`;
+    const downloadUrl = `${config.api.url.replace(/\/$/, "")}/results/${encodeURIComponent(id)}.geojson${query}`;
     window.open(
       `https://whisp.earthmap.org/?aoi=WHISP&fetchJson=${encodeURIComponent(downloadUrl)}`,
       "_blank"
@@ -391,15 +395,30 @@ export default function ResultsPage() {
     downloadGeoJson(geoJsonData, timestampFilename("geojson"));
   }, [geoJsonData]);
 
-  const handleExportHtml = useCallback(() => {
-    downloadOfflineReport({
-      rows: tableData,
-      columns: allColumns,
-      title: isLocal ? "WHISP risk report · GeoJSON" : `WHISP risk report · ${id}`,
-      theme,
-      label: t,
-    });
-  }, [tableData, allColumns, id, isLocal, theme, t]);
+  const handleExportHtml = useCallback(async () => {
+    if (exportingHtmlRef.current) return;
+    exportingHtmlRef.current = true;
+    setExportingHtml(true);
+    try {
+      await exportHtmlReport({
+        local: isLocal,
+        token: id,
+        apiUrl: config?.api.url,
+        rows: tableData,
+        columns: allColumns,
+        title: "WHISP risk report · GeoJSON",
+        theme,
+        language: locale,
+        label: t,
+      });
+    } catch (error) {
+      const reason = error instanceof ReportDownloadError ? error.reason : "failed";
+      toast.error(t(reason === "expired" ? "htmlExportExpired" : reason === "timeout" ? "htmlExportTimeout" : "htmlExportFailed"));
+    } finally {
+      exportingHtmlRef.current = false;
+      setExportingHtml(false);
+    }
+  }, [tableData, allColumns, id, isLocal, theme, t, locale, config]);
 
   const selectedFeatureIndex = useMemo(() => {
     if (!selectedRow || !filteredGeoJson) return undefined;
@@ -501,6 +520,7 @@ export default function ResultsPage() {
       onExportCsv={handleExportCsv}
       onExportGeoJson={handleExportGeoJson}
       onExportHtml={handleExportHtml}
+      exportHtmlDisabled={exportingHtml}
       onOpenWhispMap={handleOpenWhispMap}
       whispMapDisabled={isLocal || !config?.api.url}
       hasSelection={selectionQuery !== ""}

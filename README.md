@@ -24,7 +24,7 @@ The application is split into independently deployable services:
 | Component | Path | Role |
 |-----------|------|------|
 | **App** | `app/` | Next.js web UI — Keycloak SSO, account management, geometry submission, results viewer |
-| **API** | `api/` | FastAPI service — submit, status, GeoJSON/CSV export |
+| **API** | `api/` | FastAPI service — submit, status, GeoJSON/CSV/HTML export |
 | **Workers** | `api/` (Celery) | Background analysis — runs `openforis-whisp` against Google Earth Engine |
 | **Database** | `db/` | PostgreSQL schema and migrations |
 | **Infra** | `infra/k8s/` | GKE manifests (API, app, workers, Redis, Cloud SQL proxy) |
@@ -329,6 +329,12 @@ e.g. in Kubernetes set `API_URL` to the internal cluster service URL
 (`http://whisp-api:8000/api`) to skip an ingress roundtrip, and
 `PUBLIC_API_URL` to the externally reachable URL.
 
+The HTML download is a browser request to this public API URL. If app and API use
+different origins, include the app origin in the API's `ALLOWED_ORIGINS` (comma-separated).
+The examples allow both `http://localhost:3000` and `http://localhost:3001`.
+The Linux start script updates `API_URL` and `HOST_URL` for its selected ports and
+supplies local CORS origins to the API; set `ALLOWED_ORIGINS` in the shell to override them.
+
 **API** (`api/.env.local`):
 ```env
 TEMP_DIR=./temp
@@ -339,7 +345,7 @@ DB_PORT=5432
 DB_NAME=whisp_db
 DB_USER=
 DB_PASSWORD=
-ALLOWED_ORIGINS=http://localhost:3001
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 GEOID_BASE_URL=https://data.review.fao.org/geoid
 GEOID_COLLECTION=
 ```
@@ -360,12 +366,48 @@ All analysis endpoints require an `X-API-KEY` header. The key is issued by the W
 | `/status/{token}` | GET | Poll job status; returns result GeoJSON when complete |
 | `/status/{token}/stream` | GET | Server-sent events stream for live progress |
 | `/status/{token}/cancel` | POST | Cancel a running analysis |
-| `/generate-geojson/{token}` | GET | Download result as GeoJSON (public, no auth) |
-| `/download-csv/{token}` | GET | Download result as CSV |
+| `/results/{token}.geojson` | GET | Download result as GeoJSON (public, no auth) |
+| `/results/{token}.csv` | GET | Download result as CSV (public, no auth) |
+| `/results/{token}.html` | GET | Download a self-contained HTML risk report (public, no auth) |
+| `/generate-geojson/{token}` | GET | Deprecated alias for `/results/{token}.geojson` |
+| `/download-csv/{token}` | GET | Deprecated alias for `/results/{token}.csv` |
 | `/config` | GET | Public runtime configuration |
 | `/health` | GET | Health check |
 
 All routes are under the `/api` prefix (e.g. `/api/submit/geojson`).
+
+The HTML report includes the risk mix, indicators, decision trees and an interactive plot table.
+It embeds its styles, scripts and data, so the downloaded file works without an internet connection.
+The results page downloads it from the API; results opened from a local GeoJSON file are still
+exported in the browser.
+
+```bash
+curl --fail 'https://whisp.openforis.org/api/results/YOUR_TOKEN.html?language=pt-BR&theme=dark' -o report.html
+```
+
+Optional HTML parameters are `language` (`en`, `fr`, `es`, `pt-BR`; default `en`) and `theme`
+(`light`, `dark`; default `light`). As in the browser report, language selects commodity,
+indicator and question labels; the report shell remains in English. HTML exports include all
+plots, independently of the table's selection or filters. GeoJSON exports retain their existing
+`ids`, `q` and result-property filters, including through the deprecated alias.
+Results remain temporary: an unavailable or expired result returns `404` with
+`code: analysis_job_not_found`. Download and keep exports if you need them later.
+
+The HTML shell and decision-tree definitions live in `app/src/lib/results/report-assets/`.
+The API wheel bundles these files and `app/messages/` from the same checkout. Build the wheel
+from `api/` within the full repository (`python -m build --wheel`); the API Docker build copies
+both sets of assets before installing the package. Changes to the shared files require rebuilding
+both images.
+
+The display trees are a versioned snapshot checked against the pinned analysis library;
+see [the asset notes](app/src/lib/results/report-assets/README.md) for the compatibility
+check and its limits. Both server and local reports embed a CSP that blocks external
+resources; the API also returns CSP and `X-Content-Type-Options: nosniff` headers.
+The browser download has a 60-second timeout and distinguishes expired results from
+network errors. It uses the attachment filename exposed by the API's CORS middleware.
+
+Export checks are currently run manually, not by CI. See [the test instructions](tests/api/README.md)
+and [the browser checklist](tests/browser/README.md) for commands and remaining end-to-end checks.
 
 The Next.js app proxies authenticated submit and status calls through `/internal/submit/*` and `/internal/status/*` so browser sessions can use the user's API key without exposing it client-side.
 

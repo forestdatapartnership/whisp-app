@@ -16,10 +16,12 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY api/pyproject.toml ./
-COPY api/src ./src
-RUN sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
-RUN pip install --no-cache-dir ./
+COPY api/pyproject.toml ./api/
+COPY api/src ./api/src
+COPY app/src/lib/results/report-assets ./app/src/lib/results/report-assets
+COPY app/messages ./app/messages
+RUN cd api && sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml \
+    && pip install --no-cache-dir ./
 
 EXPOSE 8000
 CMD ["sh", "-c", "exec python -m src.run 2>&1"]

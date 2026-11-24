@@ -1,3 +1,4 @@
+import decisionTrees from "./report-assets/risk-trees.json";
 import { isTruthyCell, riskValueToTone, type RiskTone, type RiskValue } from "./catalog-fields";
 
 export type CommodityKey = "pcrop" | "acrop" | "timber";
@@ -11,82 +12,8 @@ export const WATERBODY_FIELD = "In_waterbody";
 type Rules = { rules: Rule[]; otherwise: RiskValue };
 type Rule = { columns: string[]; is: "yes" | "no"; then: RiskValue | Rules };
 
-// The decision trees of openforis-whisp's risk.py, hardcoded until the library outputs them.
-const DECISION_TREES: Array<{ key: CommodityKey; riskField: string; tree: Rules }> = [
-  {
-    key: "pcrop",
-    riskField: "risk_pcrop",
-    tree: {
-      rules: [
-        { columns: ["Ind_01_treecover"], is: "no", then: "low" },
-        { columns: ["Ind_02_commodities"], is: "yes", then: "low" },
-        { columns: ["Ind_03_disturbance_before_2020"], is: "yes", then: "low" },
-        { columns: ["Ind_04_disturbance_after_2020"], is: "yes", then: "high" },
-      ],
-      otherwise: "more_info_needed",
-    },
-  },
-  {
-    key: "acrop",
-    riskField: "risk_acrop",
-    tree: {
-      rules: [
-        { columns: ["Ind_01_treecover"], is: "no", then: "low" },
-        { columns: ["Ind_02_commodities"], is: "yes", then: "low" },
-        { columns: ["Ind_04_disturbance_after_2020"], is: "yes", then: "high" },
-      ],
-      otherwise: "more_info_needed",
-    },
-  },
-  {
-    key: "timber",
-    riskField: "risk_timber",
-    tree: {
-      rules: [
-        {
-          columns: [
-            "Ind_01_treecover",
-            "Ind_05_primary_2020",
-            "Ind_06_nat_reg_forest_2020",
-            "Ind_14_planted_forest_2020",
-            "Ind_16_plantation_forest_2020",
-          ],
-          is: "yes",
-          then: {
-            rules: [
-              { columns: ["Ind_10_agri_after_2020"], is: "yes", then: "high" },
-              {
-                columns: ["Ind_05_primary_2020"],
-                is: "yes",
-                then: {
-                  rules: [
-                    { columns: ["Ind_17_plantation_forest_gain_after_2020"], is: "yes", then: "high" },
-                    { columns: ["Ind_13_other_land_gain_after_2020"], is: "yes", then: "low" },
-                    { columns: ["Ind_04_disturbance_after_2020"], is: "yes", then: "more_info_needed" },
-                  ],
-                  otherwise: "low",
-                },
-              },
-              {
-                columns: ["Ind_06_nat_reg_forest_2020", "Ind_14_planted_forest_2020"],
-                is: "yes",
-                then: {
-                  rules: [{ columns: ["Ind_17_plantation_forest_gain_after_2020"], is: "yes", then: "high" }],
-                  otherwise: "low",
-                },
-              },
-              { columns: ["Ind_16_plantation_forest_2020"], is: "yes", then: "low" },
-            ],
-            otherwise: "more_info_needed",
-          },
-        },
-        { columns: ["Ind_12_other_land_2020"], is: "yes", then: "low" },
-        { columns: ["Ind_02_commodities", "Ind_15_cropland_2020"], is: "yes", then: "low" },
-      ],
-      otherwise: "more_info_needed",
-    },
-  },
-];
+// Display snapshot checked against openforis-whisp 3.0.0a25; see report-assets/README.md.
+const DECISION_TREES = decisionTrees as Array<{ key: CommodityKey; riskField: string; tree: Rules }>;
 
 // The columns the rules read, in order, each with the risk a yes on it gives straight away.
 function indicatorsOf(tree: Rules, seen = new Map<string, RiskTone | null>()) {

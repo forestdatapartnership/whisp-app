@@ -53,7 +53,7 @@ async def fetch_result_fields() -> list[dict[str, Any]]:
     pool = get_pool()
     async with pool.acquire() as conn:
         rows = await conn.fetch(
-            'SELECT id, category, "order", iso2_code, commodity_metadata, analysis_metadata '
+            'SELECT id, category, "order", iso2_code, commodity_metadata, analysis_metadata, display_metadata '
             "FROM result_fields ORDER BY \"order\" NULLS LAST, id"
         )
     return [dict(row) for row in rows]

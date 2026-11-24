@@ -10,6 +10,9 @@ source "$SCRIPT_DIR/common.sh"
 API_PORT="${API_PORT:-8001}"
 APP_PORT="${APP_PORT:-3001}"
 API_URL="http://localhost:$API_PORT/api"
+HOST_URL="http://localhost:$APP_PORT"
+export API_PORT
+export ALLOWED_ORIGINS="${ALLOWED_ORIGINS:-http://localhost:3000,$HOST_URL}"
 
 PIDS=()
 
@@ -46,11 +49,14 @@ elif ! check_app_deps || ! check_api_deps; then
 fi
 
 ENV_LOCAL="$APP_DIR/.env.local"
-if [ -f "$ENV_LOCAL" ] && grep -q "^API_URL=" "$ENV_LOCAL"; then
-    sed -i "s|^API_URL=.*|API_URL=$API_URL|" "$ENV_LOCAL"
-else
-    echo "API_URL=$API_URL" >> "$ENV_LOCAL"
-fi
+for key in API_URL HOST_URL; do
+    value="${!key}"
+    if [ -f "$ENV_LOCAL" ] && grep -q "^$key=" "$ENV_LOCAL"; then
+        sed -i "s|^$key=.*|$key=$value|" "$ENV_LOCAL"
+    else
+        echo "$key=$value" >> "$ENV_LOCAL"
+    fi
+done
 
 bash "$SCRIPT_DIR/api-start.sh" &
 API_SUPERVISOR=$!

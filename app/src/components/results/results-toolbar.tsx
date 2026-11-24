@@ -15,7 +15,7 @@ import { InfoToast } from "@/components/ui/info-toast";
 import { linkVariants } from "@/components/ui/link";
 import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
 import { FEEDBACK_PROMPT_KEY } from "@/components/feedback/feedback-form";
-import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Layers, ListFilter, Map, MessageSquare, Table2 } from "lucide-react";
+import { ArrowLeft, ChartColumn, ChevronDown, Download, FileText, Layers, ListFilter, LoaderCircle, Map, MessageSquare, Table2 } from "lucide-react";
 
 interface ResultsToolbarProps {
   title: string;
@@ -29,6 +29,7 @@ interface ResultsToolbarProps {
   onExportCsv?: () => void;
   onExportGeoJson?: () => void;
   onExportHtml?: () => void;
+  exportHtmlDisabled?: boolean;
   onOpenWhispMap?: (selectionOnly: boolean) => void;
   whispMapDisabled?: boolean;
   hasSelection?: boolean;
@@ -48,6 +49,7 @@ export function ResultsToolbar({
   onExportCsv,
   onExportGeoJson,
   onExportHtml,
+  exportHtmlDisabled = false,
   onOpenWhispMap,
   whispMapDisabled = false,
   hasSelection = false,
@@ -121,9 +123,9 @@ export function ResultsToolbar({
         {t('newAnalysis')}
       </Button>
       <DropdownMenu open={exportOpen} onOpenChange={setExportOpen}>
-        <DropdownMenuTrigger render={<Button variant="secondary" size="sm" className="min-w-[90px]" />}>
-          <Download />
-          {t('download')}
+        <DropdownMenuTrigger render={<Button variant="secondary" size="sm" className="min-w-[90px]" aria-busy={exportHtmlDisabled} />}>
+          {exportHtmlDisabled ? <LoaderCircle className="animate-spin" /> : <Download />}
+          {exportHtmlDisabled ? t('htmlExporting') : t('download')}
           <ChevronDown />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-[160px] border-border bg-surface">
@@ -148,6 +150,7 @@ export function ResultsToolbar({
             GeoJSON
           </DropdownMenuItem>
           <DropdownMenuItem
+            disabled={exportHtmlDisabled}
             onClick={() => {
               onExportHtml?.();
               setExportOpen(false);

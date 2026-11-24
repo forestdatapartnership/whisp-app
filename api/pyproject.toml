@@ -34,3 +34,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"../app/src/lib/results/report-assets" = "src/geojson/report_assets"
+"../app/messages" = "src/geojson/report_assets/messages"

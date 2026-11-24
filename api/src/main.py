@@ -58,7 +58,7 @@ def create_app() -> FastAPI:
         openapi_tags=[
             {"name": "submit", "description": "Submit geometries for analysis (GeoJSON, WKT, or GeoIDs)"},
             {"name": "status", "description": "Poll or stream job status; cancel running jobs"},
-            {"name": "geojson", "description": "Download completed results as GeoJSON or CSV"},
+            {"name": "geojson", "description": "Download completed results as GeoJSON, CSV or an offline HTML risk report"},
             {"name": "result-fields", "description": "Export result field definitions"},
             {"name": "config", "description": "Public API configuration (limits, versions)"},
             {"name": "meta", "description": "Health check"},
@@ -74,6 +74,7 @@ def create_app() -> FastAPI:
         allow_credentials=settings.cors_allow_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Content-Disposition"],
     )
     app.add_middleware(LogContextMiddleware)
 

@@ -55,6 +55,7 @@ credentials.*
 
 # Ignore Python virtual environments
 venv/
+.venv/
 /lib
 /bin
 
