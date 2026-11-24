@@ -47,11 +47,11 @@ class Settings(BaseSettings):
     max_request_body_size_kb: int | None = None
 
     max_plot_area_ha: int | None = None
-    max_total_area_local_ha: int = 45000
+    max_total_area_local_ha: int = 6000
 
     geometry_limit_sync: int = 500
     geometry_limit_async: int = 10000
-    geometry_limit_local: int = 500
+    geometry_limit_local: int = 50
     analysis_timeout_sync_seconds: int = 60
     analysis_timeout_async_seconds: int = 1800
 

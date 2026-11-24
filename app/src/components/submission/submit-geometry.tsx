@@ -83,7 +83,7 @@ export function SubmitGeometry({
       return
     }
     const features = parseFeatures(text)
-    if (maxPlotAreaHa != null && features?.some((feature) => geometryAreaHa(feature.geometry) > maxPlotAreaHa)) {
+    if (!options.localMode && maxPlotAreaHa != null && features?.some((feature) => geometryAreaHa(feature.geometry) > maxPlotAreaHa)) {
       onError(t('draw.tooLarge', { limit: maxPlotAreaHa }))
       return
     }

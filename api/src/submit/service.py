@@ -51,9 +51,10 @@ def validate_feature_collection(fc: dict, opts: AnalysisOptions, settings: Setti
         logger.warning("analyze_geojson failed, falling back to count-only metrics: %s", e)
         metrics = {"count": polygon_count}
 
-    _check_plot_area(metrics, settings)
     if opts.local_mode:
         _check_total_area(metrics, settings)
+    else:
+        _check_plot_area(metrics, settings)
     return metrics
 
 

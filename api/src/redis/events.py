@@ -14,7 +14,11 @@ _async_redis = None
 _worker_redis = threading.local()
 
 _PUBSUB_POLL_SECONDS = 30.0
-_SNAPSHOT_TTL_SECONDS = 600
+
+
+def _snapshot_ttl() -> int:
+    # A run can go without a progress update for its whole time limit, e.g. a long local-mode extraction
+    return get_settings().analysis_timeout_async_seconds
 
 
 def _state_key(job_id: str) -> str:
@@ -42,7 +46,7 @@ def _sync_redis():
 def _store_and_publish(body: str, job_id: str) -> None:
     r = _sync_redis()
     pipe = r.pipeline()
-    pipe.setex(_state_key(job_id), _SNAPSHOT_TTL_SECONDS, body)
+    pipe.setex(_state_key(job_id), _snapshot_ttl(), body)
     pipe.publish(_channel(job_id), body)
     pipe.execute()
 
@@ -95,7 +99,7 @@ async def publish(job_id: str, data: dict[str, Any]) -> None:
     try:
         body = json.dumps(data)
         r = _async_redis_client()
-        await r.setex(_state_key(job_id), _SNAPSHOT_TTL_SECONDS, body)
+        await r.setex(_state_key(job_id), _snapshot_ttl(), body)
         await r.publish(_channel(job_id), body)
     except Exception:
         logger.exception("redis publish failed for job %s", job_id)
