@@ -132,13 +132,14 @@ jobs:
             case $tier in
               01|03) kubectl wait --for=condition=available deployment --all -n "$GKE_NAMESPACE" --timeout=300s ;;
               02)
-                kubectl wait --for=condition=complete job --all -n "$GKE_NAMESPACE" --timeout=300s &
+                job="job/whisp-db-migrate-$VERSION_SLUG"
+                kubectl wait --for=condition=complete "$job" -n "$GKE_NAMESPACE" --timeout=300s &
                 wp=$!
                 while kill -0 $wp 2>/dev/null; do
-                  kubectl get job -n "$GKE_NAMESPACE" -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Failed")].status}{"\n"}{end}' | grep -qx True && {
+                  kubectl get "$job" -n "$GKE_NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}' | grep -qx True && {
                     kill $wp 2>/dev/null || true
                     wait $wp 2>/dev/null || true
-                    kubectl get job -n "$GKE_NAMESPACE"
+                    kubectl get "$job" -n "$GKE_NAMESPACE"
                     exit 1
                   }
                   sleep 2
