@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useConfig } from '@/lib/config/config-context'
 
 const POLL_INTERVAL = 5000
 
@@ -24,6 +25,7 @@ export function useJobStatus({
   const [response, setResponse] = useState<JobStatus | null>(null)
   const [fallback, setFallback] = useState(false)
   const completedRef = useRef(false)
+  const apiUrl = useConfig().config?.api.url
 
   const handleCompleted = useCallback((data: unknown) => {
     if (!completedRef.current) {
@@ -33,11 +35,11 @@ export function useJobStatus({
   }, [onCompleted])
 
   useEffect(() => {
-    if (!token || completedRef.current || fallback) return
+    if (!token || !apiUrl || completedRef.current || fallback) return
 
     const controller = new AbortController()
-    // The API sends a completed job's headers only after building its result, one job at a time
-    const timeout = setTimeout(() => { controller.abort(); setFallback(true) }, 30_000)
+    // Some proxies hold a stream back until it ends; waiting longer than a poll interval is slower than polling
+    const timeout = setTimeout(() => { controller.abort(); setFallback(true) }, POLL_INTERVAL)
 
     const run = async () => {
       try {
@@ -53,7 +55,8 @@ export function useJobStatus({
 
         while (true) {
           const { done, value } = await reader.read()
-          if (done) break
+          // A proxy or a restart can close the stream before its final event
+          if (done) { setFallback(true); return }
           buffer += decoder.decode(value, { stream: true })
           let idx: number
           while ((idx = buffer.indexOf('\n\n')) !== -1) {
@@ -64,12 +67,12 @@ export function useJobStatus({
             const json = line.slice(5).trim()
             if (!json) continue
             const data: JobStatus = JSON.parse(json)
-            setResponse(data)
             if (data.code === 'analysis_completed') {
-              handleCompleted(data.data)
-              controller.abort()
-              return
+              const result = await fetch(new URL(data.data?.resultsUrl as string, apiUrl), { signal: controller.signal })
+              if (!result.ok) throw new Error(`Results request failed: ${result.status}`)
+              handleCompleted(await result.json())
             }
+            setResponse(data)
             if (data.final) { controller.abort(); return }
           }
         }
@@ -80,7 +83,7 @@ export function useJobStatus({
 
     run()
     return () => { clearTimeout(timeout); controller.abort() }
-  }, [token, handleCompleted, fallback])
+  }, [token, apiUrl, handleCompleted, fallback])
 
   useEffect(() => {
     if (!token || !fallback) return

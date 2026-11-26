@@ -1,12 +1,12 @@
 import json
 import uuid
+from collections.abc import Callable
+from typing import Any
 
 from fastapi.responses import JSONResponse
 
 from src.codes import RUNNING_STATUSES, SystemCode
-from src.config import Settings
 from src.db import jobs as db_jobs
-from src.io.files import load_completed_result
 from src.job_progress import JobProgress
 from src.redis import get, publish
 from src.responses import api_response
@@ -90,19 +90,19 @@ def not_found_sse() -> bytes:
     return sse_bytes({"code": SystemCode.ANALYSIS_JOB_NOT_FOUND.value, "final": True})
 
 
-def terminal_sse_payload(token: str, job: JobProgress, settings: Settings | None) -> dict:
+def results_link(token: str) -> dict:
+    return {"resultsUrl": f"/api/results/{token}.geojson"}
+
+
+def terminal_sse(token: str, job: JobProgress, completed_data: Callable[[str], Any]) -> bytes:
     payload: dict = {"code": job.status.value, "final": True}
     if job.status == SystemCode.ANALYSIS_COMPLETED:
-        data = load_completed_result(token, settings)
+        data = completed_data(token)
         if data is not None:
             payload["data"] = data
     elif job.error_message:
         payload["cause"] = job.error_message
-    return payload
-
-
-def terminal_sse(token: str, job: JobProgress, settings: Settings | None) -> bytes:
-    return sse_bytes(terminal_sse_payload(token, job, settings))
+    return sse_bytes(payload)
 
 
 def progress_sse(job: JobProgress, *, token: str | None = None) -> bytes:

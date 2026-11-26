@@ -1,4 +1,5 @@
-from typing import AsyncIterator
+from collections.abc import AsyncIterator, Callable
+from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -19,6 +20,17 @@ _SSE_HEADERS = {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     "Connection": "keep-alive",
+}
+
+_SSE_RESPONSES = {
+    200: {
+        "content": {"text/event-stream": {"schema": {"type": "string"}}},
+        "description": (
+            "Server-Sent Events stream. Each event is a JSON object with `code` and optional `data` / `cause`. "
+            "The final event has `\"final\": true`."
+        ),
+    },
+    **route_responses(*AUTH_ERRORS),
 }
 
 
@@ -89,18 +101,25 @@ async def cancel_status(
 
 
 @router.get(
+    "/{token}/events",
+    response_model=None,
+    description="Live job status. When the analysis completes, the final event's `data.resultsUrl` links to the results GeoJSON.",
+    responses=_SSE_RESPONSES,
+)
+async def status_events(
+    token: str,
+    request: Request,
+    _api_key: ApiKey = Depends(api_key_dependency),
+) -> StreamingResponse:
+    return await _stream(token, request, service.results_link)
+
+
+@router.get(
     "/{token}/stream",
     response_model=None,
-    responses={
-        200: {
-            "content": {"text/event-stream": {"schema": {"type": "string"}}},
-            "description": (
-                "Server-Sent Events stream. Each event is a JSON object with `code` and optional `data` / `cause`. "
-                "The final event has `\"final\": true`."
-            ),
-        },
-        **route_responses(*AUTH_ERRORS),
-    },
+    deprecated=True,
+    description="Sends the whole result in the final event; use `/status/{token}/events` instead.",
+    responses=_SSE_RESPONSES,
 )
 async def status_stream(
     token: str,
@@ -108,13 +127,17 @@ async def status_stream(
     settings: SettingsDep,
     _api_key: ApiKey = Depends(api_key_dependency),
 ) -> StreamingResponse:
+    return await _stream(token, request, lambda t: load_completed_result(t, settings))
+
+
+async def _stream(token: str, request: Request, completed_data: Callable[[str], Any]) -> StreamingResponse:
     job = await service.get_job_state(token)
     if not job:
         return StreamingResponse(iter([service.not_found_sse()]), headers=_SSE_HEADERS)
 
     if job.status in TERMINAL_STATUSES:
         return StreamingResponse(
-            iter([service.terminal_sse(token, job, settings)]),
+            iter([service.terminal_sse(token, job, completed_data)]),
             headers=_SSE_HEADERS,
         )
 
@@ -127,7 +150,7 @@ async def status_stream(
 
             progress = JobProgress.from_redis(event, id=token)
             if progress.status in TERMINAL_STATUSES:
-                yield service.terminal_sse(token, progress, settings)
+                yield service.terminal_sse(token, progress, completed_data)
                 break
 
             yield service.progress_sse(progress)

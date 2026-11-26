@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.app_logging import LogContextMiddleware
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
         redoc_url=None,
         openapi_url=f"{API_PREFIX}/openapi.json",
     )
+    app.add_middleware(GZipMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,

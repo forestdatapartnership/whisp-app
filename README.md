@@ -120,13 +120,14 @@ sequenceDiagram
     loop Progress updates
         W->>GEE: openforis-whisp analysis
         W->>R: Publish progress events
-        APP->>API: GET /status/{token}/stream (SSE)
+        APP->>API: GET /status/{token}/events (SSE)
         API->>R: Subscribe to job events
         API-->>APP: Progress / completion
     end
 
     W->>API: Write result GeoJSON to temp storage
     W->>DB: Mark job completed
+    APP->>API: GET /results/{token}.geojson
     APP->>U: Display results
 ```
 
@@ -358,7 +359,7 @@ All analysis endpoints require an `X-API-KEY` header. The key is issued by the W
 | `/submit/wkt` | POST | Submit a WKT geometry for analysis |
 | `/submit/geo-ids` | POST | Submit GeoIDs for analysis |
 | `/status/{token}` | GET | Poll job status; returns result GeoJSON when complete |
-| `/status/{token}/stream` | GET | Server-sent events stream for live progress |
+| `/status/{token}/events` | GET | Server-sent events stream for live progress; the final event links to the result |
 | `/status/{token}/cancel` | POST | Cancel a running analysis |
 | `/results/{token}.geojson` | GET | Download result as GeoJSON (public, no auth) |
 | `/results/{token}.csv` | GET | Download result as CSV |
@@ -368,7 +369,8 @@ All analysis endpoints require an `X-API-KEY` header. The key is issued by the W
 | `/health` | GET | Health check |
 
 All routes are under the `/api` prefix (e.g. `/api/submit/geojson`). The former `/generate-geojson/{token}`
-and `/download-csv/{token}` still work as deprecated aliases.
+and `/download-csv/{token}` still work as deprecated aliases. `/status/{token}/stream`, which sends the whole
+result in its final event, is deprecated in favour of `/status/{token}/events`.
 
 The Next.js app proxies authenticated submit and status calls through `/internal/submit/*` and `/internal/status/*` so browser sessions can use the user's API key without exposing it client-side.
 
