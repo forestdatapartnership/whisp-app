@@ -4,22 +4,12 @@ import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { MapContainer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 import "./leaflet-dark.css";
 import { BaseLayers } from "./base-layers";
 import { FeatureCollection, Feature, Geometry, GeoJsonProperties } from "geojson";
 import { riskLevel, useRiskLabel } from "@/components/results/risk-badge";
 import { COMMODITY_OPTIONS } from "@/lib/results/risk-trees";
-
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => string })._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x.src,
-  iconUrl: markerIcon.src,
-  shadowUrl: markerShadow.src,
-});
 
 function esc(v: unknown) {
   return String(v ?? "").replace(/[&<>"]/g, (c) =>
@@ -138,6 +128,7 @@ export function PlotMapView({
         <GeoJSON
           key={`${riskField ?? "none"}-${geoJsonData.features.length}-${String(selectedPlotId ?? "")}`}
           data={geoJsonData}
+          pointToLayer={(_, latlng) => L.circleMarker(latlng)}
           style={(feature) => {
             const selected = feature?.properties?.plotId === selectedPlotId;
             const fill = riskColor(feature?.properties, riskField);
