@@ -14,6 +14,7 @@ from src.exceptions import register
 from src.results.router import router as results_router
 from src.public_config.router import router as config_router
 from src.result_fields.router import router as result_fields_router
+from src.stats.router import router as stats_router
 from src.status.router import router as status_router
 from src.submit.router import router as submit_router
 
@@ -61,6 +62,7 @@ def create_app() -> FastAPI:
             {"name": "results", "description": "Download completed results as GeoJSON, CSV or an offline HTML risk report"},
             {"name": "result-fields", "description": "Export result field definitions"},
             {"name": "config", "description": "Public API configuration (limits, versions)"},
+            {"name": "stats", "description": "Usage statistics"},
             {"name": "meta", "description": "Health check"},
         ],
         lifespan=lifespan,
@@ -83,6 +85,7 @@ def create_app() -> FastAPI:
     app.include_router(status_router, prefix=API_PREFIX)
     app.include_router(results_router, prefix=API_PREFIX)
     app.include_router(result_fields_router, prefix=API_PREFIX)
+    app.include_router(stats_router, prefix=API_PREFIX)
 
     @app.get(f"{API_PREFIX}/docs", include_in_schema=False)
     async def swagger_ui() -> HTMLResponse:

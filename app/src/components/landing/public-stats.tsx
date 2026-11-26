@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { BarChart3 } from 'lucide-react';
-import { fetchPublicStats } from '@/lib/analysis/actions';
-import type { PublicStats } from '@/lib/db/analysis-jobs-service';
+import { fetchPublicStats, type PublicStats } from '@/lib/analysis/actions';
 import { DetailedStatsModal } from '@/components/landing/detailed-stats-modal';
 import { linkVariants } from '@/components/ui/link';
 import { cn } from '@/lib/utils';
@@ -44,7 +43,7 @@ export function PublicStats() {
           {t('more')}
         </button>
       </div>
-      <DetailedStatsModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <DetailedStatsModal stats={stats} open={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   );
 }

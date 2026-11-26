@@ -364,6 +364,7 @@ All analysis endpoints require an `X-API-KEY` header. The key is issued by the W
 | `/results/{token}.csv` | GET | Download result as CSV |
 | `/results/{token}.html` | GET | Download an offline HTML risk report (`language`, `theme`) |
 | `/config` | GET | Public runtime configuration |
+| `/stats` | GET | Usage statistics, refreshed every five minutes |
 | `/health` | GET | Health check |
 
 All routes are under the `/api` prefix (e.g. `/api/submit/geojson`). The former `/generate-geojson/{token}`

@@ -170,6 +170,22 @@ class PublicConfigResponse(BaseModel):
     )
 
 
+class MonthlyFeatures(BaseModel):
+    month: str = Field(description="First day of the month, as YYYY-MM-DD.")
+    count: int = Field(description="Plots analysed that month.")
+
+
+class PublicStatsResponse(BaseModel):
+    totalFeatures: int = Field(description="Plots analysed in all completed analyses.")
+    featuresLast7d: int = Field(description="Plots analysed in the last 7 days.")
+    featuresThisMonth: int = Field(description="Plots analysed this month.")
+    featuresLastMonth: int = Field(description="Plots analysed last month.")
+    uiFeatures: int = Field(description="Plots analysed from the web app.")
+    apiFeatures: int = Field(description="Plots analysed through the API.")
+    activeApiKeys: int = Field(description="API keys that are neither revoked nor expired.")
+    monthly: list[MonthlyFeatures] = Field(description="Plots analysed in each of the last three full months, newest first.")
+
+
 # ── Route response helper ──────────────────────────────────────────────────────
 
 _CODE_EXAMPLES: dict[SystemCode, Any] = {

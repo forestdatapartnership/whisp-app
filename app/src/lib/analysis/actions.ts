@@ -4,7 +4,19 @@ import { getAuthUserWithRefresh } from '@/lib/auth/session';
 import { SystemError } from '@/types/system-error';
 import { SystemCode } from '@/types/system-codes';
 import { action } from '@/lib/server/action';
-import { getAnalysisJobStats, getPublicStats, getDetailedPublicStats, type AnalysisJobStats, type PublicStats, type DetailedPublicStats } from '@/lib/db/analysis-jobs-service';
+import { config } from '@/lib/server/env';
+import { getAnalysisJobStats, type AnalysisJobStats } from '@/lib/db/analysis-jobs-service';
+
+export type PublicStats = {
+  totalFeatures: number;
+  featuresLast7d: number;
+  featuresThisMonth: number;
+  featuresLastMonth: number;
+  uiFeatures: number;
+  apiFeatures: number;
+  activeApiKeys: number;
+  monthly: { month: string; count: number }[];
+};
 
 export const fetchAnalysisJobStats = action(async (): Promise<AnalysisJobStats> => {
   const user = await getAuthUserWithRefresh();
@@ -13,9 +25,7 @@ export const fetchAnalysisJobStats = action(async (): Promise<AnalysisJobStats> 
 });
 
 export const fetchPublicStats = action(async (): Promise<PublicStats> => {
-  return getPublicStats();
-});
-
-export const fetchDetailedPublicStats = action(async (): Promise<DetailedPublicStats> => {
-  return getDetailedPublicStats();
+  const res = await fetch(`${config.api.url}/stats`);
+  if (!res.ok) throw new Error(`Stats request failed: ${res.status}`);
+  return res.json();
 });

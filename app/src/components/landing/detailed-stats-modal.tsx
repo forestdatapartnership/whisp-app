@@ -1,28 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { Monitor, Terminal } from 'lucide-react';
-import { fetchDetailedPublicStats } from '@/lib/analysis/actions';
-import type { DetailedPublicStats } from '@/lib/db/analysis-jobs-service';
+import type { PublicStats } from '@/lib/analysis/actions';
 import { CloseButton } from '@/components/ui/button';
 import { Link } from '@/components/ui/link';
 import { cn } from '@/lib/utils';
 
 interface Props {
+  stats: PublicStats | null;
   open: boolean;
   onClose: () => void;
 }
 
-export function DetailedStatsModal({ open, onClose }: Props) {
+export function DetailedStatsModal({ stats, open, onClose }: Props) {
   const t = useTranslations('Stats');
   const format = useFormatter();
-  const [stats, setStats] = useState<DetailedPublicStats | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    fetchDetailedPublicStats().then(r => { if (r.ok) setStats(r.data); });
-  }, [open]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
