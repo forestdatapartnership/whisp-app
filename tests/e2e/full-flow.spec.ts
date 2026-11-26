@@ -29,6 +29,15 @@ test.describe.serial('Full E2E Flow', () => {
     tokens.push({ label: 'Geo IDs (unauth)', token: await submitGeoIds(page) });
   });
 
+  test('1.4 — download the HTML risk report', async ({ page }) => {
+    await page.goto(`/results/${tokens[0].token}`);
+    await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible({ timeout: 60000 });
+    await page.getByRole('button', { name: 'Download' }).click();
+    const download = page.waitForEvent('download');
+    await page.getByRole('menuitem', { name: 'HTML Report' }).click();
+    expect((await download).suggestedFilename()).toMatch(/^whisp_analysis_.*-report\.html$/);
+  });
+
   // ── Phase 2: Registration ────────────────────────────────────────────
 
   test('2.1 — register a new user', async ({ page }) => {

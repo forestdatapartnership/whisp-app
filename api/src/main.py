@@ -11,7 +11,7 @@ from src.config import get_settings
 from src.db import close_pool, init_pool
 from src.redis import close_redis, init_redis
 from src.exceptions import register
-from src.geojson.router import router as geojson_router
+from src.results.router import router as results_router
 from src.public_config.router import router as config_router
 from src.result_fields.router import router as result_fields_router
 from src.status.router import router as status_router
@@ -58,7 +58,7 @@ def create_app() -> FastAPI:
         openapi_tags=[
             {"name": "submit", "description": "Submit geometries for analysis (GeoJSON, WKT, or GeoIDs)"},
             {"name": "status", "description": "Poll or stream job status; cancel running jobs"},
-            {"name": "geojson", "description": "Download completed results as GeoJSON or CSV"},
+            {"name": "results", "description": "Download completed results as GeoJSON, CSV or an offline HTML risk report"},
             {"name": "result-fields", "description": "Export result field definitions"},
             {"name": "config", "description": "Public API configuration (limits, versions)"},
             {"name": "meta", "description": "Health check"},
@@ -81,7 +81,7 @@ def create_app() -> FastAPI:
     app.include_router(config_router, prefix=API_PREFIX)
     app.include_router(submit_router, prefix=API_PREFIX)
     app.include_router(status_router, prefix=API_PREFIX)
-    app.include_router(geojson_router, prefix=API_PREFIX)
+    app.include_router(results_router, prefix=API_PREFIX)
     app.include_router(result_fields_router, prefix=API_PREFIX)
 
     @app.get(f"{API_PREFIX}/docs", include_in_schema=False)

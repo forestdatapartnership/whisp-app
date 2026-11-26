@@ -28,7 +28,7 @@ interface ResultsToolbarProps {
   onBack?: () => void;
   onExportCsv?: () => void;
   onExportGeoJson?: () => void;
-  onExportHtml?: () => void;
+  htmlReportUrl?: string;
   onOpenWhispMap?: (selectionOnly: boolean) => void;
   whispMapDisabled?: boolean;
   hasSelection?: boolean;
@@ -47,7 +47,7 @@ export function ResultsToolbar({
   onBack,
   onExportCsv,
   onExportGeoJson,
-  onExportHtml,
+  htmlReportUrl,
   onOpenWhispMap,
   whispMapDisabled = false,
   hasSelection = false,
@@ -147,16 +147,15 @@ export function ResultsToolbar({
             <FileText className="h-3 w-3" />
             GeoJSON
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              onExportHtml?.();
-              setExportOpen(false);
-            }}
-            className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
-          >
-            <FileText className="h-3 w-3" />
-            {t('htmlReport')}
-          </DropdownMenuItem>
+          {htmlReportUrl && (
+            <DropdownMenuItem
+              render={<a href={htmlReportUrl} download />}
+              className="cursor-pointer gap-2 text-xs text-text-muted focus:bg-surface-raised focus:text-text-primary"
+            >
+              <FileText className="h-3 w-3" />
+              {t('htmlReport')}
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       {hasSelection && !whispMapDisabled ? (

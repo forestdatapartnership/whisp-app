@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from typing import Any
+from urllib.parse import quote
 
 from fastapi.responses import JSONResponse
 
@@ -42,3 +43,10 @@ def api_response(
         status_code=code.http_status,
         content=api_envelope(code, args=args, data=data, context=context, cause=cause, **extra),
     )
+
+
+def attachment_headers(filename: str) -> dict[str, str]:
+    return {
+        "Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}; filename=\"{filename}\"",
+        "Cache-Control": "no-cache",
+    }

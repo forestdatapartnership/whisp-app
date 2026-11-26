@@ -20,6 +20,9 @@ COPY api/pyproject.toml ./
 COPY api/src ./src
 RUN sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
 RUN pip install --no-cache-dir ./
+COPY app/messages /whisp-app/messages
+COPY app/src/lib/results/risk-trees.json /whisp-app/src/lib/results/risk-trees.json
+ENV WHISP_APP_DIR=/whisp-app
 
 EXPOSE 8000
 CMD ["sh", "-c", "exec python -m src.run 2>&1"]

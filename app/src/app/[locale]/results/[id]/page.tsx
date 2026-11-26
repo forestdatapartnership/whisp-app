@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -19,7 +19,6 @@ import { useConfig } from "@/lib/config/config-context";
 import { useJobStatus } from "@/lib/submission/useJobStatus";
 import { readSyncResult } from "@/lib/submission/sync-result";
 import { downloadCsv, downloadGeoJson, timestampFilename } from "@/lib/utils/export";
-import { downloadOfflineReport } from "@/lib/results/offline-report";
 import {
   clearLocalResults,
   readLocalResults,
@@ -111,6 +110,7 @@ function compareResultValues(
 export default function ResultsPage() {
   const t = useTranslations("Results");
   const tCommon = useTranslations("Common");
+  const locale = useLocale();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { config } = useConfig();
@@ -367,15 +367,16 @@ export default function ResultsPage() {
     return params.toString();
   }, [selectedRow, search, riskFilter, indicatorFilter]);
 
+  const resultsUrl = isLocal || !config?.api.url ? null : `${config.api.url}/results/${id}`;
+
   const handleOpenWhispMap = useCallback((selectionOnly: boolean) => {
-    if (isLocal || tableData.length === 0 || !config?.api.url) return;
+    if (!resultsUrl || tableData.length === 0) return;
     const query = selectionOnly ? `?${selectionQuery}` : "";
-    const downloadUrl = `${config.api.url}/generate-geojson/${id}${query}`;
     window.open(
-      `https://whisp.earthmap.org/?aoi=WHISP&fetchJson=${encodeURIComponent(downloadUrl)}`,
+      `https://whisp.earthmap.org/?aoi=WHISP&fetchJson=${encodeURIComponent(`${resultsUrl}.geojson${query}`)}`,
       "_blank"
     );
-  }, [id, isLocal, tableData.length, config, selectionQuery]);
+  }, [resultsUrl, tableData.length, selectionQuery]);
 
   const handleExportCsv = useCallback(() => {
     const cols = allColumns.map((c) => c.key);
@@ -390,16 +391,6 @@ export default function ResultsPage() {
     if (!geoJsonData) return;
     downloadGeoJson(geoJsonData, timestampFilename("geojson"));
   }, [geoJsonData]);
-
-  const handleExportHtml = useCallback(() => {
-    downloadOfflineReport({
-      rows: tableData,
-      columns: allColumns,
-      title: isLocal ? "WHISP risk report · GeoJSON" : `WHISP risk report · ${id}`,
-      theme,
-      label: t,
-    });
-  }, [tableData, allColumns, id, isLocal, theme, t]);
 
   const selectedFeatureIndex = useMemo(() => {
     if (!selectedRow || !filteredGeoJson) return undefined;
@@ -500,9 +491,9 @@ export default function ResultsPage() {
       onBack={leaveToHome}
       onExportCsv={handleExportCsv}
       onExportGeoJson={handleExportGeoJson}
-      onExportHtml={handleExportHtml}
+      htmlReportUrl={resultsUrl ? `${resultsUrl}.html?${new URLSearchParams({ language: locale, theme })}` : undefined}
       onOpenWhispMap={handleOpenWhispMap}
-      whispMapDisabled={isLocal || !config?.api.url}
+      whispMapDisabled={!resultsUrl}
       hasSelection={selectionQuery !== ""}
       selectionEmpty={!selectedRow && filteredData.length === 0}
     />

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import Response
 
-from src.geojson.csv_export import csv_attachment_headers
+from src.responses import attachment_headers
 from src.result_fields import csv_export
 
 router = APIRouter(prefix="/result-fields", tags=["result-fields"], include_in_schema=False)
@@ -14,5 +14,5 @@ async def export_lookup_datasets() -> Response:
     return Response(
         content=csv,
         media_type="text/csv; charset=utf-8",
-        headers=csv_attachment_headers("lookup_datasets.csv"),
+        headers=attachment_headers("lookup_datasets.csv"),
     )

@@ -1,28 +1,13 @@
 import json
-from datetime import datetime
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote
+from uuid import uuid4
 
 from src.io import files
 
 
-def valid_token(token: str) -> bool:
-    return bool(token) and ".." not in token and "/" not in token and "\\" not in token
-
-
 def result_csv_path(token: str) -> Path:
     return files.result_path(token).parent / f"{token}-result.csv"
-
-
-def timestamp_filename(ext: str, suffix: str | None = None) -> str:
-    now = datetime.now()
-    base = (
-        f"whisp_analysis_{now.year}_{now.month:02d}_{now.day:02d}_"
-        f"{now.hour:02d}_{now.minute:02d}"
-    )
-    suffix_part = f"-{suffix}" if suffix else ""
-    return f"{base}{suffix_part}.{ext}"
 
 
 def _to_csv_value(value: Any) -> str:
@@ -82,40 +67,17 @@ def geojson_to_csv_string(geojson: dict[str, Any]) -> str | None:
     return "\n".join(lines)
 
 
-def csv_attachment_headers(filename: str) -> dict[str, str]:
-    encoded = quote(filename)
-    return {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": (
-            f"attachment; filename*=UTF-8''{encoded}; filename=\"{filename}\""
-        ),
-        "Cache-Control": "no-cache",
-    }
-
-
-def load_or_build_csv(token: str) -> tuple[str | None, str | None]:
-    csv_path = result_csv_path(token)
-    if csv_path.is_file():
-        cached = csv_path.read_text(encoding="utf-8")
-        if cached:
-            return cached, None
-
+def write_csv(token: str) -> bool:
     json_path = files.result_path(token)
     if not json_path.is_file():
-        return None, "not_found"
+        return False
 
-    try:
-        geojson = files.read_json(json_path)
-    except Exception:
-        return None, "invalid_json"
-
-    csv = geojson_to_csv_string(geojson)
+    csv = geojson_to_csv_string(files.read_json(json_path))
     if csv is None:
-        return None, "no_features"
+        raise ValueError(f"Result {token} has no features to export")
 
-    csv_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = csv_path.with_suffix(csv_path.suffix + ".tmp")
+    csv_path = result_csv_path(token)
+    tmp = csv_path.with_name(f"{csv_path.name}.{uuid4().hex}.tmp")
     tmp.write_text(csv, encoding="utf-8")
     tmp.replace(csv_path)
-
-    return csv, None
+    return True
